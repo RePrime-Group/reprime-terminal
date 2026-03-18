@@ -76,7 +76,7 @@ export default function LoginCard({ locale }: LoginCardProps) {
   }
 
   return (
-    <div className="w-full max-w-md bg-white/[0.02] border border-white/[0.08] backdrop-blur-[40px] rounded-2xl p-8 shadow-[0_32px_64px_rgba(0,0,0,0.5)]">
+    <div className="w-full max-w-md bg-white/[0.02] border border-white/[0.08] backdrop-blur-[40px] rounded-2xl p-8 shadow-[0_32px_64px_rgba(0,0,0,0.5)] transition-all duration-300 hover:border-[#BC9C45]/20 hover:shadow-[0_0_30px_rgba(188,156,69,0.08)]">
       <div className="w-14 h-14 bg-gradient-to-br from-rp-gold to-rp-gold-soft rounded-xl flex items-center justify-center mx-auto">
         <span className="text-2xl font-extrabold text-white font-[family-name:var(--font-bodoni)]">
           R
@@ -90,7 +90,10 @@ export default function LoginCard({ locale }: LoginCardProps) {
         Terminal
       </p>
 
-      <form onSubmit={handleLogin} className="mt-8 space-y-4">
+      {/* Gold line separator */}
+      <div className="w-12 h-px bg-gradient-to-r from-transparent via-[#BC9C45]/30 to-transparent mx-auto my-6" />
+
+      <form onSubmit={handleLogin} className="space-y-4">
         <input
           type="email"
           value={email}
@@ -117,7 +120,7 @@ export default function LoginCard({ locale }: LoginCardProps) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3.5 bg-gradient-to-r from-rp-gold to-rp-gold-soft text-white font-semibold rounded-lg text-sm hover:opacity-90 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50"
+          className="w-full py-3.5 bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-white font-semibold rounded-lg text-sm hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(188,156,69,0.3)] transition-all duration-200 disabled:opacity-50"
         >
           {loading ? 'Signing in...' : 'Sign In'}
         </button>

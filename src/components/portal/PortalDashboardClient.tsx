@@ -24,6 +24,9 @@ export interface DealCardData {
   photo_url: string | null;
   viewing_count: number;
   meetings_count: number;
+  square_footage?: string | null;
+  units?: string | null;
+  class_type?: string | null;
 }
 
 interface PortalDashboardClientProps {
@@ -44,28 +47,52 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-1.5">
-          <h1 className="text-[28px] font-bold text-rp-navy leading-tight">
+          <h1 className="text-[28px] font-bold text-[#0E3470] leading-tight">
             Active Opportunities
           </h1>
-          <span className="bg-rp-gold-bg text-rp-gold px-3 py-1 rounded-full text-xs font-semibold">
+          <span className="bg-[#FDF8ED] text-[#BC9C45] px-3 py-1 rounded-full text-xs font-semibold border border-[#ECD9A0]">
             {quarterLabel}
           </span>
         </div>
-        <p className="text-sm text-rp-gray-500">
+        <p className="text-sm text-[#6B7280]">
           {activeCount} active &middot; {closedCount} closed &middot; All under executed PSA &middot; 30-day DD &middot; 30-day close
         </p>
       </div>
 
       {/* Deal card grid */}
       {deals.length === 0 ? (
-        <div className="text-center py-20">
-          <p className="text-rp-gray-400 text-lg">No deals available at this time.</p>
-          <p className="text-rp-gray-400 text-sm mt-2">Check back soon for new opportunities.</p>
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#0E3470] to-[#1D5FB8] flex items-center justify-center mb-5">
+            <svg
+              width="36"
+              height="36"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M3 21V7L12 3L21 7V21H15V13H9V21H3Z"
+                fill="rgba(255,255,255,0.2)"
+                stroke="rgba(255,255,255,0.4)"
+                strokeWidth="1.5"
+                strokeLinejoin="round"
+              />
+              <rect x="10" y="15" width="4" height="6" rx="0.5" fill="rgba(255,255,255,0.3)" />
+              <rect x="7" y="9" width="2.5" height="2.5" rx="0.5" fill="rgba(255,255,255,0.3)" />
+              <rect x="14.5" y="9" width="2.5" height="2.5" rx="0.5" fill="rgba(255,255,255,0.3)" />
+            </svg>
+          </div>
+          <p className="text-lg font-semibold text-[#0E3470] mb-1">
+            No active opportunities at this time
+          </p>
+          <p className="text-sm text-[#6B7280]">
+            Check back soon for new investment opportunities.
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(370px,1fr))] gap-5">
-          {deals.map((deal) => (
-            <DealCard key={deal.id} deal={deal} locale={locale} />
+          {deals.map((deal, index) => (
+            <DealCard key={deal.id} deal={deal} locale={locale} index={index} />
           ))}
         </div>
       )}

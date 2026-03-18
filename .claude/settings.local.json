@@ -16,7 +16,12 @@
       "Bash(npx tsc:*)",
       "Bash(ls \"C:/Users/doomz/reprime-terminal/src/app/[locale]/\\(admin\\)/\")",
       "Bash(ls:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git config:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)"
     ]
   }
 }

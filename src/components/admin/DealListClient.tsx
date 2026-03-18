@@ -4,8 +4,8 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import Badge from '@/components/ui/Badge';
 import { DEAL_STATUS_LABELS } from '@/lib/constants';
+import { formatPrice } from '@/lib/utils/format';
 import type { TerminalDeal, DealStatus } from '@/lib/types/database';
 
 interface DealListClientProps {
@@ -22,19 +22,16 @@ const STATUS_OPTIONS: { value: DealStatus | 'all'; label: string }[] = [
   { value: 'closed', label: 'Closed' },
 ];
 
-function formatCurrency(value: string | null): string {
-  if (!value) return '—';
-  const num = parseFloat(value);
-  if (isNaN(num)) return value;
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 0,
-  }).format(num);
-}
+const STATUS_PILL_STYLES: Record<DealStatus, string> = {
+  draft: 'bg-[#EEF0F4] text-[#4B5563]',
+  published: 'bg-[#ECFDF5] text-[#0B8A4D]',
+  under_review: 'bg-[#FFFBEB] text-[#D97706]',
+  assigned: 'bg-[#FDF8ED] text-[#BC9C45]',
+  closed: 'bg-[#0E3470]/10 text-[#0E3470]',
+};
 
 function formatDate(dateStr: string | null): string {
-  if (!dateStr) return '—';
+  if (!dateStr) return '\u2014';
   return new Date(dateStr).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -109,8 +106,10 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
               strokeLinejoin="round"
               className="text-rp-gray-400"
             >
-              <rect x="2" y="2" width="20" height="20" rx="3" />
-              <path d="M9 12h6M12 9v6" />
+              {/* Building icon */}
+              <rect x="4" y="2" width="16" height="20" rx="2" />
+              <path d="M9 22V12h6v10" />
+              <path d="M8 6h.01M16 6h.01M12 6h.01M8 10h.01M16 10h.01M12 10h.01" />
             </svg>
           </div>
           <h3 className="text-[16px] font-semibold text-rp-gray-700 mb-1">
@@ -129,26 +128,26 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
         <div className="bg-white rounded-2xl border border-rp-gray-200 overflow-hidden">
           <table className="w-full">
             <thead>
-              <tr className="bg-rp-gray-100">
-                <th className="text-left px-5 py-3 text-xs font-semibold text-rp-gray-500 uppercase tracking-wider">
+              <tr className="bg-[#F7F8FA]">
+                <th className="text-left px-6 py-3.5 text-xs font-semibold text-rp-gray-500 uppercase tracking-wider">
                   Name
                 </th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-rp-gray-500 uppercase tracking-wider">
+                <th className="text-left px-6 py-3.5 text-xs font-semibold text-rp-gray-500 uppercase tracking-wider">
                   City / State
                 </th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-rp-gray-500 uppercase tracking-wider">
+                <th className="text-left px-6 py-3.5 text-xs font-semibold text-rp-gray-500 uppercase tracking-wider">
                   Type
                 </th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-rp-gray-500 uppercase tracking-wider">
+                <th className="text-left px-6 py-3.5 text-xs font-semibold text-rp-gray-500 uppercase tracking-wider">
                   Price
                 </th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-rp-gray-500 uppercase tracking-wider">
+                <th className="text-left px-6 py-3.5 text-xs font-semibold text-rp-gray-500 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-rp-gray-500 uppercase tracking-wider">
+                <th className="text-left px-6 py-3.5 text-xs font-semibold text-rp-gray-500 uppercase tracking-wider">
                   DD Deadline
                 </th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-rp-gray-500 uppercase tracking-wider">
+                <th className="text-left px-6 py-3.5 text-xs font-semibold text-rp-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -157,38 +156,40 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
               {filteredDeals.map((deal) => (
                 <tr
                   key={deal.id}
-                  className="hover:bg-rp-gray-100 cursor-pointer transition-colors"
+                  className="hover:bg-[#F7F8FA] cursor-pointer transition-colors duration-150"
                   onClick={() => {
                     window.location.href = `/${locale}/admin/deals/${deal.id}`;
                   }}
                 >
-                  <td className="px-5 py-4 text-sm font-medium text-rp-navy">
+                  <td className="px-6 py-4 text-sm font-medium text-rp-navy">
                     {deal.name}
                   </td>
-                  <td className="px-5 py-4 text-sm text-rp-gray-600">
+                  <td className="px-6 py-4 text-sm text-rp-gray-600">
                     {deal.city}, {deal.state}
                   </td>
-                  <td className="px-5 py-4 text-sm text-rp-gray-600">
+                  <td className="px-6 py-4 text-sm text-rp-gray-600">
                     {deal.property_type}
                   </td>
-                  <td className="px-5 py-4 text-sm text-rp-gray-700 font-medium">
-                    {formatCurrency(deal.purchase_price)}
+                  <td className="px-6 py-4 text-sm text-rp-gray-700 font-medium">
+                    {formatPrice(deal.purchase_price)}
                   </td>
-                  <td className="px-5 py-4">
-                    <Badge variant={deal.status}>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_PILL_STYLES[deal.status] ?? 'bg-[#EEF0F4] text-[#4B5563]'}`}
+                    >
                       {DEAL_STATUS_LABELS[deal.status] ?? deal.status}
-                    </Badge>
+                    </span>
                   </td>
                   <td
-                    className={`px-5 py-4 text-sm ${
+                    className={`px-6 py-4 text-sm ${
                       isDeadlinePast(deal.dd_deadline)
-                        ? 'text-rp-red font-medium'
+                        ? 'text-red-600 font-semibold'
                         : 'text-rp-gray-600'
                     }`}
                   >
                     {formatDate(deal.dd_deadline)}
                   </td>
-                  <td className="px-5 py-4">
+                  <td className="px-6 py-4">
                     <Link
                       href={`/${locale}/admin/deals/${deal.id}`}
                       onClick={(e) => e.stopPropagation()}
