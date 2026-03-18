@@ -18,30 +18,63 @@ export default function LoginCard({ locale }: LoginCardProps) {
     setLoading(true);
     setError('');
 
-    const supabase = createClient();
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const supabase = createClient();
 
-    if (authError) {
-      setError('Invalid email or password');
+      // DEBUG: Verify env vars are loaded
+      console.log('[LOGIN DEBUG] Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      // DEBUG: Log full auth result
+      console.log('[LOGIN DEBUG] Auth error:', JSON.stringify(authError));
+      console.log('[LOGIN DEBUG] Auth data session exists:', !!authData?.session);
+      console.log('[LOGIN DEBUG] Auth data user id:', authData?.user?.id);
+
+      if (authError) {
+        setError(`Sign in failed: ${authError.message}`);
+        setLoading(false);
+        return;
+      }
+
+      if (!authData?.session) {
+        console.log('[LOGIN DEBUG] No session returned — email may not be confirmed');
+        setError('Account not confirmed. Check your email or confirm the account in Supabase dashboard.');
+        setLoading(false);
+        return;
+      }
+
+      const { data: user, error: userError } = await supabase
+        .from('terminal_users')
+        .select('role')
+        .single();
+
+      // DEBUG: Log terminal_users query result
+      console.log('[LOGIN DEBUG] terminal_users data:', JSON.stringify(user));
+      console.log('[LOGIN DEBUG] terminal_users error:', JSON.stringify(userError));
+
+      if (userError || !user) {
+        setError(`Profile not found. Make sure your account exists in terminal_users. Error: ${userError?.message || 'No row returned'}`);
+        setLoading(false);
+        return;
+      }
+
+      console.log('[LOGIN DEBUG] Redirecting, role:', user.role);
+
+      // Use window.location.href to force a full page reload so the
+      // Supabase auth cookie is available when middleware runs.
+      if (user.role === 'investor') {
+        window.location.href = `/${locale}/portal`;
+      } else {
+        window.location.href = `/${locale}/admin`;
+      }
+    } catch (err) {
+      console.error('[LOGIN DEBUG] Unexpected error:', err);
+      setError(`Unexpected error: ${err instanceof Error ? err.message : String(err)}`);
       setLoading(false);
-      return;
-    }
-
-    const { data: user } = await supabase
-      .from('terminal_users')
-      .select('role')
-      .single();
-
-    // Use window.location.href instead of router.push to force a full page
-    // reload. This ensures the Supabase auth cookie is fully written to the
-    // browser before the middleware runs on the next request.
-    if (user?.role === 'investor') {
-      window.location.href = `/${locale}/portal`;
-    } else {
-      window.location.href = `/${locale}/admin`;
     }
   }
 
