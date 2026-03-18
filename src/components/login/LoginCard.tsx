@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
 
 interface LoginCardProps {
   locale: string;
@@ -12,27 +11,48 @@ export default function LoginCard({ locale }: LoginCardProps) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [debugLog, setDebugLog] = useState<string[]>([]);
+
+  function addLog(msg: string) {
+    console.log('[LOGIN]', msg);
+    setDebugLog((prev) => [...prev, msg]);
+  }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setDebugLog([]);
+
+    addLog('handleLogin fired');
+
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    addLog(`SUPABASE URL: ${url?.substring(0, 40) || 'UNDEFINED'}`);
+    addLog(`ANON KEY: ${key ? key.substring(0, 20) + '...' : 'UNDEFINED'}`);
+
+    if (!url || !key) {
+      setError('Supabase env vars are missing. Check Vercel environment variables.');
+      setLoading(false);
+      return;
+    }
 
     try {
-      const supabase = createClient();
+      // Import createBrowserClient dynamically to catch import errors
+      addLog('Importing @supabase/ssr...');
+      const { createBrowserClient } = await import('@supabase/ssr');
+      addLog('Import OK, creating client...');
 
-      // DEBUG: Verify env vars are loaded
-      console.log('[LOGIN DEBUG] Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+      const supabase = createBrowserClient(url, key);
+      addLog('Client created, calling signInWithPassword...');
 
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      // DEBUG: Log full auth result
-      console.log('[LOGIN DEBUG] Auth error:', JSON.stringify(authError));
-      console.log('[LOGIN DEBUG] Auth data session exists:', !!authData?.session);
-      console.log('[LOGIN DEBUG] Auth data user id:', authData?.user?.id);
+      addLog(`AUTH DATA: ${JSON.stringify(data)}`);
+      addLog(`AUTH ERROR: ${JSON.stringify(authError)}`);
 
       if (authError) {
         setError(`Sign in failed: ${authError.message}`);
@@ -40,40 +60,42 @@ export default function LoginCard({ locale }: LoginCardProps) {
         return;
       }
 
-      if (!authData?.session) {
-        console.log('[LOGIN DEBUG] No session returned — email may not be confirmed');
-        setError('Account not confirmed. Check your email or confirm the account in Supabase dashboard.');
+      if (!data?.session) {
+        addLog('No error but no session either — email likely not confirmed');
+        setError('No session returned. The email may not be confirmed in Supabase. Go to Supabase Dashboard → Authentication → Users and confirm the email.');
         setLoading(false);
         return;
       }
 
-      const { data: user, error: userError } = await supabase
+      addLog(`Session OK, user id: ${data.session.user.id}`);
+      addLog('Querying terminal_users...');
+
+      const { data: userData, error: userError } = await supabase
         .from('terminal_users')
         .select('role')
+        .eq('id', data.session.user.id)
         .single();
 
-      // DEBUG: Log terminal_users query result
-      console.log('[LOGIN DEBUG] terminal_users data:', JSON.stringify(user));
-      console.log('[LOGIN DEBUG] terminal_users error:', JSON.stringify(userError));
+      addLog(`USER ROLE: ${JSON.stringify(userData)} ERROR: ${JSON.stringify(userError)}`);
 
-      if (userError || !user) {
-        setError(`Profile not found. Make sure your account exists in terminal_users. Error: ${userError?.message || 'No row returned'}`);
+      if (userError || !userData) {
+        setError(`Profile not found in terminal_users for id ${data.session.user.id}. Run the seed migration (003). Error: ${userError?.message || 'no row'}`);
         setLoading(false);
         return;
       }
 
-      console.log('[LOGIN DEBUG] Redirecting, role:', user.role);
+      addLog(`Redirecting as ${userData.role}...`);
 
-      // Use window.location.href to force a full page reload so the
-      // Supabase auth cookie is available when middleware runs.
-      if (user.role === 'investor') {
+      if (userData.role === 'investor') {
         window.location.href = `/${locale}/portal`;
       } else {
         window.location.href = `/${locale}/admin`;
       }
     } catch (err) {
-      console.error('[LOGIN DEBUG] Unexpected error:', err);
-      setError(`Unexpected error: ${err instanceof Error ? err.message : String(err)}`);
+      const msg = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+      addLog(`CAUGHT ERROR: ${msg}`);
+      console.error('[LOGIN] Full error:', err);
+      setError(`Error: ${msg}`);
       setLoading(false);
     }
   }
@@ -115,7 +137,9 @@ export default function LoginCard({ locale }: LoginCardProps) {
         />
 
         {error && (
-          <p className="text-rp-red text-sm text-center">{error}</p>
+          <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3 text-red-400 text-sm break-all">
+            {error}
+          </div>
         )}
 
         <button
@@ -126,6 +150,18 @@ export default function LoginCard({ locale }: LoginCardProps) {
           {loading ? 'Signing in...' : 'Sign In'}
         </button>
       </form>
+
+      {/* Debug log — visible on page */}
+      {debugLog.length > 0 && (
+        <div className="mt-4 bg-black/40 border border-white/10 rounded-lg p-3 max-h-48 overflow-y-auto">
+          <p className="text-white/40 text-[10px] font-mono mb-1">DEBUG LOG:</p>
+          {debugLog.map((log, i) => (
+            <p key={i} className="text-green-400/80 text-[10px] font-mono break-all leading-relaxed">
+              {log}
+            </p>
+          ))}
+        </div>
+      )}
 
       {/* Footer */}
       <p className="text-[11px] text-white/20 text-center mt-8">
