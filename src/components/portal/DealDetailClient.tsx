@@ -883,7 +883,7 @@ export default function DealDetailClient({
   const showSocialProof = (deal.viewing_count ?? 0) > 0 || (deal.meetings_count ?? 0) > 0;
 
   return (
-    <div className="min-h-screen bg-[#F7F8FA] font-[family-name:var(--font-poppins)]">
+    <div className="min-h-screen rp-page-texture font-[family-name:var(--font-poppins)]">
       {/* ------------------------------------------------------------------ */}
       {/* HERO GRADIENT BANNER                                               */}
       {/* ------------------------------------------------------------------ */}
