@@ -44,6 +44,32 @@
 }
 
 @layer utilities {
+  /* Page background texture */
+  .rp-page-texture {
+    background-color: var(--color-rp-page-bg);
+    background-image: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 35px,
+      rgba(14, 52, 112, 0.008) 35px,
+      rgba(14, 52, 112, 0.008) 36px
+    );
+  }
+
+  /* Card depth shadows */
+  .rp-card-shadow {
+    box-shadow:
+      0 1px 3px rgba(14, 52, 112, 0.04),
+      0 8px 24px rgba(14, 52, 112, 0.03);
+  }
+
+  .rp-card-shadow-hover {
+    box-shadow:
+      0 8px 40px rgba(14, 52, 112, 0.1),
+      0 0 0 1px rgba(188, 156, 69, 0.3);
+  }
+
+  /* Skeleton shimmer */
   .skeleton-shimmer {
     background: linear-gradient(
       90deg,
@@ -56,54 +82,92 @@
   }
 
   @keyframes shimmer {
-    0% {
-      background-position: 200% 0;
-    }
-    100% {
-      background-position: -200% 0;
-    }
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
   }
 
+  /* Pulsing dot for social proof */
   .countdown-pulse {
     animation: pulse-dot 2s ease-in-out infinite;
   }
 
   @keyframes pulse-dot {
-    0%, 100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.4;
-    }
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
   }
 
+  /* Card fade-up on page load */
   .animate-fade-up {
     animation: fadeUp 0.5s ease-out forwards;
   }
 
   @keyframes fadeUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
+  /* Slide-in for activity feed */
   .animate-slide-in {
     animation: slideIn 0.3s ease-out forwards;
   }
 
   @keyframes slideIn {
-    from {
-      opacity: 0;
-      transform: translateX(-10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  /* Gold shimmer for Limited Release badge */
+  .gold-shimmer {
+    background: linear-gradient(
+      110deg,
+      rgba(188, 156, 69, 0.8) 0%,
+      rgba(188, 156, 69, 1) 45%,
+      rgba(212, 185, 106, 1) 50%,
+      rgba(188, 156, 69, 1) 55%,
+      rgba(188, 156, 69, 0.8) 100%
+    );
+    background-size: 200% 100%;
+    animation: goldShimmer 4s ease-in-out infinite;
+  }
+
+  @keyframes goldShimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Confetti fall for assigned overlay */
+  .confetti-fall {
+    animation: confettiFall 3s ease-in-out infinite alternate;
+  }
+
+  @keyframes confettiFall {
+    0% { transform: translateY(-10px) rotate(0deg); opacity: 0.6; }
+    100% { transform: translateY(10px) rotate(180deg); opacity: 0.2; }
+  }
+
+  /* Fade-in on scroll */
+  .fade-in-scroll {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+  }
+
+  .fade-in-scroll.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Bodoni Moda font utility */
+  .font-bodoni {
+    font-family: var(--font-bodoni);
+  }
+
+  /* Bloomberg-style data label */
+  .data-label {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--color-rp-gray-400);
   }
 }

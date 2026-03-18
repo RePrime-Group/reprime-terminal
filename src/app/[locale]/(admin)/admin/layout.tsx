@@ -27,7 +27,7 @@ export default async function AdminLayout({
   return (
     <div className="flex min-h-screen">
       <AdminSidebar user={terminalUser} locale={locale} />
-      <main className="flex-1 ml-[260px] bg-rp-page-bg min-h-screen">
+      <main className="flex-1 ml-[260px] rp-page-texture min-h-screen">
         <div className="p-8">
           {children}
         </div>

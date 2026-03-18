@@ -26,14 +26,14 @@ export default function PortalNavbar({ firstName, locale }: PortalNavbarProps) {
       {/* Left: Logo */}
       <Link href="/portal" className="flex items-center gap-2.5 select-none">
         {/* Gold "R" square */}
-        <div className="w-8 h-8 bg-rp-gold rounded-md flex items-center justify-center">
+        <div className="w-8 h-8 bg-rp-gold rounded-md flex items-center justify-center hover:shadow-[0_0_12px_rgba(188,156,69,0.3)] transition-shadow duration-300">
           <span className="text-white font-bold text-lg leading-none">R</span>
         </div>
         <div className="flex items-baseline gap-1.5">
-          <span className="text-rp-navy font-bold text-[15px] tracking-[0.08em] uppercase">
+          <span className="text-rp-navy font-semibold text-[15px] tracking-[3px] uppercase">
             REPRIME
           </span>
-          <span className="font-[family-name:var(--font-bodoni)] text-rp-gold italic text-[15px] font-normal">
+          <span className="font-[family-name:var(--font-bodoni)] text-[#BC9C45] italic text-[11px] font-normal">
             Terminal
           </span>
         </div>
@@ -41,23 +41,38 @@ export default function PortalNavbar({ firstName, locale }: PortalNavbarProps) {
 
       {/* Right: Language toggle, Welcome, Sign out */}
       <div className="flex items-center gap-6">
-        {/* Language toggle */}
-        <Link
-          href={pathname}
-          locale={toggleLocale}
-          className="text-sm text-rp-gray-500 hover:text-rp-navy transition-colors"
-        >
-          {locale === 'en' ? (
-            <span>EN | <span className="font-medium">עב</span></span>
-          ) : (
-            <span><span className="font-medium">EN</span> | עב</span>
-          )}
-        </Link>
+        {/* Language toggle — segmented control */}
+        <div className="bg-[#F7F8FA] rounded-full p-0.5 inline-flex">
+          <Link
+            href={pathname}
+            locale="en"
+            className={`px-3 py-1 text-xs transition-colors rounded-full ${
+              locale === 'en'
+                ? 'bg-[#0E3470] text-white font-semibold'
+                : 'text-[#9CA3AF] font-medium hover:text-[#0E3470]'
+            }`}
+          >
+            EN
+          </Link>
+          <Link
+            href={pathname}
+            locale="he"
+            className={`px-3 py-1 text-xs transition-colors rounded-full ${
+              locale === 'he'
+                ? 'bg-[#0E3470] text-white font-semibold'
+                : 'text-[#9CA3AF] font-medium hover:text-[#0E3470]'
+            }`}
+          >
+            עב
+          </Link>
+        </div>
 
         {/* Welcome text */}
-        <span className="text-sm text-rp-gray-600">
-          Welcome, <span className="font-medium">{firstName}</span>
-        </span>
+        {firstName ? (
+          <span className="text-sm text-rp-gray-600">
+            Welcome, <span className="font-medium">{firstName}</span>
+          </span>
+        ) : null}
 
         {/* Sign out */}
         <button

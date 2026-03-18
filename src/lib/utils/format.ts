@@ -49,13 +49,23 @@ export function formatPriceCompact(value: string | number | null | undefined): s
   return currencyFull.format(n);
 }
 
-/** "10.0%" — percentage with one decimal */
+/** "10.0%" — percentage with one decimal.
+ * Values stored as whole numbers (e.g. "10", "18.5") display as-is with %.
+ * Values stored as decimals < 1 (e.g. 0.10) are multiplied by 100.
+ * Already-formatted strings with % are passed through. */
 export function formatPercent(value: string | number | null | undefined): string {
   if (value == null) return '—';
-  const s = String(value).replace(/[%\s]/g, '');
-  const n = parseFloat(s);
+  const raw = String(value).trim();
+  // If it already ends with %, strip and re-format
+  if (raw.endsWith('%')) {
+    const n = parseFloat(raw.replace('%', ''));
+    if (isNaN(n)) return raw;
+    return `${n.toFixed(1)}%`;
+  }
+  const n = parseFloat(raw);
   if (isNaN(n)) return value?.toString() || '—';
-  // If the raw value looks like a decimal < 1 (e.g. 0.10 for 10%), multiply
+  // Only multiply if it's a true decimal (between 0 and 1 exclusive)
+  // Values like "10", "18.5", "125" are already percentages
   if (n > 0 && n < 1) return `${(n * 100).toFixed(1)}%`;
   return `${n.toFixed(1)}%`;
 }

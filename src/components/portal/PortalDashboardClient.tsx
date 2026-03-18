@@ -43,11 +43,11 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
     deals.find((d) => d.quarter_release)?.quarter_release ?? 'Q1 2026';
 
   return (
-    <div className="px-6 py-8 max-w-[1600px] mx-auto">
+    <div className="px-6 py-8 max-w-[1600px] mx-auto rp-page-texture">
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-1.5">
-          <h1 className="text-[28px] font-bold text-[#0E3470] leading-tight">
+          <h1 className="font-[family-name:var(--font-bodoni)] text-[32px] font-bold text-[#0E3470] leading-tight">
             Active Opportunities
           </h1>
           <span className="bg-[#FDF8ED] text-[#BC9C45] px-3 py-1 rounded-full text-xs font-semibold border border-[#ECD9A0]">
@@ -82,7 +82,7 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
               <rect x="14.5" y="9" width="2.5" height="2.5" rx="0.5" fill="rgba(255,255,255,0.3)" />
             </svg>
           </div>
-          <p className="text-lg font-semibold text-[#0E3470] mb-1">
+          <p className="font-[family-name:var(--font-bodoni)] text-lg font-semibold text-[#0E3470] mb-1">
             No active opportunities at this time
           </p>
           <p className="text-sm text-[#6B7280]">

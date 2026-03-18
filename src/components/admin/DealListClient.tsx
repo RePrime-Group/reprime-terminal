@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { DEAL_STATUS_LABELS } from '@/lib/constants';
 import { formatPrice } from '@/lib/utils/format';
@@ -23,11 +22,11 @@ const STATUS_OPTIONS: { value: DealStatus | 'all'; label: string }[] = [
 ];
 
 const STATUS_PILL_STYLES: Record<DealStatus, string> = {
-  draft: 'bg-[#EEF0F4] text-[#4B5563]',
-  published: 'bg-[#ECFDF5] text-[#0B8A4D]',
-  under_review: 'bg-[#FFFBEB] text-[#D97706]',
-  assigned: 'bg-[#FDF8ED] text-[#BC9C45]',
-  closed: 'bg-[#0E3470]/10 text-[#0E3470]',
+  draft: 'bg-[#F7F8FA] text-[#4B5563] border border-[#EEF0F4]',
+  published: 'bg-[#ECFDF5] text-[#0B8A4D] border border-[#A7F3D0]',
+  under_review: 'bg-[#FFFBEB] text-[#D97706] border border-[#FDE68A]',
+  assigned: 'bg-[#FDF8ED] text-[#BC9C45] border border-[#ECD9A0]',
+  closed: 'bg-[#0E3470] text-white',
 };
 
 function formatDate(dateStr: string | null): string {
@@ -66,7 +65,9 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-[24px] font-bold text-rp-navy">Deals</h1>
         <Link href={`/${locale}/admin/deals/new`}>
-          <Button variant="gold">New Deal</Button>
+          <button className="bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-white font-semibold px-5 py-2.5 rounded-lg hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(188,156,69,0.25)] transition-all">
+            New Deal
+          </button>
         </Link>
       </div>
 
@@ -93,8 +94,8 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
 
       {/* Table */}
       {filteredDeals.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-rp-gray-200 p-16 text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-rp-gray-100 flex items-center justify-center">
+        <div className="bg-white rounded-2xl rp-card-shadow p-16 text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#0E3470] to-[#1A4A8A] flex items-center justify-center">
             <svg
               width="28"
               height="28"
@@ -104,7 +105,7 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="text-rp-gray-400"
+              className="text-white"
             >
               {/* Building icon */}
               <rect x="4" y="2" width="16" height="20" rx="2" />
@@ -112,51 +113,53 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
               <path d="M8 6h.01M16 6h.01M12 6h.01M8 10h.01M16 10h.01M12 10h.01" />
             </svg>
           </div>
-          <h3 className="text-[16px] font-semibold text-rp-gray-700 mb-1">
+          <h3 className="font-[family-name:var(--font-bodoni-moda)] text-[20px] font-semibold text-rp-navy mb-1">
             No deals yet
           </h3>
           <p className="text-sm text-rp-gray-400 mb-4">
             Create your first deal to get started.
           </p>
           <Link href={`/${locale}/admin/deals/new`}>
-            <Button variant="gold" size="sm">
+            <button className="bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-white font-semibold px-5 py-2.5 rounded-lg hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(188,156,69,0.25)] transition-all text-sm">
               New Deal
-            </Button>
+            </button>
           </Link>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-rp-gray-200 overflow-hidden">
+        <div className="bg-white rounded-2xl rp-card-shadow overflow-hidden">
           <table className="w-full">
             <thead>
               <tr className="bg-[#F7F8FA]">
-                <th className="text-left px-6 py-3.5 text-xs font-semibold text-rp-gray-500 uppercase tracking-wider">
+                <th className="text-left px-6 py-3.5 text-[9px] font-semibold uppercase tracking-[1.5px] text-[#9CA3AF]">
                   Name
                 </th>
-                <th className="text-left px-6 py-3.5 text-xs font-semibold text-rp-gray-500 uppercase tracking-wider">
+                <th className="text-left px-6 py-3.5 text-[9px] font-semibold uppercase tracking-[1.5px] text-[#9CA3AF]">
                   City / State
                 </th>
-                <th className="text-left px-6 py-3.5 text-xs font-semibold text-rp-gray-500 uppercase tracking-wider">
+                <th className="text-left px-6 py-3.5 text-[9px] font-semibold uppercase tracking-[1.5px] text-[#9CA3AF]">
                   Type
                 </th>
-                <th className="text-left px-6 py-3.5 text-xs font-semibold text-rp-gray-500 uppercase tracking-wider">
+                <th className="text-left px-6 py-3.5 text-[9px] font-semibold uppercase tracking-[1.5px] text-[#9CA3AF]">
                   Price
                 </th>
-                <th className="text-left px-6 py-3.5 text-xs font-semibold text-rp-gray-500 uppercase tracking-wider">
+                <th className="text-left px-6 py-3.5 text-[9px] font-semibold uppercase tracking-[1.5px] text-[#9CA3AF]">
                   Status
                 </th>
-                <th className="text-left px-6 py-3.5 text-xs font-semibold text-rp-gray-500 uppercase tracking-wider">
+                <th className="text-left px-6 py-3.5 text-[9px] font-semibold uppercase tracking-[1.5px] text-[#9CA3AF]">
                   DD Deadline
                 </th>
-                <th className="text-left px-6 py-3.5 text-xs font-semibold text-rp-gray-500 uppercase tracking-wider">
+                <th className="text-left px-6 py-3.5 text-[9px] font-semibold uppercase tracking-[1.5px] text-[#9CA3AF]">
                   Actions
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-rp-gray-200">
-              {filteredDeals.map((deal) => (
+              {filteredDeals.map((deal, index) => (
                 <tr
                   key={deal.id}
-                  className="hover:bg-[#F7F8FA] cursor-pointer transition-colors duration-150"
+                  className={`hover:bg-[#FAFBFC] cursor-pointer transition-colors duration-150 ${
+                    index % 2 === 0 ? 'bg-white' : 'bg-[#F7F8FA]'
+                  }`}
                   onClick={() => {
                     window.location.href = `/${locale}/admin/deals/${deal.id}`;
                   }}
@@ -175,7 +178,7 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
                   </td>
                   <td className="px-6 py-4">
                     <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_PILL_STYLES[deal.status] ?? 'bg-[#EEF0F4] text-[#4B5563]'}`}
+                      className={`text-[11px] font-semibold px-2.5 py-1 rounded-full inline-flex items-center ${STATUS_PILL_STYLES[deal.status] ?? 'bg-[#F7F8FA] text-[#4B5563] border border-[#EEF0F4]'}`}
                     >
                       {DEAL_STATUS_LABELS[deal.status] ?? deal.status}
                     </span>
@@ -193,10 +196,9 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
                     <Link
                       href={`/${locale}/admin/deals/${deal.id}`}
                       onClick={(e) => e.stopPropagation()}
+                      className="text-sm text-rp-navy hover:text-rp-gold font-medium transition-colors"
                     >
-                      <Button variant="ghost" size="sm">
-                        Edit
-                      </Button>
+                      Edit
                     </Link>
                   </td>
                 </tr>

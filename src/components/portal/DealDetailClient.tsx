@@ -7,6 +7,7 @@ import { useCountdown } from '@/lib/hooks/useCountdown';
 import { useActivityTracker } from '@/lib/hooks/useActivityTracker';
 import { calculateCustomIRR } from '@/lib/utils/irr-calculator';
 import { createClient } from '@/lib/supabase/client';
+import FadeInOnScroll from '@/components/ui/FadeInOnScroll';
 import type {
   DealWithDetails,
   TerminalDDFolder,
@@ -62,9 +63,9 @@ function CountdownTimerCard({
   ];
 
   return (
-    <div className="bg-white rounded-2xl border border-[#EEF0F4] p-5">
+    <div className="bg-white rounded-2xl border border-[#EEF0F4] p-5 rp-card-shadow">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-semibold text-[#6B7280] uppercase tracking-wider">
+        <span className="data-label">
           {label}
         </span>
         {isUrgent && !isExpired && (
@@ -108,27 +109,34 @@ function ImageCarousel({ urls }: { urls: string[] }) {
 
   if (urls.length === 0) {
     return (
-      <div className="w-full h-full min-h-[340px] rounded-2xl overflow-hidden bg-gradient-to-br from-[#0E3470] to-[#1D5FB8] flex items-center justify-center">
+      <div className="w-full h-full min-h-[340px] rounded-2xl overflow-hidden flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0A1628 0%, #0E3470 40%, #1D5FB8 100%)' }}>
+        {/* Gold building SVG at center, 20% opacity */}
         <svg
-          width="80"
-          height="80"
-          viewBox="0 0 24 24"
+          width="120"
+          height="120"
+          viewBox="0 0 64 64"
           fill="none"
-          className="text-white/10"
+          style={{ opacity: 0.2 }}
         >
-          <path
-            d="M3 21V3h18v18H3z"
-            stroke="currentColor"
-            strokeWidth="1.5"
-          />
-          <path
-            d="M3 17l4-4 4 4 4-6 6 6"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <rect x="7" y="7" width="4" height="4" rx="1" fill="currentColor" />
+          <rect x="8" y="16" width="20" height="40" rx="2" stroke="#BC9C45" strokeWidth="2" fill="none" />
+          <rect x="36" y="8" width="20" height="48" rx="2" stroke="#BC9C45" strokeWidth="2" fill="none" />
+          <rect x="12" y="22" width="4" height="4" rx="0.5" fill="#BC9C45" />
+          <rect x="20" y="22" width="4" height="4" rx="0.5" fill="#BC9C45" />
+          <rect x="12" y="30" width="4" height="4" rx="0.5" fill="#BC9C45" />
+          <rect x="20" y="30" width="4" height="4" rx="0.5" fill="#BC9C45" />
+          <rect x="12" y="38" width="4" height="4" rx="0.5" fill="#BC9C45" />
+          <rect x="20" y="38" width="4" height="4" rx="0.5" fill="#BC9C45" />
+          <rect x="40" y="14" width="4" height="4" rx="0.5" fill="#BC9C45" />
+          <rect x="48" y="14" width="4" height="4" rx="0.5" fill="#BC9C45" />
+          <rect x="40" y="22" width="4" height="4" rx="0.5" fill="#BC9C45" />
+          <rect x="48" y="22" width="4" height="4" rx="0.5" fill="#BC9C45" />
+          <rect x="40" y="30" width="4" height="4" rx="0.5" fill="#BC9C45" />
+          <rect x="48" y="30" width="4" height="4" rx="0.5" fill="#BC9C45" />
+          <rect x="40" y="38" width="4" height="4" rx="0.5" fill="#BC9C45" />
+          <rect x="48" y="38" width="4" height="4" rx="0.5" fill="#BC9C45" />
+          <rect x="14" y="46" width="8" height="10" rx="1" stroke="#BC9C45" strokeWidth="1.5" fill="none" />
+          <rect x="42" y="46" width="8" height="10" rx="1" stroke="#BC9C45" strokeWidth="1.5" fill="none" />
+          <line x1="0" y1="56" x2="64" y2="56" stroke="#BC9C45" strokeWidth="2" />
         </svg>
       </div>
     );
@@ -220,10 +228,10 @@ function MetricCard({
 }) {
   return (
     <div
-      className="bg-white rounded-xl p-3.5 border border-[#EEF0F4]"
-      style={{ borderTop: `3px solid ${borderColor}` }}
+      className="bg-white rounded-xl p-3.5 border border-[#EEF0F4] rp-card-shadow"
+      style={{ borderLeft: `3px solid ${borderColor}` }}
     >
-      <div className="text-[10px] text-[#9CA3AF] uppercase tracking-wider font-medium mb-1">
+      <div className="data-label mb-1">
         {label}
       </div>
       <div
@@ -287,7 +295,7 @@ function DDFolderCard({
         : 'bg-[#F7F8FA]';
 
   return (
-    <div className="bg-white rounded-xl border border-[#EEF0F4] overflow-hidden cursor-pointer hover:border-[#BC9C45] transition-colors">
+    <div className="bg-white rounded-xl border border-[#EEF0F4] overflow-hidden cursor-pointer hover:border-[#BC9C45] transition-colors rp-card-shadow">
       <button
         onClick={() => setExpanded(!expanded)}
         className="w-full p-4 flex items-center gap-3 text-left"
@@ -429,7 +437,7 @@ function IRRCalculatorPanel({
   ];
 
   return (
-    <div className="bg-[#0E3470] rounded-2xl p-6 text-white">
+    <div className="bg-[#0E3470] rounded-2xl p-6 text-white rp-card-shadow">
       <h3 className="font-bold text-lg mb-4">IRR Calculator</h3>
 
       {/* Mode tabs */}
@@ -890,8 +898,16 @@ export default function DealDetailClient({
     { key: 'schedule', label: 'Schedule & Contact' },
   ];
 
+  // Social proof visibility
+  const showSocialProof = (deal.viewing_count ?? 0) > 0 || (deal.meetings_count ?? 0) > 0;
+
   return (
     <div className="min-h-screen bg-[#F7F8FA] font-[family-name:var(--font-poppins)]">
+      {/* ------------------------------------------------------------------ */}
+      {/* HERO GRADIENT BANNER                                               */}
+      {/* ------------------------------------------------------------------ */}
+      <div className="h-1 bg-gradient-to-r from-[#BC9C45] via-[#0E3470] to-[#BC9C45]" />
+
       {/* ------------------------------------------------------------------ */}
       {/* 1. STICKY TOP NAV BAR                                              */}
       {/* ------------------------------------------------------------------ */}
@@ -924,642 +940,683 @@ export default function DealDetailClient({
       </div>
 
       {/* ------------------------------------------------------------------ */}
-      {/* 2. HERO SECTION                                                    */}
+      {/* PAGE TEXTURE CONTENT AREA                                          */}
       {/* ------------------------------------------------------------------ */}
-      <div className="grid grid-cols-[1.4fr_1fr] gap-6 p-6">
-        {/* Left: Image Carousel */}
-        <ImageCarousel urls={photoUrls} />
+      <div className="rp-page-texture">
+        {/* ------------------------------------------------------------------ */}
+        {/* 2. HERO SECTION                                                    */}
+        {/* ------------------------------------------------------------------ */}
+        <div className="grid grid-cols-[1.4fr_1fr] gap-6 p-6">
+          {/* Left: Image Carousel */}
+          <ImageCarousel urls={photoUrls} />
 
-        {/* Right: Countdown Timers */}
-        <div className="flex flex-col gap-4">
-          <CountdownTimerCard
-            label="Due Diligence Deadline"
-            targetDate={deal.dd_deadline}
+          {/* Right: Countdown Timers */}
+          <div className="flex flex-col gap-4">
+            <CountdownTimerCard
+              label="Due Diligence Deadline"
+              targetDate={deal.dd_deadline}
+            />
+            <CountdownTimerCard
+              label="Closing Deadline"
+              targetDate={deal.close_deadline}
+            />
+            <CountdownTimerCard
+              label="Extension Deadline"
+              targetDate={deal.extension_deadline}
+            />
+          </div>
+        </div>
+
+        {/* ------------------------------------------------------------------ */}
+        {/* 4. SEVEN-METRIC BAR                                                */}
+        {/* ------------------------------------------------------------------ */}
+        <div className="grid grid-cols-7 gap-3 px-6 mt-6">
+          <MetricCard
+            label="Purchase Price"
+            value={formatPrice(deal.purchase_price)}
+            borderColor="#0E3470"
           />
-          <CountdownTimerCard
-            label="Closing Deadline"
-            targetDate={deal.close_deadline}
+          <MetricCard
+            label="NOI"
+            value={formatPrice(deal.noi)}
+            borderColor="#0E3470"
           />
-          <CountdownTimerCard
-            label="Extension Deadline"
-            targetDate={deal.extension_deadline}
+          <MetricCard
+            label="Cap Rate"
+            value={formatPercent(deal.cap_rate)}
+            borderColor="#BC9C45"
+          />
+          <MetricCard
+            label="IRR"
+            value={formatPercent(deal.irr)}
+            borderColor="#0B8A4D"
+            valueColor="#0B8A4D"
+          />
+          <MetricCard
+            label="CoC"
+            value={formatPercent(deal.coc)}
+            borderColor="#0B8A4D"
+            valueColor="#0B8A4D"
+          />
+          <MetricCard
+            label="DSCR"
+            value={formatDSCR(deal.dscr)}
+            borderColor="#0E3470"
+          />
+          <MetricCard
+            label="Equity"
+            value={formatPrice(deal.equity_required)}
+            borderColor="#BC9C45"
           />
         </div>
-      </div>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* 4. SEVEN-METRIC BAR                                                */}
-      {/* ------------------------------------------------------------------ */}
-      <div className="grid grid-cols-7 gap-3 px-6 mt-6">
-        <MetricCard
-          label="Purchase Price"
-          value={formatPrice(deal.purchase_price)}
-          borderColor="#0E3470"
-        />
-        <MetricCard
-          label="NOI"
-          value={formatPrice(deal.noi)}
-          borderColor="#0E3470"
-        />
-        <MetricCard
-          label="Cap Rate"
-          value={formatPercent(deal.cap_rate)}
-          borderColor="#BC9C45"
-        />
-        <MetricCard
-          label="IRR"
-          value={formatPercent(deal.irr)}
-          borderColor="#0B8A4D"
-          valueColor="#0B8A4D"
-        />
-        <MetricCard
-          label="CoC"
-          value={formatPercent(deal.coc)}
-          borderColor="#0B8A4D"
-          valueColor="#0B8A4D"
-        />
-        <MetricCard
-          label="DSCR"
-          value={formatDSCR(deal.dscr)}
-          borderColor="#0E3470"
-        />
-        <MetricCard
-          label="Equity"
-          value={formatPrice(deal.equity_required)}
-          borderColor="#BC9C45"
-        />
-      </div>
-
-      {/* ------------------------------------------------------------------ */}
-      {/* 5. TABS                                                            */}
-      {/* ------------------------------------------------------------------ */}
-      <div className="px-6 mt-6">
-        <div className="flex border-b border-[#EEF0F4] gap-0">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`px-5 py-3.5 text-sm font-medium transition-colors relative ${
-                activeTab === tab.key
-                  ? 'text-[#0E3470] font-semibold'
-                  : 'text-[#9CA3AF] hover:text-[#0E3470]'
-              }`}
-            >
-              {tab.label}
-              {activeTab === tab.key && (
-                <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#BC9C45] rounded-t" />
-              )}
-            </button>
-          ))}
+        {/* ------------------------------------------------------------------ */}
+        {/* 5. TABS                                                            */}
+        {/* ------------------------------------------------------------------ */}
+        <div className="px-6 mt-6">
+          <div className="bg-[#F7F8FA] rounded-lg p-1 inline-flex gap-1">
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`rounded-md px-7 py-3 text-sm transition-all ${
+                  activeTab === tab.key
+                    ? 'bg-[#0E3470] text-white font-semibold'
+                    : 'bg-transparent text-[#9CA3AF] font-medium hover:bg-white hover:text-[#0E3470]'
+                }`}
+                style={
+                  activeTab === tab.key
+                    ? { boxShadow: 'inset 0 -3px 0 #BC9C45' }
+                    : undefined
+                }
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* TAB CONTENT                                                        */}
-      {/* ------------------------------------------------------------------ */}
+        {/* ------------------------------------------------------------------ */}
+        {/* TAB CONTENT                                                        */}
+        {/* ------------------------------------------------------------------ */}
 
-      {/* ========== OVERVIEW TAB ========== */}
-      <div
-        className="transition-opacity duration-200"
-        style={{ display: activeTab === 'overview' ? 'block' : 'none' }}
-      >
-        <div className="grid grid-cols-[1fr_340px] gap-6 mt-6 px-6 pb-8">
-          {/* Left Column */}
-          <div className="space-y-6">
-            {/* Investment Highlights */}
-            {deal.investment_highlights &&
-              deal.investment_highlights.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-bold text-[#0E3470] mb-4">
-                    Investment Highlights
-                  </h3>
-                  <div className="space-y-3">
-                    {deal.investment_highlights.map((highlight, idx) => (
-                      <div key={idx} className="flex gap-3 items-start mb-3">
-                        <div className="w-6 h-6 rounded-lg bg-[#ECFDF5] flex items-center justify-center shrink-0">
-                          <svg
-                            width="14"
-                            height="14"
-                            viewBox="0 0 16 16"
-                            fill="none"
-                            stroke="#0B8A4D"
-                            strokeWidth="2.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
+        {/* ========== OVERVIEW TAB ========== */}
+        <div
+          className="transition-opacity duration-200"
+          style={{ display: activeTab === 'overview' ? 'block' : 'none' }}
+        >
+          <div className="grid grid-cols-[1fr_340px] gap-6 mt-6 px-6 pb-8">
+            {/* Left Column */}
+            <div className="space-y-6">
+              {/* Investment Highlights */}
+              {deal.investment_highlights &&
+                deal.investment_highlights.length > 0 && (
+                  <FadeInOnScroll delay={0}>
+                    <div>
+                      <h3 className="font-[family-name:var(--font-bodoni)] text-lg font-bold text-[#0E3470] mb-4">
+                        Investment Highlights
+                      </h3>
+                      <div className="space-y-3">
+                        {deal.investment_highlights.map((highlight, idx) => (
+                          <div
+                            key={idx}
+                            className="bg-white border border-[#EEF0F4] rounded-xl p-4 border-l-2 border-l-[#BC9C45] flex gap-3 items-start"
                           >
-                            <path d="M3 8l4 4 6-7" />
-                          </svg>
-                        </div>
-                        <span className="text-sm text-[#374151] leading-relaxed">
-                          {highlight}
+                            <div className="w-7 h-7 rounded-full bg-[#ECFDF5] flex items-center justify-center shrink-0">
+                              <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 16 16"
+                                fill="none"
+                                stroke="#0B8A4D"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M3 8l4 4 6-7" />
+                              </svg>
+                            </div>
+                            <span className="text-sm text-[#374151] leading-relaxed">
+                              {highlight}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </FadeInOnScroll>
+                )}
+
+              {/* Acquisition Thesis */}
+              {deal.acquisition_thesis && (
+                <FadeInOnScroll delay={0.1}>
+                  <div>
+                    <h3 className="font-[family-name:var(--font-bodoni)] text-lg font-bold text-[#0E3470] mb-3">
+                      Acquisition Thesis
+                    </h3>
+                    <p className="text-sm text-[#4B5563] leading-[1.8]">
+                      {deal.acquisition_thesis}
+                    </p>
+                  </div>
+                </FadeInOnScroll>
+              )}
+
+              {/* Financing Summary */}
+              <FadeInOnScroll delay={0.2}>
+                <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 rp-card-shadow">
+                  <h3 className="font-[family-name:var(--font-bodoni)] text-lg font-bold text-[#0E3470] mb-4">
+                    Financing Summary
+                  </h3>
+                  <div className="space-y-0">
+                    {[
+                      { label: 'Loan Estimate', value: deal.loan_estimate },
+                      {
+                        label: 'Seller Financing',
+                        value: deal.seller_financing ? 'Yes' : 'No',
+                      },
+                      { label: 'Loan Fee', value: deal.loan_fee },
+                      { label: 'Equity Required', value: deal.equity_required },
+                    ].map((row) => (
+                      <div
+                        key={row.label}
+                        className="flex justify-between py-2.5 border-b border-[#EEF0F4] last:border-b-0"
+                      >
+                        <span className="data-label">
+                          {row.label}
+                        </span>
+                        <span className="text-sm font-semibold text-[#0E3470]">
+                          {row.value ?? '--'}
                         </span>
                       </div>
                     ))}
                   </div>
+
+                  {deal.special_terms && deal.special_terms !== 'None' && (
+                    <div className="mt-4 bg-[#FDF8ED] border-l-4 border-[#BC9C45] p-4 rounded-r-lg">
+                      <div className="text-[11px] font-semibold text-[#BC9C45] uppercase tracking-wider mb-1">
+                        Special Terms
+                      </div>
+                      <p className="text-sm text-[#4B5563]">
+                        {deal.special_terms}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </FadeInOnScroll>
+
+              {/* Market Context */}
+              <FadeInOnScroll delay={0.3}>
+                <div>
+                  <h3 className="font-[family-name:var(--font-bodoni)] text-lg font-bold text-[#0E3470] mb-4">
+                    Market Context
+                  </h3>
+                  <div className="flex gap-4">
+                    <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 flex-1 rp-card-shadow">
+                      <div className="data-label mb-1">
+                        Metro Population
+                      </div>
+                      <div className="text-lg font-bold text-[#0E3470]">
+                        {formatNumber(deal.metro_population)}
+                      </div>
+                    </div>
+                    <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 flex-1 rp-card-shadow">
+                      <div className="data-label mb-1">
+                        Job Growth
+                      </div>
+                      <div className="text-lg font-bold text-[#0B8A4D]">
+                        {deal.job_growth ? `+${deal.job_growth}` : '--'}
+                      </div>
+                    </div>
+                    <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 flex-1 rp-card-shadow">
+                      <div className="data-label mb-1">
+                        Occupancy
+                      </div>
+                      <div className="text-lg font-bold text-[#0E3470]">
+                        {deal.occupancy ? `${deal.occupancy}%` : '--'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </FadeInOnScroll>
+
+              {/* Cycle Indicator */}
+              <FadeInOnScroll delay={0.3}>
+                <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 mt-4 rp-card-shadow">
+                  <h3 className="text-sm font-semibold text-[#0E3470] mb-1">
+                    Market Cycle Position
+                  </h3>
+                  <div className="relative mt-3">
+                    <div className="h-3 rounded-full bg-gradient-to-r from-[#0B8A4D] via-[#BC9C45] to-[#DC2626]" />
+                    <div
+                      className="absolute top-1/2 -translate-y-1/2"
+                      style={{ left: '35%', transform: 'translateX(-50%) translateY(-50%)' }}
+                    >
+                      <div className="flex flex-col items-center">
+                        <span className="text-[9px] font-bold text-[#BC9C45] mb-1">
+                          WE ARE HERE
+                        </span>
+                        <div className="w-5 h-5 bg-[#BC9C45] border-2 border-white rounded-full shadow-md" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex justify-between mt-3 text-[9px] text-[#9CA3AF] uppercase tracking-wider">
+                    <span>Recovery</span>
+                    <span>Expansion</span>
+                    <span>Peak</span>
+                  </div>
+                </div>
+              </FadeInOnScroll>
+            </div>
+
+            {/* Right Column (Sidebar) */}
+            <div className="space-y-4">
+              {/* Property Details */}
+              <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 rp-card-shadow">
+                <h3 className="text-sm font-semibold text-[#0E3470] mb-4">
+                  Property Details
+                </h3>
+                <div className="space-y-0">
+                  {[
+                    { label: 'Type', value: deal.property_type },
+                    { label: 'Class', value: deal.class_type },
+                    { label: 'Year Built', value: deal.year_built?.toString() },
+                    { label: 'Sq Ft', value: formatSqFt(deal.square_footage) },
+                    { label: 'Units', value: deal.units },
+                    { label: 'Neighborhood', value: deal.neighborhood },
+                  ].map((row, idx) => (
+                    <div
+                      key={row.label}
+                      className={`flex justify-between py-2.5 ${
+                        idx % 2 === 0 ? 'bg-[#F7F8FA]' : ''
+                      } px-2 rounded`}
+                    >
+                      <span className="data-label">
+                        {row.label}
+                      </span>
+                      <span className="text-sm font-semibold text-[#0E3470]">
+                        {row.value ?? '--'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Cap Rate Sparkline */}
+              <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 rp-card-shadow">
+                <h4 className="text-sm font-semibold text-[#0E3470] mb-3">
+                  Cap Rate Trend
+                </h4>
+                <svg viewBox="0 0 200 60" className="w-full h-14">
+                  {/* Subtle fill under the line */}
+                  <defs>
+                    <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#0B8A4D" stopOpacity="0.12" />
+                      <stop offset="100%" stopColor="#0B8A4D" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <polygon
+                    points="0,45 30,40 60,38 90,35 120,30 150,28 180,25 200,22 200,60 0,60"
+                    fill="url(#sparkFill)"
+                  />
+                  <polyline
+                    points="0,45 30,40 60,38 90,35 120,30 150,28 180,25 200,22"
+                    stroke="#0B8A4D"
+                    strokeWidth="2"
+                    fill="none"
+                  />
+                  <circle cx="200" cy="22" r="4" fill="#0B8A4D" />
+                  <circle cx="200" cy="22" r="7" fill="#0B8A4D" fillOpacity="0.15" />
+                </svg>
+              </div>
+
+              {/* Live Activity Feed */}
+              <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 rp-card-shadow">
+                <h4 className="text-sm font-semibold text-[#0E3470] mb-3">
+                  Recent Activity
+                </h4>
+                <div className="space-y-3">
+                  {[
+                    { dot: 'bg-[#0B8A4D]', text: 'Terminal member viewed this deal', time: '2 min ago' },
+                    { dot: 'bg-[#1D5FB8]', text: 'Document downloaded', time: '15 min ago' },
+                    { dot: 'bg-[#BC9C45]', text: 'Meeting scheduled', time: '1 hour ago' },
+                    { dot: 'bg-[#0B8A4D]', text: 'New member viewing', time: '3 hours ago' },
+                  ].map((item, idx) => (
+                    <div key={idx} className="flex items-start gap-2">
+                      <div className={`w-2 h-2 rounded-full ${item.dot} mt-1.5 shrink-0`} />
+                      <div>
+                        <div className="text-xs text-[#374151]">{item.text}</div>
+                        <div className="text-xs text-[#6B7280]">{item.time}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Social Proof -- hidden when both counts are 0 */}
+              {showSocialProof && (
+                <div className="bg-[#FEF2F2] rounded-xl p-4 border border-[#FECACA]">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-[#0E3470]">
+                      {deal.viewing_count}
+                    </div>
+                    <div className="text-xs text-[#6B7280] mb-2">investors reviewing</div>
+                    <div className="text-2xl font-bold text-[#0E3470]">
+                      {deal.meetings_count}
+                    </div>
+                    <div className="text-xs text-[#6B7280]">meetings scheduled</div>
+                  </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
 
-            {/* Acquisition Thesis */}
-            {deal.acquisition_thesis && (
-              <div>
-                <h3 className="text-lg font-bold text-[#0E3470] mb-3">
-                  Acquisition Thesis
-                </h3>
-                <p className="text-sm text-[#4B5563] leading-[1.8]">
-                  {deal.acquisition_thesis}
-                </p>
-              </div>
-            )}
-
-            {/* Financing Summary */}
-            <div className="bg-white rounded-xl border border-[#EEF0F4] p-5">
-              <h3 className="text-sm font-semibold text-[#0E3470] mb-4">
-                Financing Summary
-              </h3>
-              <div className="space-y-0">
-                {[
-                  { label: 'Loan Estimate', value: deal.loan_estimate },
-                  {
-                    label: 'Seller Financing',
-                    value: deal.seller_financing ? 'Yes' : 'No',
-                  },
-                  { label: 'Loan Fee', value: deal.loan_fee },
-                  { label: 'Equity Required', value: deal.equity_required },
-                ].map((row) => (
+        {/* ========== DUE DILIGENCE TAB ========== */}
+        <div
+          className="transition-opacity duration-200"
+          style={{ display: activeTab === 'due-diligence' ? 'block' : 'none' }}
+        >
+          <div className="mt-6 px-6 pb-8">
+            {/* Progress bar + Download button row */}
+            <div className="flex items-start justify-between mb-6">
+              <div className="flex-1 mr-6">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-semibold text-[#0B8A4D]">
+                    {ddProgress}% Complete
+                  </span>
+                  <span className="text-xs text-[#9CA3AF]">
+                    {verifiedDocs} of {totalDocs} verified
+                  </span>
+                </div>
+                <div className="bg-[#EEF0F4] rounded-full h-3 overflow-hidden">
                   <div
-                    key={row.label}
-                    className="flex justify-between py-2.5 border-b border-[#EEF0F4] last:border-b-0"
-                  >
-                    <span className="text-xs text-[#9CA3AF]">
-                      {row.label}
-                    </span>
-                    <span className="text-sm font-semibold text-[#0E3470]">
-                      {row.value ?? '--'}
-                    </span>
-                  </div>
-                ))}
+                    className="bg-gradient-to-r from-[#0B8A4D] to-[#34D399] h-full rounded-full transition-all duration-500"
+                    style={{ width: `${ddProgress}%` }}
+                  />
+                </div>
               </div>
+              <a
+                href={`/api/deals/${deal.id}/package`}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-sm font-semibold rounded-xl transition-colors shrink-0"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Download Complete Package
+              </a>
+            </div>
 
-              {deal.special_terms && deal.special_terms !== 'None' && (
-                <div className="mt-4 bg-[#FDF8ED] border-l-4 border-[#BC9C45] p-4 rounded-r-lg">
-                  <div className="text-[11px] font-semibold text-[#BC9C45] uppercase tracking-wider mb-1">
-                    Special Terms
-                  </div>
-                  <p className="text-sm text-[#4B5563]">
-                    {deal.special_terms}
+            {/* Folder Grid */}
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              {deal.dd_folders.map((folder, idx) => (
+                <FadeInOnScroll key={folder.id} delay={idx * 0.05}>
+                  <DDFolderCard
+                    folder={folder}
+                    dealId={deal.id}
+                    onDocumentDownload={handleDocumentDownload}
+                  />
+                </FadeInOnScroll>
+              ))}
+              {deal.dd_folders.length === 0 && (
+                <div className="col-span-2 bg-white rounded-xl border border-[#EEF0F4] p-12 text-center">
+                  <p className="text-sm text-[#9CA3AF]">
+                    No due diligence documents available yet.
                   </p>
                 </div>
               )}
             </div>
-
-            {/* Market Context */}
-            <div>
-              <h3 className="text-lg font-bold text-[#0E3470] mb-4">
-                Market Context
-              </h3>
-              <div className="flex gap-4">
-                <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 flex-1">
-                  <div className="text-[10px] text-[#9CA3AF] uppercase font-semibold tracking-wider mb-1">
-                    Metro Population
-                  </div>
-                  <div className="text-lg font-bold text-[#0E3470]">
-                    {formatNumber(deal.metro_population)}
-                  </div>
-                </div>
-                <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 flex-1">
-                  <div className="text-[10px] text-[#9CA3AF] uppercase font-semibold tracking-wider mb-1">
-                    Job Growth
-                  </div>
-                  <div className="text-lg font-bold text-[#0B8A4D]">
-                    {deal.job_growth ? `+${deal.job_growth}` : '--'}
-                  </div>
-                </div>
-                <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 flex-1">
-                  <div className="text-[10px] text-[#9CA3AF] uppercase font-semibold tracking-wider mb-1">
-                    Occupancy
-                  </div>
-                  <div className="text-lg font-bold text-[#0E3470]">
-                    {deal.occupancy ? `${deal.occupancy}%` : '--'}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Cycle Indicator */}
-            <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 mt-4">
-              <h3 className="text-sm font-semibold text-[#0E3470] mb-1">
-                Market Cycle Position
-              </h3>
-              <div className="relative mt-3">
-                <div className="h-3 rounded-full bg-gradient-to-r from-[#0B8A4D] via-[#BC9C45] to-[#DC2626]" />
-                <div
-                  className="absolute top-1/2 -translate-y-1/2"
-                  style={{ left: '35%', transform: 'translateX(-50%) translateY(-50%)' }}
-                >
-                  <div className="flex flex-col items-center">
-                    <span className="text-[9px] font-bold text-[#BC9C45] mb-1">
-                      WE ARE HERE
-                    </span>
-                    <div className="w-5 h-5 bg-[#BC9C45] border-2 border-white rounded-full shadow-md" />
-                  </div>
-                </div>
-              </div>
-              <div className="flex justify-between mt-3 text-[9px] text-[#9CA3AF] uppercase tracking-wider">
-                <span>Recovery</span>
-                <span>Expansion</span>
-                <span>Peak</span>
-              </div>
-            </div>
           </div>
+        </div>
 
-          {/* Right Column (Sidebar) */}
-          <div className="space-y-4">
-            {/* Property Details */}
-            <div className="bg-white rounded-xl border border-[#EEF0F4] p-5">
-              <h3 className="text-sm font-semibold text-[#0E3470] mb-4">
-                Property Details
-              </h3>
-              <div className="space-y-0">
-                {[
-                  { label: 'Type', value: deal.property_type },
-                  { label: 'Class', value: deal.class_type },
-                  { label: 'Year Built', value: deal.year_built?.toString() },
-                  { label: 'Sq Ft', value: formatSqFt(deal.square_footage) },
-                  { label: 'Units', value: deal.units },
-                  { label: 'Neighborhood', value: deal.neighborhood },
-                ].map((row, idx) => (
-                  <div
-                    key={row.label}
-                    className={`flex justify-between py-2.5 ${
-                      idx % 2 === 0 ? 'bg-[#F7F8FA]' : ''
-                    } px-2 rounded`}
-                  >
-                    <span className="text-xs text-[#9CA3AF]">
-                      {row.label}
-                    </span>
-                    <span className="text-sm font-semibold text-[#0E3470]">
-                      {row.value ?? '--'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Cap Rate Sparkline */}
-            <div className="bg-white rounded-xl border border-[#EEF0F4] p-4">
-              <h4 className="text-sm font-semibold text-[#0E3470] mb-3">
-                Cap Rate Trend
-              </h4>
-              <svg viewBox="0 0 200 60" className="w-full h-14">
-                <polyline
-                  points="0,45 30,40 60,38 90,35 120,30 150,28 180,25 200,22"
-                  stroke="#0B8A4D"
-                  strokeWidth="2"
-                  fill="none"
-                />
-                <circle cx="200" cy="22" r="4" fill="#0B8A4D" />
-              </svg>
-            </div>
-
-            {/* Live Activity Feed */}
-            <div className="bg-white rounded-xl border border-[#EEF0F4] p-4">
-              <h4 className="text-sm font-semibold text-[#0E3470] mb-3">
-                Recent Activity
-              </h4>
-              <div className="space-y-3">
-                {[
-                  { dot: 'bg-[#0B8A4D]', text: 'Terminal member viewed this deal', time: '2 min ago' },
-                  { dot: 'bg-[#1D5FB8]', text: 'Document downloaded', time: '15 min ago' },
-                  { dot: 'bg-[#BC9C45]', text: 'Meeting scheduled', time: '1 hour ago' },
-                  { dot: 'bg-[#0B8A4D]', text: 'New member viewing', time: '3 hours ago' },
-                ].map((item, idx) => (
-                  <div key={idx} className="flex items-start gap-2">
-                    <div className={`w-2 h-2 rounded-full ${item.dot} mt-1.5 shrink-0`} />
-                    <div>
-                      <div className="text-xs text-[#374151]">{item.text}</div>
-                      <div className="text-xs text-[#6B7280]">{item.time}</div>
+        {/* ========== DEAL STRUCTURE TAB ========== */}
+        <div
+          className="transition-opacity duration-200"
+          style={{ display: activeTab === 'deal-structure' ? 'block' : 'none' }}
+        >
+          <div className="mt-6 px-6 pb-8">
+            {/* Two option cards side by side */}
+            <div className="grid grid-cols-2 gap-6">
+              {/* Option A: Assignment */}
+              <FadeInOnScroll delay={0}>
+                <button
+                  onClick={() => setSelectedStructure('assignment')}
+                  className={`w-full bg-white rounded-xl border-2 p-6 text-left cursor-pointer transition-all ${
+                    selectedStructure === 'assignment'
+                      ? 'border-[#BC9C45] shadow-[0_0_0_3px_#FDF8ED]'
+                      : 'border-[#EEF0F4] hover:border-[#D1D5DB]'
+                  }`}
+                >
+                  <h3 className="font-bold text-[#0E3470] text-lg mb-4">
+                    Option A: Assignment
+                  </h3>
+                  <div className="mb-4">
+                    <div className="data-label mb-1">
+                      Assignment Fee
+                    </div>
+                    <div className="text-2xl font-bold text-[#0E3470]">
+                      {deal.assignment_fee}
                     </div>
                   </div>
-                ))}
-              </div>
+                  <p className="text-sm text-[#6B7280] mb-4">
+                    Clean assignment of contract with fixed fee. All projected
+                    returns account for the assignment fee.
+                  </p>
+                  <div className="bg-[#ECFDF5] border border-[#A7F3D0] rounded-xl p-4">
+                    <div className="data-label !text-[#0B8A4D] mb-1">
+                      Projected IRR
+                    </div>
+                    <div className="text-2xl font-bold text-[#0B8A4D]">
+                      {deal.assignment_irr ?? '--'}
+                    </div>
+                    <div className="text-[11px] text-[#6B7280] mt-1">
+                      Fee included
+                    </div>
+                  </div>
+                </button>
+              </FadeInOnScroll>
+
+              {/* Option B: GP/LP Partnership */}
+              <FadeInOnScroll delay={0.1}>
+                <button
+                  onClick={() => setSelectedStructure('gplp')}
+                  className={`w-full bg-white rounded-xl border-2 p-6 text-left cursor-pointer transition-all ${
+                    selectedStructure === 'gplp'
+                      ? 'border-[#BC9C45] shadow-[0_0_0_3px_#FDF8ED]'
+                      : 'border-[#EEF0F4] hover:border-[#D1D5DB]'
+                  }`}
+                >
+                  <h3 className="font-bold text-[#0E3470] text-lg mb-4">
+                    Option B: GP/LP Partnership
+                  </h3>
+                  <div className="space-y-2 mb-4">
+                    {[
+                      { label: 'Acquisition Fee', value: deal.acq_fee },
+                      { label: 'Asset Mgmt Fee', value: deal.asset_mgmt_fee },
+                      { label: 'GP Carry', value: deal.gp_carry },
+                      { label: 'Equity Required', value: deal.equity_required },
+                    ].map((row) => (
+                      <div
+                        key={row.label}
+                        className="flex justify-between py-1.5 border-b border-[#EEF0F4] last:border-b-0"
+                      >
+                        <span className="data-label">
+                          {row.label}
+                        </span>
+                        <span className="text-sm font-semibold text-[#0E3470]">
+                          {row.value ?? '--'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="bg-[#ECFDF5] border border-[#A7F3D0] rounded-xl p-4">
+                    <div className="data-label !text-[#0B8A4D] mb-1">
+                      Projected IRR
+                    </div>
+                    <div className="text-2xl font-bold text-[#0B8A4D]">
+                      {deal.gplp_irr ?? '--'}
+                    </div>
+                    <div className="text-[11px] text-[#6B7280] mt-1">
+                      All fees included
+                    </div>
+                  </div>
+                </button>
+              </FadeInOnScroll>
             </div>
 
-            {/* Social Proof */}
-            <div className="bg-[#FEF2F2] rounded-xl p-4 border border-[#FECACA]">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-[#0E3470]">
-                  {deal.viewing_count}
-                </div>
-                <div className="text-xs text-[#6B7280] mb-2">investors reviewing</div>
-                <div className="text-2xl font-bold text-[#0E3470]">
-                  {deal.meetings_count}
-                </div>
-                <div className="text-xs text-[#6B7280]">meetings scheduled</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ========== DUE DILIGENCE TAB ========== */}
-      <div
-        className="transition-opacity duration-200"
-        style={{ display: activeTab === 'due-diligence' ? 'block' : 'none' }}
-      >
-        <div className="mt-6 px-6 pb-8">
-          {/* Progress bar + Download button row */}
-          <div className="flex items-start justify-between mb-6">
-            <div className="flex-1 mr-6">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-semibold text-[#0B8A4D]">
-                  {ddProgress}% Complete
-                </span>
-                <span className="text-xs text-[#9CA3AF]">
-                  {verifiedDocs} of {totalDocs} verified
-                </span>
-              </div>
-              <div className="bg-[#EEF0F4] rounded-full h-3 overflow-hidden">
-                <div
-                  className="bg-gradient-to-r from-[#0B8A4D] to-[#34D399] h-full rounded-full transition-all duration-500"
-                  style={{ width: `${ddProgress}%` }}
+            {/* IRR Calculator Panel */}
+            <FadeInOnScroll delay={0.2}>
+              <div className="mt-6">
+                <IRRCalculatorPanel
+                  deal={deal}
+                  onSliderChange={handleIRRSliderChange}
                 />
               </div>
-            </div>
-            <a
-              href={`/api/deals/${deal.id}/package`}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-sm font-semibold rounded-xl transition-colors shrink-0"
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-              Download Complete Package
-            </a>
-          </div>
-
-          {/* Folder Grid */}
-          <div className="grid grid-cols-2 gap-4 mt-4">
-            {deal.dd_folders.map((folder) => (
-              <DDFolderCard
-                key={folder.id}
-                folder={folder}
-                dealId={deal.id}
-                onDocumentDownload={handleDocumentDownload}
-              />
-            ))}
-            {deal.dd_folders.length === 0 && (
-              <div className="col-span-2 bg-white rounded-xl border border-[#EEF0F4] p-12 text-center">
-                <p className="text-sm text-[#9CA3AF]">
-                  No due diligence documents available yet.
-                </p>
-              </div>
-            )}
+            </FadeInOnScroll>
           </div>
         </div>
-      </div>
 
-      {/* ========== DEAL STRUCTURE TAB ========== */}
-      <div
-        className="transition-opacity duration-200"
-        style={{ display: activeTab === 'deal-structure' ? 'block' : 'none' }}
-      >
-        <div className="mt-6 px-6 pb-8">
-          {/* Two option cards side by side */}
-          <div className="grid grid-cols-2 gap-6">
-            {/* Option A: Assignment */}
-            <button
-              onClick={() => setSelectedStructure('assignment')}
-              className={`bg-white rounded-xl border-2 p-6 text-left cursor-pointer transition-all ${
-                selectedStructure === 'assignment'
-                  ? 'border-[#BC9C45] shadow-[0_0_0_3px_#FDF8ED]'
-                  : 'border-[#EEF0F4] hover:border-[#D1D5DB]'
-              }`}
-            >
-              <h3 className="font-bold text-[#0E3470] text-lg mb-4">
-                Option A: Assignment
+        {/* ========== SCHEDULE & CONTACT TAB ========== */}
+        <div
+          className="transition-opacity duration-200"
+          style={{ display: activeTab === 'schedule' ? 'block' : 'none' }}
+        >
+          <div className="mt-6 px-6 pb-8 grid grid-cols-[1fr_1fr] gap-6">
+            {/* Left: Meeting Scheduler */}
+            <div className="bg-white rounded-xl border border-[#EEF0F4] p-6 rp-card-shadow">
+              <h3 className="text-sm font-semibold text-[#0E3470] mb-4">
+                Schedule a Meeting
               </h3>
-              <div className="mb-4">
-                <div className="text-xs text-[#9CA3AF] mb-1">
-                  Assignment Fee
-                </div>
-                <div className="text-2xl font-bold text-[#0E3470]">
-                  {deal.assignment_fee}
-                </div>
-              </div>
-              <p className="text-sm text-[#6B7280] mb-4">
-                Clean assignment of contract with fixed fee. All projected
-                returns account for the assignment fee.
-              </p>
-              <div className="bg-[#ECFDF5] border border-[#A7F3D0] rounded-xl p-4">
-                <div className="text-[10px] text-[#0B8A4D] uppercase font-semibold mb-1">
-                  Projected IRR
-                </div>
-                <div className="text-2xl font-bold text-[#0B8A4D]">
-                  {deal.assignment_irr ?? '--'}
-                </div>
-                <div className="text-[11px] text-[#6B7280] mt-1">
-                  Fee included
-                </div>
-              </div>
-            </button>
+              <MeetingScheduler
+                dealId={deal.id}
+                slots={availabilitySlots}
+                bookedTimes={bookedTimes}
+                onMeetingRequested={handleMeetingRequested}
+              />
+            </div>
 
-            {/* Option B: GP/LP Partnership */}
-            <button
-              onClick={() => setSelectedStructure('gplp')}
-              className={`bg-white rounded-xl border-2 p-6 text-left cursor-pointer transition-all ${
-                selectedStructure === 'gplp'
-                  ? 'border-[#BC9C45] shadow-[0_0_0_3px_#FDF8ED]'
-                  : 'border-[#EEF0F4] hover:border-[#D1D5DB]'
-              }`}
-            >
-              <h3 className="font-bold text-[#0E3470] text-lg mb-4">
-                Option B: GP/LP Partnership
-              </h3>
-              <div className="space-y-2 mb-4">
-                {[
-                  { label: 'Acquisition Fee', value: deal.acq_fee },
-                  { label: 'Asset Mgmt Fee', value: deal.asset_mgmt_fee },
-                  { label: 'GP Carry', value: deal.gp_carry },
-                  { label: 'Equity Required', value: deal.equity_required },
-                ].map((row) => (
-                  <div
-                    key={row.label}
-                    className="flex justify-between py-1.5 border-b border-[#EEF0F4] last:border-b-0"
-                  >
-                    <span className="text-xs text-[#9CA3AF]">
-                      {row.label}
-                    </span>
-                    <span className="text-sm font-semibold text-[#0E3470]">
-                      {row.value ?? '--'}
+            {/* Right: Contact & Info */}
+            <div className="space-y-4">
+              {/* Contact Card */}
+              <div className="bg-white rounded-xl border border-[#EEF0F4] p-6 rp-card-shadow">
+                <div className="flex items-center gap-4 mb-5">
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#0E3470] to-[#1D5FB8] flex items-center justify-center shrink-0">
+                    <span className="text-white font-bold text-lg">
+                      {initials || 'RP'}
                     </span>
                   </div>
-                ))}
+                  <div>
+                    <div className="font-semibold text-[#0E3470]">
+                      {contactName || 'RePrime Team'}
+                    </div>
+                    <div className="text-xs text-[#9CA3AF]">
+                      {contactTitle || 'Investment Advisor'}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <a
+                    href={`mailto:${contactEmail}?subject=${encodeURIComponent(`RE: ${deal.name}`)}`}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 border-2 border-[#BC9C45] text-[#BC9C45] hover:bg-[#FDF8ED] font-semibold text-sm rounded-xl transition-colors"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                      <polyline points="22,6 12,13 2,6" />
+                    </svg>
+                    Email About This Deal
+                  </a>
+                  <a
+                    href={`mailto:${contactEmail}?subject=${encodeURIComponent(`Callback Request: ${deal.name}`)}`}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#0E3470] hover:bg-[#0E3470]/90 text-white font-semibold text-sm rounded-xl transition-colors"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" />
+                    </svg>
+                    Request a Call Back
+                  </a>
+                </div>
               </div>
-              <div className="bg-[#ECFDF5] border border-[#A7F3D0] rounded-xl p-4">
-                <div className="text-[10px] text-[#0B8A4D] uppercase font-semibold mb-1">
-                  Projected IRR
-                </div>
-                <div className="text-2xl font-bold text-[#0B8A4D]">
-                  {deal.gplp_irr ?? '--'}
-                </div>
-                <div className="text-[11px] text-[#6B7280] mt-1">
-                  All fees included
+
+              {/* Notification Preferences */}
+              <div className="bg-white rounded-xl border border-[#EEF0F4] p-6 rp-card-shadow">
+                <h4 className="data-label mb-3">
+                  Notification Preferences
+                </h4>
+                <div className="space-y-2.5">
+                  {(
+                    [
+                      { key: 'deadline' as const, label: 'Deadline reminders' },
+                      {
+                        key: 'documents' as const,
+                        label: 'New document uploads',
+                      },
+                      {
+                        key: 'meetings' as const,
+                        label: 'Meeting confirmations',
+                      },
+                    ] as const
+                  ).map((pref) => (
+                    <label
+                      key={pref.key}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={notifPrefs[pref.key]}
+                        onChange={() => toggleNotifPref(pref.key)}
+                        className="w-4 h-4 rounded border-[#D1D5DB] text-[#BC9C45] focus:ring-[#BC9C45]/20"
+                      />
+                      <span className="text-sm text-[#4B5563]">
+                        {pref.label}
+                      </span>
+                    </label>
+                  ))}
                 </div>
               </div>
-            </button>
-          </div>
 
-          {/* IRR Calculator Panel */}
-          <div className="mt-6">
-            <IRRCalculatorPanel
-              deal={deal}
-              onSliderChange={handleIRRSliderChange}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* ========== SCHEDULE & CONTACT TAB ========== */}
-      <div
-        className="transition-opacity duration-200"
-        style={{ display: activeTab === 'schedule' ? 'block' : 'none' }}
-      >
-        <div className="mt-6 px-6 pb-8 grid grid-cols-[1fr_1fr] gap-6">
-          {/* Left: Meeting Scheduler */}
-          <div className="bg-white rounded-xl border border-[#EEF0F4] p-6">
-            <h3 className="text-sm font-semibold text-[#0E3470] mb-4">
-              Schedule a Meeting
-            </h3>
-            <MeetingScheduler
-              dealId={deal.id}
-              slots={availabilitySlots}
-              bookedTimes={bookedTimes}
-              onMeetingRequested={handleMeetingRequested}
-            />
-          </div>
-
-          {/* Right: Contact & Info */}
-          <div className="space-y-4">
-            {/* Contact Card */}
-            <div className="bg-white rounded-xl border border-[#EEF0F4] p-6">
-              <div className="flex items-center gap-4 mb-5">
-                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#0E3470] to-[#1D5FB8] flex items-center justify-center shrink-0">
-                  <span className="text-white font-bold text-lg">
-                    {initials || 'RP'}
+              {/* Scarcity Indicator */}
+              <div className="bg-[#FEF2F2] border border-[#FECACA] rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-2 h-2 rounded-full bg-[#DC2626] animate-pulse" />
+                  <span className="text-sm font-semibold text-[#DC2626]">
+                    Limited Release
                   </span>
                 </div>
-                <div>
-                  <div className="font-semibold text-[#0E3470]">
-                    {contactName || 'RePrime Team'}
-                  </div>
-                  <div className="text-xs text-[#9CA3AF]">
-                    {contactTitle || 'Investment Advisor'}
-                  </div>
-                </div>
+                <p className="text-xs text-[#4B5563] mb-1">
+                  Q{Math.ceil((new Date().getMonth() + 1) / 3)} {new Date().getFullYear()} release
+                </p>
+                <p className="text-xs text-[#6B7280]">
+                  Controlled release to qualified Terminal members only
+                </p>
               </div>
-
-              <div className="space-y-2">
-                <a
-                  href={`mailto:${contactEmail}?subject=${encodeURIComponent(`RE: ${deal.name}`)}`}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 border-2 border-[#BC9C45] text-[#BC9C45] hover:bg-[#FDF8ED] font-semibold text-sm rounded-xl transition-colors"
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                    <polyline points="22,6 12,13 2,6" />
-                  </svg>
-                  Email About This Deal
-                </a>
-                <a
-                  href={`mailto:${contactEmail}?subject=${encodeURIComponent(`Callback Request: ${deal.name}`)}`}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#0E3470] hover:bg-[#0E3470]/90 text-white font-semibold text-sm rounded-xl transition-colors"
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" />
-                  </svg>
-                  Request a Call Back
-                </a>
-              </div>
-            </div>
-
-            {/* Notification Preferences */}
-            <div className="bg-white rounded-xl border border-[#EEF0F4] p-6">
-              <h4 className="text-xs font-semibold text-[#6B7280] uppercase tracking-wider mb-3">
-                Notification Preferences
-              </h4>
-              <div className="space-y-2.5">
-                {(
-                  [
-                    { key: 'deadline' as const, label: 'Deadline reminders' },
-                    {
-                      key: 'documents' as const,
-                      label: 'New document uploads',
-                    },
-                    {
-                      key: 'meetings' as const,
-                      label: 'Meeting confirmations',
-                    },
-                  ] as const
-                ).map((pref) => (
-                  <label
-                    key={pref.key}
-                    className="flex items-center gap-2 cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={notifPrefs[pref.key]}
-                      onChange={() => toggleNotifPref(pref.key)}
-                      className="w-4 h-4 rounded border-[#D1D5DB] text-[#BC9C45] focus:ring-[#BC9C45]/20"
-                    />
-                    <span className="text-sm text-[#4B5563]">
-                      {pref.label}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* Scarcity Indicator */}
-            <div className="bg-[#FEF2F2] border border-[#FECACA] rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-2 h-2 rounded-full bg-[#DC2626] animate-pulse" />
-                <span className="text-sm font-semibold text-[#DC2626]">
-                  Limited Release
-                </span>
-              </div>
-              <p className="text-xs text-[#4B5563] mb-1">
-                Q{Math.ceil((new Date().getMonth() + 1) / 3)} {new Date().getFullYear()} release
-              </p>
-              <p className="text-xs text-[#6B7280]">
-                Controlled release to qualified Terminal members only
-              </p>
             </div>
           </div>
         </div>

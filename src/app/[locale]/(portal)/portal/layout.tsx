@@ -25,7 +25,7 @@ export default async function PortalLayout({
   if (terminalUser.role !== 'investor') redirect(`/${locale}/admin`);
 
   return (
-    <div className="min-h-screen bg-rp-page-bg">
+    <div className="min-h-screen rp-page-texture">
       <PortalNavbar
         firstName={terminalUser.first_name}
         locale={locale}

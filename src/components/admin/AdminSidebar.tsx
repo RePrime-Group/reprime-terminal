@@ -17,10 +17,10 @@ const navItems = [
     ownerOnly: false,
     icon: (
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="2" y="2" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
-        <rect x="11" y="2" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
-        <rect x="2" y="11" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
-        <rect x="11" y="11" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+        <rect x="2" y="2" width="7" height="7" rx="1.5" stroke="#0E3470" strokeWidth="1.5" />
+        <rect x="11" y="2" width="7" height="7" rx="1.5" stroke="#0E3470" strokeWidth="1.5" />
+        <rect x="2" y="11" width="7" height="7" rx="1.5" stroke="#0E3470" strokeWidth="1.5" />
+        <rect x="11" y="11" width="7" height="7" rx="1.5" stroke="#0E3470" strokeWidth="1.5" />
       </svg>
     ),
   },
@@ -30,10 +30,10 @@ const navItems = [
     ownerOnly: true,
     icon: (
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="7" cy="6" r="3" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M1.5 17c0-3.04 2.46-5.5 5.5-5.5s5.5 2.46 5.5 5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <circle cx="14" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M14 12c2.76 0 5 2.24 5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <circle cx="7" cy="6" r="3" stroke="#0E3470" strokeWidth="1.5" />
+        <path d="M1.5 17c0-3.04 2.46-5.5 5.5-5.5s5.5 2.46 5.5 5.5" stroke="#0E3470" strokeWidth="1.5" strokeLinecap="round" />
+        <circle cx="14" cy="7" r="2.5" stroke="#0E3470" strokeWidth="1.5" />
+        <path d="M14 12c2.76 0 5 2.24 5 5" stroke="#0E3470" strokeWidth="1.5" strokeLinecap="round" />
       </svg>
     ),
   },
@@ -43,11 +43,11 @@ const navItems = [
     ownerOnly: true,
     icon: (
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M3 17V10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M7 17V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M11 17V11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M15 17V4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M3 13l4-5 4 3 6-8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M3 17V10" stroke="#0E3470" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M7 17V7" stroke="#0E3470" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M11 17V11" stroke="#0E3470" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M15 17V4" stroke="#0E3470" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M3 13l4-5 4 3 6-8" stroke="#0E3470" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
   },
@@ -57,8 +57,8 @@ const navItems = [
     ownerOnly: true,
     icon: (
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="10" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M10 1.5v2M10 16.5v2M18.5 10h-2M3.5 10h-2M16 4l-1.4 1.4M5.4 14.6L4 16M16 16l-1.4-1.4M5.4 5.4L4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <circle cx="10" cy="10" r="2.5" stroke="#0E3470" strokeWidth="1.5" />
+        <path d="M10 1.5v2M10 16.5v2M18.5 10h-2M3.5 10h-2M16 4l-1.4 1.4M5.4 14.6L4 16M16 16l-1.4-1.4M5.4 5.4L4 4" stroke="#0E3470" strokeWidth="1.5" strokeLinecap="round" />
       </svg>
     ),
   },
@@ -87,7 +87,7 @@ export default function AdminSidebar({ user, locale }: AdminSidebarProps) {
       : 'bg-rp-navy/10 text-rp-navy';
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-[260px] bg-white border-r border-rp-gray-200 flex flex-col font-[var(--font-poppins)] z-40">
+    <aside className="fixed left-0 top-0 h-screen w-[260px] bg-gradient-to-b from-white to-[#F7F8FA] border-r border-rp-gray-200 flex flex-col font-[var(--font-poppins)] z-40">
       {/* Logo */}
       <div className="pt-8 px-6">
         <div className="flex items-center gap-3">
@@ -97,10 +97,10 @@ export default function AdminSidebar({ user, locale }: AdminSidebarProps) {
             </span>
           </div>
           <div className="flex flex-col">
-            <span className="text-rp-navy text-[15px] font-semibold tracking-wide leading-tight">
+            <span className="text-rp-navy text-[15px] font-semibold tracking-[3px] leading-tight">
               REPRIME
             </span>
-            <span className="font-[var(--font-bodoni)] text-rp-gold text-[13px] italic leading-tight">
+            <span className="font-[family-name:var(--font-bodoni)] text-[#BC9C45] text-[13px] italic leading-tight">
               Terminal
             </span>
           </div>
@@ -121,13 +121,10 @@ export default function AdminSidebar({ user, locale }: AdminSidebarProps) {
                 href={fullHref}
                 className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-[14px] transition-colors ${
                   isActive
-                    ? 'bg-rp-page-bg text-rp-navy font-semibold'
-                    : 'text-rp-gray-500 hover:bg-rp-gray-200/50'
+                    ? 'border-l-[3px] border-l-[#BC9C45] bg-[#FDF8ED]/50 text-[#0E3470] font-semibold'
+                    : 'text-[#0E3470]/60 hover:bg-[#F7F8FA] hover:text-[#0E3470]'
                 }`}
               >
-                {isActive && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-rp-gold" />
-                )}
                 <span className="flex-shrink-0">{item.icon}</span>
                 <span>{item.label}</span>
               </Link>
