@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
 
 interface LoginCardProps {
   locale: string;
@@ -13,7 +12,6 @@ export default function LoginCard({ locale }: LoginCardProps) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -37,10 +35,13 @@ export default function LoginCard({ locale }: LoginCardProps) {
       .select('role')
       .single();
 
+    // Use window.location.href instead of router.push to force a full page
+    // reload. This ensures the Supabase auth cookie is fully written to the
+    // browser before the middleware runs on the next request.
     if (user?.role === 'investor') {
-      router.push(`/${locale}/portal`);
+      window.location.href = `/${locale}/portal`;
     } else {
-      router.push(`/${locale}/admin`);
+      window.location.href = `/${locale}/admin`;
     }
   }
 

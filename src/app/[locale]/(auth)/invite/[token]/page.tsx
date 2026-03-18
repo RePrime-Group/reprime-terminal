@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 type ValidationResult =
@@ -25,7 +25,7 @@ const ERROR_MESSAGES: Record<string, { title: string; description: string }> = {
 
 export default function InviteRegistrationPage() {
   const params = useParams();
-  const router = useRouter();
+  const locale = (params.locale as string) || 'en';
   const token = params.token as string;
 
   const [loading, setLoading] = useState(true);
@@ -125,10 +125,12 @@ export default function InviteRegistrationPage() {
         .update({ accepted_at: new Date().toISOString() })
         .eq('token', token);
 
-      if (validation.role === 'admin') {
-        router.push('/admin');
+      // Use window.location.href to force a full page reload so the
+      // Supabase auth cookie is available when middleware runs.
+      if (validation.role === 'employee') {
+        window.location.href = `/${locale}/admin`;
       } else {
-        router.push('/portal');
+        window.location.href = `/${locale}/portal`;
       }
     } catch {
       setError('An unexpected error occurred. Please try again.');
