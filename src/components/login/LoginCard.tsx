@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { createBrowserClient } from '@supabase/ssr';
 
 interface LoginCardProps {
   locale: string;
@@ -11,48 +12,30 @@ export default function LoginCard({ locale }: LoginCardProps) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [debugLog, setDebugLog] = useState<string[]>([]);
-
-  function addLog(msg: string) {
-    console.log('[LOGIN]', msg);
-    setDebugLog((prev) => [...prev, msg]);
-  }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError('');
-    setDebugLog([]);
-
-    addLog('handleLogin fired');
 
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    addLog(`SUPABASE URL: ${url?.substring(0, 40) || 'UNDEFINED'}`);
-    addLog(`ANON KEY: ${key ? key.substring(0, 20) + '...' : 'UNDEFINED'}`);
 
     if (!url || !key) {
-      setError('Supabase env vars are missing. Check Vercel environment variables.');
+      setError('Supabase configuration missing.');
       setLoading(false);
       return;
     }
 
-    try {
-      // Import createBrowserClient dynamically to catch import errors
-      addLog('Importing @supabase/ssr...');
-      const { createBrowserClient } = await import('@supabase/ssr');
-      addLog('Import OK, creating client...');
+    let redirectTo: string | null = null;
 
+    try {
       const supabase = createBrowserClient(url, key);
-      addLog('Client created, calling signInWithPassword...');
 
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-
-      addLog(`AUTH DATA: ${JSON.stringify(data)}`);
-      addLog(`AUTH ERROR: ${JSON.stringify(authError)}`);
 
       if (authError) {
         setError(`Sign in failed: ${authError.message}`);
@@ -61,14 +44,10 @@ export default function LoginCard({ locale }: LoginCardProps) {
       }
 
       if (!data?.session) {
-        addLog('No error but no session either — email likely not confirmed');
-        setError('No session returned. The email may not be confirmed in Supabase. Go to Supabase Dashboard → Authentication → Users and confirm the email.');
+        setError('Email not confirmed. Confirm the account in Supabase Dashboard → Authentication → Users.');
         setLoading(false);
         return;
       }
-
-      addLog(`Session OK, user id: ${data.session.user.id}`);
-      addLog('Querying terminal_users...');
 
       const { data: userData, error: userError } = await supabase
         .from('terminal_users')
@@ -76,40 +55,34 @@ export default function LoginCard({ locale }: LoginCardProps) {
         .eq('id', data.session.user.id)
         .single();
 
-      addLog(`USER ROLE: ${JSON.stringify(userData)} ERROR: ${JSON.stringify(userError)}`);
-
       if (userError || !userData) {
-        setError(`Profile not found in terminal_users for id ${data.session.user.id}. Run the seed migration (003). Error: ${userError?.message || 'no row'}`);
+        setError(`Profile not found. Run the seed migration for user ${data.session.user.id}.`);
         setLoading(false);
         return;
       }
 
-      addLog(`Redirecting as ${userData.role}...`);
-
-      if (userData.role === 'investor') {
-        window.location.href = `/${locale}/portal`;
-      } else {
-        window.location.href = `/${locale}/admin`;
-      }
+      const loc = locale || 'en';
+      redirectTo = userData.role === 'investor' ? `/${loc}/portal` : `/${loc}/admin`;
     } catch (err) {
-      const msg = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
-      addLog(`CAUGHT ERROR: ${msg}`);
-      console.error('[LOGIN] Full error:', err);
-      setError(`Error: ${msg}`);
+      setError(`Error: ${err instanceof Error ? err.message : String(err)}`);
       setLoading(false);
+      return;
+    }
+
+    // Redirect OUTSIDE try/catch — nothing can swallow this
+    if (redirectTo) {
+      window.location.replace(redirectTo);
     }
   }
 
   return (
     <div className="w-full max-w-md bg-white/[0.02] border border-white/[0.08] backdrop-blur-[40px] rounded-2xl p-8 shadow-[0_32px_64px_rgba(0,0,0,0.5)]">
-      {/* Logo */}
       <div className="w-14 h-14 bg-gradient-to-br from-rp-gold to-rp-gold-soft rounded-xl flex items-center justify-center mx-auto">
         <span className="text-2xl font-extrabold text-white font-[family-name:var(--font-bodoni)]">
           R
         </span>
       </div>
 
-      {/* Brand name */}
       <h1 className="text-[28px] font-bold text-white tracking-[0.15em] text-center mt-4">
         REPRIME
       </h1>
@@ -117,7 +90,6 @@ export default function LoginCard({ locale }: LoginCardProps) {
         Terminal
       </p>
 
-      {/* Form */}
       <form onSubmit={handleLogin} className="mt-8 space-y-4">
         <input
           type="email"
@@ -151,19 +123,6 @@ export default function LoginCard({ locale }: LoginCardProps) {
         </button>
       </form>
 
-      {/* Debug log — visible on page */}
-      {debugLog.length > 0 && (
-        <div className="mt-4 bg-black/40 border border-white/10 rounded-lg p-3 max-h-48 overflow-y-auto">
-          <p className="text-white/40 text-[10px] font-mono mb-1">DEBUG LOG:</p>
-          {debugLog.map((log, i) => (
-            <p key={i} className="text-green-400/80 text-[10px] font-mono break-all leading-relaxed">
-              {log}
-            </p>
-          ))}
-        </div>
-      )}
-
-      {/* Footer */}
       <p className="text-[11px] text-white/20 text-center mt-8">
         Membership by invitation only
       </p>
