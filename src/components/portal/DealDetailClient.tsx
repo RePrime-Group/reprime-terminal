@@ -887,47 +887,92 @@ export default function DealDetailClient({
       {/* ------------------------------------------------------------------ */}
       {/* HERO GRADIENT BANNER                                               */}
       {/* ------------------------------------------------------------------ */}
-      <div className="h-1 bg-gradient-to-r from-[#BC9C45] via-[#0E3470] to-[#BC9C45]" />
+      <div className="h-[3px] bg-gradient-to-r from-[#BC9C45] via-[#D4B96A] to-[#BC9C45]" />
 
       {/* ------------------------------------------------------------------ */}
       {/* 1. STICKY TOP NAV BAR                                              */}
       {/* ------------------------------------------------------------------ */}
-      <div className="sticky top-0 z-30 bg-white border-b border-[#EEF0F4] h-14 flex items-center px-6">
-        <button
-          onClick={() => router.push(`/${locale}/portal`)}
-          className="hover:bg-[#F7F8FA] rounded-full p-2 transition mr-2"
-          aria-label="Back to portal"
-        >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 16 16"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="text-[#6B7280]"
+      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-[#EEF0F4] shadow-[0_1px_3px_rgba(14,52,112,0.04),0_4px_12px_rgba(14,52,112,0.02)]">
+        <div className="h-[64px] flex items-center px-8">
+          <button
+            onClick={() => router.push(`/${locale}/portal`)}
+            className="hover:bg-[#F7F8FA] rounded-full p-2 transition mr-3 group"
+            aria-label="Back to portal"
           >
-            <path d="M10 12L6 8l4-4" />
-          </svg>
-        </button>
-        <h1 className="text-base font-bold text-[#0E3470] truncate flex-1">
-          {deal.name}
-        </h1>
-        <div className="w-8 h-8 rounded-lg bg-[#BC9C45] flex items-center justify-center ml-4 shrink-0">
-          <span className="text-white text-xs font-bold">R</span>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-[#9CA3AF] group-hover:text-[#0E3470] transition-colors"
+            >
+              <path d="M10 12L6 8l4-4" />
+            </svg>
+          </button>
+          {/* Vertical separator */}
+          <div className="h-5 w-px bg-[#EEF0F4] mr-4" />
+          <div className="flex-1 min-w-0">
+            <h1 className="font-[family-name:var(--font-bodoni)] text-[18px] font-bold text-[#0E3470] truncate">
+              {deal.name}
+            </h1>
+            <p className="text-[10px] text-[#9CA3AF] truncate">
+              {deal.city}, {deal.state} &middot; {deal.property_type}
+            </p>
+          </div>
+          <div className="flex items-center gap-3 ml-4 shrink-0">
+            <span className="text-[9px] font-semibold tracking-[1.5px] uppercase text-[#9CA3AF]">
+              CONFIDENTIAL
+            </span>
+            <div className="h-4 w-px bg-[#EEF0F4]" />
+            <div className="w-8 h-8 bg-gradient-to-br from-[#BC9C45] to-[#A88A3D] rounded-lg flex items-center justify-center shadow-[0_2px_6px_rgba(188,156,69,0.2)]">
+              <span className="text-white text-[11px] font-bold font-[family-name:var(--font-bodoni)] italic">R</span>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* ------------------------------------------------------------------ */}
       {/* PAGE TEXTURE CONTENT AREA                                          */}
       {/* ------------------------------------------------------------------ */}
-      <div className="rp-page-texture">
+      <div>
+        {/* ------------------------------------------------------------------ */}
+        {/* DEAL HEADER BAR                                                    */}
+        {/* ------------------------------------------------------------------ */}
+        <div className="bg-gradient-to-r from-[#0A1628] to-[#0E3470] px-8 py-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-[family-name:var(--font-bodoni)] text-[28px] font-bold text-white leading-tight">
+                {deal.name}
+              </h2>
+              <p className="text-[12px] text-white/40 mt-1">
+                {deal.city}, {deal.state} &middot; {deal.property_type}
+                {deal.square_footage ? ` \u00B7 ${deal.square_footage} SF` : ''}
+                {deal.units ? ` \u00B7 ${deal.units} Units` : ''}
+                {deal.class_type ? ` \u00B7 Class ${deal.class_type}` : ''}
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              {deal.seller_financing && (
+                <span className="bg-[#BC9C45] text-white text-[10px] font-semibold px-3 py-1.5 rounded-full">
+                  Seller Financing
+                </span>
+              )}
+              <span className="bg-white/5 border border-white/10 text-white/50 text-[10px] font-semibold px-3 py-1.5 rounded-full">
+                {deal.property_type}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div className="h-px bg-gradient-to-r from-transparent via-[#BC9C45]/30 to-transparent" />
+
         {/* ------------------------------------------------------------------ */}
         {/* 2. HERO SECTION                                                    */}
         {/* ------------------------------------------------------------------ */}
-        <div className="grid grid-cols-[1.4fr_1fr] gap-6 p-6">
+        <div className="grid grid-cols-[1.4fr_1fr] gap-6 p-8">
           {/* Left: Image Carousel */}
           <ImageCarousel urls={photoUrls} />
 
@@ -951,7 +996,7 @@ export default function DealDetailClient({
         {/* ------------------------------------------------------------------ */}
         {/* 4. SEVEN-METRIC BAR                                                */}
         {/* ------------------------------------------------------------------ */}
-        <div className="grid grid-cols-7 gap-3 px-6 mt-6">
+        <div className="grid grid-cols-7 gap-3 px-8 mt-8">
           {[
             { label: 'Purchase Price', value: formatPrice(deal.purchase_price), borderColor: '#0E3470' },
             { label: 'NOI', value: formatPrice(deal.noi), borderColor: '#0E3470' },
@@ -975,8 +1020,8 @@ export default function DealDetailClient({
         {/* ------------------------------------------------------------------ */}
         {/* 5. TABS                                                            */}
         {/* ------------------------------------------------------------------ */}
-        <div className="px-6 mt-6">
-          <div className="bg-[#F7F8FA] rounded-lg p-1 inline-flex gap-1">
+        <div className="px-8 mt-8">
+          <div className="bg-[#F7F8FA] rounded-xl p-1 inline-flex gap-1 border border-[#EEF0F4]">
             {tabs.map((tab) => (
               <button
                 key={tab.key}
@@ -1007,7 +1052,7 @@ export default function DealDetailClient({
           className="transition-opacity duration-200"
           style={{ display: activeTab === 'overview' ? 'block' : 'none' }}
         >
-          <div className="grid grid-cols-[1fr_340px] gap-6 mt-6 px-6 pb-8">
+          <div className="grid grid-cols-[1fr_360px] gap-8 mt-8 px-8 pb-10">
             {/* Left Column */}
             <div className="space-y-6">
               {/* Investment Highlights */}
@@ -1278,7 +1323,7 @@ export default function DealDetailClient({
           className="transition-opacity duration-200"
           style={{ display: activeTab === 'due-diligence' ? 'block' : 'none' }}
         >
-          <div className="mt-6 px-6 pb-8">
+          <div className="mt-8 px-8 pb-10">
             {/* Progress bar + Download button row */}
             <div className="flex items-start justify-between mb-6">
               <div className="flex-1 mr-6">
@@ -1346,7 +1391,7 @@ export default function DealDetailClient({
           className="transition-opacity duration-200"
           style={{ display: activeTab === 'deal-structure' ? 'block' : 'none' }}
         >
-          <div className="mt-6 px-6 pb-8">
+          <div className="mt-8 px-8 pb-10">
             {/* Two option cards side by side */}
             <div className="grid grid-cols-2 gap-6">
               {/* Option A: Assignment */}
@@ -1453,7 +1498,7 @@ export default function DealDetailClient({
           className="transition-opacity duration-200"
           style={{ display: activeTab === 'schedule' ? 'block' : 'none' }}
         >
-          <div className="mt-6 px-6 pb-8 grid grid-cols-[1fr_1fr] gap-6">
+          <div className="mt-8 px-8 pb-10 grid grid-cols-[1fr_1fr] gap-6">
             {/* Left: Meeting Scheduler */}
             <div className="bg-white rounded-xl border border-[#EEF0F4] p-6 rp-card-shadow">
               <h3 className="text-sm font-semibold text-[#0E3470] mb-4">
@@ -1581,6 +1626,24 @@ export default function DealDetailClient({
                 </p>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* ── Confidentiality Footer ── */}
+        <div className="px-8 pb-10 pt-4">
+          <div className="border-t border-[#EEF0F4] pt-6 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-5 h-5 bg-gradient-to-br from-[#BC9C45] to-[#A88A3D] rounded flex items-center justify-center">
+                <span className="text-white text-[8px] font-bold font-[family-name:var(--font-bodoni)] italic">R</span>
+              </div>
+              <span className="text-[10px] text-[#9CA3AF] tracking-wide">
+                REPRIME TERMINAL
+              </span>
+            </div>
+            <p className="text-[10px] text-[#9CA3AF] max-w-[600px] text-right leading-relaxed">
+              This material is confidential and intended solely for the use of authorized Terminal members.
+              Any reproduction or distribution is strictly prohibited. All investments involve risk.
+            </p>
           </div>
         </div>
       </div>

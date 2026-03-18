@@ -135,7 +135,7 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
         <div className="h-px bg-gradient-to-r from-[#BC9C45]/0 via-[#BC9C45]/25 to-[#BC9C45]/0" />
 
         {/* ── Card Body ── */}
-        <div className="px-[22px] pt-[16px] pb-0">
+        <div className="px-[24px] pt-[18px] pb-0">
           {/* Deal name */}
           <h3 className="text-[19px] font-bold text-[#0E3470] font-[family-name:var(--font-bodoni)] leading-tight truncate">
             {deal.name}
@@ -181,7 +181,7 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
 
           {/* ── Countdown bar ── */}
           <div
-            className={`mt-4 -mx-[22px] px-[20px] py-[14px] ${urgencyBg} flex items-center justify-between`}
+            className={`mt-4 -mx-[24px] px-[22px] py-[14px] ${urgencyBg} flex items-center justify-between`}
           >
             <span className="data-label" style={{ color: urgencyTextColor }}>
               DD DEADLINE
