@@ -27,7 +27,7 @@ export default async function PortalLayout({
   return (
     <div className="min-h-screen rp-page-texture">
       <PortalNavbar
-        firstName={terminalUser.first_name}
+        firstName={terminalUser.full_name?.split(' ')[0] ?? ''}
         locale={locale}
       />
       <main>

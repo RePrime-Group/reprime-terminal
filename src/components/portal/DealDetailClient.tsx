@@ -952,43 +952,24 @@ export default function DealDetailClient({
         {/* 4. SEVEN-METRIC BAR                                                */}
         {/* ------------------------------------------------------------------ */}
         <div className="grid grid-cols-7 gap-3 px-6 mt-6">
-          <MetricCard
-            label="Purchase Price"
-            value={formatPrice(deal.purchase_price)}
-            borderColor="#0E3470"
-          />
-          <MetricCard
-            label="NOI"
-            value={formatPrice(deal.noi)}
-            borderColor="#0E3470"
-          />
-          <MetricCard
-            label="Cap Rate"
-            value={formatPercent(deal.cap_rate)}
-            borderColor="#BC9C45"
-          />
-          <MetricCard
-            label="IRR"
-            value={formatPercent(deal.irr)}
-            borderColor="#0B8A4D"
-            valueColor="#0B8A4D"
-          />
-          <MetricCard
-            label="CoC"
-            value={formatPercent(deal.coc)}
-            borderColor="#0B8A4D"
-            valueColor="#0B8A4D"
-          />
-          <MetricCard
-            label="DSCR"
-            value={formatDSCR(deal.dscr)}
-            borderColor="#0E3470"
-          />
-          <MetricCard
-            label="Equity"
-            value={formatPrice(deal.equity_required)}
-            borderColor="#BC9C45"
-          />
+          {[
+            { label: 'Purchase Price', value: formatPrice(deal.purchase_price), borderColor: '#0E3470' },
+            { label: 'NOI', value: formatPrice(deal.noi), borderColor: '#0E3470' },
+            { label: 'Cap Rate', value: formatPercent(deal.cap_rate), borderColor: '#BC9C45' },
+            { label: 'IRR', value: formatPercent(deal.irr), borderColor: '#0B8A4D', valueColor: '#0B8A4D' },
+            { label: 'CoC', value: formatPercent(deal.coc), borderColor: '#0B8A4D', valueColor: '#0B8A4D' },
+            { label: 'DSCR', value: formatDSCR(deal.dscr), borderColor: '#0E3470' },
+            { label: 'Equity', value: formatPrice(deal.equity_required), borderColor: '#BC9C45' },
+          ].map((m, idx) => (
+            <FadeInOnScroll key={m.label} delay={idx * 0.05}>
+              <MetricCard
+                label={m.label}
+                value={m.value}
+                borderColor={m.borderColor}
+                valueColor={m.valueColor}
+              />
+            </FadeInOnScroll>
+          ))}
         </div>
 
         {/* ------------------------------------------------------------------ */}

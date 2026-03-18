@@ -65,7 +65,7 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-[24px] font-bold text-rp-navy">Deals</h1>
         <Link href={`/${locale}/admin/deals/new`}>
-          <button className="bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-white font-semibold px-5 py-2.5 rounded-lg hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(188,156,69,0.25)] transition-all">
+          <button className="bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] font-semibold px-5 py-2.5 rounded-lg shadow-[0_2px_8px_rgba(188,156,69,0.2)] hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(188,156,69,0.25)] transition-all">
             New Deal
           </button>
         </Link>
@@ -120,7 +120,7 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
             Create your first deal to get started.
           </p>
           <Link href={`/${locale}/admin/deals/new`}>
-            <button className="bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-white font-semibold px-5 py-2.5 rounded-lg hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(188,156,69,0.25)] transition-all text-sm">
+            <button className="bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] font-semibold px-5 py-2.5 rounded-lg shadow-[0_2px_8px_rgba(188,156,69,0.2)] hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(188,156,69,0.25)] transition-all text-sm">
               New Deal
             </button>
           </Link>
