@@ -20,6 +20,11 @@ const bodoniModa = Bodoni_Moda({
 export const metadata: Metadata = {
   title: 'RePrime Terminal',
   description: 'Institutional commercial real estate investment platform',
+  openGraph: {
+    title: 'RePrime Terminal',
+    description: 'Institutional commercial real estate investment platform',
+    images: [{ url: '/images/og-image.jpg', width: 1200, height: 630 }],
+  },
 };
 
 export default function RootLayout({

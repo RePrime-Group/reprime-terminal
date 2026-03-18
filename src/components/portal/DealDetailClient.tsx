@@ -109,35 +109,16 @@ function ImageCarousel({ urls }: { urls: string[] }) {
 
   if (urls.length === 0) {
     return (
-      <div className="w-full h-full min-h-[340px] rounded-2xl overflow-hidden flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0A1628 0%, #0E3470 40%, #1D5FB8 100%)' }}>
-        {/* Gold building SVG at center, 20% opacity */}
-        <svg
-          width="120"
-          height="120"
-          viewBox="0 0 64 64"
-          fill="none"
-          style={{ opacity: 0.2 }}
-        >
-          <rect x="8" y="16" width="20" height="40" rx="2" stroke="#BC9C45" strokeWidth="2" fill="none" />
-          <rect x="36" y="8" width="20" height="48" rx="2" stroke="#BC9C45" strokeWidth="2" fill="none" />
-          <rect x="12" y="22" width="4" height="4" rx="0.5" fill="#BC9C45" />
-          <rect x="20" y="22" width="4" height="4" rx="0.5" fill="#BC9C45" />
-          <rect x="12" y="30" width="4" height="4" rx="0.5" fill="#BC9C45" />
-          <rect x="20" y="30" width="4" height="4" rx="0.5" fill="#BC9C45" />
-          <rect x="12" y="38" width="4" height="4" rx="0.5" fill="#BC9C45" />
-          <rect x="20" y="38" width="4" height="4" rx="0.5" fill="#BC9C45" />
-          <rect x="40" y="14" width="4" height="4" rx="0.5" fill="#BC9C45" />
-          <rect x="48" y="14" width="4" height="4" rx="0.5" fill="#BC9C45" />
-          <rect x="40" y="22" width="4" height="4" rx="0.5" fill="#BC9C45" />
-          <rect x="48" y="22" width="4" height="4" rx="0.5" fill="#BC9C45" />
-          <rect x="40" y="30" width="4" height="4" rx="0.5" fill="#BC9C45" />
-          <rect x="48" y="30" width="4" height="4" rx="0.5" fill="#BC9C45" />
-          <rect x="40" y="38" width="4" height="4" rx="0.5" fill="#BC9C45" />
-          <rect x="48" y="38" width="4" height="4" rx="0.5" fill="#BC9C45" />
-          <rect x="14" y="46" width="8" height="10" rx="1" stroke="#BC9C45" strokeWidth="1.5" fill="none" />
-          <rect x="42" y="46" width="8" height="10" rx="1" stroke="#BC9C45" strokeWidth="1.5" fill="none" />
-          <line x1="0" y1="56" x2="64" y2="56" stroke="#BC9C45" strokeWidth="2" />
-        </svg>
+      <div className="w-full h-full min-h-[340px] rounded-2xl overflow-hidden relative">
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #0A1628 0%, #0E3470 40%, #1D5FB8 100%)' }}>
+          <div className="absolute inset-0 opacity-[0.06]" style={{
+            backgroundImage: 'linear-gradient(rgba(188,156,69,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(188,156,69,0.3) 1px, transparent 1px)',
+            backgroundSize: '40px 40px'
+          }} />
+          <svg className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 text-[#BC9C45]/20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3 21V7l9-4 9 4v14H3zm2-2h5v-4h4v4h5V8.3l-7-3.1L5 8.3V19zm2-6h2v2H7v-2zm4 0h2v2h-2v-2zm4 0h2v2h-2v-2zm-8-4h2v2H7V9zm4 0h2v2h-2V9zm4 0h2v2h-2V9z"/>
+          </svg>
+        </div>
       </div>
     );
   }
@@ -484,7 +465,7 @@ function IRRCalculatorPanel({
               { label: 'Acquisition Fee', value: deal.acq_fee },
               { label: 'Asset Mgmt Fee', value: deal.asset_mgmt_fee },
               { label: 'GP Carry', value: deal.gp_carry },
-              { label: 'Equity Required', value: deal.equity_required },
+              { label: 'Equity Required', value: formatPrice(deal.equity_required) },
             ].map((row) => (
               <div
                 key={row.label}
@@ -1108,13 +1089,14 @@ export default function DealDetailClient({
                   </h3>
                   <div className="space-y-0">
                     {[
-                      { label: 'Loan Estimate', value: deal.loan_estimate },
+                      { label: 'Loan Estimate', value: formatPrice(deal.loan_estimate), color: '' },
                       {
                         label: 'Seller Financing',
                         value: deal.seller_financing ? 'Yes' : 'No',
+                        color: deal.seller_financing ? 'text-[#0B8A4D]' : 'text-[#9CA3AF]',
                       },
-                      { label: 'Loan Fee', value: deal.loan_fee },
-                      { label: 'Equity Required', value: deal.equity_required },
+                      { label: 'Loan Fee', value: deal.loan_fee, color: '' },
+                      { label: 'Equity Required', value: formatPrice(deal.equity_required), color: '' },
                     ].map((row) => (
                       <div
                         key={row.label}
@@ -1123,7 +1105,7 @@ export default function DealDetailClient({
                         <span className="data-label">
                           {row.label}
                         </span>
-                        <span className="text-sm font-semibold text-[#0E3470]">
+                        <span className={`text-sm font-semibold ${row.color || 'text-[#0E3470]'}`}>
                           {row.value ?? '--'}
                         </span>
                       </div>
@@ -1443,7 +1425,7 @@ export default function DealDetailClient({
                       { label: 'Acquisition Fee', value: deal.acq_fee },
                       { label: 'Asset Mgmt Fee', value: deal.asset_mgmt_fee },
                       { label: 'GP Carry', value: deal.gp_carry },
-                      { label: 'Equity Required', value: deal.equity_required },
+                      { label: 'Equity Required', value: formatPrice(deal.equity_required) },
                     ].map((row) => (
                       <div
                         key={row.label}

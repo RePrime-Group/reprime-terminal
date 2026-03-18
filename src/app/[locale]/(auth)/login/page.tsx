@@ -24,6 +24,12 @@ export default function LoginPage() {
           `,
         }}
       />
+      {/* Hero image background */}
+      <img
+        src="/images/login-hero.jpg"
+        alt=""
+        className="absolute inset-0 w-full h-full object-cover z-0 opacity-40"
+      />
       {/* Subtle grid */}
       <div
         className="absolute inset-0 z-0 opacity-[0.03]"
