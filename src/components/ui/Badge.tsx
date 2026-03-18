@@ -1,0 +1,31 @@
+import React from 'react';
+
+type BadgeVariant = 'draft' | 'published' | 'under_review' | 'assigned' | 'closed';
+
+interface BadgeProps {
+  variant: BadgeVariant;
+  children: React.ReactNode;
+  className?: string;
+}
+
+const variantStyles: Record<BadgeVariant, string> = {
+  draft: 'bg-rp-gray-200 text-rp-gray-600',
+  published: 'bg-rp-green-light text-rp-green',
+  under_review: 'bg-rp-amber-light text-rp-amber',
+  assigned: 'bg-rp-gold-bg text-rp-gold',
+  closed: 'bg-rp-navy/10 text-rp-navy',
+};
+
+export default function Badge({ variant, children, className = '' }: BadgeProps) {
+  return (
+    <span
+      className={`
+        inline-flex px-2.5 py-1 rounded-full text-xs font-semibold
+        ${variantStyles[variant]}
+        ${className}
+      `.trim()}
+    >
+      {children}
+    </span>
+  );
+}

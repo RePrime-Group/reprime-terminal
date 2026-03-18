@@ -1,0 +1,158 @@
+export type UserRole = 'owner' | 'employee' | 'investor';
+export type DealStatus = 'draft' | 'published' | 'under_review' | 'assigned' | 'closed';
+export type MeetingStatus = 'scheduled' | 'completed' | 'cancelled' | 'no_show';
+export type Locale = 'en' | 'he';
+export type ActivityAction =
+  | 'deal_viewed'
+  | 'document_downloaded'
+  | 'dataroom_viewed'
+  | 'structure_viewed'
+  | 'irr_calculator_used'
+  | 'meeting_requested'
+  | 'page_time';
+
+export interface TerminalUser {
+  id: string;
+  email: string;
+  full_name: string;
+  role: UserRole;
+  language_preference: Locale;
+  company_name: string | null;
+  phone: string | null;
+  is_active: boolean;
+  last_active_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TerminalInviteToken {
+  id: string;
+  email: string;
+  role: 'investor' | 'employee';
+  token: string;
+  invited_by: string | null;
+  accepted_at: string | null;
+  expires_at: string;
+  created_at: string;
+}
+
+export interface TerminalDeal {
+  id: string;
+  name: string;
+  city: string;
+  state: string;
+  property_type: string;
+  square_footage: string | null;
+  units: string | null;
+  class_type: string | null;
+  year_built: number | null;
+  occupancy: string | null;
+  purchase_price: string;
+  noi: string | null;
+  cap_rate: string | null;
+  irr: string | null;
+  coc: string | null;
+  dscr: string | null;
+  equity_required: string | null;
+  loan_estimate: string | null;
+  seller_financing: boolean;
+  special_terms: string;
+  assignment_fee: string;
+  assignment_irr: string | null;
+  gplp_irr: string | null;
+  acq_fee: string;
+  asset_mgmt_fee: string;
+  gp_carry: string;
+  loan_fee: string;
+  dd_deadline: string | null;
+  close_deadline: string | null;
+  extension_deadline: string | null;
+  status: DealStatus;
+  neighborhood: string | null;
+  metro_population: string | null;
+  job_growth: string | null;
+  investment_highlights: string[] | null;
+  acquisition_thesis: string | null;
+  quarter_release: string | null;
+  created_by: string | null;
+  assigned_to: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TerminalDealPhoto {
+  id: string;
+  deal_id: string;
+  storage_path: string;
+  display_order: number;
+  caption: string | null;
+  created_at: string;
+}
+
+export interface TerminalDDFolder {
+  id: string;
+  deal_id: string;
+  name: string;
+  icon: string | null;
+  display_order: number;
+}
+
+export interface TerminalDDDocument {
+  id: string;
+  folder_id: string;
+  deal_id: string;
+  name: string;
+  file_size: string | null;
+  file_type: string | null;
+  storage_path: string | null;
+  is_verified: boolean;
+  uploaded_by: string | null;
+  created_at: string;
+}
+
+export interface TerminalActivityLog {
+  id: string;
+  user_id: string | null;
+  deal_id: string | null;
+  action: ActivityAction;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface TerminalMeeting {
+  id: string;
+  deal_id: string | null;
+  investor_id: string;
+  scheduled_at: string;
+  status: MeetingStatus;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface TerminalAvailabilitySlot {
+  id: string;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  timezone: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface TerminalSetting {
+  key: string;
+  value: unknown;
+  updated_at: string;
+}
+
+// Deal with related data for portal display
+export interface DealWithPhotos extends TerminalDeal {
+  photos: TerminalDealPhoto[];
+}
+
+export interface DealWithDetails extends TerminalDeal {
+  photos: TerminalDealPhoto[];
+  dd_folders: (TerminalDDFolder & { documents: TerminalDDDocument[] })[];
+  viewing_count: number;
+  meetings_count: number;
+}

@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mv README.md README.md.bak)",
+      "Bash(npx create-next-app@latest . --typescript --tailwind --app --src-dir --import-alias \"@/*\" --yes)",
+      "Bash(cd /tmp)",
+      "Bash(npx create-next-app@latest reprime-init --typescript --tailwind --app --src-dir --import-alias \"@/*\" --yes)",
+      "Bash(cp -r /tmp/reprime-init/* /c/Users/doomz/reprime-terminal/)",
+      "Bash(cp /tmp/reprime-init/.eslintrc.json /c/Users/doomz/reprime-terminal/)",
+      "Bash(cp /tmp/reprime-init/.gitignore /c/Users/doomz/reprime-terminal/)",
+      "Bash(cp /tmp/reprime-init/tsconfig.json /c/Users/doomz/reprime-terminal/)",
+      "Bash(rm /c/Users/doomz/reprime-terminal/README.md.bak)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(ls \"C:/Users/doomz/reprime-terminal/src/app/[locale]/\\(admin\\)/admin/\")",
+      "Bash(npx tsc:*)",
+      "Bash(ls \"C:/Users/doomz/reprime-terminal/src/app/[locale]/\\(admin\\)/\")",
+      "Bash(ls:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}

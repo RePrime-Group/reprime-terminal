@@ -1,0 +1,161 @@
+{
+  "common": {
+    "appName": "RePrime Terminal",
+    "signOut": "Sign Out",
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "copy": "Copy",
+    "close": "Close"
+  },
+  "auth": {
+    "loginTitle": "Sign In to RePrime Terminal",
+    "email": "Email Address",
+    "password": "Password",
+    "signIn": "Sign In",
+    "inviteTitle": "Create Your Account",
+    "fullName": "Full Name",
+    "companyName": "Company Name",
+    "confirmPassword": "Confirm Password",
+    "register": "Register",
+    "invalidToken": "This invitation link is invalid.",
+    "expiredToken": "This invitation link has expired.",
+    "membershipByInvitation": "Membership by invitation only"
+  },
+  "admin": {
+    "sidebar": {
+      "deals": "Deals",
+      "investors": "Investors",
+      "activity": "Activity",
+      "settings": "Settings"
+    },
+    "dealList": {
+      "title": "Deals",
+      "newDeal": "New Deal",
+      "statusDraft": "Draft",
+      "statusPublished": "Published",
+      "statusUnderReview": "Under Review",
+      "statusAssigned": "Assigned",
+      "statusClosed": "Closed"
+    },
+    "dealForm": {
+      "title": "Deal Title",
+      "slug": "Slug",
+      "propertyType": "Property Type",
+      "propertySubtype": "Property Subtype",
+      "address": "Address",
+      "city": "City",
+      "state": "State",
+      "zip": "ZIP Code",
+      "county": "County",
+      "country": "Country",
+      "latitude": "Latitude",
+      "longitude": "Longitude",
+      "description": "Description",
+      "highlights": "Highlights",
+      "purchasePrice": "Purchase Price",
+      "noi": "NOI",
+      "capRate": "Cap Rate",
+      "irr": "IRR",
+      "coc": "CoC",
+      "dscr": "DSCR",
+      "ltv": "LTV",
+      "equityRequired": "Equity Required",
+      "loanAmount": "Loan Amount",
+      "loanType": "Loan Type",
+      "interestRate": "Interest Rate",
+      "loanTerm": "Loan Term",
+      "amortization": "Amortization",
+      "yearBuilt": "Year Built",
+      "buildingSize": "Building Size",
+      "lotSize": "Lot Size",
+      "units": "Units",
+      "occupancy": "Occupancy",
+      "tenantCount": "Tenant Count",
+      "anchorTenant": "Anchor Tenant",
+      "leaseType": "Lease Type",
+      "parkingSpaces": "Parking Spaces",
+      "zoning": "Zoning",
+      "ebitda": "EBITDA",
+      "heroImage": "Hero Image",
+      "gallery": "Gallery",
+      "documents": "Documents",
+      "floorPlans": "Floor Plans",
+      "status": "Status",
+      "expiresAt": "Expires At",
+      "assignedTo": "Assigned To",
+      "structureType": "Structure Type",
+      "gpSplit": "GP Split",
+      "lpSplit": "LP Split",
+      "prefReturn": "Preferred Return",
+      "holdPeriod": "Hold Period",
+      "customTerms": "Custom Terms",
+      "proformaFile": "Proforma File",
+      "rentRoll": "Rent Roll",
+      "inspectionReport": "Inspection Report",
+      "environmentalReport": "Environmental Report",
+      "titleReport": "Title Report",
+      "appraisal": "Appraisal",
+      "loi": "LOI",
+      "psa": "PSA"
+    },
+    "investors": {
+      "title": "Investors",
+      "invite": "Invite Investor",
+      "activity": "Investor Activity"
+    },
+    "settings": {
+      "title": "Settings",
+      "contactInfo": "Contact Information",
+      "availability": "Availability"
+    }
+  },
+  "portal": {
+    "dashboardTitle": "Dashboard",
+    "activeOpportunities": "Active Opportunities",
+    "dealCard": {
+      "purchasePrice": "Purchase Price",
+      "noi": "NOI",
+      "capRate": "Cap Rate",
+      "irr": "IRR",
+      "coc": "CoC",
+      "dscr": "DSCR",
+      "equityRequired": "Equity Required",
+      "viewingCount": "Total Views",
+      "meetingsBooked": "Meetings Booked"
+    },
+    "dealDetail": {
+      "overview": "Overview",
+      "dueDiligence": "Due Diligence",
+      "dealStructure": "Deal Structure",
+      "scheduleContact": "Schedule & Contact"
+    },
+    "countdown": {
+      "days": "Days",
+      "hours": "Hours",
+      "minutes": "Minutes",
+      "seconds": "Seconds",
+      "expired": "This deal has expired"
+    },
+    "structure": {
+      "assignment": "Assignment",
+      "gpLpPartnership": "GP/LP Partnership",
+      "irrCalculator": "IRR Calculator",
+      "customTerms": "Custom Terms"
+    }
+  },
+  "errors": {
+    "notFound": "Page Not Found",
+    "somethingWentWrong": "Something went wrong",
+    "returnToDashboard": "Return to Dashboard",
+    "unauthorized": "You must be signed in to access this page.",
+    "forbidden": "You do not have permission to access this page."
+  }
+}

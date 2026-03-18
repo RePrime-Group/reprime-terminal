@@ -1,0 +1,161 @@
+{
+  "common": {
+    "appName": "RePrime Terminal",
+    "signOut": "יציאה",
+    "loading": "טוען...",
+    "save": "שמור",
+    "cancel": "ביטול",
+    "delete": "מחק",
+    "confirm": "אישור",
+    "back": "חזרה",
+    "next": "הבא",
+    "search": "חיפוש",
+    "filter": "סינון",
+    "export": "ייצוא",
+    "copy": "העתקה",
+    "close": "סגירה"
+  },
+  "auth": {
+    "loginTitle": "כניסה ל-RePrime Terminal",
+    "email": "כתובת אימייל",
+    "password": "סיסמה",
+    "signIn": "כניסה",
+    "inviteTitle": "יצירת חשבון",
+    "fullName": "שם מלא",
+    "companyName": "שם חברה",
+    "confirmPassword": "אימות סיסמה",
+    "register": "הרשמה",
+    "invalidToken": "קישור ההזמנה אינו תקין.",
+    "expiredToken": "פג תוקף קישור ההזמנה.",
+    "membershipByInvitation": "חברות בהזמנה בלבד"
+  },
+  "admin": {
+    "sidebar": {
+      "deals": "עסקאות",
+      "investors": "משקיעים",
+      "activity": "פעילות",
+      "settings": "הגדרות"
+    },
+    "dealList": {
+      "title": "עסקאות",
+      "newDeal": "עסקה חדשה",
+      "statusDraft": "טיוטה",
+      "statusPublished": "פורסם",
+      "statusUnderReview": "בבדיקה",
+      "statusAssigned": "הוקצה",
+      "statusClosed": "נסגר"
+    },
+    "dealForm": {
+      "title": "כותרת העסקה",
+      "slug": "Slug",
+      "propertyType": "סוג נכס",
+      "propertySubtype": "תת-סוג נכס",
+      "address": "כתובת",
+      "city": "עיר",
+      "state": "מדינה",
+      "zip": "מיקוד",
+      "county": "מחוז",
+      "country": "ארץ",
+      "latitude": "קו רוחב",
+      "longitude": "קו אורך",
+      "description": "תיאור",
+      "highlights": "נקודות מפתח",
+      "purchasePrice": "מחיר רכישה",
+      "noi": "NOI",
+      "capRate": "Cap Rate",
+      "irr": "IRR",
+      "coc": "CoC",
+      "dscr": "DSCR",
+      "ltv": "LTV",
+      "equityRequired": "הון עצמי נדרש",
+      "loanAmount": "סכום הלוואה",
+      "loanType": "סוג הלוואה",
+      "interestRate": "שיעור ריבית",
+      "loanTerm": "תקופת הלוואה",
+      "amortization": "לוח סילוקין",
+      "yearBuilt": "שנת בנייה",
+      "buildingSize": "שטח בנוי",
+      "lotSize": "שטח מגרש",
+      "units": "יחידות",
+      "occupancy": "תפוסה",
+      "tenantCount": "מספר דיירים",
+      "anchorTenant": "דייר עוגן",
+      "leaseType": "סוג חכירה",
+      "parkingSpaces": "מקומות חניה",
+      "zoning": "ייעוד קרקע",
+      "ebitda": "EBITDA",
+      "heroImage": "תמונה ראשית",
+      "gallery": "גלריה",
+      "documents": "מסמכים",
+      "floorPlans": "תוכניות קומה",
+      "status": "סטטוס",
+      "expiresAt": "תאריך תפוגה",
+      "assignedTo": "הוקצה ל",
+      "structureType": "סוג מבנה עסקה",
+      "gpSplit": "חלוקת GP",
+      "lpSplit": "חלוקת LP",
+      "prefReturn": "תשואה מועדפת",
+      "holdPeriod": "תקופת החזקה",
+      "customTerms": "תנאים מותאמים",
+      "proformaFile": "קובץ פרופורמה",
+      "rentRoll": "גליון שכירות",
+      "inspectionReport": "דוח בדיקה",
+      "environmentalReport": "דוח סביבתי",
+      "titleReport": "דוח טאבו",
+      "appraisal": "שמאות",
+      "loi": "LOI",
+      "psa": "PSA"
+    },
+    "investors": {
+      "title": "משקיעים",
+      "invite": "הזמנת משקיע",
+      "activity": "פעילות משקיעים"
+    },
+    "settings": {
+      "title": "הגדרות",
+      "contactInfo": "פרטי יצירת קשר",
+      "availability": "זמינות"
+    }
+  },
+  "portal": {
+    "dashboardTitle": "לוח בקרה",
+    "activeOpportunities": "הזדמנויות פעילות",
+    "dealCard": {
+      "purchasePrice": "מחיר רכישה",
+      "noi": "NOI",
+      "capRate": "Cap Rate",
+      "irr": "IRR",
+      "coc": "CoC",
+      "dscr": "DSCR",
+      "equityRequired": "הון עצמי נדרש",
+      "viewingCount": "סה\"כ צפיות",
+      "meetingsBooked": "פגישות שנקבעו"
+    },
+    "dealDetail": {
+      "overview": "סקירה כללית",
+      "dueDiligence": "בדיקת נאותות",
+      "dealStructure": "מבנה העסקה",
+      "scheduleContact": "תיאום פגישה ויצירת קשר"
+    },
+    "countdown": {
+      "days": "ימים",
+      "hours": "שעות",
+      "minutes": "דקות",
+      "seconds": "שניות",
+      "expired": "העסקה פגה תוקף"
+    },
+    "structure": {
+      "assignment": "המחאת זכויות",
+      "gpLpPartnership": "שותפות GP/LP",
+      "irrCalculator": "מחשבון IRR",
+      "customTerms": "תנאים מותאמים"
+    }
+  },
+  "errors": {
+    "notFound": "הדף לא נמצא",
+    "somethingWentWrong": "משהו השתבש",
+    "returnToDashboard": "חזרה ללוח הבקרה",
+    "unauthorized": "יש להתחבר כדי לגשת לדף זה.",
+    "forbidden": "אין לך הרשאה לגשת לדף זה."
+  }
+}
