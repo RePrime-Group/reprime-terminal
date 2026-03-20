@@ -193,13 +193,39 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
                     {formatDate(deal.dd_deadline)}
                   </td>
                   <td className="px-6 py-4">
-                    <Link
-                      href={`/${locale}/admin/deals/${deal.id}`}
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-sm text-rp-navy hover:text-rp-gold font-medium transition-colors"
-                    >
-                      Edit
-                    </Link>
+                    <div className="flex items-center gap-3">
+                      <Link
+                        href={`/${locale}/admin/deals/${deal.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-sm text-rp-navy hover:text-rp-gold font-medium transition-colors"
+                      >
+                        Edit
+                      </Link>
+                      <Link
+                        href={`/${locale}/admin/deals/${deal.id}/pipeline`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-rp-gray-400 hover:text-rp-gold transition-colors"
+                        title="Pipeline"
+                      >
+                        <svg
+                          width="18"
+                          height="18"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <circle cx="5" cy="6" r="2" />
+                          <circle cx="12" cy="6" r="2" />
+                          <circle cx="19" cy="18" r="2" />
+                          <path d="M5 8v2a4 4 0 004 4h2" />
+                          <path d="M12 8v2a4 4 0 004 4h1" />
+                          <line x1="7" y1="14" x2="17" y2="14" />
+                        </svg>
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))}

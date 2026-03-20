@@ -148,6 +148,63 @@ export interface TerminalSetting {
   updated_at: string;
 }
 
+// Pipeline types
+export type PipelineStage = 'post_loi' | 'due_diligence' | 'pre_closing' | 'post_closing';
+export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'overdue' | 'blocked';
+
+export interface TerminalDealStage {
+  id: string;
+  deal_id: string;
+  stage: PipelineStage;
+  started_at: string | null;
+  completed_at: string | null;
+  is_current: boolean;
+  created_at: string;
+}
+
+export interface TerminalDealTask {
+  id: string;
+  deal_id: string;
+  stage: PipelineStage;
+  name: string;
+  assignee_id: string | null;
+  due_days: number | null;
+  due_date: string | null;
+  due_type: string;
+  is_gate: boolean;
+  is_milestone: boolean;
+  status: TaskStatus;
+  completed_at: string | null;
+  completed_by: string | null;
+  sort_order: number;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TerminalTaskAttachment {
+  id: string;
+  task_id: string;
+  deal_id: string;
+  name: string;
+  file_size: string | null;
+  file_type: string | null;
+  storage_path: string;
+  uploaded_by: string | null;
+  show_to_investors: boolean;
+  investor_folder_id: string | null;
+  is_verified: boolean;
+  created_at: string;
+}
+
+export interface TerminalDealMessage {
+  id: string;
+  deal_id: string;
+  user_id: string;
+  message: string;
+  created_at: string;
+}
+
 // Deal with related data for portal display
 export interface DealWithPhotos extends TerminalDeal {
   photos: TerminalDealPhoto[];

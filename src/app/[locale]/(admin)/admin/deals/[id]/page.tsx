@@ -207,6 +207,9 @@ export default function EditDealPage() {
   const [photos, setPhotos] = useState<TerminalDealPhoto[]>([]);
   const [uploading, setUploading] = useState(false);
 
+  // Pipeline stage
+  const [pipelineStage, setPipelineStage] = useState<string | null>(null);
+
   // Delete modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -248,6 +251,16 @@ export default function EditDealPage() {
         .eq('deal_id', dealId)
         .order('display_order', { ascending: true });
       setPhotos((photosData as TerminalDealPhoto[]) ?? []);
+
+      // Fetch current pipeline stage
+      const { data: stageData } = await supabase
+        .from('terminal_deal_stages')
+        .select('stage')
+        .eq('deal_id', dealId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      setPipelineStage(stageData?.stage ?? null);
     } finally {
       setLoading(false);
     }
@@ -564,7 +577,101 @@ export default function EditDealPage() {
           </svg>
           Deals
         </Link>
-        <h1 className="text-[24px] font-bold text-rp-navy">Edit Deal</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-[24px] font-bold text-rp-navy">Edit Deal</h1>
+          <Link
+            href={`/${locale}/admin/deals/${dealId}/pipeline`}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-[#0E3470] bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] rounded-lg shadow-[0_2px_8px_rgba(188,156,69,0.2)] hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(188,156,69,0.25)] transition-all"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="5" cy="6" r="2" />
+              <circle cx="12" cy="6" r="2" />
+              <circle cx="19" cy="18" r="2" />
+              <path d="M5 8v2a4 4 0 004 4h2" />
+              <path d="M12 8v2a4 4 0 004 4h1" />
+              <line x1="7" y1="14" x2="17" y2="14" />
+            </svg>
+            Pipeline
+          </Link>
+        </div>
+
+        {/* Pipeline Stage Indicator */}
+        {(() => {
+          const stages = ['post_loi', 'due_diligence', 'pre_closing', 'post_closing'];
+          const stageLabels: Record<string, string> = {
+            post_loi: 'POST LOI',
+            due_diligence: 'DUE DILIGENCE',
+            pre_closing: 'PRE-CLOSING',
+            post_closing: 'POST-CLOSING',
+          };
+          const currentIdx = pipelineStage ? stages.indexOf(pipelineStage) : -1;
+
+          return (
+            <div className="mt-4 flex items-center gap-0">
+              {stages.map((stage, idx) => {
+                const isCompleted = currentIdx > idx;
+                const isCurrent = currentIdx === idx;
+                const isPending = currentIdx < idx;
+
+                return (
+                  <div key={stage} className="flex items-center">
+                    <div className="flex flex-col items-center">
+                      <span
+                        className={`text-[10px] font-semibold tracking-wide mb-1.5 ${
+                          isCurrent
+                            ? 'text-rp-gold'
+                            : isCompleted
+                            ? 'text-green-600'
+                            : 'text-rp-gray-400'
+                        }`}
+                      >
+                        {stageLabels[stage]}
+                      </span>
+                      <div
+                        className={`w-5 h-5 rounded-full flex items-center justify-center text-[11px] ${
+                          isCompleted
+                            ? 'bg-green-500 text-white'
+                            : isCurrent
+                            ? 'bg-rp-gold text-white ring-2 ring-rp-gold/30'
+                            : 'border-2 border-rp-gray-300 text-rp-gray-300'
+                        }`}
+                      >
+                        {isCompleted ? (
+                          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="3.5 8.5 6.5 11.5 12.5 5.5" />
+                          </svg>
+                        ) : isPending ? (
+                          ''
+                        ) : (
+                          ''
+                        )}
+                      </div>
+                    </div>
+                    {idx < stages.length - 1 && (
+                      <div
+                        className={`w-12 h-0.5 mt-4 mx-1 ${
+                          currentIdx > idx ? 'bg-green-400' : 'bg-rp-gray-200'
+                        }`}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+              {currentIdx === -1 && (
+                <span className="ml-4 text-xs text-rp-gray-400 mt-4">No stage set</span>
+              )}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Status Section */}
