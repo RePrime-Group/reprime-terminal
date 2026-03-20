@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useCountdown, getUrgencyLevel } from '@/lib/hooks/useCountdown';
 import { Link } from '@/i18n/navigation';
 import { formatPriceCompact, formatPercent, formatDSCR, formatPrice, formatSqFt } from '@/lib/utils/format';
@@ -13,6 +14,7 @@ interface DealCardProps {
 }
 
 export default function DealCard({ deal, locale, index }: DealCardProps) {
+  const t = useTranslations('portal');
   const countdown = useCountdown(deal.dd_deadline);
   const isAssigned = deal.status === 'assigned' || deal.status === 'closed';
   const urgency = isAssigned ? 'assigned' : getUrgencyLevel(deal.dd_deadline);
@@ -127,11 +129,11 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
               <div className="flex items-center gap-1.5">
                 <span className="live-dot w-1.5 h-1.5 rounded-full bg-[#0B8A4D]" />
                 <span className="text-[10px] text-white">
-                  {deal.viewing_count} viewing
+                  {deal.viewing_count} {t('dealCard.viewingCount')}
                 </span>
               </div>
               <span className="text-[10px] text-[#BC9C45]">
-                {deal.meetings_count} meetings
+                {deal.meetings_count} {t('dealCard.meetingsBooked')}
               </span>
             </div>
           )}
@@ -181,7 +183,7 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
           {/* Equity required */}
           <div className="mt-4">
             <div className="text-[8px] font-bold text-gray-400 uppercase tracking-[1.5px]">
-              EQUITY REQUIRED
+              {t('dealCard.equityRequired')}
             </div>
             <div className="text-[24px] font-extrabold text-[#0E3470] tracking-tight leading-tight">
               {formatPrice(deal.equity_required)}

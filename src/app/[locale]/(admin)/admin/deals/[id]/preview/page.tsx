@@ -11,42 +11,43 @@ import type {
   DealWithDetails,
 } from '@/lib/types/database';
 
-interface DealDetailPageProps {
+export const metadata = { title: 'Investor Preview — RePrime Terminal Admin' };
+
+interface DealPreviewPageProps {
   params: Promise<{ locale: string; id: string }>;
 }
 
-export async function generateMetadata({ params }: DealDetailPageProps) {
-  const { id } = await params;
-  const supabase = await createClient();
-  const { data } = await supabase.from('terminal_deals').select('name').eq('id', id).single();
-  return { title: data ? `${data.name} — RePrime Terminal` : 'Deal — RePrime Terminal' };
-}
-
-export default async function DealDetailPage({ params }: DealDetailPageProps) {
+export default async function DealPreviewPage({ params }: DealPreviewPageProps) {
   const { locale, id } = await params;
   const supabase = await createClient();
 
-  // Verify user is authenticated
+  // ---------- Verify admin access ----------
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect(`/${locale}/login`);
 
-  // Fetch deal - only published, assigned, or closed deals are visible
+  const { data: terminalUser } = await supabase
+    .from('terminal_users')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+  if (!terminalUser || terminalUser.role === 'investor') redirect(`/${locale}/portal`);
+
+  // ---------- Fetch deal (all statuses visible to admin) ----------
   const { data: dealData } = await supabase
     .from('terminal_deals')
     .select('*')
     .eq('id', id)
-    .in('status', ['published', 'assigned', 'closed'])
     .single();
 
   if (!dealData) {
-    redirect(`/${locale}/portal`);
+    redirect(`/${locale}/admin/deals`);
   }
 
   const deal = dealData as TerminalDeal;
 
-  // Fetch photos ordered by display_order
+  // ---------- Fetch photos ordered by display_order ----------
   const { data: photosData } = await supabase
     .from('terminal_deal_photos')
     .select('*')
@@ -64,7 +65,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
     photoUrls.push(data.publicUrl);
   }
 
-  // Fetch DD folders with their documents
+  // ---------- Fetch DD folders with their documents ----------
   const { data: foldersData } = await supabase
     .from('terminal_dd_folders')
     .select('*')
@@ -73,7 +74,6 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
 
   const folders = (foldersData as TerminalDDFolder[]) ?? [];
 
-  // Fetch documents for each folder
   const foldersWithDocs: (TerminalDDFolder & {
     documents: TerminalDDDocument[];
   })[] = [];
@@ -91,31 +91,21 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
     });
   }
 
-  // Fetch viewing count (unique users who viewed this deal)
+  // ---------- Fetch viewing count ----------
   const { count: viewingCount } = await supabase
     .from('terminal_activity_log')
     .select('user_id', { count: 'exact', head: true })
     .eq('deal_id', id)
     .eq('action', 'deal_viewed');
 
-  // Fetch meetings count
+  // ---------- Fetch meetings count ----------
   const { count: meetingsCount } = await supabase
     .from('terminal_meetings')
     .select('id', { count: 'exact', head: true })
     .eq('deal_id', id)
     .in('status', ['scheduled', 'completed']);
 
-  // Fetch pipeline progress for DD completion
-  const { data: pipelineTasks } = await supabase
-    .from('terminal_deal_tasks')
-    .select('status')
-    .eq('deal_id', id);
-
-  const pipelineTotal = pipelineTasks?.length ?? 0;
-  const pipelineCompleted = pipelineTasks?.filter(t => t.status === 'completed').length ?? 0;
-  const pipelineProgress = pipelineTotal > 0 ? Math.round((pipelineCompleted / pipelineTotal) * 100) : -1;
-
-  // Fetch settings (contact info)
+  // ---------- Fetch settings (contact info) ----------
   const { data: settingsData } = await supabase
     .from('terminal_settings')
     .select('*')
@@ -127,7 +117,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
     settingsMap[setting.key] = String(setting.value ?? '');
   }
 
-  // Fetch availability slots
+  // ---------- Fetch availability slots ----------
   const { data: slotsData } = await supabase
     .from('terminal_availability_slots')
     .select('*')
@@ -137,7 +127,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
 
   const availabilitySlots = (slotsData as TerminalAvailabilitySlot[]) ?? [];
 
-  // Fetch already-booked meetings for this deal to exclude those times
+  // ---------- Fetch already-booked meetings ----------
   const { data: bookedMeetingsData } = await supabase
     .from('terminal_meetings')
     .select('scheduled_at')
@@ -148,6 +138,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
     (m: { scheduled_at: string }) => m.scheduled_at
   );
 
+  // ---------- Build deal with details ----------
   const dealWithDetails: DealWithDetails = {
     ...deal,
     photos,
@@ -157,16 +148,35 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
   };
 
   return (
-    <DealDetailClient
-      deal={dealWithDetails}
-      photoUrls={photoUrls}
-      contactName={settingsMap.contact_name ?? ''}
-      contactTitle={settingsMap.contact_title ?? ''}
-      contactEmail={settingsMap.contact_email ?? ''}
-      availabilitySlots={availabilitySlots}
-      bookedTimes={bookedTimes}
-      locale={locale}
-      pipelineProgress={pipelineProgress}
-    />
+    <div className="min-h-screen bg-[#060D1B]">
+      {/* Admin Preview Banner */}
+      <div className="sticky top-0 z-50 bg-[#0E3470] border-b border-[#BC9C45]/30 text-white px-6 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="text-[10px] font-bold tracking-[1.5px] uppercase text-[#BC9C45]">
+            Admin Preview
+          </span>
+          <span className="text-[12px] text-white/70">
+            You are viewing this deal as an investor would see it
+          </span>
+        </div>
+        <a
+          href={`/${locale}/admin/deals/${id}`}
+          className="px-4 py-1.5 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[12px] font-semibold rounded-lg transition-colors"
+        >
+          Back to Admin
+        </a>
+      </div>
+
+      <DealDetailClient
+        deal={dealWithDetails}
+        photoUrls={photoUrls}
+        contactName={settingsMap.contact_name ?? ''}
+        contactTitle={settingsMap.contact_title ?? ''}
+        contactEmail={settingsMap.contact_email ?? ''}
+        availabilitySlots={availabilitySlots}
+        bookedTimes={bookedTimes}
+        locale={locale}
+      />
+    </div>
   );
 }

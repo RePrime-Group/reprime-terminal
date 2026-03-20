@@ -447,6 +447,28 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
       .from('terminal_task_attachments')
       .update({ show_to_investors: value, investor_folder_id: value ? attachment.investor_folder_id : null })
       .eq('id', attachment.id);
+
+    if (value && attachment.investor_folder_id) {
+      // Create a DD document record so investors can see it
+      await supabase.from('terminal_dd_documents').insert({
+        folder_id: attachment.investor_folder_id,
+        deal_id: dealId,
+        name: attachment.name,
+        file_size: attachment.file_size,
+        file_type: attachment.file_type,
+        storage_path: attachment.storage_path,
+        is_verified: false,
+        uploaded_by: attachment.uploaded_by,
+      });
+    } else if (!value) {
+      // Remove the DD document record when hiding from investors
+      await supabase
+        .from('terminal_dd_documents')
+        .delete()
+        .eq('deal_id', dealId)
+        .eq('storage_path', attachment.storage_path);
+    }
+
     setTaskAttachments((prev) => ({
       ...prev,
       [attachment.task_id]: (prev[attachment.task_id] ?? []).map((a) =>
@@ -460,6 +482,34 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
       .from('terminal_task_attachments')
       .update({ investor_folder_id: folderId })
       .eq('id', attachment.id);
+
+    if (attachment.show_to_investors && folderId) {
+      // Remove old DD document if exists
+      await supabase
+        .from('terminal_dd_documents')
+        .delete()
+        .eq('deal_id', dealId)
+        .eq('storage_path', attachment.storage_path);
+      // Create new one in the correct folder
+      await supabase.from('terminal_dd_documents').insert({
+        folder_id: folderId,
+        deal_id: dealId,
+        name: attachment.name,
+        file_size: attachment.file_size,
+        file_type: attachment.file_type,
+        storage_path: attachment.storage_path,
+        is_verified: false,
+        uploaded_by: attachment.uploaded_by,
+      });
+    } else if (!folderId) {
+      // Remove DD document if folder deselected
+      await supabase
+        .from('terminal_dd_documents')
+        .delete()
+        .eq('deal_id', dealId)
+        .eq('storage_path', attachment.storage_path);
+    }
+
     setTaskAttachments((prev) => ({
       ...prev,
       [attachment.task_id]: (prev[attachment.task_id] ?? []).map((a) =>

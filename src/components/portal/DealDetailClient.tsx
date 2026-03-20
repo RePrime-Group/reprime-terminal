@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { formatPrice, formatPriceCompact, formatPercent, formatDSCR, formatSqFt, formatNumber } from '@/lib/utils/format';
 import { useCountdown } from '@/lib/hooks/useCountdown';
@@ -28,6 +29,7 @@ interface DealDetailClientProps {
   availabilitySlots: TerminalAvailabilitySlot[];
   bookedTimes: string[];
   locale: string;
+  pipelineProgress?: number;
 }
 
 type TabKey = 'overview' | 'due-diligence' | 'deal-structure' | 'schedule';
@@ -820,7 +822,9 @@ export default function DealDetailClient({
   availabilitySlots,
   bookedTimes,
   locale,
+  pipelineProgress,
 }: DealDetailClientProps) {
+  const t = useTranslations('portal');
   const router = useRouter();
   const { trackActivity } = useActivityTracker();
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
@@ -903,7 +907,9 @@ export default function DealDetailClient({
     (sum, f) => sum + f.documents.filter((d) => d.is_verified).length,
     0
   );
-  const ddProgress = totalDocs > 0 ? Math.round((verifiedDocs / totalDocs) * 100) : 0;
+  // DD progress: use pipeline progress if available, else fall back to document verification
+  const docBasedProgress = totalDocs > 0 ? Math.round((verifiedDocs / totalDocs) * 100) : 0;
+  const ddProgress = (typeof pipelineProgress === 'number' && pipelineProgress >= 0) ? pipelineProgress : docBasedProgress;
 
   // Contact initials
   const initials = contactName
@@ -938,10 +944,10 @@ export default function DealDetailClient({
   };
 
   const tabs: { key: TabKey; label: string }[] = [
-    { key: 'overview', label: 'Overview' },
-    { key: 'due-diligence', label: 'Due Diligence Room' },
-    { key: 'deal-structure', label: 'Deal Structure' },
-    { key: 'schedule', label: 'Schedule & Contact' },
+    { key: 'overview', label: t('dealDetail.overview') },
+    { key: 'due-diligence', label: t('dealDetail.dueDiligence') },
+    { key: 'deal-structure', label: t('dealDetail.dealStructure') },
+    { key: 'schedule', label: t('dealDetail.scheduleContact') },
   ];
 
   // Social proof visibility

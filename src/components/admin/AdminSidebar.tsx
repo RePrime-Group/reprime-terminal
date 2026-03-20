@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 import type { TerminalUser } from '@/lib/types/database';
 
@@ -12,7 +13,7 @@ interface AdminSidebarProps {
 
 const navItems = [
   {
-    label: 'Deals',
+    labelKey: 'sidebar.deals' as const,
     href: '/admin/deals',
     ownerOnly: false,
     icon: (
@@ -25,7 +26,7 @@ const navItems = [
     ),
   },
   {
-    label: 'Investors',
+    labelKey: 'sidebar.investors' as const,
     href: '/admin/investors',
     ownerOnly: true,
     icon: (
@@ -38,7 +39,7 @@ const navItems = [
     ),
   },
   {
-    label: 'Activity',
+    labelKey: 'sidebar.activity' as const,
     href: '/admin/activity',
     ownerOnly: true,
     icon: (
@@ -52,7 +53,7 @@ const navItems = [
     ),
   },
   {
-    label: 'Settings',
+    labelKey: 'sidebar.settings' as const,
     href: '/admin/settings',
     ownerOnly: true,
     icon: (
@@ -65,6 +66,8 @@ const navItems = [
 ];
 
 export default function AdminSidebar({ user, locale }: AdminSidebarProps) {
+  const t = useTranslations('admin');
+  const tc = useTranslations('common');
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
@@ -126,7 +129,7 @@ export default function AdminSidebar({ user, locale }: AdminSidebarProps) {
                 }`}
               >
                 <span className="flex-shrink-0">{item.icon}</span>
-                <span>{item.label}</span>
+                <span>{t(item.labelKey)}</span>
               </Link>
             );
           })}
@@ -181,7 +184,7 @@ export default function AdminSidebar({ user, locale }: AdminSidebarProps) {
             <path d="M11 11l3-3-3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
             <path d="M14 8H6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
           </svg>
-          <span>Sign out</span>
+          <span>{tc('signOut')}</span>
         </button>
       </div>
     </aside>

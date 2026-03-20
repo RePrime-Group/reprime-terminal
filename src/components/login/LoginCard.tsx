@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { createBrowserClient } from '@supabase/ssr';
 
 interface LoginCardProps {
@@ -8,6 +9,7 @@ interface LoginCardProps {
 }
 
 export default function LoginCard({ locale }: LoginCardProps) {
+  const t = useTranslations('auth');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -98,7 +100,7 @@ export default function LoginCard({ locale }: LoginCardProps) {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email address"
+          placeholder={t('email')}
           required
           className="bg-white/[0.04] border border-white/[0.08] rounded-lg px-4 py-3.5 text-white text-sm placeholder:text-white/30 focus:border-rp-gold/50 focus:outline-none transition-colors w-full"
         />
@@ -106,7 +108,7 @@ export default function LoginCard({ locale }: LoginCardProps) {
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
+          placeholder={t('password')}
           required
           className="bg-white/[0.04] border border-white/[0.08] rounded-lg px-4 py-3.5 text-white text-sm placeholder:text-white/30 focus:border-rp-gold/50 focus:outline-none transition-colors w-full"
         />
@@ -122,12 +124,12 @@ export default function LoginCard({ locale }: LoginCardProps) {
           disabled={loading}
           className="w-full py-3.5 bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-white font-semibold rounded-lg text-sm hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(188,156,69,0.3)] transition-all duration-200 disabled:opacity-50"
         >
-          {loading ? 'Signing in...' : 'Sign In'}
+          {loading ? `${t('signIn')}...` : t('signIn')}
         </button>
       </form>
 
       <p className="text-[11px] text-white/20 text-center mt-8">
-        Membership by invitation only
+        {t('membershipByInvitation')}
       </p>
     </div>
   );

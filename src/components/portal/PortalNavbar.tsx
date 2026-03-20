@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 import { Link, usePathname } from '@/i18n/navigation';
 
@@ -19,6 +20,8 @@ const notifications = [
 ];
 
 export default function PortalNavbar({ firstName, locale, activeTab = 'dashboard' }: PortalNavbarProps) {
+  const t = useTranslations('portal');
+  const tc = useTranslations('common');
   const router = useRouter();
   const pathname = usePathname();
   const supabase = createClient();
@@ -44,7 +47,7 @@ export default function PortalNavbar({ firstName, locale, activeTab = 'dashboard
   const initials = firstName ? firstName[0].toUpperCase() : 'U';
 
   const navTabs = [
-    { key: 'dashboard', label: 'Dashboard', href: '/portal' },
+    { key: 'dashboard', label: t('dashboardTitle'), href: '/portal' },
     { key: 'portfolio', label: 'Portfolio', href: '/portal/portfolio' },
     { key: 'compare', label: 'Compare', href: '/portal/compare' },
   ];
@@ -191,7 +194,7 @@ export default function PortalNavbar({ firstName, locale, activeTab = 'dashboard
             onClick={handleSignOut}
             className="text-[11px] text-[#9CA3AF] hover:text-[#DC2626] transition-colors cursor-pointer font-medium ml-1"
           >
-            Sign Out
+            {tc('signOut')}
           </button>
         </div>
       </nav>
