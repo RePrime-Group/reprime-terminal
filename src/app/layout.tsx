@@ -1,19 +1,19 @@
 import type { Metadata } from 'next';
-import { Poppins, Bodoni_Moda } from 'next/font/google';
+import { Poppins, Playfair_Display } from 'next/font/google';
 import './globals.css';
 
 const poppins = Poppins({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700', '800'],
+  weight: ['300', '400', '500', '600', '700', '800', '900'],
   variable: '--font-poppins',
   display: 'swap',
 });
 
-const bodoniModa = Bodoni_Moda({
+const playfairDisplay = Playfair_Display({
   subsets: ['latin'],
-  weight: ['400', '700', '800'],
+  weight: ['400', '700', '900'],
   style: ['normal', 'italic'],
-  variable: '--font-bodoni',
+  variable: '--font-playfair',
   display: 'swap',
 });
 
@@ -34,7 +34,7 @@ export default function RootLayout({
 }>) {
   return (
     <html suppressHydrationWarning>
-      <body className={`${poppins.variable} ${bodoniModa.variable} font-[family-name:var(--font-poppins)] antialiased`}>
+      <body className={`${poppins.variable} ${playfairDisplay.variable} font-[family-name:var(--font-poppins)] antialiased`}>
         {children}
       </body>
     </html>

@@ -16,7 +16,7 @@ export default function AdminErrorPage({ error: _error, reset }: ErrorPageProps)
     <div className="min-h-screen bg-rp-page-bg flex items-center justify-center">
       <div className="text-center">
         <div className="w-14 h-14 bg-gradient-to-br from-rp-gold to-rp-gold-soft rounded-lg flex items-center justify-center mx-auto mb-6">
-          <span className="text-white text-2xl font-[family-name:var(--font-bodoni)] font-extrabold">
+          <span className="text-white text-2xl font-[family-name:var(--font-playfair)] font-extrabold">
             R
           </span>
         </div>

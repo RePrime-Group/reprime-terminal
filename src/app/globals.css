@@ -28,7 +28,7 @@
   --color-rp-login-bg: #07090F;
 
   --font-poppins: "Poppins", sans-serif;
-  --font-bodoni: "Bodoni Moda", serif;
+  --font-playfair: "Playfair Display", serif;
 }
 
 @layer base {
@@ -68,7 +68,7 @@
 
   .rp-card-shadow-hover {
     box-shadow:
-      0 8px 40px rgba(14, 52, 112, 0.1),
+      0 20px 60px rgba(14, 52, 112, 0.12),
       0 0 0 1px rgba(188, 156, 69, 0.3);
   }
 
@@ -89,14 +89,14 @@
     100% { background-position: -200% 0; }
   }
 
-  /* Pulsing dot for social proof */
+  /* Pulsing dot for social proof & notifications */
   .countdown-pulse {
-    animation: pulse-dot 2s ease-in-out infinite;
+    animation: pulse 2s ease-in-out infinite;
   }
 
-  @keyframes pulse-dot {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.5); }
   }
 
   /* Card fade-up on page load */
@@ -119,26 +119,80 @@
     to { opacity: 1; transform: translateX(0); }
   }
 
-  /* Gold shimmer for Limited Release badge */
+  /* Slide-down for dropdowns */
+  .animate-slide-down {
+    animation: slideDown 0.2s ease-out forwards;
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Gold shimmer for tier/Limited Release badges */
   .gold-shimmer {
     background: linear-gradient(
       110deg,
-      rgba(188, 156, 69, 0.8) 0%,
-      rgba(188, 156, 69, 1) 45%,
+      rgba(188, 156, 69, 0.85) 0%,
       rgba(212, 185, 106, 1) 50%,
-      rgba(188, 156, 69, 1) 55%,
-      rgba(188, 156, 69, 0.8) 100%
+      rgba(188, 156, 69, 0.85) 100%
     );
     background-size: 200% 100%;
-    animation: goldShimmer 4s ease-in-out infinite;
+    animation: shimmer 4s ease-in-out infinite;
   }
 
-  @keyframes goldShimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+  /* Live dot animation */
+  .live-dot {
+    animation: liveDot 1.5s infinite;
   }
 
-  /* Confetti fall for assigned overlay */
+  @keyframes liveDot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* Glow animation for logo */
+  .animate-glow {
+    animation: glow 3s ease-in-out infinite;
+  }
+
+  @keyframes glow {
+    0%, 100% { box-shadow: 0 0 8px rgba(188, 156, 69, 0.2); }
+    50% { box-shadow: 0 0 24px rgba(188, 156, 69, 0.4); }
+  }
+
+  /* Marquee for market ticker */
+  .animate-marquee {
+    animation: marquee 30s linear infinite;
+  }
+
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  /* Stamp animation for CLOSED overlay */
+  .animate-stamp-in {
+    animation: stampIn 0.6s ease-out forwards;
+  }
+
+  @keyframes stampIn {
+    0% { transform: scale(3) rotate(-15deg); opacity: 0; }
+    60% { transform: scale(1) rotate(-6deg); opacity: 1; }
+    100% { transform: scale(1) rotate(-6deg); opacity: 1; }
+  }
+
+  /* Confetti drop for closed deal overlay */
+  .confetti-drop {
+    animation: confettiDrop 3s linear infinite;
+  }
+
+  @keyframes confettiDrop {
+    0% { transform: translateY(-100vh) rotate(0); }
+    100% { transform: translateY(100vh) rotate(720deg); }
+  }
+
+  /* Confetti fall (gentle version) */
   .confetti-fall {
     animation: confettiFall 3s ease-in-out infinite alternate;
   }
@@ -160,17 +214,27 @@
     transform: translateY(0);
   }
 
-  /* Bodoni Moda font utility */
-  .font-bodoni {
-    font-family: var(--font-bodoni);
+  /* Playfair Display serif font utility */
+  .font-playfair {
+    font-family: var(--font-playfair);
   }
 
   /* Bloomberg-style data label */
   .data-label {
     font-size: 9px;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: 1.5px;
     text-transform: uppercase;
     color: var(--color-rp-gray-400);
+  }
+
+  /* Audio visualization bar pulse */
+  .audio-bar {
+    animation: audioBar 0.8s ease-in-out infinite alternate;
+  }
+
+  @keyframes audioBar {
+    0% { transform: scaleY(0.3); }
+    100% { transform: scaleY(1); }
   }
 }

@@ -37,67 +37,98 @@ type CalculatorMode = 'assignment' | 'gplp' | 'custom';
 // Sub-components
 // ---------------------------------------------------------------------------
 
-/* ---------- Countdown Timer Card ---------- */
+/* ---------- Circular Countdown Ring ---------- */
 
-function CountdownTimerCard({
+function CountdownRing({
   label,
   targetDate,
+  accentColor,
 }: {
   label: string;
   targetDate: string | null;
+  accentColor: string;
 }) {
   const { days, hours, minutes, seconds, isExpired, isUrgent } =
     useCountdown(targetDate);
 
-  const digitClass = isExpired
-    ? 'bg-[#D1D5DB] text-[#9CA3AF]'
-    : isUrgent
-      ? 'bg-[#1C0A0A] text-[#FF4444]'
-      : 'bg-[#0E3470] text-white';
+  const size = 130;
+  const strokeWidth = 6;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
 
-  const groups: { value: number; unit: string }[] = [
-    { value: days, unit: 'DAYS' },
-    { value: hours, unit: 'HRS' },
-    { value: minutes, unit: 'MIN' },
-    { value: seconds, unit: 'SEC' },
-  ];
+  // Calculate progress (assume 90-day max for visual fill)
+  const maxDays = 90;
+  const totalSeconds = days * 86400 + hours * 3600 + minutes * 60 + seconds;
+  const maxSeconds = maxDays * 86400;
+  const progress = isExpired ? 0 : Math.min(totalSeconds / maxSeconds, 1);
+  const dashOffset = circumference * (1 - progress);
+
+  const ringColor = isUrgent && !isExpired ? '#DC2626' : isExpired ? '#D1D5DB' : accentColor;
+
+  const hh = String(hours).padStart(2, '0');
+  const mm = String(minutes).padStart(2, '0');
+  const ss = String(seconds).padStart(2, '0');
 
   return (
-    <div className="bg-white rounded-2xl border border-[#EEF0F4] p-5 rp-card-shadow">
-      <div className="flex items-center justify-between mb-3">
-        <span className="data-label">
-          {label}
-        </span>
-        {isUrgent && !isExpired && (
-          <span className="bg-[#DC2626] text-white text-[10px] px-2.5 py-0.5 rounded-full font-semibold">
-            URGENT
+    <div className="flex flex-col items-center">
+      <div className="relative" style={{ width: size, height: size }}>
+        <svg width={size} height={size} className="transform -rotate-90">
+          {/* Background circle */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke="#EEF0F4"
+            strokeWidth={strokeWidth}
+          />
+          {/* Progress circle */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke={ringColor}
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={dashOffset}
+            style={{ transition: 'stroke-dashoffset 1s ease-in-out' }}
+          />
+        </svg>
+        {/* Center content */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span
+            className="text-[28px] font-[800] leading-none"
+            style={{ color: ringColor }}
+          >
+            {isExpired ? '00' : days}
           </span>
+          <span className="text-[9px] font-[700] uppercase tracking-[1.5px] text-[#9CA3AF] mt-0.5">
+            DAYS
+          </span>
+          <span className="text-[13px] text-[#9CA3AF] mt-1 font-mono">
+            {hh}:{mm}:{ss}
+          </span>
+        </div>
+      </div>
+      {/* Label below ring */}
+      <div className="flex items-center gap-1.5 mt-3">
+        {isUrgent && !isExpired && (
+          <div className="w-2 h-2 rounded-full bg-[#DC2626] countdown-pulse" />
         )}
         {isExpired && (
-          <span className="text-[#9CA3AF] text-[10px] font-semibold uppercase">
-            EXPIRED
-          </span>
+          <div className="w-2 h-2 rounded-full bg-[#D1D5DB]" />
         )}
+        <span className="text-[10px] uppercase font-[700] tracking-[1.5px] text-[#9CA3AF]">
+          {label}
+        </span>
       </div>
-      <div className="flex items-center gap-1">
-        {groups.map((g, i) => (
-          <div key={g.unit} className="flex items-center gap-1">
-            {i > 0 && (
-              <span className="text-[#D1D5DB] text-2xl font-bold mx-0.5">:</span>
-            )}
-            <div className="flex flex-col items-center">
-              <div
-                className={`${digitClass} rounded-lg w-[58px] h-[68px] flex items-center justify-center text-[32px] font-extrabold`}
-              >
-                {String(g.value).padStart(2, '0')}
-              </div>
-              <span className="text-[8px] text-[#9CA3AF] uppercase tracking-widest mt-1.5 font-medium">
-                {g.unit}
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
+      {isUrgent && !isExpired && (
+        <span className="bg-[#DC2626] text-white text-[9px] px-2 py-0.5 rounded-full font-semibold mt-1.5">
+          URGENT
+        </span>
+      )}
     </div>
   );
 }
@@ -229,26 +260,30 @@ function MetricCard({
 
 function FileTypeBadge({ fileType }: { fileType: string | null }) {
   const ext = fileType?.toLowerCase() ?? '';
+  let icon = '\u{1F4C4}';
   let colorClass = 'bg-gray-100 text-gray-600';
   let label = 'FILE';
 
   if (ext.includes('pdf')) {
+    icon = '\u{1F4D5}';
     colorClass = 'bg-red-100 text-red-600';
     label = 'PDF';
   } else if (ext.includes('sheet') || ext.includes('xlsx')) {
+    icon = '\u{1F4D7}';
     colorClass = 'bg-green-100 text-green-600';
     label = 'XLSX';
   } else if (ext.includes('word') || ext.includes('docx')) {
     colorClass = 'bg-blue-100 text-blue-600';
     label = 'DOC';
   } else if (ext.includes('zip')) {
+    icon = '\u{1F4E6}';
     colorClass = 'bg-blue-100 text-blue-600';
     label = 'ZIP';
   }
 
   return (
-    <span className={`${colorClass} text-[10px] font-bold px-2 py-0.5 rounded`}>
-      {label}
+    <span className={`${colorClass} text-[10px] font-bold px-2 py-0.5 rounded inline-flex items-center gap-1`}>
+      <span>{icon}</span> {label}
     </span>
   );
 }
@@ -375,7 +410,8 @@ function DDFolderCard({
           ))}
           {folder.documents.length === 0 && (
             <div className="px-4 py-6 text-center text-sm text-[#9CA3AF]">
-              No documents in this folder yet.
+              <span className="text-2xl block mb-2">{'\u231B'}</span>
+              Documents pending upload
             </div>
           )}
         </div>
@@ -419,7 +455,9 @@ function IRRCalculatorPanel({
 
   return (
     <div className="bg-[#0E3470] rounded-2xl p-6 text-white rp-card-shadow">
-      <h3 className="font-bold text-lg mb-4">IRR Calculator</h3>
+      <div className="data-label !text-[#BC9C45] !tracking-[1.5px] mb-4">
+        RETURNS CALCULATOR
+      </div>
 
       {/* Mode tabs */}
       <div className="inline-flex rounded-lg bg-white/10 p-1 mb-6">
@@ -447,7 +485,7 @@ function IRRCalculatorPanel({
           </div>
           <div className="mb-4">
             <div className="text-white/60 text-xs mb-1">Projected IRR</div>
-            <div className="text-[52px] font-extrabold text-[#BC9C45] leading-none">
+            <div className="text-[52px] font-[800] text-[#34D399] leading-none">
               {deal.assignment_irr ?? '--'}
             </div>
           </div>
@@ -478,7 +516,7 @@ function IRRCalculatorPanel({
           </div>
           <div className="mb-4">
             <div className="text-white/60 text-xs mb-1">Projected IRR</div>
-            <div className="text-[52px] font-extrabold text-[#BC9C45] leading-none">
+            <div className="text-[52px] font-[800] text-[#34D399] leading-none">
               {deal.gplp_irr ?? '--'}
             </div>
           </div>
@@ -564,7 +602,7 @@ function IRRCalculatorPanel({
 
           <div>
             <div className="text-white/60 text-xs mb-1">Calculated IRR</div>
-            <div className="text-[52px] font-extrabold text-[#BC9C45] leading-none">
+            <div className="text-[52px] font-[800] text-[#34D399] leading-none">
               {customIRR.toFixed(2)}%
             </div>
           </div>
@@ -717,41 +755,28 @@ function MeetingScheduler({
 
   return (
     <div>
-      <div className="grid grid-cols-7 gap-1">
+      {/* 2-column grid of meeting slot buttons */}
+      <div className="grid grid-cols-2 gap-2">
         {weekDays.map((day) => {
           const timeSlots = generateTimeSlots(day);
-          return (
-            <div key={day.toISOString()} className="min-w-0">
-              <div className="text-center mb-2">
-                <div className="text-[10px] text-[#9CA3AF] font-medium">
-                  {dayLabels[day.getDay()]}
-                </div>
-                <div className="text-xs font-semibold text-[#0E3470]">
-                  {day.getDate()}
-                </div>
-              </div>
-              <div className="flex flex-col gap-1">
-                {timeSlots.length === 0 && (
-                  <div className="text-[9px] text-[#D1D5DB] text-center py-2">
-                    --
-                  </div>
-                )}
-                {timeSlots.map((ts) => (
-                  <button
-                    key={ts.isoString}
-                    onClick={() => setSelectedSlot(ts.isoString)}
-                    className={`text-sm px-4 py-2.5 rounded-lg transition-colors font-medium ${
-                      selectedSlot === ts.isoString
-                        ? 'border border-[#BC9C45] bg-[#FDF8ED] ring-1 ring-[#BC9C45] text-[#0E3470]'
-                        : 'bg-white border border-[#EEF0F4] hover:border-[#BC9C45] text-[#374151]'
-                    }`}
-                  >
-                    {ts.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          );
+          return timeSlots.map((ts) => {
+            const dayLabel = dayLabels[day.getDay()];
+            const dateNum = day.getDate();
+            return (
+              <button
+                key={ts.isoString}
+                onClick={() => setSelectedSlot(ts.isoString)}
+                className={`text-sm px-4 py-3 rounded-lg transition-colors font-medium text-left ${
+                  selectedSlot === ts.isoString
+                    ? 'border border-[#BC9C45] bg-[#FDF8ED] ring-1 ring-[#BC9C45] text-[#0E3470]'
+                    : 'bg-white border border-[#EEF0F4] hover:border-[#BC9C45] text-[#374151]'
+                }`}
+              >
+                <div className="text-[10px] text-[#9CA3AF] font-medium uppercase">{dayLabel} {dateNum}</div>
+                <div className="text-sm font-semibold text-[#0E3470]">{ts.label}</div>
+              </button>
+            );
+          });
         })}
       </div>
 
@@ -890,7 +915,7 @@ export default function DealDetailClient({
       <div className="h-[3px] bg-gradient-to-r from-[#BC9C45] via-[#D4B96A] to-[#BC9C45]" />
 
       {/* ------------------------------------------------------------------ */}
-      {/* 1. STICKY TOP NAV BAR                                              */}
+      {/* 5A. STICKY TOP NAV BAR                                             */}
       {/* ------------------------------------------------------------------ */}
       <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-[#EEF0F4] shadow-[0_1px_3px_rgba(14,52,112,0.04),0_4px_12px_rgba(14,52,112,0.02)]">
         <div className="h-[64px] flex items-center px-8">
@@ -916,7 +941,7 @@ export default function DealDetailClient({
           {/* Vertical separator */}
           <div className="h-5 w-px bg-[#EEF0F4] mr-4" />
           <div className="flex-1 min-w-0">
-            <h1 className="font-[family-name:var(--font-bodoni)] text-[18px] font-bold text-[#0E3470] truncate">
+            <h1 className="font-[family-name:var(--font-playfair)] text-[18px] font-bold text-[#0E3470] truncate">
               {deal.name}
             </h1>
             <p className="text-[10px] text-[#9CA3AF] truncate">
@@ -924,12 +949,21 @@ export default function DealDetailClient({
             </p>
           </div>
           <div className="flex items-center gap-3 ml-4 shrink-0">
+            {/* Express Interest button */}
+            <button className="px-5 py-2 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[12px] font-semibold rounded-lg transition-colors shadow-[0_2px_6px_rgba(188,156,69,0.25)]">
+              Express Interest
+            </button>
+            {/* Download OM button */}
+            <button className="px-4 py-2 border border-[#EEF0F4] hover:border-[#BC9C45] text-[#6B7280] hover:text-[#0E3470] text-[12px] font-semibold rounded-lg transition-colors">
+              Download OM
+            </button>
+            <div className="h-4 w-px bg-[#EEF0F4]" />
             <span className="text-[9px] font-semibold tracking-[1.5px] uppercase text-[#9CA3AF]">
               CONFIDENTIAL
             </span>
             <div className="h-4 w-px bg-[#EEF0F4]" />
             <div className="w-8 h-8 bg-gradient-to-br from-[#BC9C45] to-[#A88A3D] rounded-lg flex items-center justify-center shadow-[0_2px_6px_rgba(188,156,69,0.2)]">
-              <span className="text-white text-[11px] font-bold font-[family-name:var(--font-bodoni)] italic">R</span>
+              <span className="text-white text-[11px] font-bold font-[family-name:var(--font-playfair)] italic">R</span>
             </div>
           </div>
         </div>
@@ -945,7 +979,7 @@ export default function DealDetailClient({
         <div className="bg-gradient-to-r from-[#0A1628] to-[#0E3470] px-8 py-5">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-[family-name:var(--font-bodoni)] text-[28px] font-bold text-white leading-tight">
+              <h2 className="font-[family-name:var(--font-playfair)] text-[28px] font-bold text-white leading-tight">
                 {deal.name}
               </h2>
               <p className="text-[12px] text-white/40 mt-1">
@@ -976,25 +1010,70 @@ export default function DealDetailClient({
           {/* Left: Image Carousel */}
           <ImageCarousel urls={photoUrls} />
 
-          {/* Right: Countdown Timers */}
+          {/* Right: 5B Circular Countdown Rings */}
           <div className="flex flex-col gap-4">
-            <CountdownTimerCard
-              label="Due Diligence Deadline"
-              targetDate={deal.dd_deadline}
-            />
-            <CountdownTimerCard
-              label="Closing Deadline"
-              targetDate={deal.close_deadline}
-            />
-            <CountdownTimerCard
-              label="Extension Deadline"
-              targetDate={deal.extension_deadline}
-            />
+            <div className="bg-white rounded-2xl border border-[#EEF0F4] p-6 rp-card-shadow">
+              <div className="flex items-center justify-around">
+                <CountdownRing
+                  label="Due Diligence"
+                  targetDate={deal.dd_deadline}
+                  accentColor="#BC9C45"
+                />
+                <CountdownRing
+                  label="Closing"
+                  targetDate={deal.close_deadline}
+                  accentColor="#0E3470"
+                />
+                <CountdownRing
+                  label="Extension"
+                  targetDate={deal.extension_deadline}
+                  accentColor="#1D5FB8"
+                />
+              </div>
+            </div>
+
+            {/* ------------------------------------------------------------------ */}
+            {/* 5C. TERMINAL INTELLIGENCE PANEL                                    */}
+            {/* ------------------------------------------------------------------ */}
+            {deal.acquisition_thesis && (
+              <div className="bg-[#0E3470] rounded-xl p-6">
+                {/* Header */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-9 h-9 rounded-lg bg-[#BC9C45]/15 flex items-center justify-center">
+                    <span className="text-[#BC9C45] text-lg">{'\u26A1'}</span>
+                  </div>
+                  <div>
+                    <div className="text-[12px] font-[700] uppercase tracking-[1.5px] text-[#BC9C45]">
+                      TERMINAL INTELLIGENCE
+                    </div>
+                    <div className="text-[9px] text-white/50">
+                      Institutional analysis by RePrime research team
+                    </div>
+                  </div>
+                </div>
+                {/* Body */}
+                <p className="text-[13px] text-white/80 leading-[1.7] font-[300]">
+                  {deal.acquisition_thesis}
+                </p>
+                {/* Footer buttons */}
+                <div className="flex items-center gap-3 mt-5">
+                  <button className="px-4 py-2 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[11px] font-semibold rounded-lg transition-colors">
+                    Full Report
+                  </button>
+                  <button className="px-4 py-2 border border-white/20 hover:border-white/40 text-white text-[11px] font-semibold rounded-lg transition-colors">
+                    Comparable Analysis
+                  </button>
+                  <button className="px-4 py-2 border border-white/20 hover:border-white/40 text-white text-[11px] font-semibold rounded-lg transition-colors">
+                    Risk Assessment
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
         {/* ------------------------------------------------------------------ */}
-        {/* 4. SEVEN-METRIC BAR                                                */}
+        {/* 5D. SEVEN-METRIC BAR (left border metric cards - keep as is)       */}
         {/* ------------------------------------------------------------------ */}
         <div className="grid grid-cols-7 gap-3 px-8 mt-8">
           {[
@@ -1018,24 +1097,19 @@ export default function DealDetailClient({
         </div>
 
         {/* ------------------------------------------------------------------ */}
-        {/* 5. TABS                                                            */}
+        {/* 5E. TAB BAR                                                        */}
         {/* ------------------------------------------------------------------ */}
         <div className="px-8 mt-8">
-          <div className="bg-[#F7F8FA] rounded-xl p-1 inline-flex gap-1 border border-[#EEF0F4]">
+          <div className="bg-[#F7F8FA] rounded-lg p-1 inline-flex gap-1">
             {tabs.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`rounded-md px-7 py-3 text-sm transition-all ${
+                className={`rounded-md px-7 py-3 text-[12px] font-[600] tracking-[0.5px] transition-all ${
                   activeTab === tab.key
-                    ? 'bg-[#0E3470] text-white font-semibold'
-                    : 'bg-transparent text-[#9CA3AF] font-medium hover:bg-white hover:text-[#0E3470]'
+                    ? 'bg-[#0E3470] text-white'
+                    : 'bg-transparent text-[#9CA3AF] hover:bg-white hover:text-[#0E3470]'
                 }`}
-                style={
-                  activeTab === tab.key
-                    ? { boxShadow: 'inset 0 -3px 0 #BC9C45' }
-                    : undefined
-                }
               >
                 {tab.label}
               </button>
@@ -1047,7 +1121,7 @@ export default function DealDetailClient({
         {/* TAB CONTENT                                                        */}
         {/* ------------------------------------------------------------------ */}
 
-        {/* ========== OVERVIEW TAB ========== */}
+        {/* ========== 5F. OVERVIEW TAB ========== */}
         <div
           className="transition-opacity duration-200"
           style={{ display: activeTab === 'overview' ? 'block' : 'none' }}
@@ -1055,37 +1129,40 @@ export default function DealDetailClient({
           <div className="grid grid-cols-[1fr_360px] gap-8 mt-8 px-8 pb-10">
             {/* Left Column */}
             <div className="space-y-6">
-              {/* Investment Highlights */}
+              {/* Investment Highlights - 2-column grid of mini cards */}
               {deal.investment_highlights &&
                 deal.investment_highlights.length > 0 && (
                   <FadeInOnScroll delay={0}>
                     <div>
-                      <h3 className="font-[family-name:var(--font-bodoni)] text-lg font-bold text-[#0E3470] mb-4">
+                      <h3 className="font-[family-name:var(--font-playfair)] text-lg font-bold text-[#0E3470] mb-4">
                         Investment Highlights
                       </h3>
-                      <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
                         {deal.investment_highlights.map((highlight, idx) => (
                           <div
                             key={idx}
-                            className="bg-white border border-[#EEF0F4] rounded-xl p-4 border-l-2 border-l-[#BC9C45] flex gap-3 items-start"
+                            className="bg-white border border-[#EEF0F4] rounded-xl p-4 rp-card-shadow"
+                            style={{ borderLeft: '2px solid #BC9C45' }}
                           >
-                            <div className="w-7 h-7 rounded-full bg-[#ECFDF5] flex items-center justify-center shrink-0">
-                              <svg
-                                width="14"
-                                height="14"
-                                viewBox="0 0 16 16"
-                                fill="none"
-                                stroke="#0B8A4D"
-                                strokeWidth="2.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M3 8l4 4 6-7" />
-                              </svg>
+                            <div className="flex gap-3 items-start">
+                              <div className="w-7 h-7 rounded-full bg-[#ECFDF5] flex items-center justify-center shrink-0">
+                                <svg
+                                  width="14"
+                                  height="14"
+                                  viewBox="0 0 16 16"
+                                  fill="none"
+                                  stroke="#0B8A4D"
+                                  strokeWidth="2.5"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M3 8l4 4 6-7" />
+                                </svg>
+                              </div>
+                              <span className="text-sm text-[#374151] leading-relaxed">
+                                {highlight}
+                              </span>
                             </div>
-                            <span className="text-sm text-[#374151] leading-relaxed">
-                              {highlight}
-                            </span>
                           </div>
                         ))}
                       </div>
@@ -1097,7 +1174,7 @@ export default function DealDetailClient({
               {deal.acquisition_thesis && (
                 <FadeInOnScroll delay={0.1}>
                   <div>
-                    <h3 className="font-[family-name:var(--font-bodoni)] text-lg font-bold text-[#0E3470] mb-3">
+                    <h3 className="font-[family-name:var(--font-playfair)] text-lg font-bold text-[#0E3470] mb-3">
                       Acquisition Thesis
                     </h3>
                     <p className="text-sm text-[#4B5563] leading-[1.8]">
@@ -1110,7 +1187,7 @@ export default function DealDetailClient({
               {/* Financing Summary */}
               <FadeInOnScroll delay={0.2}>
                 <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 rp-card-shadow">
-                  <h3 className="font-[family-name:var(--font-bodoni)] text-lg font-bold text-[#0E3470] mb-4">
+                  <h3 className="font-[family-name:var(--font-playfair)] text-lg font-bold text-[#0E3470] mb-4">
                     Financing Summary
                   </h3>
                   <div className="space-y-0">
@@ -1151,32 +1228,35 @@ export default function DealDetailClient({
                 </div>
               </FadeInOnScroll>
 
-              {/* Market Context */}
+              {/* Market Context - with emoji icons */}
               <FadeInOnScroll delay={0.3}>
                 <div>
-                  <h3 className="font-[family-name:var(--font-bodoni)] text-lg font-bold text-[#0E3470] mb-4">
+                  <h3 className="font-[family-name:var(--font-playfair)] text-lg font-bold text-[#0E3470] mb-4">
                     Market Context
                   </h3>
                   <div className="flex gap-4">
                     <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 flex-1 rp-card-shadow">
-                      <div className="data-label mb-1">
-                        Metro Population
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className="text-base">{'\uD83D\uDC65'}</span>
+                        <span className="data-label">Metro Population</span>
                       </div>
                       <div className="text-lg font-bold text-[#0E3470]">
                         {formatNumber(deal.metro_population)}
                       </div>
                     </div>
                     <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 flex-1 rp-card-shadow">
-                      <div className="data-label mb-1">
-                        Job Growth
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className="text-base">{'\uD83D\uDCC8'}</span>
+                        <span className="data-label">Job Growth</span>
                       </div>
                       <div className="text-lg font-bold text-[#0B8A4D]">
                         {deal.job_growth ? `+${deal.job_growth}` : '--'}
                       </div>
                     </div>
                     <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 flex-1 rp-card-shadow">
-                      <div className="data-label mb-1">
-                        Occupancy
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className="text-base">{'\uD83C\uDFE2'}</span>
+                        <span className="data-label">Occupancy</span>
                       </div>
                       <div className="text-lg font-bold text-[#0E3470]">
                         {deal.occupancy ? `${deal.occupancy}%` : '--'}
@@ -1186,12 +1266,15 @@ export default function DealDetailClient({
                 </div>
               </FadeInOnScroll>
 
-              {/* Cycle Indicator */}
+              {/* Cycle Indicator - with Howard Marks Framework label */}
               <FadeInOnScroll delay={0.3}>
                 <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 mt-4 rp-card-shadow">
-                  <h3 className="text-sm font-semibold text-[#0E3470] mb-1">
-                    Market Cycle Position
-                  </h3>
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="text-sm font-semibold text-[#0E3470]">
+                      Market Cycle Position
+                    </h3>
+                    <span className="text-[9px] text-[#9CA3AF]">Howard Marks Framework</span>
+                  </div>
                   <div className="relative mt-3">
                     <div className="h-3 rounded-full bg-gradient-to-r from-[#0B8A4D] via-[#BC9C45] to-[#DC2626]" />
                     <div
@@ -1276,19 +1359,23 @@ export default function DealDetailClient({
                 </svg>
               </div>
 
-              {/* Live Activity Feed */}
+              {/* Live Activity Feed - colored dots per type + stagger animation */}
               <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 rp-card-shadow">
                 <h4 className="text-sm font-semibold text-[#0E3470] mb-3">
                   Recent Activity
                 </h4>
                 <div className="space-y-3">
                   {[
-                    { dot: 'bg-[#0B8A4D]', text: 'Terminal member viewed this deal', time: '2 min ago' },
-                    { dot: 'bg-[#1D5FB8]', text: 'Document downloaded', time: '15 min ago' },
-                    { dot: 'bg-[#BC9C45]', text: 'Meeting scheduled', time: '1 hour ago' },
-                    { dot: 'bg-[#0B8A4D]', text: 'New member viewing', time: '3 hours ago' },
+                    { dot: 'bg-[#6B7280]', text: 'Terminal member viewed this deal', time: '2 min ago', type: 'view' },
+                    { dot: 'bg-[#1D5FB8]', text: 'Document downloaded', time: '15 min ago', type: 'docs' },
+                    { dot: 'bg-[#BC9C45]', text: 'Meeting scheduled', time: '1 hour ago', type: 'meeting' },
+                    { dot: 'bg-[#0B8A4D]', text: 'Verification completed', time: '3 hours ago', type: 'verification' },
                   ].map((item, idx) => (
-                    <div key={idx} className="flex items-start gap-2">
+                    <div
+                      key={idx}
+                      className="flex items-start gap-2 animate-slide-in"
+                      style={{ animationDelay: `${idx * 0.1}s` }}
+                    >
                       <div className={`w-2 h-2 rounded-full ${item.dot} mt-1.5 shrink-0`} />
                       <div>
                         <div className="text-xs text-[#374151]">{item.text}</div>
@@ -1303,11 +1390,11 @@ export default function DealDetailClient({
               {showSocialProof && (
                 <div className="bg-[#FEF2F2] rounded-xl p-4 border border-[#FECACA]">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-[#0E3470]">
+                    <div className="text-[32px] font-[800] text-[#DC2626]">
                       {deal.viewing_count}
                     </div>
                     <div className="text-xs text-[#6B7280] mb-2">investors reviewing</div>
-                    <div className="text-2xl font-bold text-[#0E3470]">
+                    <div className="text-[32px] font-[800] text-[#DC2626]">
                       {deal.meetings_count}
                     </div>
                     <div className="text-xs text-[#6B7280]">meetings scheduled</div>
@@ -1318,7 +1405,7 @@ export default function DealDetailClient({
           </div>
         </div>
 
-        {/* ========== DUE DILIGENCE TAB ========== */}
+        {/* ========== 5G. DUE DILIGENCE TAB ========== */}
         <div
           className="transition-opacity duration-200"
           style={{ display: activeTab === 'due-diligence' ? 'block' : 'none' }}
@@ -1328,18 +1415,21 @@ export default function DealDetailClient({
             <div className="flex items-start justify-between mb-6">
               <div className="flex-1 mr-6">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-semibold text-[#0B8A4D]">
-                    {ddProgress}% Complete
+                  <span className="data-label !text-[#0B8A4D]">
+                    DD COMPLETION
                   </span>
-                  <span className="text-xs text-[#9CA3AF]">
-                    {verifiedDocs} of {totalDocs} verified
+                  <span className="text-sm font-semibold text-[#0B8A4D]">
+                    {ddProgress}%
                   </span>
                 </div>
-                <div className="bg-[#EEF0F4] rounded-full h-3 overflow-hidden">
+                <div className="bg-[#EEF0F4] rounded-full h-2 overflow-hidden">
                   <div
                     className="bg-gradient-to-r from-[#0B8A4D] to-[#34D399] h-full rounded-full transition-all duration-500"
                     style={{ width: `${ddProgress}%` }}
                   />
+                </div>
+                <div className="text-[11px] text-[#9CA3AF] mt-1">
+                  {verifiedDocs} of {totalDocs} verified
                 </div>
               </div>
               <a
@@ -1377,8 +1467,9 @@ export default function DealDetailClient({
               ))}
               {deal.dd_folders.length === 0 && (
                 <div className="col-span-2 bg-white rounded-xl border border-[#EEF0F4] p-12 text-center">
+                  <span className="text-3xl block mb-3">{'\u231B'}</span>
                   <p className="text-sm text-[#9CA3AF]">
-                    No due diligence documents available yet.
+                    Documents pending upload
                   </p>
                 </div>
               )}
@@ -1386,7 +1477,7 @@ export default function DealDetailClient({
           </div>
         </div>
 
-        {/* ========== DEAL STRUCTURE TAB ========== */}
+        {/* ========== 5H. DEAL STRUCTURE TAB ========== */}
         <div
           className="transition-opacity duration-200"
           style={{ display: activeTab === 'deal-structure' ? 'block' : 'none' }}
@@ -1398,23 +1489,24 @@ export default function DealDetailClient({
               <FadeInOnScroll delay={0}>
                 <button
                   onClick={() => setSelectedStructure('assignment')}
-                  className={`w-full bg-white rounded-xl border-2 p-6 text-left cursor-pointer transition-all ${
+                  className={`w-full bg-white rounded-xl border-2 p-6 text-left cursor-pointer transition-all relative ${
                     selectedStructure === 'assignment'
-                      ? 'border-[#BC9C45] shadow-[0_0_0_3px_#FDF8ED]'
+                      ? 'border-[#BC9C45] shadow-[0_0_0_3px_#FDF8ED,0_0_20px_rgba(188,156,69,0.15)]'
                       : 'border-[#EEF0F4] hover:border-[#D1D5DB]'
                   }`}
                 >
-                  <h3 className="font-bold text-[#0E3470] text-lg mb-4">
-                    Option A: Assignment
-                  </h3>
-                  <div className="mb-4">
-                    <div className="data-label mb-1">
-                      Assignment Fee
-                    </div>
-                    <div className="text-2xl font-bold text-[#0E3470]">
-                      {deal.assignment_fee}
-                    </div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-[700] uppercase tracking-[1.5px] text-[#BC9C45]">
+                      OPTION A
+                    </span>
+                    {/* Assignment fee large number top-right */}
+                    <span className="text-[32px] font-[800] text-[#BC9C45] leading-none">
+                      {deal.assignment_fee ?? '3%'}
+                    </span>
                   </div>
+                  <h3 className="font-[700] text-[#0E3470] text-[20px] mb-4">
+                    Assignment
+                  </h3>
                   <p className="text-sm text-[#6B7280] mb-4">
                     Clean assignment of contract with fixed fee. All projected
                     returns account for the assignment fee.
@@ -1439,12 +1531,15 @@ export default function DealDetailClient({
                   onClick={() => setSelectedStructure('gplp')}
                   className={`w-full bg-white rounded-xl border-2 p-6 text-left cursor-pointer transition-all ${
                     selectedStructure === 'gplp'
-                      ? 'border-[#BC9C45] shadow-[0_0_0_3px_#FDF8ED]'
+                      ? 'border-[#BC9C45] shadow-[0_0_0_3px_#FDF8ED,0_0_20px_rgba(188,156,69,0.15)]'
                       : 'border-[#EEF0F4] hover:border-[#D1D5DB]'
                   }`}
                 >
-                  <h3 className="font-bold text-[#0E3470] text-lg mb-4">
-                    Option B: GP/LP Partnership
+                  <span className="text-[10px] font-[700] uppercase tracking-[1.5px] text-[#BC9C45] block mb-2">
+                    OPTION B
+                  </span>
+                  <h3 className="font-[700] text-[#0E3470] text-[20px] mb-4">
+                    GP/LP Partnership
                   </h3>
                   <div className="space-y-2 mb-4">
                     {[
@@ -1493,7 +1588,7 @@ export default function DealDetailClient({
           </div>
         </div>
 
-        {/* ========== SCHEDULE & CONTACT TAB ========== */}
+        {/* ========== 5I. SCHEDULE & CONTACT TAB ========== */}
         <div
           className="transition-opacity duration-200"
           style={{ display: activeTab === 'schedule' ? 'block' : 'none' }}
@@ -1514,10 +1609,10 @@ export default function DealDetailClient({
 
             {/* Right: Contact & Info */}
             <div className="space-y-4">
-              {/* Contact Card */}
+              {/* Contact Card with navy gradient avatar */}
               <div className="bg-white rounded-xl border border-[#EEF0F4] p-6 rp-card-shadow">
                 <div className="flex items-center gap-4 mb-5">
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#0E3470] to-[#1D5FB8] flex items-center justify-center shrink-0">
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#0E3470] to-[#1D5FB8] flex items-center justify-center shrink-0 shadow-lg">
                     <span className="text-white font-bold text-lg">
                       {initials || 'RP'}
                     </span>
@@ -1535,7 +1630,7 @@ export default function DealDetailClient({
                 <div className="space-y-2">
                   <a
                     href={`mailto:${contactEmail}?subject=${encodeURIComponent(`RE: ${deal.name}`)}`}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 border-2 border-[#BC9C45] text-[#BC9C45] hover:bg-[#FDF8ED] font-semibold text-sm rounded-xl transition-colors"
+                    className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#BC9C45] hover:bg-[#A88A3D] text-white font-semibold text-sm rounded-xl transition-colors"
                   >
                     <svg
                       width="16"
@@ -1550,7 +1645,7 @@ export default function DealDetailClient({
                       <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                       <polyline points="22,6 12,13 2,6" />
                     </svg>
-                    Email About This Deal
+                    Email {contactName?.split(' ')[0] || 'Shirel'} About This Deal
                   </a>
                   <a
                     href={`mailto:${contactEmail}?subject=${encodeURIComponent(`Callback Request: ${deal.name}`)}`}
@@ -1573,6 +1668,17 @@ export default function DealDetailClient({
                 </div>
               </div>
 
+              {/* Email Availability Card */}
+              <div className="bg-[#FDF8ED] border border-[#BC9C45]/30 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-2 h-2 rounded-full bg-[#0B8A4D] live-dot" />
+                  <span className="text-sm font-semibold text-[#0E3470]">Available via Email</span>
+                </div>
+                <p className="text-xs text-[#6B7280]">
+                  Typical response time: within 2 business hours
+                </p>
+              </div>
+
               {/* Notification Preferences */}
               <div className="bg-white rounded-xl border border-[#EEF0F4] p-6 rp-card-shadow">
                 <h4 className="data-label mb-3">
@@ -1581,14 +1687,14 @@ export default function DealDetailClient({
                 <div className="space-y-2.5">
                   {(
                     [
-                      { key: 'deadline' as const, label: 'Deadline reminders' },
+                      { key: 'deadline' as const, label: 'New deals matching your criteria' },
                       {
                         key: 'documents' as const,
                         label: 'New document uploads',
                       },
                       {
                         key: 'meetings' as const,
-                        label: 'Meeting confirmations',
+                        label: 'Deal activity updates',
                       },
                     ] as const
                   ).map((pref) => (
@@ -1608,14 +1714,17 @@ export default function DealDetailClient({
                     </label>
                   ))}
                 </div>
+                <p className="text-[10px] text-[#9CA3AF] mt-3">
+                  You control your notifications
+                </p>
               </div>
 
-              {/* Scarcity Indicator */}
+              {/* Limited Release Indicator */}
               <div className="bg-[#FEF2F2] border border-[#FECACA] rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="w-2 h-2 rounded-full bg-[#DC2626] animate-pulse" />
+                  <div className="w-2 h-2 rounded-full bg-[#DC2626] countdown-pulse" />
                   <span className="text-sm font-semibold text-[#DC2626]">
-                    Limited Release
+                    LIMITED RELEASE
                   </span>
                 </div>
                 <p className="text-xs text-[#4B5563] mb-1">
@@ -1629,12 +1738,12 @@ export default function DealDetailClient({
           </div>
         </div>
 
-        {/* ── Confidentiality Footer ── */}
+        {/* -- Confidentiality Footer -- */}
         <div className="px-8 pb-10 pt-4">
           <div className="border-t border-[#EEF0F4] pt-6 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 bg-gradient-to-br from-[#BC9C45] to-[#A88A3D] rounded flex items-center justify-center">
-                <span className="text-white text-[8px] font-bold font-[family-name:var(--font-bodoni)] italic">R</span>
+                <span className="text-white text-[8px] font-bold font-[family-name:var(--font-playfair)] italic">R</span>
               </div>
               <span className="text-[10px] text-[#9CA3AF] tracking-wide">
                 REPRIME TERMINAL

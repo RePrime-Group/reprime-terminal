@@ -113,7 +113,7 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
               <path d="M8 6h.01M16 6h.01M12 6h.01M8 10h.01M16 10h.01M12 10h.01" />
             </svg>
           </div>
-          <h3 className="font-[family-name:var(--font-bodoni-moda)] text-[20px] font-semibold text-rp-navy mb-1">
+          <h3 className="font-[family-name:var(--font-playfair)] text-[20px] font-semibold text-rp-navy mb-1">
             No deals yet
           </h3>
           <p className="text-sm text-rp-gray-400 mb-4">

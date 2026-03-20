@@ -1,6 +1,7 @@
 'use client';
 
 import DealCard from '@/components/portal/DealCard';
+import MarketIntelSidebar from '@/components/portal/MarketIntelSidebar';
 import { formatPriceCompact } from '@/lib/utils/format';
 
 export interface DealCardData {
@@ -41,7 +42,6 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
   const activeCount = activeDeals.length;
   const closedCount = closedDeals.length;
 
-  // Portfolio summary calculations
   const totalDealVolume = activeDeals.reduce((sum, d) => sum + (d.purchase_price || 0), 0);
   const totalEquity = activeDeals.reduce((sum, d) => sum + (d.equity_required || 0), 0);
   const avgIrr = activeDeals.length > 0
@@ -51,23 +51,21 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
     ? activeDeals.reduce((sum, d) => sum + (d.cap_rate || 0), 0) / activeDeals.length
     : 0;
 
-  // Derive quarter badge from first deal or default
   const quarterLabel =
     deals.find((d) => d.quarter_release)?.quarter_release ?? 'Q1 2026';
 
   const summaryMetrics = [
-    { label: 'TOTAL DEAL VOLUME', value: formatPriceCompact(totalDealVolume), color: 'text-[#0E3470]' },
-    { label: 'AGGREGATE EQUITY', value: formatPriceCompact(totalEquity), color: 'text-[#0E3470]' },
-    { label: 'AVG. PROJECTED IRR', value: avgIrr > 0 ? `${avgIrr.toFixed(1)}%` : '--', color: 'text-[#0B8A4D]' },
-    { label: 'AVG. CAP RATE', value: avgCapRate > 0 ? `${avgCapRate.toFixed(1)}%` : '--', color: 'text-[#0E3470]' },
-    { label: 'ACTIVE RELEASES', value: String(activeCount), color: 'text-[#0E3470]' },
+    { label: 'TOTAL DEAL VOLUME', value: formatPriceCompact(totalDealVolume) },
+    { label: 'AGGREGATE EQUITY', value: formatPriceCompact(totalEquity) },
+    { label: 'AVG. PROJECTED IRR', value: avgIrr > 0 ? `${avgIrr.toFixed(1)}%` : '--' },
+    { label: 'AVG. CAP RATE', value: avgCapRate > 0 ? `${avgCapRate.toFixed(1)}%` : '--' },
+    { label: 'ACTIVE RELEASES', value: String(activeCount) },
   ];
 
   return (
     <div className="max-w-[1600px] mx-auto">
       {/* ── Hero Section ── */}
       <div className="bg-gradient-to-br from-[#0A1628] via-[#0E3470] to-[#163D7A] relative overflow-hidden">
-        {/* Subtle geometric overlay */}
         <div
           className="absolute inset-0 opacity-[0.03]"
           style={{
@@ -80,12 +78,12 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
           <div className="flex items-end justify-between mb-8">
             <div>
               <div className="flex items-center gap-2.5 mb-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#0B8A4D] countdown-pulse" />
+                <div className="w-1.5 h-1.5 rounded-full bg-[#0B8A4D] live-dot" />
                 <span className="text-[10px] font-semibold tracking-[2px] uppercase text-[#BC9C45]">
                   {quarterLabel} Release
                 </span>
               </div>
-              <h1 className="font-[family-name:var(--font-bodoni)] text-[38px] font-bold text-white leading-tight">
+              <h1 className="font-[family-name:var(--font-playfair)] text-[38px] font-bold text-white leading-tight">
                 Active Opportunities
               </h1>
               <p className="text-[13px] text-white/50 mt-2 font-light">
@@ -99,15 +97,14 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
             </div>
           </div>
 
-          {/* Portfolio Summary Bar */}
           {activeCount > 0 && (
             <div className="grid grid-cols-5 gap-px bg-white/[0.06] rounded-xl overflow-hidden border border-white/[0.06]">
               {summaryMetrics.map((m) => (
                 <div key={m.label} className="bg-[#0E3470]/40 backdrop-blur-sm px-5 py-4">
-                  <div className="text-[9px] font-semibold tracking-[1.5px] uppercase text-white/40 mb-1.5">
+                  <div className="text-[9px] font-bold tracking-[1.5px] uppercase text-white/40 mb-1.5">
                     {m.label}
                   </div>
-                  <div className={`text-[20px] font-extrabold text-white tabular-nums`}>
+                  <div className="text-[20px] font-extrabold text-white tabular-nums">
                     {m.value}
                   </div>
                 </div>
@@ -116,46 +113,43 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
           )}
         </div>
 
-        {/* Bottom gold accent line */}
         <div className="h-px bg-gradient-to-r from-transparent via-[#BC9C45]/40 to-transparent" />
       </div>
 
-      {/* ── Deal Card Grid ── */}
+      {/* ── Main Content: Deal Grid + Market Intel Sidebar ── */}
       <div className="px-10 py-10">
         {deals.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24">
             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#0E3470] to-[#1D5FB8] flex items-center justify-center mb-5 shadow-[0_4px_20px_rgba(14,52,112,0.2)]">
-              <svg
-                width="36"
-                height="36"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M3 21V7L12 3L21 7V21H15V13H9V21H3Z"
-                  fill="rgba(255,255,255,0.2)"
-                  stroke="rgba(255,255,255,0.4)"
-                  strokeWidth="1.5"
-                  strokeLinejoin="round"
-                />
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+                <path d="M3 21V7L12 3L21 7V21H15V13H9V21H3Z" fill="rgba(255,255,255,0.2)" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinejoin="round" />
                 <rect x="10" y="15" width="4" height="6" rx="0.5" fill="rgba(255,255,255,0.3)" />
                 <rect x="7" y="9" width="2.5" height="2.5" rx="0.5" fill="rgba(255,255,255,0.3)" />
                 <rect x="14.5" y="9" width="2.5" height="2.5" rx="0.5" fill="rgba(255,255,255,0.3)" />
               </svg>
             </div>
-            <p className="font-[family-name:var(--font-bodoni)] text-xl font-semibold text-[#0E3470] mb-1.5">
+            <p className="font-[family-name:var(--font-playfair)] text-xl font-semibold text-[#0E3470] mb-1.5">
               No active opportunities at this time
             </p>
-            <p className="text-sm text-[#6B7280]">
-              Check back soon for new investment opportunities.
+            <p className="text-sm text-[#6B7280] max-w-md text-center">
+              New deals are released to qualified members on a controlled schedule.
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-7">
-            {deals.map((deal, index) => (
-              <DealCard key={deal.id} deal={deal} locale={locale} index={index} />
-            ))}
+          <div className="flex gap-8">
+            {/* Deal Card Grid */}
+            <div className="flex-1 min-w-0">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-7">
+                {deals.map((deal, index) => (
+                  <DealCard key={deal.id} deal={deal} locale={locale} index={index} />
+                ))}
+              </div>
+            </div>
+
+            {/* Market Intelligence Sidebar */}
+            <div className="w-[320px] shrink-0">
+              <MarketIntelSidebar />
+            </div>
           </div>
         )}
       </div>
@@ -165,7 +159,7 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
         <div className="border-t border-[#EEF0F4] pt-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-5 h-5 bg-gradient-to-br from-[#BC9C45] to-[#A88A3D] rounded flex items-center justify-center">
-              <span className="text-white text-[8px] font-bold font-[family-name:var(--font-bodoni)] italic">R</span>
+              <span className="text-white text-[8px] font-bold font-[family-name:var(--font-playfair)] italic">R</span>
             </div>
             <span className="text-[10px] text-[#9CA3AF] tracking-wide">
               REPRIME TERMINAL

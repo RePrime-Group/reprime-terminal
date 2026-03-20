@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import PortalNavbar from '@/components/portal/PortalNavbar';
+import MarketTicker from '@/components/portal/MarketTicker';
 
 export default async function PortalLayout({
   children,
@@ -26,6 +27,7 @@ export default async function PortalLayout({
 
   return (
     <div className="min-h-screen rp-page-texture">
+      <MarketTicker />
       <PortalNavbar
         firstName={terminalUser.full_name?.split(' ')[0] ?? ''}
         locale={locale}

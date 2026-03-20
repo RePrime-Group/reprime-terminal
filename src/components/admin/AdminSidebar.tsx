@@ -92,7 +92,7 @@ export default function AdminSidebar({ user, locale }: AdminSidebarProps) {
       <div className="pt-8 px-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-rp-gold flex items-center justify-center">
-            <span className="font-[var(--font-bodoni)] text-white text-xl italic font-bold leading-none">
+            <span className="font-[var(--font-playfair)] text-white text-xl italic font-bold leading-none">
               R
             </span>
           </div>
@@ -100,7 +100,7 @@ export default function AdminSidebar({ user, locale }: AdminSidebarProps) {
             <span className="text-rp-navy text-[15px] font-semibold tracking-[3px] leading-tight">
               REPRIME
             </span>
-            <span className="font-[family-name:var(--font-bodoni)] text-[#BC9C45] text-[13px] italic leading-tight">
+            <span className="font-[family-name:var(--font-playfair)] text-[#BC9C45] text-[13px] italic leading-tight">
               Terminal
             </span>
           </div>

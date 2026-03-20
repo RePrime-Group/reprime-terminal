@@ -77,16 +77,16 @@ export default function LoginCard({ locale }: LoginCardProps) {
 
   return (
     <div className="w-full max-w-md bg-white/[0.02] border border-white/[0.08] backdrop-blur-[40px] rounded-2xl p-8 shadow-[0_32px_64px_rgba(0,0,0,0.5)] transition-all duration-300 hover:border-[#BC9C45]/20 hover:shadow-[0_0_30px_rgba(188,156,69,0.08)]">
-      <div className="w-14 h-14 bg-gradient-to-br from-rp-gold to-rp-gold-soft rounded-xl flex items-center justify-center mx-auto">
-        <span className="text-2xl font-extrabold text-white font-[family-name:var(--font-bodoni)]">
+      <div className="w-14 h-14 bg-gradient-to-br from-rp-gold to-rp-gold-soft rounded-xl flex items-center justify-center mx-auto animate-glow">
+        <span className="text-2xl font-extrabold text-white font-[family-name:var(--font-playfair)]">
           R
         </span>
       </div>
 
-      <h1 className="text-[28px] font-bold text-white tracking-[0.15em] text-center mt-4">
+      <h1 className="text-[28px] font-bold text-white tracking-[4px] text-center mt-4">
         REPRIME
       </h1>
-      <p className="text-xs font-[family-name:var(--font-bodoni)] italic text-rp-gold text-center mt-1">
+      <p className="text-xs font-[family-name:var(--font-playfair)] italic text-rp-gold text-center mt-1">
         Terminal
       </p>
 
