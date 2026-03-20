@@ -9,7 +9,10 @@ export type ActivityAction =
   | 'structure_viewed'
   | 'irr_calculator_used'
   | 'meeting_requested'
-  | 'page_time';
+  | 'page_time'
+  | 'expressed_interest'
+  | 'om_downloaded'
+  | 'portal_viewed';
 
 export interface TerminalUser {
   id: string;

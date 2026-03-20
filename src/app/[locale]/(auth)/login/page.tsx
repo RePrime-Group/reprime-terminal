@@ -28,11 +28,14 @@ export default function LoginPage() {
       <img
         src="/images/login-hero.jpg"
         alt=""
-        className="absolute inset-0 w-full h-full object-cover z-0 opacity-40"
+        className="absolute inset-0 w-full h-full object-cover z-0"
+        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
       />
+      {/* Dark overlay for readability */}
+      <div className="absolute inset-0 z-[1]" style={{ background: 'rgba(7, 9, 15, 0.75)' }} />
       {/* Subtle grid */}
       <div
-        className="absolute inset-0 z-0 opacity-[0.03]"
+        className="absolute inset-0 z-[2] opacity-[0.03]"
         style={{
           backgroundImage: `
             linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),

@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { formatPrice, formatPriceCompact, formatPercent } from '@/lib/utils/format';
 
+export const metadata = { title: 'Portfolio — RePrime Terminal' };
+
 interface Deal {
   id: string;
   name: string;

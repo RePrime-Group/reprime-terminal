@@ -32,6 +32,9 @@ const ACTION_LABELS: Record<ActivityAction, string> = {
   irr_calculator_used: 'Used IRR Calculator',
   meeting_requested: 'Requested Meeting',
   page_time: 'Time on Page',
+  expressed_interest: 'Expressed Interest',
+  om_downloaded: 'Downloaded OM',
+  portal_viewed: 'Viewed Portal',
 };
 
 const ALL_ACTIONS: ActivityAction[] = [
@@ -42,6 +45,9 @@ const ALL_ACTIONS: ActivityAction[] = [
   'irr_calculator_used',
   'meeting_requested',
   'page_time',
+  'expressed_interest',
+  'om_downloaded',
+  'portal_viewed',
 ];
 
 const PAGE_SIZE = 50;

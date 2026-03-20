@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
 import InvestorListClient from '@/components/admin/InvestorListClient';
 
+export const metadata = { title: 'Investors — RePrime Terminal Admin' };
+
 interface InvestorsPageProps {
   params: Promise<{ locale: string }>;
 }

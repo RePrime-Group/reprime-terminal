@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import PortalDashboardClient from '@/components/portal/PortalDashboardClient';
 
+export const metadata = { title: 'Active Opportunities — RePrime Terminal' };
+
 interface DealWithMeta {
   id: string;
   name: string;

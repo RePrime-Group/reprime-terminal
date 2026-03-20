@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 
+export const metadata = { title: 'Admin — RePrime Terminal' };
+
 export default async function AdminLayout({
   children,
   params,

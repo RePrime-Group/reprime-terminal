@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server';
 import ActivityLogClient from '@/components/admin/ActivityLogClient';
 import type { ActivityAction } from '@/lib/types/database';
 
+export const metadata = { title: 'Activity — RePrime Terminal Admin' };
+
 interface ActivityPageProps {
   params: Promise<{ locale: string }>;
 }

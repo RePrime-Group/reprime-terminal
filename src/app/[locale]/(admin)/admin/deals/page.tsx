@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server';
 import type { TerminalDeal } from '@/lib/types/database';
 import DealListClient from '@/components/admin/DealListClient';
 
+export const metadata = { title: 'Deals — RePrime Terminal Admin' };
+
 export default async function DealsPage({
   params,
 }: {

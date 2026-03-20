@@ -15,6 +15,13 @@ interface DealDetailPageProps {
   params: Promise<{ locale: string; id: string }>;
 }
 
+export async function generateMetadata({ params }: DealDetailPageProps) {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data } = await supabase.from('terminal_deals').select('name').eq('id', id).single();
+  return { title: data ? `${data.name} — RePrime Terminal` : 'Deal — RePrime Terminal' };
+}
+
 export default async function DealDetailPage({ params }: DealDetailPageProps) {
   const { locale, id } = await params;
   const supabase = await createClient();

@@ -825,11 +825,35 @@ export default function DealDetailClient({
   const { trackActivity } = useActivityTracker();
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
   const [selectedStructure, setSelectedStructure] = useState<'assignment' | 'gplp'>('assignment');
+  const [expressedInterest, setExpressedInterest] = useState(false);
+  const [showExpressModal, setShowExpressModal] = useState(false);
+  const [checkingInterest, setCheckingInterest] = useState(true);
 
   // Track deal_viewed on mount
   useEffect(() => {
     trackActivity('deal_viewed', deal.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deal.id]);
+
+  // Check if user already expressed interest
+  useEffect(() => {
+    async function checkExisting() {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setCheckingInterest(false); return; }
+
+      const { data } = await supabase
+        .from('terminal_activity_log')
+        .select('id')
+        .eq('deal_id', deal.id)
+        .eq('user_id', user.id)
+        .eq('action', 'expressed_interest')
+        .limit(1);
+
+      if (data && data.length > 0) setExpressedInterest(true);
+      setCheckingInterest(false);
+    }
+    checkExisting();
   }, [deal.id]);
 
   // Track tab-specific events
@@ -852,6 +876,22 @@ export default function DealDetailClient({
 
   const handleMeetingRequested = () => {
     trackActivity('meeting_requested', deal.id);
+  };
+
+  const handleExpressInterest = async () => {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    await supabase.from('terminal_activity_log').insert({
+      user_id: user.id,
+      deal_id: deal.id,
+      action: 'expressed_interest',
+      metadata: {},
+    });
+
+    setExpressedInterest(true);
+    setShowExpressModal(false);
   };
 
   // DD progress calculation
@@ -950,13 +990,32 @@ export default function DealDetailClient({
           </div>
           <div className="flex items-center gap-3 ml-4 shrink-0">
             {/* Express Interest button */}
-            <button className="px-5 py-2 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[12px] font-semibold rounded-lg transition-colors shadow-[0_2px_6px_rgba(188,156,69,0.25)]">
-              Express Interest
-            </button>
+            {expressedInterest ? (
+              <span className="px-5 py-2 bg-[#ECFDF5] text-[#0B8A4D] text-[12px] font-semibold rounded-lg flex items-center gap-1.5">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#0B8A4D" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8l4 4 6-7"/></svg>
+                Interest Expressed
+              </span>
+            ) : (
+              <button
+                onClick={() => setShowExpressModal(true)}
+                disabled={checkingInterest}
+                className="px-5 py-2 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[12px] font-semibold rounded-lg transition-colors shadow-[0_2px_6px_rgba(188,156,69,0.25)] disabled:opacity-50"
+              >
+                Express Interest
+              </button>
+            )}
             {/* Download OM button */}
-            <button className="px-4 py-2 border border-[#EEF0F4] hover:border-[#BC9C45] text-[#6B7280] hover:text-[#0E3470] text-[12px] font-semibold rounded-lg transition-colors">
+            <a
+              href={`/api/deals/${deal.id}/package`}
+              className="px-4 py-2 border border-[#EEF0F4] hover:border-[#BC9C45] text-[#6B7280] hover:text-[#0E3470] text-[12px] font-semibold rounded-lg transition-colors inline-flex items-center gap-1.5"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
               Download OM
-            </button>
+            </a>
             <div className="h-4 w-px bg-[#EEF0F4]" />
             <span className="text-[9px] font-semibold tracking-[1.5px] uppercase text-[#9CA3AF]">
               CONFIDENTIAL
@@ -1756,6 +1815,38 @@ export default function DealDetailClient({
           </div>
         </div>
       </div>
+
+      {showExpressModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 p-8 animate-fade-up" style={{ animationDuration: '0.3s' }}>
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 rounded-full bg-[#FDF8ED] flex items-center justify-center mb-4">
+                <span className="text-2xl">&#x1F4BC;</span>
+              </div>
+              <h3 className="font-[family-name:var(--font-playfair)] text-[18px] font-bold text-[#0E3470] mb-2">
+                Express Interest in {deal.name}
+              </h3>
+              <p className="text-[13px] text-[#4B5563] mb-6">
+                The RePrime team will contact you within 24 hours to discuss this opportunity.
+              </p>
+              <div className="flex items-center gap-3 w-full">
+                <button
+                  onClick={() => setShowExpressModal(false)}
+                  className="flex-1 py-2.5 text-[13px] font-medium text-[#6B7280] hover:text-[#0E3470] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleExpressInterest}
+                  className="flex-1 py-2.5 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[13px] font-semibold rounded-lg transition-colors"
+                >
+                  Confirm
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
