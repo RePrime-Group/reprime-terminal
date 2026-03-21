@@ -19,7 +19,7 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale} dir={locale === 'he' ? 'rtl' : 'ltr'} suppressHydrationWarning>
-      <body className="font-[family-name:var(--font-poppins)] antialiased">
+      <body className="font-[family-name:var(--font-inter)] antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
         </NextIntlClientProvider>

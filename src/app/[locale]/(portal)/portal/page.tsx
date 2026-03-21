@@ -50,7 +50,7 @@ export default async function PortalDashboardPage({
       let photo_url: string | null = null;
       if (photos && photos.length > 0) {
         const { data: urlData } = supabase.storage
-          .from('deal-photos')
+          .from('terminal-deal-photos')
           .getPublicUrl(photos[0].storage_path);
         photo_url = urlData?.publicUrl ?? null;
       }

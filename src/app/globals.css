@@ -33,13 +33,13 @@
   --color-rp-gray-700: #374151;
   --color-rp-login-bg: #07090F;
 
-  --font-poppins: "Poppins", sans-serif;
+  --font-inter: "Inter", sans-serif;
   --font-playfair: "Playfair Display", serif;
 }
 
 @layer base {
   html {
-    font-family: var(--font-poppins);
+    font-family: var(--font-inter);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -50,13 +50,15 @@
 }
 
 @layer utilities {
-  /* Page background — warm cream with navy/gold radial depth */
+  /* Page background — rich gradient with depth */
   .rp-page-texture {
-    background-color: var(--color-rp-cream);
+    background-color: #F8F6F1;
     background-image:
-      radial-gradient(ellipse at 15% 0%, rgba(14, 52, 112, 0.06) 0%, transparent 60%),
-      radial-gradient(ellipse at 85% 100%, rgba(188, 156, 69, 0.04) 0%, transparent 60%),
-      linear-gradient(180deg, rgba(7, 9, 15, 0.02) 0%, transparent 40%);
+      radial-gradient(ellipse at 0% 0%, rgba(14, 52, 112, 0.07) 0%, transparent 50%),
+      radial-gradient(ellipse at 100% 0%, rgba(188, 156, 69, 0.05) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 100%, rgba(14, 52, 112, 0.04) 0%, transparent 60%),
+      linear-gradient(180deg, rgba(7, 9, 15, 0.025) 0%, rgba(248, 246, 241, 0) 30%);
+    background-attachment: fixed;
   }
 
   /* Premium dark gradient for hero sections */

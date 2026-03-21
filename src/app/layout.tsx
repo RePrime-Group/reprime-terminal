@@ -1,17 +1,17 @@
 import type { Metadata } from 'next';
-import { Poppins, Playfair_Display } from 'next/font/google';
+import { Inter, Playfair_Display } from 'next/font/google';
 import './globals.css';
 
-const poppins = Poppins({
+const inter = Inter({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700', '800', '900'],
-  variable: '--font-poppins',
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-inter',
   display: 'swap',
 });
 
 const playfairDisplay = Playfair_Display({
   subsets: ['latin'],
-  weight: ['400', '700', '900'],
+  weight: ['400', '500', '600', '700', '900'],
   style: ['normal', 'italic'],
   variable: '--font-playfair',
   display: 'swap',
@@ -34,7 +34,7 @@ export default function RootLayout({
 }>) {
   return (
     <html suppressHydrationWarning>
-      <body className={`${poppins.variable} ${playfairDisplay.variable} font-[family-name:var(--font-poppins)] antialiased`}>
+      <body className={`${inter.variable} ${playfairDisplay.variable} font-[family-name:var(--font-inter)] antialiased`}>
         {children}
       </body>
     </html>

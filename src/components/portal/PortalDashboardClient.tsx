@@ -72,50 +72,50 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
   const hasAnyDeals = deals.length > 0;
 
   return (
-    <div className="max-w-[1600px] mx-auto">
-      {/* ── Hero Section ── */}
-      <div className="rp-dark-gradient relative overflow-hidden">
+    <div>
+      {/* ── Full-width dark hero that bleeds edge to edge ── */}
+      <div className="relative overflow-hidden" style={{ background: 'linear-gradient(180deg, #07090F 0%, #0A1628 35%, #0E3470 70%, #1A4A8A 100%)' }}>
+        {/* Subtle grid */}
         <div
-          className="absolute inset-0 opacity-[0.02]"
+          className="absolute inset-0 opacity-[0.015]"
           style={{
             backgroundImage:
-              'linear-gradient(rgba(188,156,69,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(188,156,69,0.4) 1px, transparent 1px)',
+              'linear-gradient(rgba(188,156,69,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(188,156,69,0.5) 1px, transparent 1px)',
             backgroundSize: '40px 40px',
           }}
         />
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\' opacity=\'0.5\'/%3E%3C/svg%3E")' }} />
-        <div className="relative px-10 py-10">
+        <div className="max-w-[1600px] mx-auto relative px-10 py-12">
           <div className="flex items-end justify-between mb-8">
             <div>
-              <div className="flex items-center gap-2.5 mb-2">
+              <div className="flex items-center gap-2.5 mb-3">
                 <div className="w-1.5 h-1.5 rounded-full bg-[#0B8A4D] live-dot" />
-                <span className="text-[10px] font-medium tracking-[2.5px] uppercase text-[#D4A843]">
+                <span className="text-[10px] font-medium tracking-[3px] uppercase text-[#D4A843]">
                   {quarterLabel} Release
                 </span>
               </div>
-              <h1 className="font-[family-name:var(--font-playfair)] text-[38px] font-semibold text-white leading-tight tracking-[-0.01em]">
+              <h1 className="font-[family-name:var(--font-playfair)] text-[42px] font-semibold text-white leading-[1.1] tracking-[-0.02em]">
                 Active Opportunities
               </h1>
-              <p className="text-[13px] text-white/40 mt-2 font-light tracking-wide">
+              <p className="text-[13px] text-white/35 mt-3 font-light tracking-wide leading-relaxed">
                 {upcomingDeals.length > 0 && <>{upcomingDeals.length} upcoming &middot; </>}
                 {activeCount} active &middot; {closedCount} closed &middot; All under executed PSA &middot; 30-day DD &middot; 30-day close
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <span className="bg-white/[0.04] border border-white/[0.08] text-white/50 px-4 py-2 rounded-lg text-[10px] font-medium tracking-[1.5px] uppercase">
+              <span className="bg-white/[0.03] border border-white/[0.06] text-white/40 px-5 py-2.5 rounded-lg text-[9px] font-medium tracking-[2px] uppercase">
                 CONFIDENTIAL
               </span>
             </div>
           </div>
 
           {activeCount > 0 && (
-            <div className="grid grid-cols-5 gap-px bg-white/[0.04] rounded-xl overflow-hidden border border-white/[0.06]">
+            <div className="grid grid-cols-5 gap-[1px] rounded-xl overflow-hidden border border-white/[0.06]" style={{ background: 'rgba(255,255,255,0.04)' }}>
               {summaryMetrics.map((m) => (
-                <div key={m.label} className="bg-[#0E3470]/30 backdrop-blur-sm px-5 py-4 border-l-2 border-l-[#BC9C45]/20 first:border-l-0">
-                  <div className="text-[9px] font-bold tracking-[2px] uppercase text-white/35 mb-1.5">
+                <div key={m.label} className="px-5 py-5" style={{ background: 'rgba(14, 52, 112, 0.25)', backdropFilter: 'blur(8px)' }}>
+                  <div className="text-[9px] font-semibold tracking-[2px] uppercase text-white/30 mb-2">
                     {m.label}
                   </div>
-                  <div className="text-[20px] font-bold text-white tabular-nums">
+                  <div className="text-[22px] font-semibold text-white tabular-nums tracking-tight">
                     {m.value}
                   </div>
                 </div>
@@ -124,7 +124,8 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
           )}
         </div>
 
-        <div className="h-[2px] bg-gradient-to-r from-transparent via-[#BC9C45]/50 to-transparent" />
+        {/* Gradient fade from hero into page background */}
+        <div className="h-24" style={{ background: 'linear-gradient(180deg, transparent 0%, #F8F6F1 100%)' }} />
       </div>
 
       {/* ── Main Content ── */}

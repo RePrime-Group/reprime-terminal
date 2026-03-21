@@ -55,9 +55,9 @@ export default function PortalNavbar({ firstName, locale, activeTab = 'dashboard
   return (
     <>
       {/* Gold accent strip */}
-      <div className="h-[3px] bg-gradient-to-r from-[#BC9C45] via-[#D4B96A] to-[#BC9C45]" />
+      <div className="h-[2px] bg-gradient-to-r from-[#BC9C45] via-[#D4B96A] to-[#BC9C45]" />
 
-      <nav className="h-[72px] bg-white/95 backdrop-blur-sm border-b border-[#EEF0F4] px-8 flex items-center justify-between sticky top-0 z-50 shadow-[0_1px_3px_rgba(14,52,112,0.04),0_4px_12px_rgba(14,52,112,0.02)]">
+      <nav className="h-[64px] bg-[#07090F]/95 backdrop-blur-xl px-8 flex items-center justify-between sticky top-0 z-50 border-b border-white/[0.06]">
         {/* Left: Logo + Nav tabs */}
         <div className="flex items-center gap-5">
           <Link href="/portal" className="flex items-center gap-3 select-none group">
@@ -65,16 +65,16 @@ export default function PortalNavbar({ firstName, locale, activeTab = 'dashboard
               <span className="text-white font-bold text-lg leading-none font-[family-name:var(--font-playfair)] italic">R</span>
             </div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-[#0E3470] font-medium text-[15px] tracking-[4px] uppercase">
+              <span className="text-white font-medium text-[14px] tracking-[4px] uppercase">
                 REPRIME
               </span>
-              <span className="font-[family-name:var(--font-playfair)] text-[#BC9C45] italic text-[12px] font-normal">
+              <span className="font-[family-name:var(--font-playfair)] text-[#D4A843] italic text-[11px] font-normal">
                 Terminal
               </span>
             </div>
           </Link>
 
-          <div className="h-5 w-px bg-[#ECD9A0] ml-1" />
+          <div className="h-5 w-px bg-white/10 ml-1" />
 
           {/* Nav Tabs */}
           <div className="flex items-center gap-1 ml-1">
@@ -83,10 +83,10 @@ export default function PortalNavbar({ firstName, locale, activeTab = 'dashboard
                 key={tab.key}
                 href={tab.href}
                 locale={locale}
-                className={`px-3.5 py-2 text-[11px] font-semibold rounded-md transition-all ${
+                className={`px-3.5 py-2 text-[11px] font-medium rounded-md transition-all ${
                   activeTab === tab.key
-                    ? 'bg-[#0E3470]/[0.06] text-[#0E3470] border-b-2 border-[#BC9C45]'
-                    : 'text-[#6B7280] hover:text-[#0E3470] hover:bg-[#F7F8FA]'
+                    ? 'bg-white/[0.08] text-white border-b-2 border-[#D4A843]'
+                    : 'text-white/40 hover:text-white/70 hover:bg-white/[0.04]'
                 }`}
               >
                 {tab.label}
@@ -100,10 +100,10 @@ export default function PortalNavbar({ firstName, locale, activeTab = 'dashboard
           {/* Voice Button */}
           <button
             onClick={() => setShowVoiceModal(true)}
-            className="w-[34px] h-[34px] rounded-full border border-[#EEF0F4] bg-white flex items-center justify-center hover:border-[#BC9C45] transition-colors"
+            className="w-[34px] h-[34px] rounded-full border border-white/10 bg-white/5 flex items-center justify-center hover:border-[#D4A843]/40 transition-colors"
             aria-label="Ask Terminal"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" />
               <path d="M19 10v2a7 7 0 01-14 0v-2" />
               <line x1="12" y1="19" x2="12" y2="23" />
@@ -118,7 +118,7 @@ export default function PortalNavbar({ firstName, locale, activeTab = 'dashboard
               className="w-[34px] h-[34px] rounded-full border border-[#EEF0F4] bg-white flex items-center justify-center hover:border-[#BC9C45] transition-colors relative"
               aria-label="Notifications"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
                 <path d="M13.73 21a2 2 0 01-3.46 0" />
               </svg>
@@ -126,21 +126,21 @@ export default function PortalNavbar({ firstName, locale, activeTab = 'dashboard
             </button>
 
             {showNotifications && (
-              <div className="absolute right-0 top-[42px] w-[320px] bg-white rounded-xl shadow-xl border border-[#EEF0F4] animate-slide-down z-50">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-[#EEF0F4]">
-                  <span className="text-[13px] font-semibold text-[#0E3470]">Notifications</span>
-                  <button className="text-[11px] font-semibold text-[#BC9C45] hover:underline">
+              <div className="absolute right-0 top-[42px] w-[320px] bg-[#0F1419] rounded-xl shadow-2xl border border-white/[0.08] animate-slide-down z-50">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
+                  <span className="text-[13px] font-medium text-white">Notifications</span>
+                  <button className="text-[11px] font-medium text-[#D4A843] hover:underline">
                     Mark all read
                   </button>
                 </div>
                 <div className="max-h-[320px] overflow-y-auto">
                   {notifications.map((item, idx) => (
-                    <div key={idx} className="px-4 py-3 hover:bg-[#F7F8FA] transition-colors border-b border-[#EEF0F4] last:border-b-0 flex gap-3">
+                    <div key={idx} className="px-4 py-3 hover:bg-white/[0.04] transition-colors border-b border-white/[0.04] last:border-b-0 flex gap-3">
                       <span className="text-lg shrink-0">{item.icon}</span>
                       <div className="min-w-0 flex-1">
-                        <div className="text-[12px] font-semibold text-[#0E3470]">{item.title}</div>
-                        <div className="text-[11px] text-[#6B7280] truncate">{item.desc}</div>
-                        <div className="text-[10px] text-[#9CA3AF] mt-0.5">{item.time}</div>
+                        <div className="text-[12px] font-medium text-white">{item.title}</div>
+                        <div className="text-[11px] text-white/50 truncate">{item.desc}</div>
+                        <div className="text-[10px] text-white/25 mt-0.5">{item.time}</div>
                       </div>
                     </div>
                   ))}
@@ -149,17 +149,17 @@ export default function PortalNavbar({ firstName, locale, activeTab = 'dashboard
             )}
           </div>
 
-          <div className="h-5 w-px bg-[#EEF0F4]" />
+          <div className="h-5 w-px bg-white/10" />
 
           {/* Language toggle */}
-          <div className="bg-[#F7F8FA] rounded-full p-0.5 inline-flex border border-[#EEF0F4]">
+          <div className="bg-white/[0.06] rounded-full p-0.5 inline-flex border border-white/[0.08]">
             <Link
               href={pathname}
               locale="en"
               className={`px-3.5 py-1.5 text-[11px] transition-all rounded-full ${
                 locale === 'en'
-                  ? 'bg-[#0E3470] text-white font-semibold shadow-sm'
-                  : 'text-[#9CA3AF] font-medium hover:text-[#0E3470]'
+                  ? 'bg-[#D4A843] text-[#07090F] font-semibold shadow-sm'
+                  : 'text-white/40 font-medium hover:text-white/70'
               }`}
             >
               EN
@@ -169,30 +169,30 @@ export default function PortalNavbar({ firstName, locale, activeTab = 'dashboard
               locale="he"
               className={`px-3.5 py-1.5 text-[11px] transition-all rounded-full ${
                 locale === 'he'
-                  ? 'bg-[#0E3470] text-white font-semibold shadow-sm'
-                  : 'text-[#9CA3AF] font-medium hover:text-[#0E3470]'
+                  ? 'bg-[#D4A843] text-[#07090F] font-semibold shadow-sm'
+                  : 'text-white/40 font-medium hover:text-white/70'
               }`}
             >
               עב
             </Link>
           </div>
 
-          <div className="h-5 w-px bg-[#EEF0F4]" />
+          <div className="h-5 w-px bg-white/10" />
 
           {/* Member Badge */}
           <div className="flex items-center gap-2.5">
             <div className="text-right">
-              <div className="text-[12px] font-semibold text-[#0E3470]">{firstName || 'Member'}</div>
-              <div className="text-[9px] font-bold text-[#BC9C45] uppercase tracking-[1.5px]">MEMBER</div>
+              <div className="text-[12px] font-medium text-white">{firstName || 'Member'}</div>
+              <div className="text-[9px] font-semibold text-[#D4A843] uppercase tracking-[2px]">MEMBER</div>
             </div>
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#0E3470] to-[#1D5FB8] flex items-center justify-center border-2 border-[#BC9C45]">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#BC9C45] to-[#A88A3D] flex items-center justify-center border border-[#D4A843]/30">
               <span className="text-white text-[13px] font-semibold">{initials}</span>
             </div>
           </div>
 
           <button
             onClick={handleSignOut}
-            className="text-[11px] text-[#9CA3AF] hover:text-[#DC2626] transition-colors cursor-pointer font-medium ml-1"
+            className="text-[11px] text-white/30 hover:text-[#DC2626] transition-colors cursor-pointer font-medium ml-1"
           >
             {tc('signOut')}
           </button>
