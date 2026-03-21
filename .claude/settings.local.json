@@ -25,7 +25,15 @@
       "mcp__nano-banana__generate_image",
       "Bash(gh api:*)",
       "Bash(curl -L -o /c/Users/doomz/reprime-terminal/public/images/login-hero.jpg \"https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1920&h=1080&fit=crop&q=80\")",
-      "Bash(curl -L -o /c/Users/doomz/reprime-terminal/public/images/og-image.jpg \"https://images.unsplash.com/photo-1464938050520-ef2571e0d6e0?w=1200&h=630&fit=crop&q=80\")"
+      "Bash(curl -L -o /c/Users/doomz/reprime-terminal/public/images/og-image.jpg \"https://images.unsplash.com/photo-1464938050520-ef2571e0d6e0?w=1200&h=630&fit=crop&q=80\")",
+      "Bash(npx next:*)",
+      "Bash(gh repo:*)",
+      "Bash(find:*)",
+      "Bash(xargs sed:*)",
+      "Bash(xargs grep:*)",
+      "Bash(xargs cat:*)",
+      "Bash(grep:*)",
+      "Bash(git diff:*)"
     ]
   }
 }
