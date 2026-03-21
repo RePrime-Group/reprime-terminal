@@ -36,6 +36,8 @@ export const CRE_TERMS = [
 
 export const DEAL_STATUS_LABELS: Record<string, string> = {
   draft: 'Draft',
+  coming_soon: 'Coming Soon',
+  loi_signed: 'LOI Signed',
   published: 'Published',
   under_review: 'Under Review',
   assigned: 'Assigned',
@@ -43,7 +45,9 @@ export const DEAL_STATUS_LABELS: Record<string, string> = {
 };
 
 export const DEAL_STATUS_TRANSITIONS: Record<string, { roles: string[]; to: string[] }> = {
-  draft: { roles: ['owner', 'employee'], to: ['published'] },
+  draft: { roles: ['owner', 'employee'], to: ['coming_soon', 'published'] },
+  coming_soon: { roles: ['owner', 'employee'], to: ['loi_signed', 'draft'] },
+  loi_signed: { roles: ['owner', 'employee'], to: ['published', 'coming_soon'] },
   published: { roles: ['owner'], to: ['draft', 'under_review'] },
   under_review: { roles: ['owner'], to: ['published', 'assigned'] },
   assigned: { roles: ['owner'], to: ['closed'] },

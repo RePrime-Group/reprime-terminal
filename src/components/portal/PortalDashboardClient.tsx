@@ -1,6 +1,7 @@
 'use client';
 
 import DealCard from '@/components/portal/DealCard';
+import ComingSoonCard from '@/components/portal/ComingSoonCard';
 import MarketIntelSidebar from '@/components/portal/MarketIntelSidebar';
 import { formatPriceCompact } from '@/lib/utils/format';
 
@@ -29,6 +30,11 @@ export interface DealCardData {
   square_footage?: string | null;
   units?: string | null;
   class_type?: string | null;
+  // Pre-pipeline fields
+  psa_draft_start?: string | null;
+  loi_signed_at?: string | null;
+  teaser_description?: string | null;
+  is_subscribed?: boolean;
 }
 
 interface PortalDashboardClientProps {
@@ -37,6 +43,7 @@ interface PortalDashboardClientProps {
 }
 
 export default function PortalDashboardClient({ deals, locale }: PortalDashboardClientProps) {
+  const upcomingDeals = deals.filter((d) => d.status === 'coming_soon' || d.status === 'loi_signed');
   const activeDeals = deals.filter((d) => d.status === 'published');
   const closedDeals = deals.filter((d) => d.status === 'assigned' || d.status === 'closed');
   const activeCount = activeDeals.length;
@@ -62,49 +69,53 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
     { label: 'ACTIVE RELEASES', value: String(activeCount) },
   ];
 
+  const hasAnyDeals = deals.length > 0;
+
   return (
     <div className="max-w-[1600px] mx-auto">
       {/* ── Hero Section ── */}
-      <div className="bg-gradient-to-br from-[#0A1628] via-[#0E3470] to-[#163D7A] relative overflow-hidden">
+      <div className="rp-dark-gradient relative overflow-hidden">
         <div
-          className="absolute inset-0 opacity-[0.03]"
+          className="absolute inset-0 opacity-[0.02]"
           style={{
             backgroundImage:
               'linear-gradient(rgba(188,156,69,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(188,156,69,0.4) 1px, transparent 1px)',
-            backgroundSize: '60px 60px',
+            backgroundSize: '40px 40px',
           }}
         />
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\' opacity=\'0.5\'/%3E%3C/svg%3E")' }} />
         <div className="relative px-10 py-10">
           <div className="flex items-end justify-between mb-8">
             <div>
               <div className="flex items-center gap-2.5 mb-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-[#0B8A4D] live-dot" />
-                <span className="text-[10px] font-semibold tracking-[2px] uppercase text-[#BC9C45]">
+                <span className="text-[10px] font-medium tracking-[2.5px] uppercase text-[#D4A843]">
                   {quarterLabel} Release
                 </span>
               </div>
-              <h1 className="font-[family-name:var(--font-playfair)] text-[38px] font-bold text-white leading-tight">
+              <h1 className="font-[family-name:var(--font-playfair)] text-[38px] font-semibold text-white leading-tight tracking-[-0.01em]">
                 Active Opportunities
               </h1>
-              <p className="text-[13px] text-white/50 mt-2 font-light">
+              <p className="text-[13px] text-white/40 mt-2 font-light tracking-wide">
+                {upcomingDeals.length > 0 && <>{upcomingDeals.length} upcoming &middot; </>}
                 {activeCount} active &middot; {closedCount} closed &middot; All under executed PSA &middot; 30-day DD &middot; 30-day close
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <span className="bg-white/5 border border-white/10 text-white/60 px-4 py-2 rounded-lg text-[11px] font-medium tracking-wide">
+              <span className="bg-white/[0.04] border border-white/[0.08] text-white/50 px-4 py-2 rounded-lg text-[10px] font-medium tracking-[1.5px] uppercase">
                 CONFIDENTIAL
               </span>
             </div>
           </div>
 
           {activeCount > 0 && (
-            <div className="grid grid-cols-5 gap-px bg-white/[0.06] rounded-xl overflow-hidden border border-white/[0.06]">
+            <div className="grid grid-cols-5 gap-px bg-white/[0.04] rounded-xl overflow-hidden border border-white/[0.06]">
               {summaryMetrics.map((m) => (
-                <div key={m.label} className="bg-[#0E3470]/40 backdrop-blur-sm px-5 py-4">
-                  <div className="text-[9px] font-bold tracking-[1.5px] uppercase text-white/40 mb-1.5">
+                <div key={m.label} className="bg-[#0E3470]/30 backdrop-blur-sm px-5 py-4 border-l-2 border-l-[#BC9C45]/20 first:border-l-0">
+                  <div className="text-[9px] font-bold tracking-[2px] uppercase text-white/35 mb-1.5">
                     {m.label}
                   </div>
-                  <div className="text-[20px] font-extrabold text-white tabular-nums">
+                  <div className="text-[20px] font-bold text-white tabular-nums">
                     {m.value}
                   </div>
                 </div>
@@ -113,12 +124,12 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
           )}
         </div>
 
-        <div className="h-px bg-gradient-to-r from-transparent via-[#BC9C45]/40 to-transparent" />
+        <div className="h-[2px] bg-gradient-to-r from-transparent via-[#BC9C45]/50 to-transparent" />
       </div>
 
-      {/* ── Main Content: Deal Grid + Market Intel Sidebar ── */}
+      {/* ── Main Content ── */}
       <div className="px-10 py-10">
-        {deals.length === 0 ? (
+        {!hasAnyDeals ? (
           <div className="flex flex-col items-center justify-center py-24">
             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#0E3470] to-[#1D5FB8] flex items-center justify-center mb-5 shadow-[0_4px_20px_rgba(14,52,112,0.2)]">
               <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
@@ -137,13 +148,59 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
           </div>
         ) : (
           <div className="flex gap-8">
-            {/* Deal Card Grid */}
-            <div className="flex-1 min-w-0">
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-7">
-                {deals.map((deal, index) => (
-                  <DealCard key={deal.id} deal={deal} locale={locale} index={index} />
-                ))}
-              </div>
+            <div className="flex-1 min-w-0 space-y-10">
+              {/* ── Upcoming Opportunities Section ── */}
+              {upcomingDeals.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-3 mb-5">
+                    <h2 className="font-[family-name:var(--font-playfair)] text-[20px] font-semibold text-[#0E3470] tracking-[-0.01em]">
+                      Upcoming Opportunities
+                    </h2>
+                    <div className="flex-1 h-px bg-gradient-to-r from-[#BC9C45]/30 to-transparent" />
+                  </div>
+                  <div className="grid grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-6">
+                    {upcomingDeals.map((deal, index) => (
+                      <ComingSoonCard key={deal.id} deal={deal} index={index} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── Active Deals Section ── */}
+              {activeDeals.length > 0 && (
+                <div>
+                  {upcomingDeals.length > 0 && (
+                    <div className="flex items-center gap-3 mb-5">
+                      <h2 className="font-[family-name:var(--font-playfair)] text-[20px] font-semibold text-[#0E3470] tracking-[-0.01em]">
+                        Active Deals
+                      </h2>
+                      <div className="flex-1 h-px bg-gradient-to-r from-[#BC9C45]/30 to-transparent" />
+                    </div>
+                  )}
+                  <div className="grid grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-7">
+                    {activeDeals.map((deal, index) => (
+                      <DealCard key={deal.id} deal={deal} locale={locale} index={index} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── Closed Deals Section ── */}
+              {closedDeals.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-3 mb-5">
+                    <h2 className="font-[family-name:var(--font-playfair)] text-[20px] font-semibold text-[#0E3470] tracking-[-0.01em]">
+                      Closed Deals
+                    </h2>
+                    <div className="flex-1 h-px bg-gradient-to-r from-[#9CA3AF]/30 to-transparent" />
+                  </div>
+                  <div className="grid grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-7">
+                    {closedDeals.map((deal, index) => (
+                      <DealCard key={deal.id} deal={deal} locale={locale} index={index} />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Market Intelligence Sidebar */}

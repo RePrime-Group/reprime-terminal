@@ -30,8 +30,8 @@ export default function Input({
         id={inputId}
         className={`
           w-full px-3.5 py-2.5 border rounded-lg text-sm text-rp-gray-700
-          focus:outline-none focus:ring-2 focus:ring-rp-gold/20 focus:border-rp-gold
-          placeholder:text-rp-gray-400 transition-colors
+          focus:outline-none focus:ring-[3px] focus:ring-rp-gold/15 focus:border-rp-gold
+          placeholder:text-rp-gray-400 transition-all duration-200
           ${error ? 'border-rp-red' : 'border-rp-gray-300'}
         `.trim()}
         {...props}

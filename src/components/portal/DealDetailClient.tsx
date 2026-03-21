@@ -106,7 +106,7 @@ function CountdownRing({
           >
             {isExpired ? '00' : days}
           </span>
-          <span className="text-[9px] font-[700] uppercase tracking-[1.5px] text-[#9CA3AF] mt-0.5">
+          <span className="text-[9px] font-[700] uppercase tracking-[2px] text-[#9CA3AF] mt-0.5">
             DAYS
           </span>
           <span className="text-[13px] text-[#9CA3AF] mt-1 font-mono">
@@ -122,7 +122,7 @@ function CountdownRing({
         {isExpired && (
           <div className="w-2 h-2 rounded-full bg-[#D1D5DB]" />
         )}
-        <span className="text-[10px] uppercase font-[700] tracking-[1.5px] text-[#9CA3AF]">
+        <span className="text-[10px] uppercase font-[700] tracking-[2px] text-[#9CA3AF]">
           {label}
         </span>
       </div>
@@ -457,7 +457,7 @@ function IRRCalculatorPanel({
 
   return (
     <div className="bg-[#0E3470] rounded-2xl p-6 text-white rp-card-shadow">
-      <div className="data-label !text-[#BC9C45] !tracking-[1.5px] mb-4">
+      <div className="data-label !text-[#BC9C45] !tracking-[2px] mb-4">
         RETURNS CALCULATOR
       </div>
 
@@ -987,7 +987,7 @@ export default function DealDetailClient({
           {/* Vertical separator */}
           <div className="h-5 w-px bg-[#EEF0F4] mr-4" />
           <div className="flex-1 min-w-0">
-            <h1 className="font-[family-name:var(--font-playfair)] text-[18px] font-bold text-[#0E3470] truncate">
+            <h1 className="font-[family-name:var(--font-playfair)] text-[18px] font-semibold text-[#0E3470] truncate">
               {deal.name}
             </h1>
             <p className="text-[10px] text-[#9CA3AF] truncate">
@@ -1023,7 +1023,7 @@ export default function DealDetailClient({
               Download OM
             </a>
             <div className="h-4 w-px bg-[#EEF0F4]" />
-            <span className="text-[9px] font-semibold tracking-[1.5px] uppercase text-[#9CA3AF]">
+            <span className="text-[9px] font-semibold tracking-[2px] uppercase text-[#9CA3AF]">
               CONFIDENTIAL
             </span>
             <div className="h-4 w-px bg-[#EEF0F4]" />
@@ -1041,10 +1041,10 @@ export default function DealDetailClient({
         {/* ------------------------------------------------------------------ */}
         {/* DEAL HEADER BAR                                                    */}
         {/* ------------------------------------------------------------------ */}
-        <div className="bg-gradient-to-r from-[#0A1628] to-[#0E3470] px-8 py-5">
+        <div className="rp-dark-gradient px-8 py-5">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-[family-name:var(--font-playfair)] text-[28px] font-bold text-white leading-tight">
+              <h2 className="font-[family-name:var(--font-playfair)] text-[28px] font-semibold text-white leading-tight tracking-[-0.01em]">
                 {deal.name}
               </h2>
               <p className="text-[12px] text-white/40 mt-1">
@@ -1066,7 +1066,7 @@ export default function DealDetailClient({
             </div>
           </div>
         </div>
-        <div className="h-px bg-gradient-to-r from-transparent via-[#BC9C45]/30 to-transparent" />
+        <div className="h-[2px] bg-gradient-to-r from-transparent via-[#BC9C45]/50 to-transparent" />
 
         {/* ------------------------------------------------------------------ */}
         {/* 2. HERO SECTION                                                    */}
@@ -1108,7 +1108,7 @@ export default function DealDetailClient({
                     <span className="text-[#BC9C45] text-lg">{'\u26A1'}</span>
                   </div>
                   <div>
-                    <div className="text-[12px] font-[700] uppercase tracking-[1.5px] text-[#BC9C45]">
+                    <div className="text-[12px] font-[700] uppercase tracking-[2px] text-[#BC9C45]">
                       TERMINAL INTELLIGENCE
                     </div>
                     <div className="text-[9px] text-white/50">
@@ -1199,7 +1199,7 @@ export default function DealDetailClient({
                 deal.investment_highlights.length > 0 && (
                   <FadeInOnScroll delay={0}>
                     <div>
-                      <h3 className="font-[family-name:var(--font-playfair)] text-lg font-bold text-[#0E3470] mb-4">
+                      <h3 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#0E3470] mb-4">
                         Investment Highlights
                       </h3>
                       <div className="grid grid-cols-2 gap-3">
@@ -1239,7 +1239,7 @@ export default function DealDetailClient({
               {deal.acquisition_thesis && (
                 <FadeInOnScroll delay={0.1}>
                   <div>
-                    <h3 className="font-[family-name:var(--font-playfair)] text-lg font-bold text-[#0E3470] mb-3">
+                    <h3 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#0E3470] mb-3">
                       Acquisition Thesis
                     </h3>
                     <p className="text-sm text-[#4B5563] leading-[1.8]">
@@ -1252,7 +1252,7 @@ export default function DealDetailClient({
               {/* Financing Summary */}
               <FadeInOnScroll delay={0.2}>
                 <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 rp-card-shadow">
-                  <h3 className="font-[family-name:var(--font-playfair)] text-lg font-bold text-[#0E3470] mb-4">
+                  <h3 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#0E3470] mb-4">
                     Financing Summary
                   </h3>
                   <div className="space-y-0">
@@ -1296,7 +1296,7 @@ export default function DealDetailClient({
               {/* Market Context - with emoji icons */}
               <FadeInOnScroll delay={0.3}>
                 <div>
-                  <h3 className="font-[family-name:var(--font-playfair)] text-lg font-bold text-[#0E3470] mb-4">
+                  <h3 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#0E3470] mb-4">
                     Market Context
                   </h3>
                   <div className="flex gap-4">
@@ -1561,7 +1561,7 @@ export default function DealDetailClient({
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] font-[700] uppercase tracking-[1.5px] text-[#BC9C45]">
+                    <span className="text-[10px] font-[700] uppercase tracking-[2px] text-[#BC9C45]">
                       OPTION A
                     </span>
                     {/* Assignment fee large number top-right */}
@@ -1600,7 +1600,7 @@ export default function DealDetailClient({
                       : 'border-[#EEF0F4] hover:border-[#D1D5DB]'
                   }`}
                 >
-                  <span className="text-[10px] font-[700] uppercase tracking-[1.5px] text-[#BC9C45] block mb-2">
+                  <span className="text-[10px] font-[700] uppercase tracking-[2px] text-[#BC9C45] block mb-2">
                     OPTION B
                   </span>
                   <h3 className="font-[700] text-[#0E3470] text-[20px] mb-4">
@@ -1829,7 +1829,7 @@ export default function DealDetailClient({
               <div className="w-16 h-16 rounded-full bg-[#FDF8ED] flex items-center justify-center mb-4">
                 <span className="text-2xl">&#x1F4BC;</span>
               </div>
-              <h3 className="font-[family-name:var(--font-playfair)] text-[18px] font-bold text-[#0E3470] mb-2">
+              <h3 className="font-[family-name:var(--font-playfair)] text-[18px] font-semibold text-[#0E3470] mb-2">
                 Express Interest in {deal.name}
               </h3>
               <p className="text-[13px] text-[#4B5563] mb-6">

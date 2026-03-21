@@ -65,6 +65,9 @@ interface DealFormData {
   dd_deadline: string;
   close_deadline: string;
   extension_deadline: string;
+  psa_draft_start: string;
+  loi_signed_at: string;
+  teaser_description: string;
   neighborhood: string;
   metro_population: string;
   job_growth: string;
@@ -166,6 +169,9 @@ function dealToForm(deal: TerminalDeal): DealFormData {
     dd_deadline: toDatetimeLocal(deal.dd_deadline),
     close_deadline: toDatetimeLocal(deal.close_deadline),
     extension_deadline: toDatetimeLocal(deal.extension_deadline),
+    psa_draft_start: toDatetimeLocal(deal.psa_draft_start),
+    loi_signed_at: toDatetimeLocal(deal.loi_signed_at),
+    teaser_description: deal.teaser_description ?? '',
     neighborhood: deal.neighborhood ?? '',
     metro_population: deal.metro_population ?? '',
     job_growth: deal.job_growth ?? '',
@@ -206,6 +212,7 @@ export default function EditDealPage() {
   // Photos
   const [photos, setPhotos] = useState<TerminalDealPhoto[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [photoUploadError, setPhotoUploadError] = useState<string | null>(null);
 
   // Pipeline stage
   const [pipelineStage, setPipelineStage] = useState<string | null>(null);
@@ -396,6 +403,9 @@ export default function EditDealPage() {
         dd_deadline: form.dd_deadline || null,
         close_deadline: form.close_deadline || null,
         extension_deadline: form.extension_deadline || null,
+        psa_draft_start: form.psa_draft_start || null,
+        loi_signed_at: form.loi_signed_at || null,
+        teaser_description: form.teaser_description || null,
         neighborhood: form.neighborhood || null,
         metro_population: form.metro_population || null,
         job_growth: form.job_growth || null,
@@ -466,33 +476,41 @@ export default function EditDealPage() {
     if (!files || files.length === 0) return;
 
     setUploading(true);
+    setPhotoUploadError(null);
+    const errors: string[] = [];
+
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
 
         if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-          alert(`${file.name} is not a supported image type.`);
+          errors.push(`${file.name}: unsupported image type`);
           continue;
         }
         if (file.size > MAX_IMAGE_SIZE) {
-          alert(`${file.name} exceeds the 10MB size limit.`);
+          errors.push(`${file.name}: exceeds 10MB limit`);
           continue;
         }
 
         const ext = file.name.split('.').pop() ?? 'jpg';
         const path = `${dealId}/${Date.now()}-${i}.${ext}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from('terminal-deal-photos')
-          .upload(path, file);
+        try {
+          const { error: uploadError } = await supabase.storage
+            .from('terminal-deal-photos')
+            .upload(path, file);
 
-        if (uploadError) {
-          console.error('Upload error:', uploadError);
+          if (uploadError) {
+            errors.push(`${file.name}: ${uploadError.message}`);
+            continue;
+          }
+        } catch (networkErr) {
+          errors.push(`${file.name}: network error — check your connection`);
           continue;
         }
 
         const nextOrder = photos.length + i;
-        const { data: photoRecord } = await supabase
+        const { data: photoRecord, error: insertError } = await supabase
           .from('terminal_deal_photos')
           .insert({
             deal_id: dealId,
@@ -502,6 +520,11 @@ export default function EditDealPage() {
           .select()
           .single();
 
+        if (insertError) {
+          errors.push(`${file.name}: saved to storage but failed to create record — ${insertError.message}`);
+          continue;
+        }
+
         if (photoRecord) {
           setPhotos((prev) => [...prev, photoRecord as TerminalDealPhoto]);
         }
@@ -510,6 +533,9 @@ export default function EditDealPage() {
       setUploading(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
+      }
+      if (errors.length > 0) {
+        setPhotoUploadError(errors.join('. '));
       }
     }
   };
@@ -1112,6 +1138,19 @@ export default function EditDealPage() {
                 </button>
               </div>
             ))}
+          </div>
+        )}
+
+        {photoUploadError && (
+          <div className="mb-4 p-3 bg-rp-red-light border border-rp-red-border rounded-lg flex items-start gap-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2" className="shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-rp-red font-medium">Photo upload failed</p>
+              <p className="text-xs text-rp-red/70 mt-0.5">{photoUploadError}</p>
+            </div>
+            <button onClick={() => setPhotoUploadError(null)} className="text-rp-red/50 hover:text-rp-red shrink-0">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
           </div>
         )}
 

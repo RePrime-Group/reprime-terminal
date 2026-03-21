@@ -108,6 +108,10 @@ export default function DataRoomPage() {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState('');
+  const [showZipModal, setShowZipModal] = useState(false);
+  const [pendingZipPath, setPendingZipPath] = useState<string | null>(null);
+  const [extracting, setExtracting] = useState(false);
+  const [extractResult, setExtractResult] = useState<{ foldersCreated: number; filesExtracted: number; errors: string[] } | null>(null);
 
   // ── Fetch data ─────────────────────────────────────────────────────────────
 
@@ -300,8 +304,41 @@ export default function DataRoomPage() {
       setUploadProgress(0);
     }, 600);
 
+    // If this is a ZIP file, offer extraction
+    if (file.type === 'application/zip') {
+      setPendingZipPath(storagePath);
+      setShowZipModal(true);
+    }
+
     // Reset file input so the same file can be re-selected
     if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+
+  async function handleExtractZip() {
+    if (!pendingZipPath) return;
+    setExtracting(true);
+    setExtractResult(null);
+
+    try {
+      const res = await fetch('/api/documents/extract-zip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dealId, storagePath: pendingZipPath }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        setExtractResult(data);
+        // Refresh the folder/document list
+        fetchData();
+      } else {
+        setUploadError(data.error || 'ZIP extraction failed');
+      }
+    } catch {
+      setUploadError('Network error during ZIP extraction');
+    } finally {
+      setExtracting(false);
+    }
   }
 
   // ── Document actions ───────────────────────────────────────────────────────
@@ -792,6 +829,51 @@ export default function DataRoomPage() {
             Delete Document
           </Button>
         </div>
+      </Modal>
+
+      {/* ─── ZIP Extraction Modal ──────────────────────────────────────── */}
+      <Modal
+        isOpen={showZipModal}
+        onClose={() => { setShowZipModal(false); setPendingZipPath(null); setExtractResult(null); }}
+        title="Extract ZIP Contents"
+      >
+        {extractResult ? (
+          <div>
+            <div className="mb-3 p-3 bg-rp-green-light border border-rp-green-border rounded-lg">
+              <p className="text-sm font-medium text-rp-green">Extraction complete</p>
+              <p className="text-xs text-rp-green/70 mt-1">
+                {extractResult.foldersCreated} folders created, {extractResult.filesExtracted} files extracted
+              </p>
+            </div>
+            {extractResult.errors.length > 0 && (
+              <div className="mb-3 p-3 bg-rp-amber-light border border-rp-amber-border rounded-lg">
+                <p className="text-xs text-rp-amber font-medium">Some files had issues:</p>
+                <ul className="text-xs text-rp-amber/70 mt-1 list-disc list-inside">
+                  {extractResult.errors.map((err, i) => <li key={i}>{err}</li>)}
+                </ul>
+              </div>
+            )}
+            <div className="flex justify-end">
+              <Button variant="primary" onClick={() => { setShowZipModal(false); setPendingZipPath(null); setExtractResult(null); }}>
+                Done
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <p className="text-sm text-rp-gray-600 mb-4">
+              Extract the ZIP contents into dataroom folders? Files will be organized by their folder structure inside the ZIP.
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button variant="secondary" onClick={() => { setShowZipModal(false); setPendingZipPath(null); }}>
+                Keep as Single File
+              </Button>
+              <Button variant="gold" onClick={handleExtractZip} loading={extracting}>
+                Extract Files
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );

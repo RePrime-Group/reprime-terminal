@@ -1,5 +1,5 @@
 export type UserRole = 'owner' | 'employee' | 'investor';
-export type DealStatus = 'draft' | 'published' | 'under_review' | 'assigned' | 'closed';
+export type DealStatus = 'draft' | 'coming_soon' | 'loi_signed' | 'published' | 'under_review' | 'assigned' | 'closed';
 export type MeetingStatus = 'scheduled' | 'completed' | 'cancelled' | 'no_show';
 export type Locale = 'en' | 'he';
 export type ActivityAction =
@@ -70,6 +70,9 @@ export interface TerminalDeal {
   dd_deadline: string | null;
   close_deadline: string | null;
   extension_deadline: string | null;
+  psa_draft_start: string | null;
+  loi_signed_at: string | null;
+  teaser_description: string | null;
   status: DealStatus;
   neighborhood: string | null;
   metro_population: string | null;
@@ -202,6 +205,25 @@ export interface TerminalDealMessage {
   deal_id: string;
   user_id: string;
   message: string;
+  created_at: string;
+}
+
+export interface TerminalDealSubscription {
+  id: string;
+  deal_id: string;
+  user_id: string;
+  created_at: string;
+  notified_at: string | null;
+}
+
+export interface TerminalNotification {
+  id: string;
+  user_id: string;
+  deal_id: string | null;
+  type: string;
+  title: string;
+  description: string;
+  read_at: string | null;
   created_at: string;
 }
 

@@ -1,0 +1,17 @@
+import { Resend } from 'resend';
+
+let _resend: Resend | null = null;
+
+export function getResend(): Resend {
+  if (!_resend) {
+    const key = process.env.RESEND_API_KEY;
+    if (!key) {
+      throw new Error('RESEND_API_KEY environment variable is not set');
+    }
+    _resend = new Resend(key);
+  }
+  return _resend;
+}
+
+export const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'terminal@reprime.com';
+export const FROM_NAME = 'RePrime Terminal';

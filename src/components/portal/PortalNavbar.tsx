@@ -65,7 +65,7 @@ export default function PortalNavbar({ firstName, locale, activeTab = 'dashboard
               <span className="text-white font-bold text-lg leading-none font-[family-name:var(--font-playfair)] italic">R</span>
             </div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-[#0E3470] font-semibold text-[15px] tracking-[3px] uppercase">
+              <span className="text-[#0E3470] font-medium text-[15px] tracking-[4px] uppercase">
                 REPRIME
               </span>
               <span className="font-[family-name:var(--font-playfair)] text-[#BC9C45] italic text-[12px] font-normal">
@@ -85,7 +85,7 @@ export default function PortalNavbar({ firstName, locale, activeTab = 'dashboard
                 locale={locale}
                 className={`px-3.5 py-2 text-[11px] font-semibold rounded-md transition-all ${
                   activeTab === tab.key
-                    ? 'bg-[#0E3470] text-white'
+                    ? 'bg-[#0E3470]/[0.06] text-[#0E3470] border-b-2 border-[#BC9C45]'
                     : 'text-[#6B7280] hover:text-[#0E3470] hover:bg-[#F7F8FA]'
                 }`}
               >

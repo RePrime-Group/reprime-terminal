@@ -57,11 +57,10 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
     >
       <div
         className={[
-          'relative bg-white rounded-[16px] overflow-hidden',
-          'border-t-[2px] border-t-[#BC9C45]',
-          'border border-[#EEF0F4]',
-          'shadow-[0_1px_3px_rgba(14,52,112,0.04),0_8px_24px_rgba(14,52,112,0.03)]',
-          'group-hover:-translate-y-2 group-hover:shadow-[0_20px_60px_rgba(14,52,112,0.12),0_0_0_1px_rgba(188,156,69,0.3)]',
+          'relative bg-white rounded-[14px] overflow-hidden',
+          'border border-transparent',
+          'rp-card-shadow',
+          'group-hover:-translate-y-2 group-hover:rp-card-shadow-hover',
           'transition-all duration-300',
         ].join(' ')}
       >
@@ -74,11 +73,11 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
                 alt={deal.name}
                 className="absolute inset-0 w-full h-full object-cover"
               />
-              {/* Gradient overlay for photo */}
+              {/* Richer bottom-half vignette */}
               <div
                 className="absolute inset-0"
                 style={{
-                  background: 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.6) 100%)',
+                  background: 'linear-gradient(to bottom, transparent 30%, rgba(7,9,15,0.3) 60%, rgba(7,9,15,0.7) 100%)',
                 }}
               />
             </>
@@ -139,11 +138,14 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
           )}
         </div>
 
+        {/* Gold gradient line at photo-body boundary */}
+        <div className="h-px bg-gradient-to-r from-transparent via-[#BC9C45]/40 to-transparent" />
+
         {/* ── Card Body ── */}
         <div style={{ padding: '18px 22px 20px' }}>
           {/* Row 1: Deal name + TerminalScore */}
           <div className="flex items-start justify-between gap-3">
-            <h3 className="text-[20px] font-bold text-[#0E3470] font-[family-name:var(--font-playfair)] leading-tight truncate min-w-0">
+            <h3 className="text-[22px] font-semibold text-[#0E3470] font-[family-name:var(--font-playfair)] leading-tight truncate min-w-0 tracking-[-0.01em]">
               {deal.name}
             </h3>
             <TerminalScore score={85} compact />
@@ -166,11 +168,11 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
           <div className="grid grid-cols-3 gap-x-5 gap-y-3">
             {metrics.map((m) => (
               <div key={m.label}>
-                <div className="text-[8px] font-bold text-gray-400 uppercase tracking-[1.5px]">
+                <div className="text-[8px] font-bold text-gray-400 uppercase tracking-[2px]">
                   {m.label}
                 </div>
                 <div
-                  className={`text-[15px] font-bold tabular-nums ${
+                  className={`text-[14px] font-semibold tabular-nums ${
                     m.highlight ? 'text-[#0B8A4D]' : 'text-[#0E3470]'
                   }`}
                 >
@@ -182,10 +184,10 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
 
           {/* Equity required */}
           <div className="mt-4">
-            <div className="text-[8px] font-bold text-gray-400 uppercase tracking-[1.5px]">
+            <div className="text-[8px] font-bold text-gray-400 uppercase tracking-[2px]">
               {t('dealCard.equityRequired')}
             </div>
-            <div className="text-[24px] font-extrabold text-[#0E3470] tracking-tight leading-tight">
+            <div className="text-[22px] font-bold text-[#0E3470] tracking-tight leading-tight tabular-nums">
               {formatPrice(deal.equity_required)}
             </div>
           </div>
@@ -267,7 +269,7 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
 
         {/* ── Assigned / Closed Overlay ── */}
         {isAssigned && (
-          <div className="absolute inset-0 bg-[rgba(7,9,15,0.88)] rounded-[16px] z-10 flex items-center justify-center pointer-events-none">
+          <div className="absolute inset-0 bg-[rgba(7,9,15,0.88)] rounded-[14px] z-10 flex items-center justify-center pointer-events-none">
             {/* Gold confetti particles */}
             <div className="absolute inset-0 overflow-hidden rounded-[16px]">
               {Array.from({ length: 12 }).map((_, i) => (

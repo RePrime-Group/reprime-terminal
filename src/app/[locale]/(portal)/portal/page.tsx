@@ -4,30 +4,6 @@ import PortalDashboardClient from '@/components/portal/PortalDashboardClient';
 
 export const metadata = { title: 'Active Opportunities — RePrime Terminal' };
 
-interface DealWithMeta {
-  id: string;
-  name: string;
-  city: string;
-  state: string;
-  property_type: string;
-  purchase_price: number;
-  noi: number;
-  cap_rate: number;
-  irr: number;
-  coc: number;
-  dscr: number;
-  equity_required: number;
-  seller_financing: boolean;
-  special_terms: string | null;
-  dd_deadline: string | null;
-  status: string;
-  assigned_to: string | null;
-  quarter_release: string | null;
-  photo_url: string | null;
-  viewing_count: number;
-  meetings_count: number;
-}
-
 export default async function PortalDashboardPage({
   params,
 }: {
@@ -39,12 +15,12 @@ export default async function PortalDashboardPage({
 
   if (!user) redirect(`/${locale}/login`);
 
-  // Fetch deals with status published, assigned, or closed
+  // Fetch deals — include new pre-pipeline statuses
   const { data: deals } = await supabase
     .from('terminal_deals')
     .select('*')
-    .in('status', ['published', 'assigned', 'closed'])
-    .order('dd_deadline', { ascending: true });
+    .in('status', ['coming_soon', 'loi_signed', 'published', 'assigned', 'closed'])
+    .order('created_at', { ascending: false });
 
   if (!deals || deals.length === 0) {
     return (
@@ -52,8 +28,16 @@ export default async function PortalDashboardPage({
     );
   }
 
-  // Enrich each deal with photo, viewing count, and meetings count
-  const enrichedDeals: DealWithMeta[] = await Promise.all(
+  // Fetch user's subscriptions for Coming Soon deals
+  const { data: subscriptions } = await supabase
+    .from('terminal_deal_subscriptions')
+    .select('deal_id')
+    .eq('user_id', user.id);
+
+  const subscribedDealIds = new Set(subscriptions?.map((s) => s.deal_id) ?? []);
+
+  // Enrich each deal
+  const enrichedDeals = await Promise.all(
     deals.map(async (deal) => {
       // Fetch first photo
       const { data: photos } = await supabase
@@ -115,18 +99,27 @@ export default async function PortalDashboardPage({
         photo_url,
         viewing_count,
         meetings_count: meetings_count ?? 0,
+        square_footage: deal.square_footage,
+        units: deal.units,
+        class_type: deal.class_type,
+        // Pre-pipeline fields
+        psa_draft_start: deal.psa_draft_start ?? null,
+        loi_signed_at: deal.loi_signed_at ?? null,
+        teaser_description: deal.teaser_description ?? null,
+        is_subscribed: subscribedDealIds.has(deal.id),
       };
     })
   );
 
-  // Sort: active (published) first by dd_deadline ASC, then assigned/closed
+  // Sort: upcoming first, then active by dd_deadline, then closed
   const sorted = enrichedDeals.sort((a, b) => {
-    const statusOrder: Record<string, number> = { published: 0, assigned: 1, closed: 2 };
-    const orderA = statusOrder[a.status] ?? 1;
-    const orderB = statusOrder[b.status] ?? 1;
+    const statusOrder: Record<string, number> = {
+      coming_soon: 0, loi_signed: 1, published: 2, assigned: 3, closed: 4,
+    };
+    const orderA = statusOrder[a.status] ?? 2;
+    const orderB = statusOrder[b.status] ?? 2;
     if (orderA !== orderB) return orderA - orderB;
 
-    // Within same status group, sort by dd_deadline ascending
     if (a.dd_deadline && b.dd_deadline) {
       return new Date(a.dd_deadline).getTime() - new Date(b.dd_deadline).getTime();
     }

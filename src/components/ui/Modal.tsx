@@ -36,11 +36,11 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-xl max-w-lg w-full mx-4 p-6 animate-in fade-in zoom-in-95 duration-200"
+        className="bg-white rounded-2xl shadow-xl max-w-lg w-full mx-4 p-6 animate-in fade-in zoom-in-95 duration-200 border border-rp-gold/10"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[18px] font-bold text-rp-navy">{title}</h2>
+          <h2 className="text-[18px] font-semibold text-rp-navy">{title}</h2>
           <button
             onClick={onClose}
             className="text-rp-gray-400 hover:text-rp-gray-600 transition-colors p-1 rounded-lg hover:bg-rp-gray-100"

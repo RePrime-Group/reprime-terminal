@@ -4,10 +4,16 @@
   --color-rp-navy: #0E3470;
   --color-rp-gold: #BC9C45;
   --color-rp-gold-soft: #D4B96A;
+  --color-rp-gold-bright: #D4A843;
   --color-rp-gold-bg: #FDF8ED;
   --color-rp-gold-border: #ECD9A0;
   --color-rp-white: #FFFFFF;
   --color-rp-page-bg: #F2F4F8;
+  --color-rp-cream: #FAF7F0;
+  --color-rp-obsidian: #07090F;
+  --color-rp-charcoal: #0F1419;
+  --color-rp-slate: #1A1F2E;
+  --color-rp-midnight: #0A1628;
   --color-rp-green: #0B8A4D;
   --color-rp-green-light: #ECFDF5;
   --color-rp-green-border: #A7F3D0;
@@ -44,32 +50,53 @@
 }
 
 @layer utilities {
-  /* Page background — subtle navy top-left, gold bottom-right, diagonal texture */
+  /* Page background — warm cream with navy/gold radial depth */
   .rp-page-texture {
-    background-color: var(--color-rp-page-bg);
+    background-color: var(--color-rp-cream);
     background-image:
-      radial-gradient(ellipse at 0% 0%, rgba(14, 52, 112, 0.04) 0%, transparent 50%),
-      radial-gradient(ellipse at 100% 100%, rgba(188, 156, 69, 0.03) 0%, transparent 50%),
-      repeating-linear-gradient(
-        45deg,
-        transparent,
-        transparent 35px,
-        rgba(14, 52, 112, 0.006) 35px,
-        rgba(14, 52, 112, 0.006) 36px
-      );
+      radial-gradient(ellipse at 15% 0%, rgba(14, 52, 112, 0.06) 0%, transparent 60%),
+      radial-gradient(ellipse at 85% 100%, rgba(188, 156, 69, 0.04) 0%, transparent 60%),
+      linear-gradient(180deg, rgba(7, 9, 15, 0.02) 0%, transparent 40%);
   }
 
-  /* Card depth shadows */
+  /* Premium dark gradient for hero sections */
+  .rp-dark-gradient {
+    background: linear-gradient(135deg, #07090F 0%, #0A1628 30%, #0E3470 70%, #163D7A 100%);
+  }
+
+  /* Thin gold gradient separator */
+  .rp-gold-line {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #BC9C45, transparent);
+  }
+
+  /* Frosted glass overlay */
+  .rp-frosted {
+    backdrop-filter: blur(12px) saturate(180%);
+    background: rgba(255, 255, 255, 0.72);
+  }
+
+  /* Premium border with subtle gold inner glow */
+  .rp-premium-border {
+    border: 1px solid rgba(188, 156, 69, 0.15);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+
+  /* Card depth shadows — multi-layer for dimensionality */
   .rp-card-shadow {
     box-shadow:
-      0 1px 3px rgba(14, 52, 112, 0.04),
-      0 8px 24px rgba(14, 52, 112, 0.03);
+      0 0 0 1px rgba(14, 52, 112, 0.04),
+      0 1px 2px rgba(14, 52, 112, 0.06),
+      0 4px 8px rgba(14, 52, 112, 0.04),
+      0 12px 32px rgba(14, 52, 112, 0.06);
   }
 
   .rp-card-shadow-hover {
     box-shadow:
-      0 20px 60px rgba(14, 52, 112, 0.12),
-      0 0 0 1px rgba(188, 156, 69, 0.3);
+      0 0 0 1px rgba(188, 156, 69, 0.2),
+      0 4px 8px rgba(14, 52, 112, 0.08),
+      0 20px 40px rgba(14, 52, 112, 0.12),
+      0 40px 80px rgba(14, 52, 112, 0.08);
   }
 
   /* Skeleton shimmer */
@@ -171,6 +198,10 @@
     100% { transform: translateX(-50%); }
   }
 
+  html[dir="rtl"] .animate-marquee {
+    animation-direction: reverse;
+  }
+
   /* Stamp animation for CLOSED overlay */
   .animate-stamp-in {
     animation: stampIn 0.6s ease-out forwards;
@@ -223,9 +254,14 @@
   .data-label {
     font-size: 9px;
     font-weight: 700;
-    letter-spacing: 1.5px;
+    letter-spacing: 2px;
     text-transform: uppercase;
     color: var(--color-rp-gray-400);
+  }
+
+  /* Tabular numbers for financial metrics */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
   }
 
   /* Audio visualization bar pulse */

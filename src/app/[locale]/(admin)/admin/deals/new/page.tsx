@@ -51,6 +51,9 @@ interface DealFormData {
   dd_deadline: string;
   close_deadline: string;
   extension_deadline: string;
+  psa_draft_start: string;
+  loi_signed_at: string;
+  teaser_description: string;
   neighborhood: string;
   metro_population: string;
   job_growth: string;
@@ -89,6 +92,9 @@ const initialFormData: DealFormData = {
   dd_deadline: '',
   close_deadline: '',
   extension_deadline: '',
+  psa_draft_start: '',
+  loi_signed_at: '',
+  teaser_description: '',
   neighborhood: '',
   metro_population: '',
   job_growth: '',
@@ -249,6 +255,9 @@ export default function NewDealPage() {
         dd_deadline: form.dd_deadline || null,
         close_deadline: form.close_deadline || null,
         extension_deadline: form.extension_deadline || null,
+        psa_draft_start: form.psa_draft_start || null,
+        loi_signed_at: form.loi_signed_at || null,
+        teaser_description: form.teaser_description || null,
         neighborhood: form.neighborhood || null,
         metro_population: form.metro_population || null,
         job_growth: form.job_growth || null,
@@ -495,7 +504,43 @@ export default function NewDealPage() {
         </div>
       </div>
 
-      {/* Section 4: Timeline */}
+      {/* Section 4: Pre-Pipeline / Coming Soon */}
+      <div className="bg-white rounded-2xl border border-rp-gray-200 p-6 mb-6">
+        <h2 className="text-[16px] font-semibold text-rp-navy mb-5">
+          Pre-Pipeline
+        </h2>
+        <div className="mb-4">
+          <label className="block text-[13px] font-medium text-rp-gray-700 mb-1.5">
+            Teaser Description
+          </label>
+          <textarea
+            value={form.teaser_description}
+            onChange={(e) => updateField('teaser_description', e.target.value)}
+            rows={3}
+            placeholder="Short description shown to investors on Coming Soon cards..."
+            className="w-full px-3.5 py-2.5 border border-rp-gray-300 rounded-lg text-sm text-rp-gray-700 focus:outline-none focus:ring-[3px] focus:ring-rp-gold/15 focus:border-rp-gold placeholder:text-rp-gray-400 transition-all duration-200 resize-vertical"
+          />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Input
+            label="LOI Signed Date"
+            type="datetime-local"
+            value={form.loi_signed_at}
+            onChange={(e) => updateField('loi_signed_at', e.target.value)}
+          />
+          <Input
+            label="PSA Draft Start"
+            type="datetime-local"
+            value={form.psa_draft_start}
+            onChange={(e) => updateField('psa_draft_start', e.target.value)}
+          />
+        </div>
+        <p className="text-[11px] text-rp-gray-400 mt-2">
+          PSA countdown shows 7 days from draft start to DD. LOI date is displayed on the investor card.
+        </p>
+      </div>
+
+      {/* Section 5: Timeline */}
       <div className="bg-white rounded-2xl border border-rp-gray-200 p-6 mb-6">
         <h2 className="text-[16px] font-semibold text-rp-navy mb-5">
           Timeline
@@ -634,6 +679,13 @@ export default function NewDealPage() {
           loading={saving}
         >
           Save as Draft
+        </Button>
+        <Button
+          variant="subscribe"
+          onClick={() => handleSubmit('coming_soon')}
+          loading={saving}
+        >
+          Save as Coming Soon
         </Button>
         <Button
           variant="gold"
