@@ -75,6 +75,7 @@ export interface TerminalDeal {
   teaser_description: string | null;
   deposit_amount: string | null;
   deposit_held_by: string | null;
+  om_storage_path: string | null;
   status: DealStatus;
   neighborhood: string | null;
   metro_population: string | null;

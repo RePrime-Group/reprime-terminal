@@ -1015,17 +1015,27 @@ export default function DealDetailClient({
               </button>
             )}
             {/* Download OM button */}
-            <a
-              href={`/api/deals/${deal.id}/package`}
-              className="px-4 py-2 border border-[#EEF0F4] hover:border-[#BC9C45] text-[#6B7280] hover:text-[#0E3470] text-[12px] font-semibold rounded-lg transition-colors inline-flex items-center gap-1.5"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-              Download OM
-            </a>
+            {deal.om_storage_path ? (
+              <a
+                href={`/api/deals/${deal.id}/om`}
+                className="px-4 py-2 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[12px] font-semibold rounded-lg transition-colors inline-flex items-center gap-1.5 shadow-[0_2px_6px_rgba(188,156,69,0.25)]"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Download OM
+              </a>
+            ) : (
+              <span className="px-4 py-2 border border-[#EEF0F4] text-[#9CA3AF] text-[12px] font-medium rounded-lg inline-flex items-center gap-1.5 cursor-default">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                OM Pending
+              </span>
+            )}
             <div className="h-4 w-px bg-[#EEF0F4]" />
             <span className="text-[9px] font-semibold tracking-[2px] uppercase text-[#9CA3AF]">
               CONFIDENTIAL
@@ -1140,104 +1150,6 @@ export default function DealDetailClient({
             )}
           </div>
         </div>
-
-        {/* ------------------------------------------------------------------ */}
-        {/* 5C2. PIPELINE STAGE PROGRESS TRACKER                               */}
-        {/* ------------------------------------------------------------------ */}
-        {stageProgress && currentStage && (
-          <div className="px-8 mt-8">
-            <div className="bg-white rounded-xl rp-card-shadow p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="text-[9px] font-semibold tracking-[2px] uppercase text-[#0E3470]">
-                  DEAL PROGRESS
-                </div>
-                <div className="text-[12px] font-semibold text-[#0B8A4D] tabular-nums">
-                  {pipelineProgress !== undefined && pipelineProgress >= 0 ? `${pipelineProgress}%` : '—'}
-                </div>
-              </div>
-
-              {/* Overall progress bar */}
-              <div className="bg-[#EEF0F4] rounded-full h-2.5 overflow-hidden mb-6">
-                <div
-                  className="h-full rounded-full transition-all duration-700 ease-out"
-                  style={{
-                    width: `${pipelineProgress !== undefined && pipelineProgress >= 0 ? pipelineProgress : 0}%`,
-                    background: 'linear-gradient(90deg, #0E3470, #0B8A4D, #34D399)',
-                  }}
-                />
-              </div>
-
-              {/* Stage breakdown */}
-              <div className="grid grid-cols-4 gap-3">
-                {([
-                  { key: 'post_loi', label: 'Post LOI', duration: '10 Days' },
-                  { key: 'due_diligence', label: 'Due Diligence', duration: '30 Days' },
-                  { key: 'pre_closing', label: 'Pre-Closing', duration: '30-60 Days' },
-                  { key: 'post_closing', label: 'Post-Closing', duration: '7 Days' },
-                ] as const).map((stage) => {
-                  const sp = stageProgress[stage.key] || { total: 0, completed: 0 };
-                  const pct = sp.total > 0 ? Math.round((sp.completed / sp.total) * 100) : 0;
-                  const isCurrent = currentStage === stage.key;
-                  const isComplete = sp.total > 0 && sp.completed === sp.total;
-                  const isPast = (() => {
-                    const order = ['post_loi', 'due_diligence', 'pre_closing', 'post_closing'];
-                    return order.indexOf(stage.key) < order.indexOf(currentStage);
-                  })();
-
-                  return (
-                    <div
-                      key={stage.key}
-                      className={`rounded-lg p-3.5 border transition-all ${
-                        isCurrent
-                          ? 'border-[#0E3470] bg-[#0E3470]/[0.03]'
-                          : isComplete || isPast
-                            ? 'border-[#0B8A4D]/20 bg-[#0B8A4D]/[0.03]'
-                            : 'border-[#EEF0F4] bg-[#F7F8FA]'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        {isComplete || isPast ? (
-                          <div className="w-4 h-4 rounded-full bg-[#0B8A4D] flex items-center justify-center">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
-                          </div>
-                        ) : isCurrent ? (
-                          <div className="w-4 h-4 rounded-full border-2 border-[#0E3470] bg-[#0E3470]/20" />
-                        ) : (
-                          <div className="w-4 h-4 rounded-full border-2 border-[#D1D5DB]" />
-                        )}
-                        <span className={`text-[10px] font-semibold tracking-[1px] uppercase ${
-                          isCurrent ? 'text-[#0E3470]' : isComplete || isPast ? 'text-[#0B8A4D]' : 'text-[#9CA3AF]'
-                        }`}>
-                          {stage.label}
-                        </span>
-                      </div>
-
-                      {/* Stage mini progress bar */}
-                      <div className="bg-[#EEF0F4] rounded-full h-1.5 overflow-hidden mb-1.5">
-                        <div
-                          className="h-full rounded-full transition-all duration-500"
-                          style={{
-                            width: `${pct}%`,
-                            backgroundColor: isComplete || isPast ? '#0B8A4D' : isCurrent ? '#0E3470' : '#D1D5DB',
-                          }}
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] text-[#9CA3AF]">{stage.duration}</span>
-                        <span className={`text-[10px] font-semibold tabular-nums ${
-                          isComplete || isPast ? 'text-[#0B8A4D]' : isCurrent ? 'text-[#0E3470]' : 'text-[#9CA3AF]'
-                        }`}>
-                          {sp.total > 0 ? `${sp.completed}/${sp.total}` : '—'}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* ------------------------------------------------------------------ */}
         {/* 5D. SEVEN-METRIC BAR (left border metric cards - keep as is)       */}
@@ -1464,36 +1376,93 @@ export default function DealDetailClient({
                 </div>
               </FadeInOnScroll>
 
-              {/* Cycle Indicator - with Howard Marks Framework label */}
-              <FadeInOnScroll delay={0.3}>
-                <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 mt-4 rp-card-shadow">
-                  <div className="flex items-center justify-between mb-1">
-                    <h3 className="text-sm font-semibold text-[#0E3470]">
-                      Market Cycle Position
-                    </h3>
-                    <span className="text-[9px] text-[#9CA3AF]">Howard Marks Framework</span>
-                  </div>
-                  <div className="relative mt-3">
-                    <div className="h-3 rounded-full bg-gradient-to-r from-[#0B8A4D] via-[#BC9C45] to-[#DC2626]" />
-                    <div
-                      className="absolute top-1/2 -translate-y-1/2"
-                      style={{ left: '35%', transform: 'translateX(-50%) translateY(-50%)' }}
-                    >
-                      <div className="flex flex-col items-center">
-                        <span className="text-[9px] font-bold text-[#BC9C45] mb-1">
-                          WE ARE HERE
-                        </span>
-                        <div className="w-5 h-5 bg-[#BC9C45] border-2 border-white rounded-full shadow-md" />
-                      </div>
+              {/* Pipeline Progress Tracker */}
+              {stageProgress && currentStage && (
+                <FadeInOnScroll delay={0.3}>
+                  <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 mt-4 rp-card-shadow">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-semibold text-[#0E3470]">
+                        Deal Progress
+                      </h3>
+                      <span className="text-[12px] font-semibold text-[#0B8A4D] tabular-nums">
+                        {pipelineProgress !== undefined && pipelineProgress >= 0 ? `${pipelineProgress}%` : '—'}
+                      </span>
+                    </div>
+
+                    {/* Overall progress bar */}
+                    <div className="bg-[#EEF0F4] rounded-full h-2.5 overflow-hidden mb-5">
+                      <div
+                        className="h-full rounded-full transition-all duration-700 ease-out"
+                        style={{
+                          width: `${pipelineProgress !== undefined && pipelineProgress >= 0 ? pipelineProgress : 0}%`,
+                          background: 'linear-gradient(90deg, #0E3470, #0B8A4D, #34D399)',
+                        }}
+                      />
+                    </div>
+
+                    {/* Stage breakdown */}
+                    <div className="space-y-2.5">
+                      {([
+                        { key: 'post_loi', label: 'Post LOI', duration: '10 Days' },
+                        { key: 'due_diligence', label: 'Due Diligence', duration: '30 Days' },
+                        { key: 'pre_closing', label: 'Pre-Closing', duration: '30-60 Days' },
+                        { key: 'post_closing', label: 'Post-Closing', duration: '7 Days' },
+                      ] as const).map((stage) => {
+                        const sp = stageProgress[stage.key] || { total: 0, completed: 0 };
+                        const pct = sp.total > 0 ? Math.round((sp.completed / sp.total) * 100) : 0;
+                        const isCurrent = currentStage === stage.key;
+                        const isComplete = sp.total > 0 && sp.completed === sp.total;
+                        const isPast = (() => {
+                          const order = ['post_loi', 'due_diligence', 'pre_closing', 'post_closing'];
+                          return order.indexOf(stage.key) < order.indexOf(currentStage);
+                        })();
+
+                        return (
+                          <div key={stage.key} className="flex items-center gap-3">
+                            {/* Status indicator */}
+                            {isComplete || isPast ? (
+                              <div className="w-5 h-5 rounded-full bg-[#0B8A4D] flex items-center justify-center shrink-0">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                              </div>
+                            ) : isCurrent ? (
+                              <div className="w-5 h-5 rounded-full border-[2.5px] border-[#0E3470] shrink-0 relative">
+                                <div className="absolute inset-[3px] rounded-full bg-[#0E3470]" />
+                              </div>
+                            ) : (
+                              <div className="w-5 h-5 rounded-full border-2 border-[#D1D5DB] shrink-0" />
+                            )}
+
+                            {/* Stage info */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className={`text-[11px] font-semibold ${
+                                  isCurrent ? 'text-[#0E3470]' : isComplete || isPast ? 'text-[#0B8A4D]' : 'text-[#9CA3AF]'
+                                }`}>
+                                  {stage.label}
+                                </span>
+                                <span className={`text-[10px] font-semibold tabular-nums ${
+                                  isCurrent ? 'text-[#0E3470]' : isComplete || isPast ? 'text-[#0B8A4D]' : 'text-[#9CA3AF]'
+                                }`}>
+                                  {sp.total > 0 ? `${sp.completed}/${sp.total}` : '—'}
+                                </span>
+                              </div>
+                              <div className="bg-[#EEF0F4] rounded-full h-1.5 overflow-hidden">
+                                <div
+                                  className="h-full rounded-full transition-all duration-500"
+                                  style={{
+                                    width: `${pct}%`,
+                                    backgroundColor: isComplete || isPast ? '#0B8A4D' : isCurrent ? '#0E3470' : '#D1D5DB',
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
-                  <div className="flex justify-between mt-3 text-[9px] text-[#9CA3AF] uppercase tracking-wider">
-                    <span>Recovery</span>
-                    <span>Expansion</span>
-                    <span>Peak</span>
-                  </div>
-                </div>
-              </FadeInOnScroll>
+                </FadeInOnScroll>
+              )}
             </div>
 
             {/* Right Column (Sidebar) */}

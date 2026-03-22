@@ -217,6 +217,9 @@ export default function EditDealPage() {
   const [photos, setPhotos] = useState<TerminalDealPhoto[]>([]);
   const [uploading, setUploading] = useState(false);
   const [photoUploadError, setPhotoUploadError] = useState<string | null>(null);
+  const [omPath, setOmPath] = useState<string | null>(null);
+  const [omUploading, setOmUploading] = useState(false);
+  const omInputRef = useRef<HTMLInputElement>(null);
 
   // Pipeline stage
   const [pipelineStage, setPipelineStage] = useState<string | null>(null);
@@ -255,6 +258,7 @@ export default function EditDealPage() {
       setDeal(typedDeal);
       setForm(dealToForm(typedDeal));
       setNewStatus(typedDeal.status);
+      setOmPath(typedDeal.om_storage_path ?? null);
 
       const { data: photosData } = await supabase
         .from('terminal_deal_photos')
@@ -561,6 +565,47 @@ export default function EditDealPage() {
       .from('terminal-deal-photos')
       .getPublicUrl(photo.storage_path);
     return data.publicUrl;
+  };
+
+  const handleOmUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+      alert('OM must be a PDF file.');
+      return;
+    }
+
+    setOmUploading(true);
+    try {
+      const path = `${dealId}/om/${Date.now()}-${file.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from('terminal-dd-documents')
+        .upload(path, file, { upsert: true });
+
+      if (uploadError) {
+        alert(`Upload failed: ${uploadError.message}`);
+        return;
+      }
+
+      // Update deal record with OM path
+      await supabase
+        .from('terminal_deals')
+        .update({ om_storage_path: path })
+        .eq('id', dealId);
+
+      setOmPath(path);
+    } finally {
+      setOmUploading(false);
+      if (omInputRef.current) omInputRef.current.value = '';
+    }
+  };
+
+  const handleOmRemove = async () => {
+    if (!omPath) return;
+    await supabase.storage.from('terminal-dd-documents').remove([omPath]);
+    await supabase.from('terminal_deals').update({ om_storage_path: null }).eq('id', dealId);
+    setOmPath(null);
   };
 
   if (loading) {
@@ -1106,6 +1151,77 @@ export default function EditDealPage() {
             className="w-full px-3.5 py-2.5 border border-rp-gray-300 rounded-lg text-sm text-rp-gray-700 focus:outline-none focus:ring-2 focus:ring-rp-gold/20 focus:border-rp-gold placeholder:text-rp-gray-400 transition-colors resize-vertical"
           />
         </div>
+      </div>
+
+      {/* OM Upload */}
+      <div className="bg-white rounded-2xl border border-rp-gold-border p-6 mb-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-8 h-8 rounded-lg bg-rp-gold/10 flex items-center justify-center">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#BC9C45" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+              <polyline points="10 9 9 9 8 9" />
+            </svg>
+          </div>
+          <div>
+            <h2 className="text-[16px] font-semibold text-rp-navy">Offering Memorandum (OM)</h2>
+            <p className="text-[12px] text-rp-gray-400">This is the first document investors will download.</p>
+          </div>
+        </div>
+
+        {omPath ? (
+          <div className="flex items-center justify-between bg-rp-gold-bg border border-rp-gold-border rounded-xl p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-rp-gold/15 flex items-center justify-center">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#BC9C45" strokeWidth="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </div>
+              <div>
+                <p className="text-[13px] font-medium text-rp-navy">OM Uploaded</p>
+                <p className="text-[11px] text-rp-gray-400 truncate max-w-[300px]">{omPath.split('/').pop()}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => omInputRef.current?.click()}
+                className="text-[12px] font-medium text-rp-gold hover:underline"
+              >
+                Replace
+              </button>
+              <button
+                onClick={handleOmRemove}
+                className="text-[12px] font-medium text-rp-red hover:underline"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div
+            className="border-2 border-dashed border-rp-gold-border rounded-xl p-8 text-center hover:border-rp-gold/60 transition-colors cursor-pointer bg-rp-gold-bg/50"
+            onClick={() => omInputRef.current?.click()}
+          >
+            <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-rp-gold/10 flex items-center justify-center">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#BC9C45" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+            </div>
+            <p className="text-sm text-rp-navy font-medium">
+              {omUploading ? 'Uploading OM...' : 'Click to upload Offering Memorandum'}
+            </p>
+            <p className="text-xs text-rp-gray-400 mt-1">PDF only</p>
+          </div>
+        )}
+        <input
+          ref={omInputRef}
+          type="file"
+          accept="application/pdf"
+          onChange={handleOmUpload}
+          className="hidden"
+        />
       </div>
 
       {/* Photo Management */}
