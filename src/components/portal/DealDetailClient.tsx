@@ -298,10 +298,12 @@ function DDFolderCard({
   folder,
   dealId,
   onDocumentDownload,
+  onViewDocument,
 }: {
   folder: TerminalDDFolder & { documents: TerminalDDDocument[] };
   dealId: string;
   onDocumentDownload: (docId: string) => void;
+  onViewDocument: (url: string, name: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const docCount = folder.documents.length;
@@ -388,6 +390,22 @@ function DDFolderCard({
                 <span className="bg-[#FFFBEB] text-[#D97706] text-[10px] font-semibold px-2 py-0.5 rounded-full">
                   Pending
                 </span>
+              )}
+              {/* View button for PDFs and images */}
+              {(doc.file_type === 'application/pdf' || doc.name?.endsWith('.pdf') || doc.file_type?.startsWith('image/')) && (
+                <button
+                  onClick={() => {
+                    onDocumentDownload(doc.id);
+                    onViewDocument(`/api/documents/${doc.id}/download?view=true`, doc.name);
+                  }}
+                  className="text-[#BC9C45] hover:text-[#A88A3D] transition-colors"
+                  aria-label={`View ${doc.name}`}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </button>
               )}
               <a
                 href={`/api/documents/${doc.id}/download`}
@@ -832,6 +850,13 @@ export default function DealDetailClient({
   const router = useRouter();
   const { trackActivity } = useActivityTracker();
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
+  const [viewerUrl, setViewerUrl] = useState<string | null>(null);
+  const [viewerName, setViewerName] = useState<string>('');
+
+  const handleViewDocument = (url: string, name: string) => {
+    setViewerUrl(url);
+    setViewerName(name);
+  };
   const [selectedStructure, setSelectedStructure] = useState<'assignment' | 'gplp'>('assignment');
   const [expressedInterest, setExpressedInterest] = useState(false);
   const [showExpressModal, setShowExpressModal] = useState(false);
@@ -1014,19 +1039,31 @@ export default function DealDetailClient({
                 Express Interest
               </button>
             )}
-            {/* Download OM button */}
+            {/* OM buttons */}
             {deal.om_storage_path ? (
-              <a
-                href={`/api/deals/${deal.id}/om`}
-                className="px-4 py-2 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[12px] font-semibold rounded-lg transition-colors inline-flex items-center gap-1.5 shadow-[0_2px_6px_rgba(188,156,69,0.25)]"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                  <polyline points="7 10 12 15 17 10"/>
-                  <line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
-                Download OM
-              </a>
+              <>
+                <button
+                  onClick={() => handleViewDocument(`/api/deals/${deal.id}/om?view=true`, `${deal.name} — Offering Memorandum`)}
+                  className="px-4 py-2 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[12px] font-semibold rounded-lg transition-colors inline-flex items-center gap-1.5 shadow-[0_2px_6px_rgba(188,156,69,0.25)]"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                  View OM
+                </button>
+                <a
+                  href={`/api/deals/${deal.id}/om`}
+                  className="px-4 py-2 border border-[#EEF0F4] hover:border-[#BC9C45] text-[#6B7280] hover:text-[#0E3470] text-[12px] font-semibold rounded-lg transition-colors inline-flex items-center gap-1.5"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                  Download
+                </a>
+              </>
             ) : (
               <span className="px-4 py-2 border border-[#EEF0F4] text-[#9CA3AF] text-[12px] font-medium rounded-lg inline-flex items-center gap-1.5 cursor-default">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1634,6 +1671,7 @@ export default function DealDetailClient({
                     folder={folder}
                     dealId={deal.id}
                     onDocumentDownload={handleDocumentDownload}
+                    onViewDocument={handleViewDocument}
                   />
                 </FadeInOnScroll>
               ))}
@@ -1957,6 +1995,58 @@ export default function DealDetailClient({
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Document Viewer Modal ── */}
+      {viewerUrl && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+          onClick={() => setViewerUrl(null)}
+        >
+          <div
+            className="relative bg-white rounded-2xl shadow-2xl overflow-hidden"
+            style={{ width: '90vw', height: '90vh', maxWidth: '1200px' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-3 bg-[#07090F] border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="w-7 h-7 rounded-lg bg-[#BC9C45]/20 flex items-center justify-center">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#BC9C45" strokeWidth="1.5">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                  </svg>
+                </div>
+                <span className="text-white text-[13px] font-medium truncate max-w-[600px]">{viewerName}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <a
+                  href={viewerUrl.replace('?view=true', '')}
+                  className="px-3 py-1.5 text-[11px] font-medium text-white/60 hover:text-white border border-white/10 rounded-lg transition-colors"
+                >
+                  Download
+                </a>
+                <button
+                  onClick={() => setViewerUrl(null)}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Document content */}
+            <iframe
+              src={viewerUrl}
+              className="w-full border-0"
+              style={{ height: 'calc(90vh - 52px)' }}
+              title={viewerName}
+            />
           </div>
         </div>
       )}

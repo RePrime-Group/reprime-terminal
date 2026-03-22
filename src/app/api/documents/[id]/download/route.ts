@@ -74,10 +74,13 @@ export async function GET(
     responseBytes = await fileData.arrayBuffer();
   }
 
+  const viewMode = request.nextUrl.searchParams.get('view') === 'true';
+  const disposition = viewMode ? 'inline' : `attachment; filename="${doc.name}"`;
+
   return new NextResponse(responseBytes, {
     headers: {
       'Content-Type': doc.file_type || 'application/octet-stream',
-      'Content-Disposition': `attachment; filename="${doc.name}"`,
+      'Content-Disposition': disposition,
     },
   });
 }

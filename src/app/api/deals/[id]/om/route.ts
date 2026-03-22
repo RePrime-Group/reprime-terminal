@@ -54,11 +54,12 @@ export async function GET(
   });
 
   const filename = `${deal.name.replace(/[^a-zA-Z0-9 ]/g, '')}_OM.pdf`;
+  const viewMode = _request.nextUrl.searchParams.get('view') === 'true';
 
   return new NextResponse(fileData, {
     headers: {
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="${filename}"`,
+      'Content-Disposition': viewMode ? 'inline' : `attachment; filename="${filename}"`,
     },
   });
 }
