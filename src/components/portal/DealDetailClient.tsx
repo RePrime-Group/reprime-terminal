@@ -754,6 +754,33 @@ function MeetingScheduler({
     return map;
   }, [slots]);
 
+  // Fetch Google Calendar busy times to overlay on availability
+  const [gcalBusy, setGcalBusy] = useState<{ start: string; end: string }[]>([]);
+
+  useEffect(() => {
+    const start = new Date().toISOString();
+    const end = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    fetch(`/api/calendar/availability?start=${start}&end=${end}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.busyTimes) setGcalBusy(data.busyTimes);
+      })
+      .catch(() => {});
+  }, []);
+
+  const isGcalBusy = useCallback(
+    (slotIso: string) => {
+      const slotStart = new Date(slotIso).getTime();
+      const slotEnd = slotStart + 30 * 60 * 1000;
+      return gcalBusy.some((busy) => {
+        const bStart = new Date(busy.start).getTime();
+        const bEnd = new Date(busy.end).getTime();
+        return slotStart < bEnd && slotEnd > bStart;
+      });
+    },
+    [gcalBusy]
+  );
+
   // Generate 30-min increments for each available slot
   const generateTimeSlots = useCallback(
     (day: Date): { label: string; isoString: string }[] => {
@@ -774,13 +801,13 @@ function MeetingScheduler({
           dateObj.setHours(h, min, 0, 0);
           const iso = dateObj.toISOString();
 
-          // Skip if already booked
+          // Skip if already booked or busy on Google Calendar
           const isBooked = bookedTimes.some((bt) => {
             const bookedDate = new Date(bt);
             return Math.abs(bookedDate.getTime() - dateObj.getTime()) < 60000;
           });
 
-          if (!isBooked) {
+          if (!isBooked && !isGcalBusy(iso)) {
             const ampm = h >= 12 ? 'PM' : 'AM';
             const displayH = h > 12 ? h - 12 : h === 0 ? 12 : h;
             const displayMin = String(min).padStart(2, '0');
@@ -794,29 +821,24 @@ function MeetingScheduler({
 
       return result;
     },
-    [slotsByDay, bookedTimes]
+    [slotsByDay, bookedTimes, isGcalBusy]
   );
 
   const handleConfirm = async () => {
     if (!selectedSlot) return;
     setConfirming(true);
     try {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-
-      await supabase.from('terminal_meetings').insert({
-        deal_id: dealId,
-        investor_id: user.id,
-        scheduled_at: selectedSlot,
-        status: 'scheduled',
+      const res = await fetch('/api/calendar/book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dealId, startTime: selectedSlot }),
       });
 
-      onMeetingRequested();
-      setSuccess(true);
-      setSelectedSlot(null);
+      if (res.ok) {
+        onMeetingRequested();
+        setSuccess(true);
+        setSelectedSlot(null);
+      }
     } finally {
       setConfirming(false);
     }
