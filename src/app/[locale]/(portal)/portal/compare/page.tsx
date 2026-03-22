@@ -65,11 +65,6 @@ const metricRows: MetricRow[] = [
     key: 'equity_required',
     format: (d) => formatPrice(d.equity_required),
   },
-  {
-    label: 'Score',
-    key: 'score',
-    format: () => '85/100',
-  },
 ];
 
 export default async function ComparePage({

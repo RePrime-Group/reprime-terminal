@@ -148,7 +148,7 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
             <h3 className="text-[22px] font-semibold text-[#0E3470] font-[family-name:var(--font-playfair)] leading-tight truncate min-w-0 tracking-[-0.01em]">
               {deal.name}
             </h3>
-            <TerminalScore score={85} compact />
+            {/* TerminalScore - removed until scoring algorithm is implemented */}
           </div>
 
           {/* Row 2: Subtitle */}

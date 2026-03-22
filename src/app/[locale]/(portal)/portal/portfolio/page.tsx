@@ -57,10 +57,12 @@ export default async function PortfolioPage({
       ? deals.reduce((sum: number, d: Deal) => sum + (d.irr ?? 0), 0) / deals.length
       : 0;
 
+  const totalEquity = deals?.reduce((sum: number, d: Deal) => sum + (d.equity_required ?? 0), 0) ?? 0;
+
   const metrics = [
     {
-      label: 'TOTAL INVESTED',
-      value: '$12.4M',
+      label: 'TOTAL EQUITY COMMITTED',
+      value: formatPriceCompact(totalEquity),
       border: 'border-[#0A1628]',
     },
     {
@@ -69,13 +71,13 @@ export default async function PortfolioPage({
       border: 'border-[#1E40AF]',
     },
     {
-      label: 'AVG. IRR',
+      label: 'AVG. PROJECTED IRR',
       value: formatPercent(avgIrr),
       border: 'border-[#0B8A4D]',
     },
     {
-      label: 'TOTAL RETURN',
-      value: '$3.8M',
+      label: 'TOTAL DEALS',
+      value: String(deals?.length ?? 0),
       border: 'border-[#0B8A4D]',
     },
   ];
