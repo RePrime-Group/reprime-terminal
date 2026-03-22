@@ -30,6 +30,8 @@ interface DealDetailClientProps {
   bookedTimes: string[];
   locale: string;
   pipelineProgress?: number;
+  stageProgress?: Record<string, { total: number; completed: number }>;
+  currentStage?: string;
 }
 
 type TabKey = 'overview' | 'due-diligence' | 'deal-structure' | 'schedule';
@@ -823,6 +825,8 @@ export default function DealDetailClient({
   bookedTimes,
   locale,
   pipelineProgress,
+  stageProgress,
+  currentStage,
 }: DealDetailClientProps) {
   const t = useTranslations('portal');
   const router = useRouter();
@@ -1136,6 +1140,104 @@ export default function DealDetailClient({
             )}
           </div>
         </div>
+
+        {/* ------------------------------------------------------------------ */}
+        {/* 5C2. PIPELINE STAGE PROGRESS TRACKER                               */}
+        {/* ------------------------------------------------------------------ */}
+        {stageProgress && currentStage && (
+          <div className="px-8 mt-8">
+            <div className="bg-white rounded-xl rp-card-shadow p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-[9px] font-semibold tracking-[2px] uppercase text-[#0E3470]">
+                  DEAL PROGRESS
+                </div>
+                <div className="text-[12px] font-semibold text-[#0B8A4D] tabular-nums">
+                  {pipelineProgress !== undefined && pipelineProgress >= 0 ? `${pipelineProgress}%` : '—'}
+                </div>
+              </div>
+
+              {/* Overall progress bar */}
+              <div className="bg-[#EEF0F4] rounded-full h-2.5 overflow-hidden mb-6">
+                <div
+                  className="h-full rounded-full transition-all duration-700 ease-out"
+                  style={{
+                    width: `${pipelineProgress !== undefined && pipelineProgress >= 0 ? pipelineProgress : 0}%`,
+                    background: 'linear-gradient(90deg, #0E3470, #0B8A4D, #34D399)',
+                  }}
+                />
+              </div>
+
+              {/* Stage breakdown */}
+              <div className="grid grid-cols-4 gap-3">
+                {([
+                  { key: 'post_loi', label: 'Post LOI', duration: '10 Days' },
+                  { key: 'due_diligence', label: 'Due Diligence', duration: '30 Days' },
+                  { key: 'pre_closing', label: 'Pre-Closing', duration: '30-60 Days' },
+                  { key: 'post_closing', label: 'Post-Closing', duration: '7 Days' },
+                ] as const).map((stage) => {
+                  const sp = stageProgress[stage.key] || { total: 0, completed: 0 };
+                  const pct = sp.total > 0 ? Math.round((sp.completed / sp.total) * 100) : 0;
+                  const isCurrent = currentStage === stage.key;
+                  const isComplete = sp.total > 0 && sp.completed === sp.total;
+                  const isPast = (() => {
+                    const order = ['post_loi', 'due_diligence', 'pre_closing', 'post_closing'];
+                    return order.indexOf(stage.key) < order.indexOf(currentStage);
+                  })();
+
+                  return (
+                    <div
+                      key={stage.key}
+                      className={`rounded-lg p-3.5 border transition-all ${
+                        isCurrent
+                          ? 'border-[#0E3470] bg-[#0E3470]/[0.03]'
+                          : isComplete || isPast
+                            ? 'border-[#0B8A4D]/20 bg-[#0B8A4D]/[0.03]'
+                            : 'border-[#EEF0F4] bg-[#F7F8FA]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        {isComplete || isPast ? (
+                          <div className="w-4 h-4 rounded-full bg-[#0B8A4D] flex items-center justify-center">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                          </div>
+                        ) : isCurrent ? (
+                          <div className="w-4 h-4 rounded-full border-2 border-[#0E3470] bg-[#0E3470]/20" />
+                        ) : (
+                          <div className="w-4 h-4 rounded-full border-2 border-[#D1D5DB]" />
+                        )}
+                        <span className={`text-[10px] font-semibold tracking-[1px] uppercase ${
+                          isCurrent ? 'text-[#0E3470]' : isComplete || isPast ? 'text-[#0B8A4D]' : 'text-[#9CA3AF]'
+                        }`}>
+                          {stage.label}
+                        </span>
+                      </div>
+
+                      {/* Stage mini progress bar */}
+                      <div className="bg-[#EEF0F4] rounded-full h-1.5 overflow-hidden mb-1.5">
+                        <div
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{
+                            width: `${pct}%`,
+                            backgroundColor: isComplete || isPast ? '#0B8A4D' : isCurrent ? '#0E3470' : '#D1D5DB',
+                          }}
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-[#9CA3AF]">{stage.duration}</span>
+                        <span className={`text-[10px] font-semibold tabular-nums ${
+                          isComplete || isPast ? 'text-[#0B8A4D]' : isCurrent ? 'text-[#0E3470]' : 'text-[#9CA3AF]'
+                        }`}>
+                          {sp.total > 0 ? `${sp.completed}/${sp.total}` : '—'}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ------------------------------------------------------------------ */}
         {/* 5D. SEVEN-METRIC BAR (left border metric cards - keep as is)       */}
@@ -1525,7 +1627,12 @@ export default function DealDetailClient({
                   />
                 </div>
                 <div className="text-[11px] text-[#9CA3AF] mt-1">
-                  {verifiedDocs} of {totalDocs} verified
+                  {verifiedDocs} of {totalDocs} documents verified
+                  {stageProgress?.due_diligence && stageProgress.due_diligence.total > 0 && (
+                    <span className="ml-2">
+                      &middot; {stageProgress.due_diligence.completed}/{stageProgress.due_diligence.total} tasks complete
+                    </span>
+                  )}
                 </div>
               </div>
               <a

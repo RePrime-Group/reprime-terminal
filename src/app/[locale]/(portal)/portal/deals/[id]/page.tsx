@@ -105,15 +105,37 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
     .eq('deal_id', id)
     .in('status', ['scheduled', 'completed']);
 
-  // Fetch pipeline progress for DD completion
+  // Fetch pipeline progress — per-stage task completion
   const { data: pipelineTasks } = await supabase
     .from('terminal_deal_tasks')
-    .select('status')
+    .select('status, stage')
     .eq('deal_id', id);
 
   const pipelineTotal = pipelineTasks?.length ?? 0;
   const pipelineCompleted = pipelineTasks?.filter(t => t.status === 'completed').length ?? 0;
   const pipelineProgress = pipelineTotal > 0 ? Math.round((pipelineCompleted / pipelineTotal) * 100) : -1;
+
+  // Per-stage breakdown
+  const stageOrder = ['post_loi', 'due_diligence', 'pre_closing', 'post_closing'] as const;
+  const stageProgress: Record<string, { total: number; completed: number }> = {};
+  for (const stage of stageOrder) {
+    const stageTasks = pipelineTasks?.filter(t => t.stage === stage) ?? [];
+    stageProgress[stage] = {
+      total: stageTasks.length,
+      completed: stageTasks.filter(t => t.status === 'completed').length,
+    };
+  }
+
+  // Determine current stage (first stage that isn't 100% complete)
+  let currentStage = 'post_loi';
+  for (const stage of stageOrder) {
+    const sp = stageProgress[stage];
+    if (sp.total === 0 || sp.completed < sp.total) {
+      currentStage = stage;
+      break;
+    }
+    if (stage === 'post_closing') currentStage = 'post_closing';
+  }
 
   // Fetch settings (contact info)
   const { data: settingsData } = await supabase
@@ -167,6 +189,8 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
       bookedTimes={bookedTimes}
       locale={locale}
       pipelineProgress={pipelineProgress}
+      stageProgress={stageProgress}
+      currentStage={currentStage}
     />
   );
 }
