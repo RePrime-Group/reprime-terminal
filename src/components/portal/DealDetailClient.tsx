@@ -1162,6 +1162,37 @@ export default function DealDetailClient({
         </div>
 
         {/* ------------------------------------------------------------------ */}
+        {/* 5D2. DEPOSIT INFO                                                  */}
+        {/* ------------------------------------------------------------------ */}
+        {(deal.deposit_amount || deal.deposit_held_by) && (
+          <div className="px-8 mt-6">
+            <div className="bg-[#FDF8ED] border border-[#ECD9A0] rounded-xl p-5 flex items-center gap-6">
+              <div className="w-10 h-10 rounded-lg bg-[#BC9C45]/10 flex items-center justify-center shrink-0">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#BC9C45" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="6" width="20" height="14" rx="2" />
+                  <path d="M2 10h20" />
+                  <path d="M6 14h4" />
+                </svg>
+              </div>
+              <div className="flex-1 flex items-center gap-8">
+                {deal.deposit_amount && (
+                  <div>
+                    <div className="text-[9px] font-semibold tracking-[2px] uppercase text-[#BC9C45]">Deposit Amount</div>
+                    <div className="text-[18px] font-semibold text-[#0E3470] tabular-nums">{deal.deposit_amount}</div>
+                  </div>
+                )}
+                {deal.deposit_held_by && (
+                  <div>
+                    <div className="text-[9px] font-semibold tracking-[2px] uppercase text-[#BC9C45]">Held By</div>
+                    <div className="text-[15px] font-medium text-[#0E3470]">{deal.deposit_held_by}</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ------------------------------------------------------------------ */}
         {/* 5E. TAB BAR                                                        */}
         {/* ------------------------------------------------------------------ */}
         <div className="px-8 mt-8">

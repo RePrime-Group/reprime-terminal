@@ -73,6 +73,8 @@ export interface TerminalDeal {
   psa_draft_start: string | null;
   loi_signed_at: string | null;
   teaser_description: string | null;
+  deposit_amount: string | null;
+  deposit_held_by: string | null;
   status: DealStatus;
   neighborhood: string | null;
   metro_population: string | null;

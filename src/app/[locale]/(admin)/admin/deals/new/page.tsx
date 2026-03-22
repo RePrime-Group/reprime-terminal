@@ -54,6 +54,8 @@ interface DealFormData {
   psa_draft_start: string;
   loi_signed_at: string;
   teaser_description: string;
+  deposit_amount: string;
+  deposit_held_by: string;
   neighborhood: string;
   metro_population: string;
   job_growth: string;
@@ -95,6 +97,8 @@ const initialFormData: DealFormData = {
   psa_draft_start: '',
   loi_signed_at: '',
   teaser_description: '',
+  deposit_amount: '',
+  deposit_held_by: '',
   neighborhood: '',
   metro_population: '',
   job_growth: '',
@@ -258,6 +262,8 @@ export default function NewDealPage() {
         psa_draft_start: form.psa_draft_start || null,
         loi_signed_at: form.loi_signed_at || null,
         teaser_description: form.teaser_description || null,
+        deposit_amount: form.deposit_amount || null,
+        deposit_held_by: form.deposit_held_by || null,
         neighborhood: form.neighborhood || null,
         metro_population: form.metro_population || null,
         job_growth: form.job_growth || null,
@@ -535,9 +541,23 @@ export default function NewDealPage() {
             onChange={(e) => updateField('psa_draft_start', e.target.value)}
           />
         </div>
-        <p className="text-[11px] text-rp-gray-400 mt-2">
+        <p className="text-[11px] text-rp-gray-400 mt-2 mb-4">
           PSA countdown shows 7 days from draft start to DD. LOI date is displayed on the investor card.
         </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Input
+            label="Deposit Amount"
+            value={form.deposit_amount}
+            onChange={(e) => updateField('deposit_amount', e.target.value)}
+            placeholder="e.g. $50,000"
+          />
+          <Input
+            label="Deposit Held By"
+            value={form.deposit_held_by}
+            onChange={(e) => updateField('deposit_held_by', e.target.value)}
+            placeholder="e.g. Chicago Title Company"
+          />
+        </div>
       </div>
 
       {/* Section 5: Timeline */}
