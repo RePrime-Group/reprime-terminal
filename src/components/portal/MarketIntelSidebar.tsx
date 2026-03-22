@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 const maturityData = [
   { year: '2026', amount: '$520B', width: '75%' },
@@ -9,15 +10,43 @@ const maturityData = [
   { year: '2029', amount: '$310B', width: '44%' },
 ];
 
-const activityFeed = [
-  { color: 'bg-blue-500', text: 'New deal published: Port Industrial Center', time: '2 min ago' },
-  { color: 'bg-[#BC9C45]', text: 'Meeting confirmed with investor', time: '15 min ago' },
-  { color: 'bg-[#0B8A4D]', text: 'DD document verified', time: '1 hr ago' },
-  { color: 'bg-blue-500', text: 'Market report updated', time: '3 hr ago' },
-  { color: 'bg-gray-400', text: 'Terminal member viewed deal', time: '5 hr ago' },
-];
+const actionLabels: Record<string, { text: string; color: string }> = {
+  deal_viewed: { text: 'Deal viewed by member', color: 'bg-[#6B7280]' },
+  document_downloaded: { text: 'Document downloaded', color: 'bg-[#1D5FB8]' },
+  om_downloaded: { text: 'OM downloaded', color: 'bg-[#BC9C45]' },
+  dataroom_viewed: { text: 'Data room accessed', color: 'bg-[#0E3470]' },
+  meeting_requested: { text: 'Meeting requested', color: 'bg-[#BC9C45]' },
+  expressed_interest: { text: 'Interest expressed', color: 'bg-[#0B8A4D]' },
+  irr_calculator_used: { text: 'Returns modeled', color: 'bg-[#1D5FB8]' },
+  portal_viewed: { text: 'Terminal accessed', color: 'bg-[#9CA3AF]' },
+};
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins} min ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs} hr${hrs > 1 ? 's' : ''} ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
+}
 
 export default function MarketIntelSidebar() {
+  const [activities, setActivities] = useState<{ action: string; created_at: string }[]>([]);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase
+      .from('terminal_activity_log')
+      .select('action, created_at')
+      .order('created_at', { ascending: false })
+      .limit(5)
+      .then(({ data }) => {
+        setActivities(data ?? []);
+      });
+  }, []);
+
   return (
     <aside className="w-[320px] flex flex-col gap-4">
       {/* Card 1: Market Cycle */}
@@ -114,7 +143,7 @@ export default function MarketIntelSidebar() {
         </div>
       </div>
 
-      {/* Card 3: Terminal Activity Feed */}
+      {/* Card 3: Terminal Activity Feed — real data */}
       <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 rp-card-shadow">
         <div className="flex items-center gap-2 mb-4">
           <span className="relative flex h-2.5 w-2.5">
@@ -130,31 +159,38 @@ export default function MarketIntelSidebar() {
         </div>
 
         <div className="flex flex-col gap-3">
-          {activityFeed.map((item, idx) => (
-            <div
-              key={idx}
-              className="flex items-start gap-2.5 animate-slide-in"
-              style={{ animationDelay: `${idx * 0.06}s` }}
-            >
-              <span
-                className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${item.color}`}
-              />
-              <div className="min-w-0">
-                <p
-                  className="font-[500] leading-tight"
-                  style={{ fontSize: '11px', color: '#0E3470' }}
+          {activities.length === 0 ? (
+            <p style={{ fontSize: '11px', color: '#94A3B8' }}>No recent activity</p>
+          ) : (
+            activities.map((item, idx) => {
+              const info = actionLabels[item.action] ?? { text: item.action, color: 'bg-[#9CA3AF]' };
+              return (
+                <div
+                  key={idx}
+                  className="flex items-start gap-2.5 animate-slide-in"
+                  style={{ animationDelay: `${idx * 0.06}s` }}
                 >
-                  {item.text}
-                </p>
-                <p
-                  className="mt-0.5"
-                  style={{ fontSize: '10px', color: '#94A3B8' }}
-                >
-                  {item.time}
-                </p>
-              </div>
-            </div>
-          ))}
+                  <span
+                    className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${info.color}`}
+                  />
+                  <div className="min-w-0">
+                    <p
+                      className="font-[500] leading-tight"
+                      style={{ fontSize: '11px', color: '#0E3470' }}
+                    >
+                      {info.text}
+                    </p>
+                    <p
+                      className="mt-0.5"
+                      style={{ fontSize: '10px', color: '#94A3B8' }}
+                    >
+                      {timeAgo(item.created_at)}
+                    </p>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
     </aside>

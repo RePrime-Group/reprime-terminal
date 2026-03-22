@@ -1996,19 +1996,19 @@ export default function DealDetailClient({
                 </p>
               </div>
 
-              {/* Limited Release Indicator */}
-              <div className="bg-[#FEF2F2] border border-[#FECACA] rounded-xl p-4">
+              {/* Confidential Access Notice */}
+              <div className="bg-[#0E3470]/[0.04] border border-[#0E3470]/10 rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="w-2 h-2 rounded-full bg-[#DC2626] countdown-pulse" />
-                  <span className="text-sm font-semibold text-[#DC2626]">
-                    LIMITED RELEASE
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0E3470" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0110 0v4" />
+                  </svg>
+                  <span className="text-sm font-semibold text-[#0E3470]">
+                    CONFIDENTIAL
                   </span>
                 </div>
-                <p className="text-xs text-[#4B5563] mb-1">
-                  Q{Math.ceil((new Date().getMonth() + 1) / 3)} {new Date().getFullYear()} release
-                </p>
                 <p className="text-xs text-[#6B7280]">
-                  Controlled release to qualified Terminal members only
+                  This material is for authorized Terminal members only. All investments involve risk.
                 </p>
               </div>
             </div>

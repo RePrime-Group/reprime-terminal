@@ -59,7 +59,7 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
     : 0;
 
   const quarterLabel =
-    deals.find((d) => d.quarter_release)?.quarter_release ?? 'Q1 2026';
+    deals.find((d) => d.quarter_release)?.quarter_release ?? '';
 
   const summaryMetrics = [
     { label: 'TOTAL DEAL VOLUME', value: formatPriceCompact(totalDealVolume) },
@@ -87,12 +87,14 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
         <div className="max-w-[1600px] mx-auto relative px-10 py-12">
           <div className="flex items-end justify-between mb-8">
             <div>
-              <div className="flex items-center gap-2.5 mb-3">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#0B8A4D] live-dot" />
-                <span className="text-[10px] font-medium tracking-[3px] uppercase text-[#D4A843]">
-                  {quarterLabel} Release
-                </span>
-              </div>
+              {quarterLabel && (
+                <div className="flex items-center gap-2.5 mb-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#0B8A4D] live-dot" />
+                  <span className="text-[10px] font-medium tracking-[3px] uppercase text-[#D4A843]">
+                    {quarterLabel} Release
+                  </span>
+                </div>
+              )}
               <h1 className="font-[family-name:var(--font-playfair)] text-[42px] font-semibold text-white leading-[1.1] tracking-[-0.02em]">
                 Active Opportunities
               </h1>

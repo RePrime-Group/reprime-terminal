@@ -115,12 +115,14 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
             )}
           </div>
 
-          {/* Top-right scarcity badge */}
-          <div className="absolute top-3 right-3 z-[2]">
-            <span className="gold-shimmer text-white text-[10px] font-semibold px-3 py-[5px] rounded-full">
-              Limited Release
-            </span>
-          </div>
+          {/* Top-right quarter badge */}
+          {deal.quarter_release && (
+            <div className="absolute top-3 right-3 z-[2]">
+              <span className="bg-[#0E3470]/80 backdrop-blur-sm text-white text-[10px] font-semibold px-2.5 py-[5px] rounded-full">
+                {deal.quarter_release}
+              </span>
+            </div>
+          )}
 
           {/* Social proof bar — hidden when both counts are 0 */}
           {hasSocialProof && (
