@@ -77,6 +77,13 @@ export default async function PortalDashboardPage({
         .eq('deal_id', deal.id)
         .eq('status', 'scheduled');
 
+      // Fetch commitment count
+      const { count: commitment_count } = await supabase
+        .from('terminal_deal_commitments')
+        .select('*', { count: 'exact', head: true })
+        .eq('deal_id', deal.id)
+        .in('status', ['pending', 'wire_sent', 'confirmed']);
+
       return {
         id: deal.id,
         name: deal.name,
@@ -107,6 +114,7 @@ export default async function PortalDashboardPage({
         loi_signed_at: deal.loi_signed_at ?? null,
         teaser_description: deal.teaser_description ?? null,
         is_subscribed: subscribedDealIds.has(deal.id),
+        commitment_count: commitment_count ?? 0,
       };
     })
   );

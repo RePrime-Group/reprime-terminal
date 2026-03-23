@@ -140,37 +140,48 @@ export default function ComingSoonCard({ deal, index }: ComingSoonCardProps) {
             </div>
           )}
 
-          {/* Subscribe button */}
-          <button
-            onClick={handleSubscribe}
-            disabled={loading}
-            className={`mt-4 w-full py-2.5 rounded-lg text-[12px] font-semibold transition-all duration-200 ${
-              subscribed
-                ? 'bg-[#BC9C45]/[0.08] border border-[#BC9C45]/20 text-[#BC9C45]'
-                : 'bg-transparent border border-[#BC9C45]/30 text-[#BC9C45] hover:bg-[#BC9C45]/5 hover:border-[#BC9C45]/50'
-            }`}
-          >
-            {loading ? (
-              <span className="inline-flex items-center gap-1.5">
-                <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
+          {/* Commitment count badge */}
+          {(deal.commitment_count ?? 0) > 0 && (
+            <div className="mt-4 p-2.5 bg-[#FEF2F2] border border-[#FECACA] rounded-lg text-center">
+              <span className="text-[11px] font-bold text-[#DC2626]">
+                🔥 {deal.commitment_count} group{(deal.commitment_count ?? 0) > 1 ? 's' : ''} already committed
               </span>
-            ) : subscribed ? (
-              <span className="inline-flex items-center gap-1.5">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                Subscribed
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1.5">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-                Notify Me
-              </span>
+            </div>
+          )}
+
+          {/* Subscribe / Commit buttons */}
+          <div className="flex gap-2 mt-4">
+            <button
+              onClick={handleSubscribe}
+              disabled={loading}
+              className={`flex-1 py-2.5 rounded-lg text-[12px] font-semibold transition-all duration-200 ${
+                subscribed
+                  ? 'bg-[#BC9C45]/[0.08] border border-[#BC9C45]/20 text-[#BC9C45]'
+                  : 'bg-transparent border border-[#BC9C45]/30 text-[#BC9C45] hover:bg-[#BC9C45]/5 hover:border-[#BC9C45]/50'
+              }`}
+            >
+              {subscribed ? '✓ Subscribed' : 'Notify Me'}
+            </button>
+            {isLoiSigned && (
+              <button
+                onClick={async (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  await fetch(`/api/deals/${deal.id}/commit`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'primary' }),
+                  });
+                }}
+                className="flex-1 py-2.5 rounded-lg text-[12px] font-bold bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] hover:opacity-90 transition-opacity"
+              >
+                Commit Early
+              </button>
             )}
-          </button>
+          </div>
         </div>
       </div>
     </div>
   );
 }
+

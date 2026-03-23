@@ -35,6 +35,7 @@ export interface DealCardData {
   loi_signed_at?: string | null;
   teaser_description?: string | null;
   is_subscribed?: boolean;
+  commitment_count?: number;
 }
 
 interface PortalDashboardClientProps {

@@ -1134,35 +1134,74 @@ function MeetingScheduler({
     );
   }
 
+  const [selectedDay, setSelectedDay] = useState(0);
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
   return (
     <div>
-      {/* 2-column grid of meeting slot buttons */}
-      <div className="grid grid-cols-2 gap-2">
-        {weekDays.map((day) => {
-          const timeSlots = generateTimeSlots(day);
-          return timeSlots.map((ts) => {
-            const dayLabel = dayLabels[day.getDay()];
-            const dateNum = day.getDate();
-            return (
-              <button
-                key={ts.isoString}
-                onClick={() => setSelectedSlot(ts.isoString)}
-                className={`text-sm px-4 py-3 rounded-lg transition-colors font-medium text-left ${
-                  selectedSlot === ts.isoString
-                    ? 'border border-[#BC9C45] bg-[#FDF8ED] ring-1 ring-[#BC9C45] text-[#0E3470]'
-                    : 'bg-white border border-[#EEF0F4] hover:border-[#BC9C45] text-[#374151]'
-                }`}
-              >
-                <div className="text-[10px] text-[#9CA3AF] font-medium uppercase">{dayLabel} {dateNum}</div>
-                <div className="text-sm font-semibold text-[#0E3470]">{ts.label}</div>
-              </button>
-            );
-          });
+      {/* Day selector — horizontal scroll */}
+      <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
+        {weekDays.map((day, i) => {
+          const daySlots = generateTimeSlots(day);
+          return (
+            <button
+              key={i}
+              onClick={() => setSelectedDay(i)}
+              className={`flex flex-col items-center px-4 py-2.5 rounded-xl transition-all shrink-0 ${
+                selectedDay === i
+                  ? 'bg-[#0E3470] text-white'
+                  : daySlots.length === 0
+                    ? 'bg-[#F7F8FA] text-[#D1D5DB] cursor-not-allowed'
+                    : 'bg-white border border-[#EEF0F4] text-[#374151] hover:border-[#BC9C45]'
+              }`}
+              disabled={daySlots.length === 0}
+            >
+              <span className="text-[10px] font-medium uppercase">{dayLabels[day.getDay()]}</span>
+              <span className="text-[16px] font-bold">{day.getDate()}</span>
+              <span className="text-[9px] opacity-60">{monthNames[day.getMonth()]}</span>
+            </button>
+          );
         })}
       </div>
 
+      {/* Time slots for selected day */}
+      {(() => {
+        const daySlots = generateTimeSlots(weekDays[selectedDay]);
+        if (daySlots.length === 0) {
+          return (
+            <div className="text-center py-6 text-[13px] text-[#9CA3AF]">
+              No available slots on this day
+            </div>
+          );
+        }
+        return (
+          <div className="grid grid-cols-3 gap-2 max-h-[200px] overflow-y-auto">
+            {daySlots.map((ts) => (
+              <button
+                key={ts.isoString}
+                onClick={() => setSelectedSlot(ts.isoString)}
+                className={`text-sm px-3 py-2.5 rounded-lg transition-all font-medium text-center ${
+                  selectedSlot === ts.isoString
+                    ? 'border-2 border-[#BC9C45] bg-[#FDF8ED] text-[#0E3470] shadow-sm'
+                    : 'bg-white border border-[#EEF0F4] hover:border-[#BC9C45] text-[#374151]'
+                }`}
+              >
+                {ts.label}
+              </button>
+            ))}
+          </div>
+        );
+      })()}
+
+      {/* Confirm button — sticky at bottom */}
       {selectedSlot && (
-        <div className="mt-4">
+        <div className="mt-4 p-3 bg-[#FDF8ED] border border-[#ECD9A0]/30 rounded-xl">
+          <div className="text-[11px] text-[#6B7280] mb-2">
+            Selected: <span className="font-semibold text-[#0E3470]">
+              {new Date(selectedSlot).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} at{' '}
+              {new Date(selectedSlot).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+            </span>
+          </div>
           <button
             onClick={handleConfirm}
             disabled={confirming}
@@ -1177,10 +1216,12 @@ function MeetingScheduler({
         <span className="text-xs text-[#9CA3AF]">
           None of these work?{' '}
           <a
-            href={`mailto:?subject=Meeting%20Request`}
+            href="https://wa.me/19177030365?text=Hi, I'd like to schedule a meeting"
+            target="_blank"
+            rel="noopener noreferrer"
             className="text-[#BC9C45] hover:underline"
           >
-            Email us
+            Message us on WhatsApp
           </a>
         </span>
       </div>

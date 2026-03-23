@@ -104,6 +104,11 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
             <span className="bg-[#0E3470]/90 backdrop-blur-sm text-white text-[10px] font-semibold px-2.5 py-[5px] rounded-full">
               {deal.property_type}
             </span>
+            {(deal.commitment_count ?? 0) > 0 && (
+              <span className="bg-[#DC2626]/90 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-[5px] rounded-full animate-pulse">
+                🔥 {deal.commitment_count} Group{(deal.commitment_count ?? 0) > 1 ? 's' : ''} Committed
+              </span>
+            )}
             {deal.seller_financing && (
               <span
                 className="text-white text-[10px] font-semibold px-2.5 py-[5px] rounded-full"
