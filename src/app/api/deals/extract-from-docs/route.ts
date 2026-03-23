@@ -75,12 +75,21 @@ These may include an Offering Memorandum (OM) and/or a Letter of Intent (LOI).
 
 CRITICAL RULES:
 1. If BOTH an OM and LOI are present, the LOI contains the ACTUAL NEGOTIATED TERMS. The LOI OVERRIDES the OM for: purchase price, deposit, closing timeline, DD period, special terms, financing terms.
-2. You MUST CALCULATE the following metrics yourself — do NOT copy them from the OM:
-   - cap_rate = NOI / Purchase Price (from LOI if available) × 100. Example: NOI $239,000 / Price $2,333,500 = 10.24%
-   - If you can determine annual debt service, calculate DSCR = NOI / Annual Debt Service
-   - If you can determine equity and cash flow, calculate CoC = Annual Cash Flow / Equity × 100
-3. For IRR: only include if you can calculate it from the deal terms. Otherwise null.
-4. purchase_price and noi should be PLAIN NUMBERS as strings (no $ or commas). Example: "2333500" not "$2,333,500"
+2. You MUST CALCULATE ALL financial metrics yourself — do NOT copy them from the OM. Use these DEFAULT ASSUMPTIONS unless the documents specify otherwise:
+   - LTV: 70% (Loan = Purchase Price × 0.70)
+   - Interest Rate: 6.5% (unless stated in docs)
+   - Amortization: 30 years
+   - Hold Period: 5 years for IRR calculation
+3. REQUIRED CALCULATIONS (show your work in source_notes):
+   - loan_estimate = Purchase Price × 0.70
+   - equity_required = Purchase Price × 0.30
+   - Annual Debt Service = Loan Amount × Interest Rate (simplified for IO estimate)
+   - cap_rate = NOI / Purchase Price × 100
+   - DSCR = NOI / Annual Debt Service
+   - Cash Flow = NOI - Annual Debt Service
+   - coc = Cash Flow / Equity × 100
+   - For IRR: estimate using cash flow + exit value at same cap rate after hold period
+4. purchase_price, noi, equity_required, loan_estimate should be PLAIN NUMBERS as strings (no $ or commas). Example: "2333500" not "$2,333,500"
 
 Extract ALL fields. If not found, use null. Return ONLY valid JSON.
 
@@ -96,12 +105,12 @@ Extract ALL fields. If not found, use null. Return ONLY valid JSON.
   "occupancy": "Occupancy percentage as string (e.g. '95')",
   "purchase_price": "PLAIN NUMBER from LOI if available, else OM (e.g. '14200000')",
   "noi": "Net Operating Income as PLAIN NUMBER string (e.g. '1278000')",
-  "cap_rate": "YOU MUST CALCULATE: NOI / purchase_price * 100, as string with 1 decimal (e.g. '10.2')",
-  "irr": "Calculated IRR as string or null if cannot calculate",
-  "coc": "Calculated Cash-on-Cash return as string or null",
-  "dscr": "Calculated DSCR as string (e.g. '1.62') or null",
-  "equity_required": "Equity required as PLAIN NUMBER string or null",
-  "loan_estimate": "Loan amount as PLAIN NUMBER string or null",
+  "cap_rate": "CALCULATE: NOI / purchase_price * 100, string with 1 decimal (e.g. '10.2')",
+  "irr": "CALCULATE: estimated IRR based on cash flow + exit at same cap over 5yr hold, as string (e.g. '18.5')",
+  "coc": "CALCULATE: (NOI - Annual Debt Service) / Equity * 100, as string (e.g. '11.2')",
+  "dscr": "CALCULATE: NOI / Annual Debt Service, as string (e.g. '1.62')",
+  "equity_required": "CALCULATE: Purchase Price * 0.30, as PLAIN NUMBER string (e.g. '700000')",
+  "loan_estimate": "CALCULATE: Purchase Price * 0.70, as PLAIN NUMBER string (e.g. '1633450')",
   "seller_financing": true or false,
   "special_terms": "Any special terms from LOI first, then OM, or 'None'",
   "deposit_amount": "From LOI if available (e.g. '$50,000') or null",
