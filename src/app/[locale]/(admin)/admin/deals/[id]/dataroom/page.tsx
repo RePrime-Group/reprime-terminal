@@ -111,7 +111,7 @@ export default function DataRoomPage() {
   const [showZipModal, setShowZipModal] = useState(false);
   const [pendingZipPath, setPendingZipPath] = useState<string | null>(null);
   const [extracting, setExtracting] = useState(false);
-  const [extractResult, setExtractResult] = useState<{ foldersCreated: number; filesExtracted: number; errors: string[] } | null>(null);
+  const [extractResult, setExtractResult] = useState<{ foldersCreated: number; filesExtracted: number; errors: string[]; classifications?: { fileName: string; category: string; confidence: string }[] } | null>(null);
 
   // ── Fetch data ─────────────────────────────────────────────────────────────
 
@@ -329,13 +329,43 @@ export default function DataRoomPage() {
 
       if (res.ok) {
         setExtractResult(data);
-        // Refresh the folder/document list
         fetchData();
       } else {
         setUploadError(data.error || 'ZIP extraction failed');
       }
     } catch {
       setUploadError('Network error during ZIP extraction');
+    } finally {
+      setExtracting(false);
+    }
+  }
+
+  async function handleAIClassify() {
+    if (!pendingZipPath) return;
+    setExtracting(true);
+    setExtractResult(null);
+
+    try {
+      const res = await fetch('/api/documents/ai-classify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dealId, storagePath: pendingZipPath }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        setExtractResult({
+          foldersCreated: data.foldersCreated,
+          filesExtracted: data.filesUploaded,
+          errors: data.errors,
+          classifications: data.classifications,
+        });
+        fetchData();
+      } else {
+        setUploadError(data.error || 'AI classification failed');
+      }
+    } catch {
+      setUploadError('Network error during AI classification');
     } finally {
       setExtracting(false);
     }
@@ -840,16 +870,32 @@ export default function DataRoomPage() {
         {extractResult ? (
           <div>
             <div className="mb-3 p-3 bg-rp-green-light border border-rp-green-border rounded-lg">
-              <p className="text-sm font-medium text-rp-green">Extraction complete</p>
+              <p className="text-sm font-medium text-rp-green">
+                {extractResult.classifications ? 'AI Classification Complete' : 'Extraction Complete'}
+              </p>
               <p className="text-xs text-rp-green/70 mt-1">
-                {extractResult.foldersCreated} folders created, {extractResult.filesExtracted} files extracted
+                {extractResult.foldersCreated} folders created, {extractResult.filesExtracted} files organized
               </p>
             </div>
+            {extractResult.classifications && (
+              <div className="mb-3 max-h-[200px] overflow-y-auto">
+                <p className="text-xs font-medium text-rp-navy mb-2">AI Classification Results:</p>
+                {extractResult.classifications.map((c: { fileName: string; category: string; confidence: string }, i: number) => (
+                  <div key={i} className="flex items-center justify-between py-1 px-2 text-xs rounded hover:bg-rp-gray-100">
+                    <span className="text-rp-gray-600 truncate flex-1">{c.fileName}</span>
+                    <span className="text-rp-navy font-medium ml-2 shrink-0">{c.category}</span>
+                    <span className={`ml-2 text-[9px] font-bold uppercase shrink-0 ${
+                      c.confidence === 'high' ? 'text-rp-green' : c.confidence === 'medium' ? 'text-rp-amber' : 'text-rp-gray-400'
+                    }`}>{c.confidence}</span>
+                  </div>
+                ))}
+              </div>
+            )}
             {extractResult.errors.length > 0 && (
               <div className="mb-3 p-3 bg-rp-amber-light border border-rp-amber-border rounded-lg">
                 <p className="text-xs text-rp-amber font-medium">Some files had issues:</p>
                 <ul className="text-xs text-rp-amber/70 mt-1 list-disc list-inside">
-                  {extractResult.errors.map((err, i) => <li key={i}>{err}</li>)}
+                  {extractResult.errors.map((err: string, i: number) => <li key={i}>{err}</li>)}
                 </ul>
               </div>
             )}
@@ -861,15 +907,46 @@ export default function DataRoomPage() {
           </div>
         ) : (
           <div>
-            <p className="text-sm text-rp-gray-600 mb-4">
-              Extract the ZIP contents into dataroom folders? Files will be organized by their folder structure inside the ZIP.
+            <p className="text-sm text-rp-gray-600 mb-5">
+              How would you like to organize these files?
             </p>
-            <div className="flex justify-end gap-3">
+            <div className="flex flex-col gap-3 mb-5">
+              <button
+                onClick={handleAIClassify}
+                disabled={extracting}
+                className="w-full p-4 rounded-xl border-2 border-rp-gold bg-rp-gold-bg text-left hover:shadow-md transition-all disabled:opacity-50"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-[20px]">⚡</span>
+                  <div>
+                    <div className="text-sm font-bold text-rp-navy">AI Smart Sort (Recommended)</div>
+                    <div className="text-xs text-rp-gray-500 mt-0.5">Claude AI reads filenames and auto-sorts into DD categories: Financials, Legal, Environmental, etc.</div>
+                  </div>
+                </div>
+              </button>
+              <button
+                onClick={handleExtractZip}
+                disabled={extracting}
+                className="w-full p-4 rounded-xl border border-rp-gray-200 text-left hover:border-rp-gray-300 transition-all disabled:opacity-50"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-[20px]">📁</span>
+                  <div>
+                    <div className="text-sm font-semibold text-rp-navy">Keep Original Folders</div>
+                    <div className="text-xs text-rp-gray-500 mt-0.5">Extract ZIP and preserve the original folder structure as-is.</div>
+                  </div>
+                </div>
+              </button>
+            </div>
+            {extracting && (
+              <div className="flex items-center gap-2 p-3 bg-rp-gold-bg rounded-lg border border-rp-gold-border">
+                <div className="w-4 h-4 border-2 border-rp-gold border-t-transparent rounded-full animate-spin" />
+                <span className="text-xs font-medium text-rp-navy">AI is analyzing and sorting your files...</span>
+              </div>
+            )}
+            <div className="flex justify-end mt-3">
               <Button variant="secondary" onClick={() => { setShowZipModal(false); setPendingZipPath(null); }}>
-                Keep as Single File
-              </Button>
-              <Button variant="gold" onClick={handleExtractZip} loading={extracting}>
-                Extract Files
+                Cancel
               </Button>
             </div>
           </div>
