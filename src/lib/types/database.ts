@@ -115,6 +115,7 @@ export interface TerminalDDDocument {
   file_type: string | null;
   storage_path: string | null;
   is_verified: boolean;
+  is_downloadable: boolean;
   uploaded_by: string | null;
   created_at: string;
 }

@@ -10,6 +10,7 @@ import { calculateCustomIRR } from '@/lib/utils/irr-calculator';
 import { createClient } from '@/lib/supabase/client';
 import FadeInOnScroll from '@/components/ui/FadeInOnScroll';
 import NDAModal from '@/components/portal/NDAModal';
+import DataRoomTab from '@/components/portal/DataRoomTab';
 import type {
   DealWithDetails,
   TerminalDDFolder,
@@ -34,6 +35,8 @@ interface DealDetailClientProps {
   stageProgress?: Record<string, { total: number; completed: number }>;
   currentStage?: string;
   hasSignedNDA?: boolean;
+  investorName?: string;
+  investorEmail?: string;
 }
 
 type TabKey = 'overview' | 'due-diligence' | 'financial-modeling' | 'deal-structure' | 'schedule';
@@ -1322,6 +1325,8 @@ export default function DealDetailClient({
   stageProgress,
   currentStage,
   hasSignedNDA: initialNDA = false,
+  investorName = 'Member',
+  investorEmail = '',
 }: DealDetailClientProps) {
   const t = useTranslations('portal');
   const router = useRouter();
@@ -2098,75 +2103,14 @@ export default function DealDetailClient({
           style={{ display: activeTab === 'due-diligence' ? 'block' : 'none' }}
         >
           <div className="mt-8 px-8 pb-10">
-            {/* Progress bar + Download button row */}
-            <div className="flex items-start justify-between mb-6">
-              <div className="flex-1 mr-6">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="data-label !text-[#0B8A4D]">
-                    DD COMPLETION
-                  </span>
-                  <span className="text-sm font-semibold text-[#0B8A4D]">
-                    {ddProgress}%
-                  </span>
-                </div>
-                <div className="bg-[#EEF0F4] rounded-full h-2 overflow-hidden">
-                  <div
-                    className="bg-gradient-to-r from-[#0B8A4D] to-[#34D399] h-full rounded-full transition-all duration-500"
-                    style={{ width: `${ddProgress}%` }}
-                  />
-                </div>
-                <div className="text-[11px] text-[#9CA3AF] mt-1">
-                  {verifiedDocs} of {totalDocs} documents verified
-                  {stageProgress?.due_diligence && stageProgress.due_diligence.total > 0 && (
-                    <span className="ml-2">
-                      &middot; {stageProgress.due_diligence.completed}/{stageProgress.due_diligence.total} tasks complete
-                    </span>
-                  )}
-                </div>
-              </div>
-              <a
-                href={`/api/deals/${deal.id}/package`}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-sm font-semibold rounded-xl transition-colors shrink-0"
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
-                Download Complete Package
-              </a>
-            </div>
-
-            {/* Folder Grid */}
-            <div className="grid grid-cols-2 gap-4 mt-4">
-              {deal.dd_folders.map((folder, idx) => (
-                <FadeInOnScroll key={folder.id} delay={idx * 0.05}>
-                  <DDFolderCard
-                    folder={folder}
-                    dealId={deal.id}
-                    onDocumentDownload={handleDocumentDownload}
-                    onViewDocument={handleViewDocument}
-                  />
-                </FadeInOnScroll>
-              ))}
-              {deal.dd_folders.length === 0 && (
-                <div className="col-span-2 bg-white rounded-xl border border-[#EEF0F4] p-12 text-center">
-                  <span className="text-3xl block mb-3">{'\u231B'}</span>
-                  <p className="text-sm text-[#9CA3AF]">
-                    Documents pending upload
-                  </p>
-                </div>
-              )}
-            </div>
+            <DataRoomTab
+              folders={deal.dd_folders}
+              dealId={deal.id}
+              investorName={investorName}
+              investorEmail={investorEmail}
+              onViewDocument={handleViewDocument}
+              onDocumentDownload={handleDocumentDownload}
+            />
           </div>
         </div>
 

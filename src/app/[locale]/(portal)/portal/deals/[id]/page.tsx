@@ -137,6 +137,13 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
     if (stage === 'post_closing') currentStage = 'post_closing';
   }
 
+  // Get investor profile for watermark
+  const { data: investorProfile } = await supabase
+    .from('terminal_users')
+    .select('full_name, email')
+    .eq('id', user.id)
+    .single();
+
   // Check NDA status — blanket NDA or deal-specific
   const { data: blanketNDA } = await supabase
     .from('terminal_nda_signatures')
@@ -208,6 +215,8 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
       stageProgress={stageProgress}
       currentStage={currentStage}
       hasSignedNDA={hasSignedNDA}
+      investorName={investorProfile?.full_name ?? 'Member'}
+      investorEmail={investorProfile?.email ?? ''}
     />
   );
 }
