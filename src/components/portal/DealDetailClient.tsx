@@ -2376,7 +2376,7 @@ export default function DealDetailClient({
             </div>
             <div className="flex gap-3">
               <a
-                href={`https://wa.me/?text=Hi, I'm interested in ${deal.name}`}
+                href={`https://wa.me/19177030365?text=Hi, I'm interested in ${deal.name}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#25D366] text-white text-[12px] font-semibold transition-opacity hover:opacity-90"
@@ -2449,12 +2449,16 @@ export default function DealDetailClient({
         <NDAModal
           dealName={deal.name}
           onClose={() => setShowNDAModal(false)}
-          onSign={async (type) => {
+          onSign={async (type, signerInfo) => {
             const supabase = createClient();
+            const { data: { user } } = await supabase.auth.getUser();
             await supabase.from('terminal_nda_signatures').insert({
-              user_id: (await supabase.auth.getUser()).data.user?.id,
+              user_id: user?.id,
               deal_id: type === 'deal' ? deal.id : null,
               nda_type: type,
+              signer_name: signerInfo.fullName,
+              signer_company: signerInfo.company || null,
+              signer_title: signerInfo.title || null,
             });
             setNdaSigned(true);
             setShowNDAModal(false);
