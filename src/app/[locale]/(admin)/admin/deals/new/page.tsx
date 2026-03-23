@@ -172,6 +172,8 @@ export default function NewDealPage() {
   const [aiError, setAiError] = useState<string | null>(null);
   const [aiNotes, setAiNotes] = useState<string | null>(null);
   const aiFileRef = useRef<HTMLInputElement>(null);
+  const [isPortfolio, setIsPortfolio] = useState(false);
+  const [portfolioAddresses, setPortfolioAddresses] = useState<{ label: string; address: string; city: string; state: string; sf: string; units: string }[]>([]);
 
   const handleAIExtract = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -235,7 +237,28 @@ export default function NewDealPage() {
         acq_fee: d.acq_fee || prev.acq_fee,
         asset_mgmt_fee: d.asset_mgmt_fee || prev.asset_mgmt_fee,
         gp_carry: d.gp_carry || prev.gp_carry,
+        loan_fee: d.loan_fee || prev.loan_fee,
+        // Set DD and close deadlines from days
+        dd_deadline: d.dd_deadline_days
+          ? new Date(Date.now() + d.dd_deadline_days * 86400000).toISOString().slice(0, 16)
+          : prev.dd_deadline,
+        close_deadline: d.close_deadline_days
+          ? new Date(Date.now() + d.close_deadline_days * 86400000).toISOString().slice(0, 16)
+          : prev.close_deadline,
       }));
+
+      // Handle portfolio addresses from AI
+      if (d.addresses && d.addresses.length > 0) {
+        setIsPortfolio(true);
+        setPortfolioAddresses(d.addresses.map((a: { label?: string; address?: string; city?: string; state?: string; square_footage?: string; units?: string }) => ({
+          label: a.label || '',
+          address: a.address || '',
+          city: a.city || '',
+          state: a.state || '',
+          sf: a.square_footage || '',
+          units: a.units || '',
+        })));
+      }
 
       if (d.source_notes) {
         setAiNotes(d.source_notes);
@@ -308,7 +331,7 @@ export default function NewDealPage() {
         (h) => h.trim() !== ''
       );
 
-      const { error } = await supabase.from('terminal_deals').insert({
+      const { data: newDeal, error } = await supabase.from('terminal_deals').insert({
         name: form.name.trim(),
         property_type: form.property_type,
         city: form.city.trim(),
@@ -351,15 +374,35 @@ export default function NewDealPage() {
         acquisition_thesis: form.acquisition_thesis || null,
         status,
         created_by: user?.id ?? null,
-      });
+      }).select('id').single();
 
-      if (error) {
+      if (error || !newDeal) {
         console.error('Failed to create deal:', error);
         alert('Failed to create deal. Please try again.');
         return;
       }
 
-      router.push(`/${locale}/admin/deals`);
+      // Create portfolio addresses if any
+      if (isPortfolio && portfolioAddresses.length > 0) {
+        const addressInserts = portfolioAddresses
+          .filter((a) => a.label.trim())
+          .map((a, i) => ({
+            deal_id: newDeal.id,
+            label: a.label.trim(),
+            address: a.address.trim() || null,
+            city: a.city.trim() || null,
+            state: a.state.trim() || null,
+            square_footage: a.sf.trim() || null,
+            units: a.units.trim() || null,
+            display_order: i,
+          }));
+
+        if (addressInserts.length > 0) {
+          await supabase.from('terminal_deal_addresses').insert(addressInserts);
+        }
+      }
+
+      router.push(`/${locale}/admin/deals/${newDeal.id}`);
     } finally {
       setSaving(false);
     }
@@ -466,6 +509,123 @@ export default function NewDealPage() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Deal Type Toggle */}
+      <div className="bg-white rounded-2xl border border-rp-gray-200 p-6 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-[16px] font-semibold text-rp-navy">Deal Type</h2>
+          <div className="bg-rp-gray-100 rounded-lg p-1 inline-flex">
+            <button
+              onClick={() => setIsPortfolio(false)}
+              className={`px-4 py-2 text-[12px] font-semibold rounded-md transition-all ${
+                !isPortfolio ? 'bg-rp-navy text-white' : 'text-rp-gray-500 hover:text-rp-navy'
+              }`}
+            >
+              Single Property
+            </button>
+            <button
+              onClick={() => setIsPortfolio(true)}
+              className={`px-4 py-2 text-[12px] font-semibold rounded-md transition-all ${
+                isPortfolio ? 'bg-rp-navy text-white' : 'text-rp-gray-500 hover:text-rp-navy'
+              }`}
+            >
+              Portfolio (Multiple Addresses)
+            </button>
+          </div>
+        </div>
+
+        {isPortfolio && (
+          <div>
+            <p className="text-[12px] text-rp-gray-400 mb-4">
+              Add each property in the portfolio. Each address will get its own OM, photos, and DD folders.
+            </p>
+
+            {portfolioAddresses.map((addr, i) => (
+              <div key={i} className="border border-rp-gray-200 rounded-xl p-4 mb-3">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[13px] font-semibold text-rp-navy">Property {i + 1}</span>
+                  <button
+                    onClick={() => setPortfolioAddresses((prev) => prev.filter((_, j) => j !== i))}
+                    className="text-[11px] text-rp-red hover:underline"
+                  >
+                    Remove
+                  </button>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <Input
+                    label="Label / Name"
+                    value={addr.label}
+                    onChange={(e) => {
+                      const updated = [...portfolioAddresses];
+                      updated[i] = { ...updated[i], label: e.target.value };
+                      setPortfolioAddresses(updated);
+                    }}
+                    placeholder="e.g. Building A"
+                  />
+                  <Input
+                    label="Address"
+                    value={addr.address}
+                    onChange={(e) => {
+                      const updated = [...portfolioAddresses];
+                      updated[i] = { ...updated[i], address: e.target.value };
+                      setPortfolioAddresses(updated);
+                    }}
+                    placeholder="123 Main St"
+                  />
+                  <Input
+                    label="City"
+                    value={addr.city}
+                    onChange={(e) => {
+                      const updated = [...portfolioAddresses];
+                      updated[i] = { ...updated[i], city: e.target.value };
+                      setPortfolioAddresses(updated);
+                    }}
+                    placeholder="New York"
+                  />
+                  <Input
+                    label="State"
+                    value={addr.state}
+                    onChange={(e) => {
+                      const updated = [...portfolioAddresses];
+                      updated[i] = { ...updated[i], state: e.target.value };
+                      setPortfolioAddresses(updated);
+                    }}
+                    placeholder="NY"
+                  />
+                  <Input
+                    label="Square Footage"
+                    value={addr.sf}
+                    onChange={(e) => {
+                      const updated = [...portfolioAddresses];
+                      updated[i] = { ...updated[i], sf: e.target.value };
+                      setPortfolioAddresses(updated);
+                    }}
+                    placeholder="50,000"
+                  />
+                  <Input
+                    label="Units"
+                    value={addr.units}
+                    onChange={(e) => {
+                      const updated = [...portfolioAddresses];
+                      updated[i] = { ...updated[i], units: e.target.value };
+                      setPortfolioAddresses(updated);
+                    }}
+                    placeholder="24"
+                  />
+                </div>
+              </div>
+            ))}
+
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setPortfolioAddresses((prev) => [...prev, { label: '', address: '', city: '', state: '', sf: '', units: '' }])}
+            >
+              + Add Property
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Section 1: Basic Information */}

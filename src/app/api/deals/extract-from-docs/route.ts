@@ -68,14 +68,21 @@ export async function POST(request: NextRequest) {
 
   contentBlocks.push({
     type: 'text',
-    text: `You are a commercial real estate analyst. I've uploaded ${files.length} document(s):
+    text: `You are a commercial real estate underwriter. I've uploaded ${files.length} document(s):
 ${fileDescriptions.join('\n')}
 
 These may include an Offering Memorandum (OM) and/or a Letter of Intent (LOI).
 
-IMPORTANT: If both an OM and LOI are present, the LOI contains the ACTUAL NEGOTIATED TERMS which override the OM's marketed terms. Use LOI values for: purchase price, deposit, closing timeline, DD period, special terms, financing terms.
+CRITICAL RULES:
+1. If BOTH an OM and LOI are present, the LOI contains the ACTUAL NEGOTIATED TERMS. The LOI OVERRIDES the OM for: purchase price, deposit, closing timeline, DD period, special terms, financing terms.
+2. You MUST CALCULATE the following metrics yourself — do NOT copy them from the OM:
+   - cap_rate = NOI / Purchase Price (from LOI if available) × 100. Example: NOI $239,000 / Price $2,333,500 = 10.24%
+   - If you can determine annual debt service, calculate DSCR = NOI / Annual Debt Service
+   - If you can determine equity and cash flow, calculate CoC = Annual Cash Flow / Equity × 100
+3. For IRR: only include if you can calculate it from the deal terms. Otherwise null.
+4. purchase_price and noi should be PLAIN NUMBERS as strings (no $ or commas). Example: "2333500" not "$2,333,500"
 
-Extract ALL of the following fields. If a field is not found, use null. Return ONLY valid JSON, no other text.
+Extract ALL fields. If not found, use null. Return ONLY valid JSON.
 
 {
   "name": "Property name",
@@ -87,30 +94,31 @@ Extract ALL of the following fields. If a field is not found, use null. Return O
   "class_type": "A, B, or C",
   "year_built": "Year as number or null",
   "occupancy": "Occupancy percentage as string (e.g. '95')",
-  "purchase_price": "Purchase price as plain number string (e.g. '14200000')",
-  "noi": "Net Operating Income as plain number string",
-  "cap_rate": "Cap rate as string (e.g. '9.0')",
-  "irr": "Projected IRR as string (e.g. '22.4') or null",
-  "coc": "Cash on cash return as string or null",
-  "dscr": "Debt service coverage ratio as string (e.g. '1.62') or null",
-  "equity_required": "Equity required as plain number string or null",
-  "loan_estimate": "Loan amount as plain number string or null",
+  "purchase_price": "PLAIN NUMBER from LOI if available, else OM (e.g. '14200000')",
+  "noi": "Net Operating Income as PLAIN NUMBER string (e.g. '1278000')",
+  "cap_rate": "YOU MUST CALCULATE: NOI / purchase_price * 100, as string with 1 decimal (e.g. '10.2')",
+  "irr": "Calculated IRR as string or null if cannot calculate",
+  "coc": "Calculated Cash-on-Cash return as string or null",
+  "dscr": "Calculated DSCR as string (e.g. '1.62') or null",
+  "equity_required": "Equity required as PLAIN NUMBER string or null",
+  "loan_estimate": "Loan amount as PLAIN NUMBER string or null",
   "seller_financing": true or false,
-  "special_terms": "Any special terms as string, or 'None'",
-  "deposit_amount": "Deposit amount as string (e.g. '$50,000') or null",
+  "special_terms": "Any special terms from LOI first, then OM, or 'None'",
+  "deposit_amount": "From LOI if available (e.g. '$50,000') or null",
   "deposit_held_by": "Who holds the deposit or null",
   "neighborhood": "Neighborhood or submarket name or null",
   "metro_population": "Metro population as string or null",
   "job_growth": "Job growth percentage as string or null",
   "investment_highlights": ["Array of 3-5 key investment highlights as strings"],
-  "acquisition_thesis": "2-3 sentence investment thesis",
-  "dd_deadline_days": "Number of days for due diligence period, or null",
-  "close_deadline_days": "Number of days to closing, or null",
+  "acquisition_thesis": "2-3 sentence investment thesis based on the ACTUAL deal terms (LOI price, not OM asking price)",
+  "dd_deadline_days": "Number of days for due diligence period from LOI, or null",
+  "close_deadline_days": "Number of days to closing from LOI, or null",
   "assignment_fee": "Assignment fee as string (e.g. '3%') or null",
   "assignment_irr": "Assignment IRR as string or null",
   "acq_fee": "Acquisition fee as string or null",
   "asset_mgmt_fee": "Asset management fee as string or null",
   "gp_carry": "GP carry terms as string or null",
+  "loan_fee": "Loan fee/points as string or null",
   "addresses": [
     {
       "label": "Building name or address label",
@@ -118,13 +126,15 @@ Extract ALL of the following fields. If a field is not found, use null. Return O
       "city": "City",
       "state": "State",
       "square_footage": "SF for this specific address or null",
-      "units": "Units for this address or null"
+      "units": "Units for this address or null",
+      "year_built": "Year as number or null",
+      "noi": "NOI for this specific address as plain number or null"
     }
   ],
-  "source_notes": "Brief note about which document each key value came from (OM vs LOI), especially where they differ"
+  "source_notes": "Explain which values came from OM vs LOI. Highlight any differences (e.g. 'OM asking $2.5M, LOI negotiated $2.33M'). Show your cap rate calculation."
 }
 
-If this is a portfolio with multiple addresses, fill in the addresses array. If single property, leave addresses as empty array [].
+If portfolio with multiple properties/addresses, fill addresses array with per-property data. If single property, addresses = [].
 
 JSON only:`,
   });
