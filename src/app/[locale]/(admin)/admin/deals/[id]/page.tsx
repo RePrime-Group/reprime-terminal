@@ -17,6 +17,7 @@ import {
 import type {
   TerminalDeal,
   TerminalDealPhoto,
+  TerminalDealAddress,
   TerminalUser,
   DealStatus,
   UserRole,
@@ -221,6 +222,15 @@ export default function EditDealPage() {
   const [omUploading, setOmUploading] = useState(false);
   const omInputRef = useRef<HTMLInputElement>(null);
 
+  // Portfolio addresses
+  const [addresses, setAddresses] = useState<TerminalDealAddress[]>([]);
+  const [showAddAddress, setShowAddAddress] = useState(false);
+  const [newAddressLabel, setNewAddressLabel] = useState('');
+  const [newAddressAddr, setNewAddressAddr] = useState('');
+  const [newAddressCity, setNewAddressCity] = useState('');
+  const [newAddressState, setNewAddressState] = useState('');
+  const addressOmRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
   // Pipeline stage
   const [pipelineStage, setPipelineStage] = useState<string | null>(null);
 
@@ -266,6 +276,14 @@ export default function EditDealPage() {
         .eq('deal_id', dealId)
         .order('display_order', { ascending: true });
       setPhotos((photosData as TerminalDealPhoto[]) ?? []);
+
+      // Fetch addresses
+      const { data: addressData } = await supabase
+        .from('terminal_deal_addresses')
+        .select('*')
+        .eq('deal_id', dealId)
+        .order('display_order', { ascending: true });
+      setAddresses((addressData as TerminalDealAddress[]) ?? []);
 
       // Fetch current pipeline stage
       const { data: stageData } = await supabase
@@ -606,6 +624,58 @@ export default function EditDealPage() {
     await supabase.storage.from('terminal-dd-documents').remove([omPath]);
     await supabase.from('terminal_deals').update({ om_storage_path: null }).eq('id', dealId);
     setOmPath(null);
+  };
+
+  // Address management
+  const handleAddAddress = async () => {
+    if (!newAddressLabel.trim()) return;
+    const { data, error } = await supabase
+      .from('terminal_deal_addresses')
+      .insert({
+        deal_id: dealId,
+        label: newAddressLabel.trim(),
+        address: newAddressAddr.trim() || null,
+        city: newAddressCity.trim() || null,
+        state: newAddressState.trim() || null,
+        display_order: addresses.length,
+      })
+      .select()
+      .single();
+
+    if (!error && data) {
+      setAddresses((prev) => [...prev, data as TerminalDealAddress]);
+      setNewAddressLabel('');
+      setNewAddressAddr('');
+      setNewAddressCity('');
+      setNewAddressState('');
+      setShowAddAddress(false);
+    }
+  };
+
+  const handleRemoveAddress = async (addressId: string) => {
+    await supabase.from('terminal_deal_addresses').delete().eq('id', addressId);
+    setAddresses((prev) => prev.filter((a) => a.id !== addressId));
+  };
+
+  const handleAddressOmUpload = async (addressId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || file.type !== 'application/pdf') return;
+
+    const path = `${dealId}/om/${addressId}-${Date.now()}-${file.name}`;
+    const { error } = await supabase.storage
+      .from('terminal-dd-documents')
+      .upload(path, file, { upsert: true });
+
+    if (!error) {
+      await supabase
+        .from('terminal_deal_addresses')
+        .update({ om_storage_path: path })
+        .eq('id', addressId);
+
+      setAddresses((prev) =>
+        prev.map((a) => a.id === addressId ? { ...a, om_storage_path: path } : a)
+      );
+    }
   };
 
   if (loading) {
@@ -1151,6 +1221,116 @@ export default function EditDealPage() {
             className="w-full px-3.5 py-2.5 border border-rp-gray-300 rounded-lg text-sm text-rp-gray-700 focus:outline-none focus:ring-2 focus:ring-rp-gold/20 focus:border-rp-gold placeholder:text-rp-gray-400 transition-colors resize-vertical"
           />
         </div>
+      </div>
+
+      {/* Portfolio Addresses */}
+      <div className="bg-white rounded-2xl border border-rp-gray-200 p-6 mb-6">
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-rp-navy/10 flex items-center justify-center">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0E3470" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-[16px] font-semibold text-rp-navy">Portfolio Addresses</h2>
+              <p className="text-[12px] text-rp-gray-400">Add multiple properties for portfolio deals. Each address gets its own OM and DD folders.</p>
+            </div>
+          </div>
+          <Button variant="gold" size="sm" onClick={() => setShowAddAddress(true)}>
+            + Add Address
+          </Button>
+        </div>
+
+        {addresses.length === 0 && !showAddAddress && (
+          <div className="text-center py-6 text-[13px] text-rp-gray-400">
+            No addresses added. Single-property deals don&apos;t need addresses.
+          </div>
+        )}
+
+        {/* Address cards */}
+        {addresses.map((addr) => (
+          <div key={addr.id} className="border border-rp-gray-200 rounded-xl p-4 mb-3 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-lg bg-rp-navy/5 flex items-center justify-center text-[16px]">🏢</div>
+              <div>
+                <div className="text-[14px] font-semibold text-rp-navy">{addr.label}</div>
+                <div className="text-[12px] text-rp-gray-500">
+                  {[addr.address, addr.city, addr.state].filter(Boolean).join(', ') || 'No address details'}
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              {/* OM upload for this address */}
+              {addr.om_storage_path ? (
+                <span className="text-[11px] font-medium text-rp-green bg-rp-green-light px-3 py-1 rounded-full">
+                  ✓ OM Uploaded
+                </span>
+              ) : (
+                <button
+                  onClick={() => addressOmRefs.current[addr.id]?.click()}
+                  className="text-[11px] font-medium text-rp-gold hover:underline"
+                >
+                  Upload OM
+                </button>
+              )}
+              <input
+                ref={(el) => { addressOmRefs.current[addr.id] = el; }}
+                type="file"
+                accept="application/pdf"
+                onChange={(e) => handleAddressOmUpload(addr.id, e)}
+                className="hidden"
+              />
+              <button
+                onClick={() => handleRemoveAddress(addr.id)}
+                className="text-[11px] text-rp-red hover:underline"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        ))}
+
+        {/* Add address form */}
+        {showAddAddress && (
+          <div className="border border-rp-gold-border bg-rp-gold-bg/50 rounded-xl p-4 mt-3">
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <Input
+                label="Label *"
+                value={newAddressLabel}
+                onChange={(e) => setNewAddressLabel(e.target.value)}
+                placeholder="e.g. Building A or 123 Main St"
+              />
+              <Input
+                label="Street Address"
+                value={newAddressAddr}
+                onChange={(e) => setNewAddressAddr(e.target.value)}
+                placeholder="123 Main Street"
+              />
+              <Input
+                label="City"
+                value={newAddressCity}
+                onChange={(e) => setNewAddressCity(e.target.value)}
+                placeholder="New York"
+              />
+              <Input
+                label="State"
+                value={newAddressState}
+                onChange={(e) => setNewAddressState(e.target.value)}
+                placeholder="NY"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button variant="gold" size="sm" onClick={handleAddAddress}>
+                Add Address
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => setShowAddAddress(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* OM Upload */}

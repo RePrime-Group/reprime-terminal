@@ -37,6 +37,7 @@ interface DealDetailClientProps {
   hasSignedNDA?: boolean;
   investorName?: string;
   investorEmail?: string;
+  addresses?: { id: string; label: string; address: string | null; city: string | null; state: string | null; square_footage: string | null; units: string | null; om_storage_path: string | null }[];
 }
 
 type TabKey = 'overview' | 'due-diligence' | 'financial-modeling' | 'deal-structure' | 'schedule';
@@ -1327,6 +1328,7 @@ export default function DealDetailClient({
   hasSignedNDA: initialNDA = false,
   investorName = 'Member',
   investorEmail = '',
+  addresses = [],
 }: DealDetailClientProps) {
   const t = useTranslations('portal');
   const router = useRouter();
@@ -1788,6 +1790,55 @@ export default function DealDetailClient({
           <div className="grid grid-cols-[1fr_360px] gap-8 mt-8 px-8 pb-10">
             {/* Left Column */}
             <div className="space-y-6">
+              {/* Portfolio Address Cards */}
+              {addresses.length > 0 && (
+                <FadeInOnScroll delay={0}>
+                  <div>
+                    <h3 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#0E3470] mb-4">
+                      Portfolio Properties
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      {addresses.map((addr, i) => (
+                        <div
+                          key={addr.id}
+                          className="bg-white rounded-xl border border-[#EEF0F4] p-5 rp-card-shadow hover:border-[#BC9C45]/30 transition-all"
+                          style={{ animationDelay: `${i * 0.08}s` }}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="w-10 h-10 rounded-lg bg-[#0E3470]/5 flex items-center justify-center text-[18px] shrink-0">
+                              🏢
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-[14px] font-semibold text-[#0E3470] truncate">{addr.label}</h4>
+                              <p className="text-[11px] text-[#6B7280] mt-0.5">
+                                {[addr.address, addr.city, addr.state].filter(Boolean).join(', ')}
+                              </p>
+                              {(addr.square_footage || addr.units) && (
+                                <p className="text-[10px] text-[#9CA3AF] mt-1">
+                                  {addr.square_footage && `${addr.square_footage} SF`}
+                                  {addr.square_footage && addr.units && ' · '}
+                                  {addr.units && `${addr.units} Units`}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          {/* Address OM */}
+                          {addr.om_storage_path && (
+                            <button
+                              onClick={() => handleViewDocument(`/api/deals/${deal.id}/om?addressId=${addr.id}&view=true`, `${addr.label} — Offering Memorandum`)}
+                              className="mt-3 w-full py-2 rounded-lg text-[11px] font-semibold bg-[#BC9C45]/10 text-[#BC9C45] hover:bg-[#BC9C45]/20 transition-colors flex items-center justify-center gap-1.5"
+                            >
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                              View OM
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </FadeInOnScroll>
+              )}
+
               {/* Investment Highlights - 2-column grid of mini cards */}
               {deal.investment_highlights &&
                 deal.investment_highlights.length > 0 && (

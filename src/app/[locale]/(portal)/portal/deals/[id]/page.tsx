@@ -137,6 +137,15 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
     if (stage === 'post_closing') currentStage = 'post_closing';
   }
 
+  // Fetch portfolio addresses
+  const { data: addressesData } = await supabase
+    .from('terminal_deal_addresses')
+    .select('*')
+    .eq('deal_id', id)
+    .order('display_order', { ascending: true });
+
+  const dealAddresses = addressesData ?? [];
+
   // Get investor profile for watermark
   const { data: investorProfile } = await supabase
     .from('terminal_users')
@@ -217,6 +226,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
       hasSignedNDA={hasSignedNDA}
       investorName={investorProfile?.full_name ?? 'Member'}
       investorEmail={investorProfile?.email ?? ''}
+      addresses={dealAddresses}
     />
   );
 }
