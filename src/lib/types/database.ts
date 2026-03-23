@@ -95,6 +95,7 @@ export interface TerminalDealPhoto {
   storage_path: string;
   display_order: number;
   caption: string | null;
+  address_id: string | null;
   created_at: string;
 }
 
@@ -104,6 +105,7 @@ export interface TerminalDDFolder {
   name: string;
   icon: string | null;
   display_order: number;
+  address_id: string | null;
 }
 
 export interface TerminalDDDocument {
@@ -209,6 +211,21 @@ export interface TerminalDealMessage {
   deal_id: string;
   user_id: string;
   message: string;
+  created_at: string;
+}
+
+export interface TerminalDealAddress {
+  id: string;
+  deal_id: string;
+  label: string;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  square_footage: string | null;
+  units: string | null;
+  year_built: number | null;
+  om_storage_path: string | null;
+  display_order: number;
   created_at: string;
 }
 
