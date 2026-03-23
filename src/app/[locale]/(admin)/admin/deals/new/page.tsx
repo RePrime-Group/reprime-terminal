@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
@@ -168,6 +168,85 @@ export default function NewDealPage() {
   const [form, setForm] = useState<DealFormData>(initialFormData);
   const [errors, setErrors] = useState<FormErrors>({});
   const [saving, setSaving] = useState(false);
+  const [aiExtracting, setAiExtracting] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiNotes, setAiNotes] = useState<string | null>(null);
+  const aiFileRef = useRef<HTMLInputElement>(null);
+
+  const handleAIExtract = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setAiExtracting(true);
+    setAiError(null);
+    setAiNotes(null);
+
+    const formData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+      formData.append('files', files[i]);
+    }
+
+    try {
+      const res = await fetch('/api/deals/extract-from-docs', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        setAiError(result.error || 'Extraction failed');
+        return;
+      }
+
+      const d = result.data;
+
+      // Auto-fill the form with extracted data
+      setForm((prev) => ({
+        ...prev,
+        name: d.name || prev.name,
+        city: d.city || prev.city,
+        state: d.state || prev.state,
+        property_type: d.property_type || prev.property_type,
+        square_footage: d.square_footage || prev.square_footage,
+        units: d.units || prev.units,
+        class_type: d.class_type || prev.class_type,
+        year_built: d.year_built?.toString() || prev.year_built,
+        occupancy: d.occupancy || prev.occupancy,
+        purchase_price: d.purchase_price || prev.purchase_price,
+        noi: d.noi || prev.noi,
+        cap_rate: d.cap_rate || prev.cap_rate,
+        irr: d.irr || prev.irr,
+        coc: d.coc || prev.coc,
+        dscr: d.dscr || prev.dscr,
+        equity_required: d.equity_required || prev.equity_required,
+        loan_estimate: d.loan_estimate || prev.loan_estimate,
+        seller_financing: d.seller_financing ?? prev.seller_financing,
+        special_terms: d.special_terms || prev.special_terms,
+        deposit_amount: d.deposit_amount || prev.deposit_amount,
+        deposit_held_by: d.deposit_held_by || prev.deposit_held_by,
+        neighborhood: d.neighborhood || prev.neighborhood,
+        metro_population: d.metro_population || prev.metro_population,
+        job_growth: d.job_growth || prev.job_growth,
+        investment_highlights: d.investment_highlights?.length > 0 ? d.investment_highlights : prev.investment_highlights,
+        acquisition_thesis: d.acquisition_thesis || prev.acquisition_thesis,
+        assignment_fee: d.assignment_fee || prev.assignment_fee,
+        assignment_irr: d.assignment_irr || prev.assignment_irr,
+        acq_fee: d.acq_fee || prev.acq_fee,
+        asset_mgmt_fee: d.asset_mgmt_fee || prev.asset_mgmt_fee,
+        gp_carry: d.gp_carry || prev.gp_carry,
+      }));
+
+      if (d.source_notes) {
+        setAiNotes(d.source_notes);
+      }
+    } catch {
+      setAiError('Network error during extraction');
+    } finally {
+      setAiExtracting(false);
+      if (aiFileRef.current) aiFileRef.current.value = '';
+    }
+  };
 
   const updateField = <K extends keyof DealFormData>(
     key: K,
@@ -309,6 +388,84 @@ export default function NewDealPage() {
           Deals
         </Link>
         <h1 className="text-[24px] font-bold text-rp-navy">New Deal</h1>
+      </div>
+
+      {/* AI Document Upload — Hero Section */}
+      <div className="bg-gradient-to-br from-[#07090F] via-[#0A1628] to-[#0E3470] rounded-2xl p-8 mb-8 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-[0.02]" style={{
+          backgroundImage: 'linear-gradient(rgba(188,156,69,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(188,156,69,0.5) 1px, transparent 1px)',
+          backgroundSize: '30px 30px',
+        }} />
+        <div className="relative">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-[#BC9C45]/20 flex items-center justify-center">
+              <span className="text-[22px]">⚡</span>
+            </div>
+            <div>
+              <h2 className="text-[18px] font-semibold text-white font-[family-name:var(--font-playfair)]">
+                AI Deal Creator
+              </h2>
+              <p className="text-[12px] text-white/40">
+                Upload an OM and/or LOI — Claude will extract all deal fields automatically
+              </p>
+            </div>
+          </div>
+
+          <div
+            onClick={() => !aiExtracting && aiFileRef.current?.click()}
+            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
+              aiExtracting
+                ? 'border-[#BC9C45]/30 bg-[#BC9C45]/5'
+                : 'border-white/15 hover:border-[#BC9C45]/40 hover:bg-white/[0.02]'
+            }`}
+          >
+            <input
+              ref={aiFileRef}
+              type="file"
+              accept="application/pdf"
+              multiple
+              onChange={handleAIExtract}
+              className="hidden"
+            />
+            {aiExtracting ? (
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-10 h-10 border-3 border-[#BC9C45] border-t-transparent rounded-full animate-spin" />
+                <p className="text-[14px] font-medium text-white">AI is reading your documents...</p>
+                <p className="text-[12px] text-white/40">Extracting property details, financials, and deal terms</p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-3">
+                <div className="flex gap-3">
+                  <div className="w-12 h-14 rounded-lg bg-white/10 border border-white/10 flex items-center justify-center">
+                    <span className="text-[11px] font-bold text-[#BC9C45]">OM</span>
+                  </div>
+                  <div className="w-12 h-14 rounded-lg bg-white/10 border border-white/10 flex items-center justify-center">
+                    <span className="text-[11px] font-bold text-white/50">LOI</span>
+                  </div>
+                </div>
+                <p className="text-[14px] font-medium text-white">
+                  Drop your OM and LOI here
+                </p>
+                <p className="text-[12px] text-white/40">
+                  PDF files · OM = marketed terms · LOI = negotiated terms (takes priority)
+                </p>
+              </div>
+            )}
+          </div>
+
+          {aiError && (
+            <div className="mt-4 p-3 bg-[#DC2626]/10 border border-[#DC2626]/20 rounded-lg">
+              <p className="text-[12px] text-[#DC2626] font-medium">{aiError}</p>
+            </div>
+          )}
+
+          {aiNotes && (
+            <div className="mt-4 p-3 bg-[#BC9C45]/10 border border-[#BC9C45]/20 rounded-lg">
+              <p className="text-[10px] font-semibold text-[#BC9C45] uppercase tracking-[1.5px] mb-1">AI SOURCE NOTES</p>
+              <p className="text-[12px] text-white/70 leading-relaxed">{aiNotes}</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Section 1: Basic Information */}
