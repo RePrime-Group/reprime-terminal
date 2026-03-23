@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { sendCommitmentConfirmation } from '@/lib/email/send';
 
 export async function POST(
   request: NextRequest,
@@ -24,11 +25,18 @@ export async function POST(
 
   const { type, notes } = await request.json();
 
-  // Get deal deposit info
+  // Get deal info
   const { data: deal } = await supabase
     .from('terminal_deals')
-    .select('deposit_amount')
+    .select('name, city, state, deposit_amount')
     .eq('id', id)
+    .single();
+
+  // Get investor info
+  const { data: investor } = await supabase
+    .from('terminal_users')
+    .select('full_name, email')
+    .eq('id', user.id)
     .single();
 
   const { data: commitment, error } = await supabase
@@ -55,6 +63,36 @@ export async function POST(
     action: 'expressed_interest',
     metadata: { commitment_id: commitment?.id, type },
   });
+
+  // Send confirmation emails
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://reprimeterminal.com';
+  const emailData = {
+    investorName: investor?.full_name ?? 'Investor',
+    dealName: deal?.name ?? 'Deal',
+    city: deal?.city ?? '',
+    state: deal?.state ?? '',
+    commitType: type || 'primary',
+    depositAmount: deal?.deposit_amount ?? undefined,
+    portalUrl: `${baseUrl}/en/portal/deals/${id}`,
+  };
+
+  try {
+    if (investor?.email) {
+      await sendCommitmentConfirmation(investor.email, emailData);
+    }
+    // Get admin email
+    const { data: settings } = await supabase
+      .from('terminal_settings')
+      .select('value')
+      .eq('key', 'contact_email')
+      .single();
+    const adminEmail = settings?.value ? String(settings.value).replace(/"/g, '') : '';
+    if (adminEmail) {
+      await sendCommitmentConfirmation(adminEmail, { ...emailData, isAdmin: true });
+    }
+  } catch (emailErr) {
+    console.error('Commitment email failed:', emailErr);
+  }
 
   return NextResponse.json({ success: true, commitmentId: commitment?.id });
 }

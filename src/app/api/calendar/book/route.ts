@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { createCalendarEvent } from '@/lib/google/calendar';
+import { sendMeetingConfirmation } from '@/lib/email/send';
 
 export async function POST(request: NextRequest) {
   const cookieStore = await cookies();
@@ -114,6 +115,27 @@ export async function POST(request: NextRequest) {
       calendar_event_id: calendarEvent?.eventId ?? null,
     },
   });
+
+  // Send confirmation emails
+  const emailData = {
+    investorName: investor.full_name,
+    dealName: deal.name,
+    city: deal.city,
+    state: deal.state,
+    dateTime: startTime,
+    calendarLink: calendarEvent?.htmlLink,
+  };
+
+  try {
+    // Email to investor
+    await sendMeetingConfirmation(investor.email, emailData);
+    // Email to admin
+    if (adminEmail) {
+      await sendMeetingConfirmation(adminEmail, { ...emailData, isAdmin: true });
+    }
+  } catch (emailErr) {
+    console.error('Meeting confirmation email failed:', emailErr);
+  }
 
   return NextResponse.json({
     success: true,

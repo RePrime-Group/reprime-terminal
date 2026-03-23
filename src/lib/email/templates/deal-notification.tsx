@@ -19,89 +19,89 @@ export default function DealNotificationEmail({
   status,
   portalUrl,
 }: DealNotificationEmailProps) {
-  const isNewDeal = status === 'published';
-  const isLoiSigned = status === 'loi_signed';
+  const isNew = status === 'published';
+  const isLoi = status === 'loi_signed';
+  const isComingSoon = status === 'coming_soon';
 
-  const headline = isNewDeal
-    ? 'New Deal Available'
-    : isLoiSigned
-      ? 'LOI Signed — PSA In Progress'
-      : 'Deal Status Update';
+  const tag = isNew ? 'NEW DEAL AVAILABLE' : isLoi ? 'LOI SIGNED' : isComingSoon ? 'COMING SOON' : 'DEAL UPDATE';
+  const tagColor = isNew ? '#0B8A4D' : isLoi ? '#BC9C45' : '#0E3470';
 
-  const description = isNewDeal
-    ? 'A new investment opportunity has been published to the Terminal. Full due diligence materials and financial metrics are now available.'
-    : isLoiSigned
-      ? 'The Letter of Intent has been executed for this property. The Purchase and Sales Agreement is now being drafted.'
-      : 'There has been an update to a deal you are following.';
+  const description = isNew
+    ? 'A new investment opportunity has been published to the Terminal. Full financial metrics, due diligence materials, and modeling tools are now available.'
+    : isLoi
+      ? 'The Letter of Intent has been executed. The Purchase and Sales Agreement is being drafted — the 7-day countdown to DD has begun.'
+      : isComingSoon
+        ? 'A new opportunity is in the pipeline. We are in advanced negotiations and expect to sign the LOI shortly.'
+        : 'There has been an update to a deal on the Terminal.';
 
   return (
-    <BaseLayout preview={`${headline}: ${dealName} — ${city}, ${state}`}>
-      <Text style={tagStyle}>
-        {headline.toUpperCase()}
-      </Text>
+    <BaseLayout preview={`${tag}: ${dealName} — ${city}, ${state}`}>
+      {/* Tag */}
+      <div style={{ display: 'inline-block', backgroundColor: `${tagColor}15`, borderRadius: '6px', padding: '6px 14px', marginBottom: '20px' }}>
+        <Text style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '2px', color: tagColor, margin: 0 }}>
+          {tag}
+        </Text>
+      </div>
 
-      <Text style={dealNameStyle}>
-        {dealName}
-      </Text>
+      <Text style={dealNameStyle}>{dealName}</Text>
 
       <Text style={dealMetaStyle}>
         {city}, {state} &middot; {propertyType}
       </Text>
 
-      <Text style={bodyTextStyle}>
-        {description}
-      </Text>
+      <div style={dividerStyle} />
 
-      <Section style={{ textAlign: 'center', margin: '32px 0' }}>
-        <Button style={ctaButtonStyle} href={portalUrl}>
+      <Text style={bodyStyle}>{description}</Text>
+
+      <Section style={{ textAlign: 'center' as const, margin: '36px 0' }}>
+        <Button style={navyButtonStyle} href={portalUrl}>
           View Deal
         </Button>
       </Section>
 
       <Text style={noteStyle}>
-        This notification was sent because you are a member of RePrime Terminal
-        or subscribed to updates for this property.
+        This notification was sent because you are a member of RePrime Terminal.
+        You can manage your notification preferences in the Terminal settings.
       </Text>
     </BaseLayout>
   );
 }
 
-const tagStyle: React.CSSProperties = {
-  fontSize: '10px',
-  fontWeight: 700,
-  letterSpacing: '2px',
-  color: '#BC9C45',
-  margin: '0 0 8px 0',
-};
-
 const dealNameStyle: React.CSSProperties = {
-  fontSize: '28px',
-  fontWeight: 600,
+  fontSize: '32px',
+  fontWeight: 700,
   color: '#0E3470',
-  margin: '0 0 4px 0',
-  lineHeight: '36px',
+  margin: '0 0 6px 0',
+  lineHeight: '38px',
+  fontFamily: 'Georgia, serif',
 };
 
 const dealMetaStyle: React.CSSProperties = {
   fontSize: '14px',
   color: '#6B7280',
-  margin: '0 0 20px 0',
+  margin: '0 0 4px 0',
 };
 
-const bodyTextStyle: React.CSSProperties = {
-  fontSize: '14px',
+const dividerStyle: React.CSSProperties = {
+  height: '1px',
+  background: 'linear-gradient(90deg, transparent, #BC9C45, transparent)',
+  margin: '24px 0',
+};
+
+const bodyStyle: React.CSSProperties = {
+  fontSize: '15px',
   color: '#4B5563',
-  lineHeight: '24px',
+  lineHeight: '26px',
   margin: '0 0 12px 0',
 };
 
-const ctaButtonStyle: React.CSSProperties = {
+const navyButtonStyle: React.CSSProperties = {
   backgroundColor: '#0E3470',
   color: '#FFFFFF',
-  fontSize: '14px',
-  fontWeight: 600,
-  padding: '14px 36px',
-  borderRadius: '10px',
+  fontSize: '15px',
+  fontWeight: 700,
+  padding: '16px 48px',
+  borderRadius: '12px',
   textDecoration: 'none',
   display: 'inline-block',
 };
@@ -111,6 +111,5 @@ const noteStyle: React.CSSProperties = {
   color: '#9CA3AF',
   lineHeight: '18px',
   margin: '24px 0 0 0',
-  borderTop: '1px solid #EEF0F4',
-  paddingTop: '16px',
+  textAlign: 'center' as const,
 };

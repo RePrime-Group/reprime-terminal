@@ -4,10 +4,9 @@ import {
   Body,
   Container,
   Section,
-  Img,
   Text,
   Hr,
-  Font,
+  Img,
 } from '@react-email/components';
 import * as React from 'react';
 
@@ -20,67 +19,63 @@ export default function BaseLayout({ children, preview }: BaseLayoutProps) {
   return (
     <Html>
       <Head>
-        <Font
-          fontFamily="Poppins"
-          fallbackFontFamily="Arial"
-          webFont={{
-            url: 'https://fonts.gstatic.com/s/poppins/v21/pxiEyp8kv8JHgFVrJJfecg.woff2',
-            format: 'woff2',
-          }}
-          fontWeight={400}
-          fontStyle="normal"
-        />
+        <meta name="color-scheme" content="light" />
+        <meta name="supported-color-schemes" content="light" />
       </Head>
-      {preview && <span style={{ display: 'none' }}>{preview}</span>}
+      {preview && <span style={{ display: 'none', maxHeight: 0, overflow: 'hidden' }}>{preview}</span>}
       <Body style={bodyStyle}>
         <Container style={containerStyle}>
+          {/* Gold accent line */}
+          <div style={{ height: '3px', background: 'linear-gradient(90deg, #BC9C45, #D4B96A, #BC9C45)' }} />
+
           {/* Header */}
           <Section style={headerStyle}>
-            <table cellPadding="0" cellSpacing="0" width="100%">
+            <table cellPadding="0" cellSpacing="0" width="100%" style={{ borderCollapse: 'collapse' }}>
               <tr>
-                <td style={{ padding: '28px 32px' }}>
-                  <table cellPadding="0" cellSpacing="0">
+                <td style={{ padding: '32px 40px' }}>
+                  <table cellPadding="0" cellSpacing="0" style={{ borderCollapse: 'collapse' }}>
                     <tr>
                       <td
                         style={{
-                          width: '32px',
-                          height: '32px',
+                          width: '36px',
+                          height: '36px',
                           backgroundColor: '#BC9C45',
-                          borderRadius: '8px',
-                          textAlign: 'center',
-                          verticalAlign: 'middle',
+                          borderRadius: '10px',
+                          textAlign: 'center' as const,
+                          verticalAlign: 'middle' as const,
                         }}
                       >
                         <span
                           style={{
                             color: '#FFFFFF',
-                            fontSize: '16px',
+                            fontSize: '18px',
                             fontWeight: 700,
                             fontStyle: 'italic',
-                            fontFamily: '"Playfair Display", Georgia, serif',
+                            fontFamily: 'Georgia, serif',
                           }}
                         >
                           R
                         </span>
                       </td>
-                      <td style={{ paddingLeft: '12px' }}>
+                      <td style={{ paddingLeft: '14px' }}>
                         <span
                           style={{
                             color: '#FFFFFF',
-                            fontSize: '14px',
+                            fontSize: '15px',
                             fontWeight: 500,
                             letterSpacing: '4px',
-                            textTransform: 'uppercase' as const,
+                            fontFamily: 'Arial, sans-serif',
                           }}
                         >
                           REPRIME
                         </span>
                         <span
                           style={{
-                            color: '#BC9C45',
-                            fontSize: '11px',
+                            color: '#D4A843',
+                            fontSize: '12px',
                             fontStyle: 'italic',
-                            marginLeft: '6px',
+                            marginLeft: '8px',
+                            fontFamily: 'Georgia, serif',
                           }}
                         >
                           Terminal
@@ -91,13 +86,6 @@ export default function BaseLayout({ children, preview }: BaseLayoutProps) {
                 </td>
               </tr>
             </table>
-            {/* Gold accent line */}
-            <div
-              style={{
-                height: '2px',
-                background: 'linear-gradient(90deg, transparent, #BC9C45, transparent)',
-              }}
-            />
           </Section>
 
           {/* Content */}
@@ -105,16 +93,28 @@ export default function BaseLayout({ children, preview }: BaseLayoutProps) {
 
           {/* Footer */}
           <Section style={footerStyle}>
-            <Hr style={{ borderColor: '#EEF0F4', margin: '0 0 20px 0' }} />
-            <Text style={footerTextStyle}>
-              This email was sent by RePrime Terminal. This communication is
-              confidential and intended solely for the use of the individual to
-              whom it is addressed.
-            </Text>
-            <Text style={footerTextStyle}>
-              &copy; {new Date().getFullYear()} RePrime Group. All rights
-              reserved.
-            </Text>
+            <Hr style={{ borderColor: '#EEF0F4', margin: '0 0 24px 0' }} />
+            <table cellPadding="0" cellSpacing="0" width="100%" style={{ borderCollapse: 'collapse' }}>
+              <tr>
+                <td>
+                  <Text style={footerBrandStyle}>
+                    REPRIME TERMINAL
+                  </Text>
+                  <Text style={footerTextStyle}>
+                    This communication is confidential and intended solely for the
+                    individual to whom it is addressed. All investments involve risk.
+                  </Text>
+                  <Text style={footerTextStyle}>
+                    &copy; {new Date().getFullYear()} RePrime Group, LLC. All rights reserved.
+                  </Text>
+                  <Text style={{ ...footerTextStyle, marginTop: '12px' }}>
+                    <a href="https://reprimeterminal.com" style={{ color: '#BC9C45', textDecoration: 'none', fontSize: '11px' }}>
+                      reprimeterminal.com
+                    </a>
+                  </Text>
+                </td>
+              </tr>
+            </table>
           </Section>
         </Container>
       </Body>
@@ -124,35 +124,43 @@ export default function BaseLayout({ children, preview }: BaseLayoutProps) {
 
 const bodyStyle: React.CSSProperties = {
   backgroundColor: '#F2F4F8',
-  fontFamily: '"Poppins", Arial, sans-serif',
+  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
   margin: 0,
   padding: '40px 0',
 };
 
 const containerStyle: React.CSSProperties = {
-  maxWidth: '580px',
+  maxWidth: '600px',
   margin: '0 auto',
   backgroundColor: '#FFFFFF',
   borderRadius: '16px',
   overflow: 'hidden',
-  boxShadow: '0 4px 24px rgba(14, 52, 112, 0.06)',
+  boxShadow: '0 4px 24px rgba(14, 52, 112, 0.08)',
 };
 
 const headerStyle: React.CSSProperties = {
-  background: 'linear-gradient(135deg, #07090F 0%, #0A1628 30%, #0E3470 100%)',
+  background: 'linear-gradient(135deg, #07090F 0%, #0A1628 40%, #0E3470 100%)',
 };
 
 const contentStyle: React.CSSProperties = {
-  padding: '32px',
+  padding: '40px 40px 32px',
 };
 
 const footerStyle: React.CSSProperties = {
-  padding: '0 32px 32px',
+  padding: '0 40px 36px',
+};
+
+const footerBrandStyle: React.CSSProperties = {
+  fontSize: '10px',
+  fontWeight: 600,
+  letterSpacing: '2px',
+  color: '#9CA3AF',
+  margin: '0 0 8px 0',
 };
 
 const footerTextStyle: React.CSSProperties = {
   fontSize: '11px',
   color: '#9CA3AF',
-  lineHeight: '16px',
+  lineHeight: '17px',
   margin: '0 0 4px 0',
 };
