@@ -2579,38 +2579,42 @@ export default function DealDetailClient({
         />
       )}
 
-      {/* ── Document Viewer Modal ── */}
+      {/* ── Enhanced Document Viewer Modal ── */}
       {viewerUrl && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md"
           onClick={() => setViewerUrl(null)}
         >
           <div
-            className="relative bg-white rounded-2xl shadow-2xl overflow-hidden"
-            style={{ width: '90vw', height: '90vh', maxWidth: '1200px' }}
+            className="relative bg-white rounded-2xl overflow-hidden flex flex-col"
+            style={{ width: '85vw', height: '90vh', maxWidth: '1100px', boxShadow: '0 40px 100px rgba(0,0,0,0.4)' }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-3 bg-[#07090F] border-b border-white/10">
-              <div className="flex items-center gap-3">
-                <div className="w-7 h-7 rounded-lg bg-[#BC9C45]/20 flex items-center justify-center">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#BC9C45" strokeWidth="1.5">
+            {/* Header with gold border */}
+            <div className="flex items-center justify-between px-6 py-4 shrink-0" style={{ background: 'linear-gradient(135deg, #0E3470, #0a2450)', borderBottom: '2px solid #BC9C45' }}>
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-[#BC9C45]/15 flex items-center justify-center">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#BC9C45" strokeWidth="1.5">
                     <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
                     <polyline points="14 2 14 8 20 8"/>
                   </svg>
                 </div>
-                <span className="text-white text-[13px] font-medium truncate max-w-[600px]">{viewerName}</span>
+                <div>
+                  <div className="text-white text-[14px] font-semibold truncate max-w-[500px]">{viewerName}</div>
+                  <div className="text-white/40 text-[11px] mt-0.5">View Only · Watermarked · All activity logged</div>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <a
-                  href={viewerUrl.replace('?view=true', '')}
-                  className="px-3 py-1.5 text-[11px] font-medium text-white/60 hover:text-white border border-white/10 rounded-lg transition-colors"
-                >
-                  Download
-                </a>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#DC2626]/15 border border-[#DC2626]/25">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FF6B6B" strokeWidth="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0110 0v4" />
+                  </svg>
+                  <span className="text-[10px] font-bold text-[#FF6B6B] tracking-wide">DOWNLOADS DISABLED</span>
+                </div>
                 <button
                   onClick={() => setViewerUrl(null)}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+                  className="w-9 h-9 rounded-lg flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-colors border border-white/10"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"/>
@@ -2620,13 +2624,55 @@ export default function DealDetailClient({
               </div>
             </div>
 
-            {/* Document content */}
-            <iframe
-              src={viewerUrl}
-              className="w-full border-0"
-              style={{ height: 'calc(90vh - 52px)' }}
-              title={viewerName}
-            />
+            {/* Document content with security overlay */}
+            <div className="flex-1 relative" style={{ background: '#1a1a2e' }}>
+              {/* Scanline effect */}
+              <div className="absolute inset-0 pointer-events-none z-10" style={{
+                background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.006) 2px, rgba(255,255,255,0.006) 4px)',
+              }} />
+
+              {/* Watermark overlay */}
+              <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <div
+                    key={i}
+                    className="absolute whitespace-nowrap select-none"
+                    style={{
+                      top: `${i * 20}%`,
+                      left: '50%',
+                      transform: 'translateX(-50%) rotate(-22deg)',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      color: `rgba(188,156,69,${0.04 + (i % 2) * 0.02})`,
+                      letterSpacing: '3px',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    CONFIDENTIAL · {investorName} · {investorEmail}
+                  </div>
+                ))}
+              </div>
+
+              <iframe
+                src={viewerUrl}
+                className="w-full h-full border-0 relative z-0"
+                title={viewerName}
+              />
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-between px-6 py-3 bg-white border-t border-[#EEF0F4] shrink-0">
+              <div className="text-[11px] text-[#9CA3AF]">
+                Viewed by <span className="font-semibold text-[#0E3470]">{investorName}</span> · {new Date().toLocaleString()}
+              </div>
+              <div className="flex items-center gap-2 px-3.5 py-1.5 bg-[#FEF2F2] rounded-lg border border-[#DC2626]/10">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0110 0v4" />
+                </svg>
+                <span className="text-[10px] font-semibold text-[#DC2626]">View only · All activity logged</span>
+              </div>
+            </div>
           </div>
         </div>
       )}
