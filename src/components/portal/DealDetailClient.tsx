@@ -299,7 +299,31 @@ function FileTypeBadge({ fileType }: { fileType: string | null }) {
 function CommitmentCard({ deal }: { deal: DealWithDetails }) {
   const [showWire, setShowWire] = useState(false);
   const [committed, setCommitted] = useState(false);
+  const [commitType, setCommitType] = useState<string | null>(null);
   const [committing, setCommitting] = useState(false);
+  const [totalCommitments, setTotalCommitments] = useState(0);
+
+  // Check for existing commitment on mount
+  useEffect(() => {
+    fetch(`/api/deals/${deal.id}/commit`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.commitment) {
+          setCommitted(true);
+          setCommitType(data.commitment.type);
+        }
+      })
+      .catch(() => {});
+
+    // Get total commitment count for this deal
+    const supabase = createClient();
+    supabase
+      .from('terminal_deal_commitments')
+      .select('*', { count: 'exact', head: true })
+      .eq('deal_id', deal.id)
+      .in('status', ['pending', 'wire_sent', 'confirmed'])
+      .then(({ count }) => setTotalCommitments(count ?? 0));
+  }, [deal.id]);
 
   const handleCommit = async (type: 'primary' | 'backup') => {
     setCommitting(true);
@@ -309,7 +333,11 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type }),
       });
-      if (res.ok) setCommitted(true);
+      if (res.ok) {
+        setCommitted(true);
+        setCommitType(type);
+        setTotalCommitments((p) => p + 1);
+      }
     } finally {
       setCommitting(false);
     }
@@ -317,16 +345,60 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
 
   if (committed) {
     return (
-      <div className="bg-[#ECFDF5] border border-[#A7F3D0] rounded-xl p-8 text-center mb-6">
-        <div className="text-[28px] mb-3">✓</div>
-        <h3 className="text-[18px] font-semibold text-[#0B8A4D] mb-2">Commitment Registered</h3>
-        <p className="text-[13px] text-[#4B5563]">Our team will contact you with wire instructions within 24 hours.</p>
+      <div className="mb-6">
+        {/* Prominent committed banner */}
+        <div className="relative overflow-hidden rounded-xl" style={{ background: 'linear-gradient(135deg, #07090F 0%, #0A1628 30%, #0E3470 100%)' }}>
+          <div className="absolute inset-0 opacity-[0.03]" style={{
+            backgroundImage: 'linear-gradient(rgba(188,156,69,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(188,156,69,0.5) 1px, transparent 1px)',
+            backgroundSize: '30px 30px',
+          }} />
+          <div className="relative px-8 py-8 flex items-center justify-between">
+            <div className="flex items-center gap-5">
+              <div className="w-14 h-14 rounded-full bg-[#BC9C45]/20 border-2 border-[#BC9C45] flex items-center justify-center">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#BC9C45" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+              <div>
+                <div className="text-[10px] font-semibold text-[#D4A843] uppercase tracking-[2px] mb-1">
+                  DEAL COMMITTED
+                </div>
+                <h3 className="text-[22px] font-semibold text-white font-[family-name:var(--font-playfair)]">
+                  {commitType === 'backup' ? 'Backup Position Registered' : 'You Are Committed to This Deal'}
+                </h3>
+                <p className="text-[13px] text-white/40 mt-1">
+                  Our team will contact you with next steps within 24 hours.
+                </p>
+              </div>
+            </div>
+            {totalCommitments > 1 && (
+              <div className="text-right">
+                <div className="text-[28px] font-bold text-[#BC9C45]">{totalCommitments}</div>
+                <div className="text-[10px] text-white/40 uppercase tracking-[1.5px]">Groups Committed</div>
+              </div>
+            )}
+          </div>
+          <div className="h-[2px] bg-gradient-to-r from-transparent via-[#BC9C45]/50 to-transparent" />
+        </div>
       </div>
     );
   }
 
   return (
     <div className="bg-white rounded-xl p-8 rp-card-shadow border border-[#EEF0F4] mb-6">
+      {/* FOMO banner when others have committed */}
+      {totalCommitments > 0 && (
+        <div className="mb-5 p-3.5 bg-[#FEF2F2] border border-[#FECACA] rounded-xl flex items-center gap-3">
+          <div className="text-[20px]">🔥</div>
+          <div>
+            <span className="text-[13px] font-bold text-[#DC2626]">
+              {totalCommitments} group{totalCommitments > 1 ? 's' : ''} already committed to this deal
+            </span>
+            <p className="text-[11px] text-[#DC2626]/60 mt-0.5">Positions are limited. Commit now to secure your allocation.</p>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between items-start mb-5">
         <div>
           <h3 className="font-[family-name:var(--font-playfair)] text-[22px] font-semibold text-[#0E3470]">
@@ -1106,6 +1178,8 @@ function MeetingScheduler({
   };
 
   const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const [selectedDay, setSelectedDay] = useState(0);
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
   if (success) {
     return (
@@ -1133,9 +1207,6 @@ function MeetingScheduler({
       </div>
     );
   }
-
-  const [selectedDay, setSelectedDay] = useState(0);
-  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
   return (
     <div>
