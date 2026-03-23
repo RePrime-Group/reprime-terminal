@@ -1,11 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useCountdown, getUrgencyLevel } from '@/lib/hooks/useCountdown';
 import { Link } from '@/i18n/navigation';
 import { formatPriceCompact, formatPercent, formatDSCR, formatPrice, formatSqFt } from '@/lib/utils/format';
 import type { DealCardData } from '@/components/portal/PortalDashboardClient';
-import TerminalScore from '@/components/portal/TerminalScore';
 
 interface DealCardProps {
   deal: DealCardData;
@@ -15,6 +15,7 @@ interface DealCardProps {
 
 export default function DealCard({ deal, locale, index }: DealCardProps) {
   const t = useTranslations('portal');
+  const [watched, setWatched] = useState(false);
   const countdown = useCountdown(deal.dd_deadline);
   const isAssigned = deal.status === 'assigned' || deal.status === 'closed';
   const urgency = isAssigned ? 'assigned' : getUrgencyLevel(deal.dd_deadline);
@@ -115,9 +116,29 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
             )}
           </div>
 
-          {/* Top-right quarter badge */}
+          {/* Top-right watch icon */}
+          <div
+            className="absolute top-3 right-3 z-[3]"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const method = watched ? 'DELETE' : 'POST';
+              fetch(`/api/deals/${deal.id}/watch`, { method }).then(() => setWatched(!watched));
+            }}
+          >
+            <div className={`w-7 h-7 rounded-full flex items-center justify-center cursor-pointer shadow-md transition-all ${
+              watched ? 'bg-[#BC9C45]' : 'bg-white/80 backdrop-blur-sm hover:bg-white'
+            }`}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill={watched ? 'white' : 'none'} stroke={watched ? 'white' : '#6B7280'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Quarter badge */}
           {deal.quarter_release && (
-            <div className="absolute top-3 right-3 z-[2]">
+            <div className="absolute top-3 right-12 z-[2]">
               <span className="bg-[#0E3470]/80 backdrop-blur-sm text-white text-[10px] font-semibold px-2.5 py-[5px] rounded-full">
                 {deal.quarter_release}
               </span>

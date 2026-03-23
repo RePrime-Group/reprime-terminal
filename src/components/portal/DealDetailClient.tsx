@@ -9,6 +9,7 @@ import { useActivityTracker } from '@/lib/hooks/useActivityTracker';
 import { calculateCustomIRR } from '@/lib/utils/irr-calculator';
 import { createClient } from '@/lib/supabase/client';
 import FadeInOnScroll from '@/components/ui/FadeInOnScroll';
+import NDAModal from '@/components/portal/NDAModal';
 import type {
   DealWithDetails,
   TerminalDDFolder,
@@ -32,9 +33,10 @@ interface DealDetailClientProps {
   pipelineProgress?: number;
   stageProgress?: Record<string, { total: number; completed: number }>;
   currentStage?: string;
+  hasSignedNDA?: boolean;
 }
 
-type TabKey = 'overview' | 'due-diligence' | 'deal-structure' | 'schedule';
+type TabKey = 'overview' | 'due-diligence' | 'financial-modeling' | 'deal-structure' | 'schedule';
 type CalculatorMode = 'assignment' | 'gplp' | 'custom';
 
 // ---------------------------------------------------------------------------
@@ -289,6 +291,265 @@ function FileTypeBadge({ fileType }: { fileType: string | null }) {
     <span className={`${colorClass} text-[10px] font-bold px-2 py-0.5 rounded inline-flex items-center gap-1`}>
       <span>{icon}</span> {label}
     </span>
+  );
+}
+
+/* ---------- Commitment Card ---------- */
+
+function CommitmentCard({ deal }: { deal: DealWithDetails }) {
+  const [showWire, setShowWire] = useState(false);
+  const [committed, setCommitted] = useState(false);
+  const [committing, setCommitting] = useState(false);
+
+  const handleCommit = async (type: 'primary' | 'backup') => {
+    setCommitting(true);
+    try {
+      const res = await fetch(`/api/deals/${deal.id}/commit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type }),
+      });
+      if (res.ok) setCommitted(true);
+    } finally {
+      setCommitting(false);
+    }
+  };
+
+  if (committed) {
+    return (
+      <div className="bg-[#ECFDF5] border border-[#A7F3D0] rounded-xl p-8 text-center mb-6">
+        <div className="text-[28px] mb-3">✓</div>
+        <h3 className="text-[18px] font-semibold text-[#0B8A4D] mb-2">Commitment Registered</h3>
+        <p className="text-[13px] text-[#4B5563]">Our team will contact you with wire instructions within 24 hours.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-xl p-8 rp-card-shadow border border-[#EEF0F4] mb-6">
+      <div className="flex justify-between items-start mb-5">
+        <div>
+          <h3 className="font-[family-name:var(--font-playfair)] text-[22px] font-semibold text-[#0E3470]">
+            Commit to This Deal
+          </h3>
+          <p className="text-[13px] text-[#6B7280] mt-2">
+            {deal.deposit_amount && <>Deposit: {deal.deposit_amount}</>}
+            {deal.deposit_held_by && <> · Held by: {deal.deposit_held_by}</>}
+            {!deal.deposit_amount && 'Contact us to discuss commitment terms'}
+          </p>
+        </div>
+        <button
+          onClick={() => setShowWire(true)}
+          disabled={committing}
+          className="px-8 py-4 rounded-xl bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] text-[15px] font-bold shadow-[0_6px_24px_rgba(188,156,69,0.3)] hover:opacity-90 transition-opacity disabled:opacity-50"
+        >
+          Lock This Deal
+        </button>
+      </div>
+
+      {showWire && (
+        <div className="p-6 bg-[#FDF8ED] rounded-xl border border-[#ECD9A0]/30 animate-slide-down mb-5">
+          <div className="text-[14px] font-semibold text-[#0E3470] mb-3">
+            Wire {deal.deposit_amount || 'deposit'} to:
+          </div>
+          <div className="bg-white rounded-lg p-4 text-[13px] text-[#4B5563] leading-[2] border border-[#EEF0F4]">
+            {deal.deposit_held_by || 'Title Company'} · Escrow Account<br />
+            Wire deadline: 72 hours from confirmation<br />
+            Contact our team for full wiring details
+          </div>
+          <div className="flex gap-3 mt-4">
+            <button
+              onClick={() => handleCommit('primary')}
+              disabled={committing}
+              className="flex-1 py-3.5 rounded-xl bg-[#BC9C45] hover:bg-[#A88A3D] text-[#0E3470] text-[13px] font-bold transition-colors disabled:opacity-50"
+            >
+              {committing ? 'Processing...' : 'Confirm — Send Wire Instructions'}
+            </button>
+            <button
+              onClick={() => setShowWire(false)}
+              className="px-6 py-3.5 rounded-xl border border-[#EEF0F4] text-[#6B7280] text-[12px] font-medium hover:bg-[#F7F8FA] transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Backup position */}
+      <div className="p-4 bg-[#F7F8FA] rounded-xl flex justify-between items-center">
+        <div>
+          <div className="text-[12px] font-semibold text-[#0E3470]">Backup Position Available</div>
+          <div className="text-[11px] text-[#6B7280] mt-1">
+            If the primary buyer&apos;s wire expires, backup buyers are notified immediately.
+          </div>
+        </div>
+        <button
+          onClick={() => handleCommit('backup')}
+          disabled={committing}
+          className="px-5 py-2.5 rounded-lg border border-[#EEF0F4] bg-white text-[#0E3470] text-[11px] font-semibold hover:border-[#BC9C45] transition-colors whitespace-nowrap disabled:opacity-50"
+        >
+          Register as Backup
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Financial Modeling Tab ---------- */
+
+function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
+  const [exitCap, setExitCap] = useState('7.5');
+  const [holdYears, setHoldYears] = useState('5');
+  const [rentGrowth, setRentGrowth] = useState('3');
+  const [ltv, setLtv] = useState('65');
+  const [rate, setRate] = useState('5.5');
+
+  const noiNum = parseFloat(deal.noi ?? '0') || 0;
+  const priceNum = parseFloat(deal.purchase_price ?? '0') || 0;
+  const exitCapNum = parseFloat(exitCap) || 7.5;
+  const holdNum = parseInt(holdYears) || 5;
+  const growthNum = parseFloat(rentGrowth) || 3;
+  const ltvNum = parseFloat(ltv) || 65;
+  const rateNum = parseFloat(rate) || 5.5;
+
+  const futureNOI = noiNum * Math.pow(1 + growthNum / 100, holdNum);
+  const exitValue = futureNOI / (exitCapNum / 100);
+  const totalReturn = exitValue - priceNum;
+  const equityIn = priceNum * (1 - ltvNum / 100);
+  const annualDebt = priceNum * (ltvNum / 100) * (rateNum / 100);
+  const totalCashFlow = Array.from({ length: holdNum }, (_, i) =>
+    noiNum * Math.pow(1 + growthNum / 100, i) - annualDebt
+  ).reduce((a, b) => a + b, 0);
+  const equityMultiple = equityIn > 0 ? ((totalCashFlow + exitValue - priceNum * (ltvNum / 100)) / equityIn).toFixed(2) : '0';
+  const irrEst = equityIn > 0 ? (Math.pow((totalCashFlow + exitValue - priceNum * (ltvNum / 100)) / equityIn, 1 / holdNum) - 1) * 100 : 0;
+
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString();
+
+  const sliders = [
+    { label: 'Exit Cap Rate (%)', val: exitCap, set: setExitCap, min: '4', max: '15', step: '0.25' },
+    { label: 'Hold Period (years)', val: holdYears, set: setHoldYears, min: '1', max: '15', step: '1' },
+    { label: 'Annual Rent Growth (%)', val: rentGrowth, set: setRentGrowth, min: '0', max: '10', step: '0.5' },
+    { label: 'Loan-to-Value (%)', val: ltv, set: setLtv, min: '0', max: '85', step: '5' },
+    { label: 'Interest Rate (%)', val: rate, set: setRate, min: '3', max: '10', step: '0.25' },
+  ];
+
+  const results = [
+    { l: 'Exit Value', v: fmt(exitValue), c: '#0E3470' },
+    { l: 'Total Profit', v: fmt(totalReturn), c: totalReturn > 0 ? '#0B8A4D' : '#DC2626' },
+    { l: 'Equity Multiple', v: equityMultiple + 'x', c: '#BC9C45' },
+    { l: 'Est. Levered IRR', v: irrEst.toFixed(1) + '%', c: '#0B8A4D' },
+    { l: 'Annual Debt Service', v: fmt(annualDebt), c: '#0E3470' },
+    { l: 'Equity Required', v: fmt(equityIn), c: '#BC9C45' },
+  ];
+
+  return (
+    <div className="grid grid-cols-[1fr_1.4fr] gap-6">
+      {/* Assumptions Panel */}
+      <div className="bg-white rounded-xl border border-[#EEF0F4] p-6 rp-card-shadow">
+        <h3 className="font-[family-name:var(--font-playfair)] text-[16px] font-semibold text-[#0E3470] mb-5">
+          Assumptions
+        </h3>
+        {sliders.map((inp, i) => {
+          const pct = ((parseFloat(inp.val) - parseFloat(inp.min)) / (parseFloat(inp.max) - parseFloat(inp.min))) * 100;
+          return (
+            <div key={i} className="mb-5">
+              <div className="flex justify-between mb-1.5">
+                <span className="text-[11px] font-medium text-[#4B5563]">{inp.label}</span>
+                <span className="text-[13px] font-semibold text-[#0E3470] tabular-nums">
+                  {inp.val}{inp.label.includes('years') ? '' : '%'}
+                </span>
+              </div>
+              <input
+                type="range"
+                min={inp.min}
+                max={inp.max}
+                step={inp.step}
+                value={inp.val}
+                onChange={(e) => inp.set(e.target.value)}
+                className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+                style={{
+                  background: `linear-gradient(90deg, #BC9C45 ${pct}%, #EEF0F4 ${pct}%)`,
+                }}
+              />
+            </div>
+          );
+        })}
+        <div className="mt-4 p-3.5 bg-[#FDF8ED] rounded-lg border border-[#ECD9A0]/30">
+          <div className="text-[9px] font-semibold text-[#BC9C45] uppercase tracking-[2px] mb-1">BASIS</div>
+          <div className="text-[11px] text-[#4B5563]">
+            Purchase: {formatPrice(deal.purchase_price)} · Cap: {formatPercent(deal.cap_rate)} · NOI: {formatPrice(deal.noi)}
+          </div>
+        </div>
+      </div>
+
+      {/* Results Panel */}
+      <div className="flex flex-col gap-4">
+        {/* Metric cards */}
+        <div className="grid grid-cols-3 gap-3">
+          {results.map((m, i) => (
+            <div
+              key={i}
+              className="bg-white rounded-xl p-4 border border-[#EEF0F4] rp-card-shadow"
+              style={{ borderLeft: `3px solid ${m.c}` }}
+            >
+              <div className="text-[8px] font-bold text-[#9CA3AF] uppercase tracking-[2px]">{m.l}</div>
+              <div className="text-[20px] font-bold tabular-nums mt-1.5" style={{ color: m.c }}>{m.v}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Cash flow chart */}
+        <div className="bg-white rounded-xl p-6 border border-[#EEF0F4] rp-card-shadow">
+          <h4 className="text-[13px] font-semibold text-[#0E3470] mb-4">Projected Annual Cash Flow</h4>
+          <div className="flex items-end gap-2" style={{ height: 140 }}>
+            {Array.from({ length: holdNum }, (_, i) => {
+              const cf = noiNum * Math.pow(1 + growthNum / 100, i) - annualDebt;
+              const maxCF = noiNum * Math.pow(1 + growthNum / 100, holdNum - 1) - annualDebt;
+              const pct = maxCF > 0 ? Math.max(10, Math.min(100, (cf / maxCF) * 100)) : 50;
+              return (
+                <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                  <span className="text-[9px] font-semibold tabular-nums" style={{ color: cf > 0 ? '#0B8A4D' : '#DC2626' }}>
+                    {fmt(cf)}
+                  </span>
+                  <div
+                    className="w-full rounded-t-md transition-all duration-500"
+                    style={{
+                      height: `${pct}%`,
+                      background: cf > 0
+                        ? 'linear-gradient(180deg, #0B8A4D, rgba(11,138,77,0.5))'
+                        : 'linear-gradient(180deg, #DC2626, rgba(220,38,38,0.5))',
+                      minHeight: 4,
+                    }}
+                  />
+                  <span className="text-[9px] text-[#9CA3AF] font-medium">Yr {i + 1}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Cap rate sensitivity */}
+        <div className="bg-white rounded-xl p-6 border border-[#EEF0F4] rp-card-shadow">
+          <h4 className="text-[13px] font-semibold text-[#0E3470] mb-3">Cap Rate Sensitivity — Exit Value</h4>
+          <div className="grid grid-cols-5 gap-2">
+            {[6.0, 6.5, 7.0, 7.5, 8.0].map((cr) => {
+              const ev = futureNOI / (cr / 100);
+              const isSel = cr === exitCapNum;
+              return (
+                <div
+                  key={cr}
+                  className="text-center py-2.5 px-1 rounded-lg transition-all"
+                  style={{ background: isSel ? '#0E3470' : '#F7F8FA' }}
+                >
+                  <div className="text-[10px] font-bold" style={{ color: isSel ? '#D4A843' : '#9CA3AF' }}>{cr}%</div>
+                  <div className="text-[12px] font-bold mt-1 tabular-nums" style={{ color: isSel ? '#FFFFFF' : '#0E3470' }}>{fmt(ev)}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -943,6 +1204,7 @@ export default function DealDetailClient({
   pipelineProgress,
   stageProgress,
   currentStage,
+  hasSignedNDA: initialNDA = false,
 }: DealDetailClientProps) {
   const t = useTranslations('portal');
   const router = useRouter();
@@ -950,6 +1212,8 @@ export default function DealDetailClient({
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
   const [viewerUrl, setViewerUrl] = useState<string | null>(null);
   const [viewerName, setViewerName] = useState<string>('');
+  const [ndaSigned, setNdaSigned] = useState(initialNDA);
+  const [showNDAModal, setShowNDAModal] = useState(false);
 
   const handleViewDocument = (url: string, name: string) => {
     setViewerUrl(url);
@@ -1073,6 +1337,7 @@ export default function DealDetailClient({
   const tabs: { key: TabKey; label: string }[] = [
     { key: 'overview', label: t('dealDetail.overview') },
     { key: 'due-diligence', label: t('dealDetail.dueDiligence') },
+    { key: 'financial-modeling', label: 'Financial Modeling' },
     { key: 'deal-structure', label: t('dealDetail.dealStructure') },
     { key: 'schedule', label: t('dealDetail.scheduleContact') },
   ];
@@ -1364,14 +1629,26 @@ export default function DealDetailClient({
             {tabs.map((tab) => (
               <button
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`rounded-md px-7 py-3 text-[12px] font-[600] tracking-[0.5px] transition-all ${
+                onClick={() => {
+                  if (tab.key === 'due-diligence' && !ndaSigned) {
+                    setShowNDAModal(true);
+                    return;
+                  }
+                  setActiveTab(tab.key);
+                }}
+                className={`rounded-md px-7 py-3 text-[12px] font-[600] tracking-[0.5px] transition-all inline-flex items-center gap-1.5 ${
                   activeTab === tab.key
                     ? 'bg-[#0E3470] text-white'
                     : 'bg-transparent text-[#9CA3AF] hover:bg-white hover:text-[#0E3470]'
                 }`}
               >
                 {tab.label}
+                {tab.key === 'due-diligence' && !ndaSigned && (
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="opacity-50">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0110 0v4" />
+                  </svg>
+                )}
               </button>
             ))}
           </div>
@@ -1776,6 +2053,16 @@ export default function DealDetailClient({
           </div>
         </div>
 
+        {/* ========== 5G2. FINANCIAL MODELING TAB ========== */}
+        <div
+          className="transition-opacity duration-200"
+          style={{ display: activeTab === 'financial-modeling' ? 'block' : 'none' }}
+        >
+          <div className="mt-8 px-8 pb-10">
+            <FinancialModelingTab deal={deal} />
+          </div>
+        </div>
+
         {/* ========== 5H. DEAL STRUCTURE TAB ========== */}
         <div
           className="transition-opacity duration-200"
@@ -2037,6 +2324,75 @@ export default function DealDetailClient({
           </div>
         </div>
 
+        {/* ========== COMMITMENT SECTION ========== */}
+        <div className="px-8 mt-12 pb-4">
+          <div className="rp-gold-line mb-10" />
+
+          {/* Deal Timeline Countdowns */}
+          <div className="bg-white rounded-xl p-8 rp-card-shadow border border-[#EEF0F4] mb-6">
+            <div className="text-[11px] font-semibold text-[#0E3470] uppercase tracking-[2px] mb-7">Deal Timeline</div>
+            <div className="flex justify-around items-center">
+              <CountdownRing label="Due Diligence" targetDate={deal.dd_deadline} accentColor="#0E3470" />
+              <CountdownRing label="Closing" targetDate={deal.close_deadline} accentColor="#BC9C45" />
+              {deal.extension_deadline && (
+                <CountdownRing label="Extension" targetDate={deal.extension_deadline} accentColor="#6B7280" />
+              )}
+            </div>
+          </div>
+
+          {/* Lock Deal */}
+          <CommitmentCard deal={deal} />
+
+          {/* How We Source Deals */}
+          <div className="bg-white rounded-xl p-8 rp-card-shadow border border-[#EEF0F4] mb-6">
+            <h3 className="font-[family-name:var(--font-playfair)] text-[20px] font-semibold text-[#0E3470] mb-5">
+              How we source deals at deeper discounts
+            </h3>
+            <div className="text-[14px] text-[#4B5563] leading-[1.9] space-y-4">
+              <p>
+                Every deal on this platform goes through the same institutional diligence — regardless
+                of deposit terms. The analysis, the inspections, the title work, the environmental
+                review — nothing changes. We complete diligence BEFORE the deposit goes hard, not after.
+              </p>
+              <p>
+                The difference is speed and certainty. When we approach a seller with a non-refundable
+                deposit, they accept a lower price because the risk of deal collapse disappears. Same
+                diligence. Same protections. Lower price.
+              </p>
+              <p>
+                Members who pre-commit deposit capital enable us to secure more of these opportunities.
+                In return, they receive fixed 3% economics on every transaction. Positions are limited.
+              </p>
+            </div>
+          </div>
+
+          {/* Contact Bar */}
+          <div className="rp-dark-gradient rounded-xl p-7 flex items-center justify-between">
+            <div>
+              <div className="text-[14px] font-medium text-white">Questions before committing?</div>
+              <div className="text-[11px] text-white/40 mt-1">
+                {contactName || 'RePrime Team'}{contactTitle ? ` · ${contactTitle}` : ''}
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <a
+                href={`https://wa.me/?text=Hi, I'm interested in ${deal.name}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#25D366] text-white text-[12px] font-semibold transition-opacity hover:opacity-90"
+              >
+                💬 WhatsApp
+              </a>
+              <button
+                onClick={() => setActiveTab('schedule')}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-lg border border-white/15 text-white/70 text-[12px] font-medium hover:bg-white/5 transition-colors"
+              >
+                📅 Schedule a Call
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* -- Confidentiality Footer -- */}
         <div className="px-8 pb-10 pt-4">
           <div className="border-t border-[#EEF0F4] pt-6 flex items-center justify-between">
@@ -2086,6 +2442,25 @@ export default function DealDetailClient({
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── NDA Modal ── */}
+      {showNDAModal && (
+        <NDAModal
+          dealName={deal.name}
+          onClose={() => setShowNDAModal(false)}
+          onSign={async (type) => {
+            const supabase = createClient();
+            await supabase.from('terminal_nda_signatures').insert({
+              user_id: (await supabase.auth.getUser()).data.user?.id,
+              deal_id: type === 'deal' ? deal.id : null,
+              nda_type: type,
+            });
+            setNdaSigned(true);
+            setShowNDAModal(false);
+            setActiveTab('due-diligence');
+          }}
+        />
       )}
 
       {/* ── Document Viewer Modal ── */}

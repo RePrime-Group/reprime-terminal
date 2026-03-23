@@ -137,6 +137,15 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
     if (stage === 'post_closing') currentStage = 'post_closing';
   }
 
+  // Check NDA status
+  const { data: ndaData } = await supabase
+    .from('terminal_nda_signatures')
+    .select('id, nda_type')
+    .or(`nda_type.eq.blanket,and(nda_type.eq.deal,deal_id.eq.${id})`)
+    .limit(1);
+
+  const hasSignedNDA = (ndaData?.length ?? 0) > 0;
+
   // Fetch settings (contact info)
   const { data: settingsData } = await supabase
     .from('terminal_settings')
@@ -191,6 +200,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
       pipelineProgress={pipelineProgress}
       stageProgress={stageProgress}
       currentStage={currentStage}
+      hasSignedNDA={hasSignedNDA}
     />
   );
 }
