@@ -68,7 +68,7 @@ export async function createCalendarEvent({
 
   const event = await calendar.events.insert({
     calendarId: CALENDAR_ID,
-    sendUpdates: 'all', // sends calendar invite emails
+    sendUpdates: 'none', // service accounts can't send invites; we send via Resend
     requestBody: {
       summary,
       description,
@@ -81,7 +81,8 @@ export async function createCalendarEvent({
         dateTime: endTime,
         timeZone: 'America/New_York',
       },
-      attendees: attendeeEmails.map((email) => ({ email })),
+      // Note: attendees omitted — service accounts can't invite without DWD
+      // Attendee emails stored in description instead
       reminders: {
         useDefault: false,
         overrides: [

@@ -573,30 +573,35 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
         {/* Cash flow chart */}
         <div className="bg-white rounded-xl p-6 border border-[#EEF0F4] rp-card-shadow">
           <h4 className="text-[13px] font-semibold text-[#0E3470] mb-4">Projected Annual Cash Flow</h4>
-          <div className="flex items-end gap-2" style={{ height: 140 }}>
-            {Array.from({ length: holdNum }, (_, i) => {
-              const cf = noiNum * Math.pow(1 + growthNum / 100, i) - annualDebt;
-              const maxCF = noiNum * Math.pow(1 + growthNum / 100, holdNum - 1) - annualDebt;
-              const pct = maxCF > 0 ? Math.max(10, Math.min(100, (cf / maxCF) * 100)) : 50;
-              return (
-                <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                  <span className="text-[9px] font-semibold tabular-nums" style={{ color: cf > 0 ? '#0B8A4D' : '#DC2626' }}>
-                    {fmt(cf)}
-                  </span>
-                  <div
-                    className="w-full rounded-t-md transition-all duration-500"
-                    style={{
-                      height: `${pct}%`,
-                      background: cf > 0
-                        ? 'linear-gradient(180deg, #0B8A4D, rgba(11,138,77,0.5))'
-                        : 'linear-gradient(180deg, #DC2626, rgba(220,38,38,0.5))',
-                      minHeight: 4,
-                    }}
-                  />
-                  <span className="text-[9px] text-[#9CA3AF] font-medium">Yr {i + 1}</span>
-                </div>
+          <div className="flex items-end gap-2" style={{ height: 180 }}>
+            {(() => {
+              const cashFlows = Array.from({ length: holdNum }, (_, i) =>
+                noiNum * Math.pow(1 + growthNum / 100, i) - annualDebt
               );
-            })}
+              const maxCF = Math.max(...cashFlows.map(Math.abs), 1);
+              return cashFlows.map((cf, i) => {
+                // Scale from 20% to 100% height based on absolute value
+                const pct = 20 + (Math.abs(cf) / maxCF) * 80;
+                return (
+                  <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
+                    <span className="text-[9px] font-bold tabular-nums" style={{ color: cf > 0 ? '#0B8A4D' : '#DC2626' }}>
+                      {fmt(cf)}
+                    </span>
+                    <div
+                      className="w-full rounded-t-lg transition-all duration-500"
+                      style={{
+                        height: `${pct}%`,
+                        background: cf > 0
+                          ? `linear-gradient(180deg, #0B8A4D, rgba(11,138,77,0.3))`
+                          : `linear-gradient(180deg, #DC2626, rgba(220,38,38,0.3))`,
+                        minHeight: 24,
+                      }}
+                    />
+                    <span className="text-[9px] text-[#9CA3AF] font-semibold">Yr {i + 1}</span>
+                  </div>
+                );
+              });
+            })()}
           </div>
         </div>
 
