@@ -128,7 +128,7 @@ export default function DataRoomTab({
   ddDeadline, closeDeadline, extensionDeadline,
   onViewDocument, onDocumentDownload,
 }: DataRoomTabProps) {
-  const [activeFolder, setActiveFolder] = useState(folders.length > 0 ? folders[0].id : '__tasks__');
+  const [activeFolder, setActiveFolder] = useState(folders[0]?.id ?? '');
   const [searchQuery, setSearchQuery] = useState('');
   const [activities, setActivities] = useState<{ action: string; created_at: string }[]>([]);
   const taskStats = { total: tasks.length, completed: tasks.filter(t => t.status === 'completed').length };
@@ -154,14 +154,10 @@ export default function DataRoomTab({
   const combinedComplete = statusCounts.verified + statusCounts.uploaded + taskStats.completed;
   const completePct = combinedTotal > 0 ? Math.round((combinedComplete / combinedTotal) * 100) : 0;
 
-  const isTasksView = activeFolder === '__tasks__';
   const activeFolderData = folders.find((f) => f.id === activeFolder);
-  const filteredDocs = isTasksView ? [] : (activeFolderData?.documents.filter(
+  const filteredDocs = activeFolderData?.documents.filter(
     (d) => !searchQuery || d.name.toLowerCase().includes(searchQuery.toLowerCase())
-  ) ?? []);
-  const filteredTasks = isTasksView ? tasks.filter(
-    (t) => !searchQuery || t.name.toLowerCase().includes(searchQuery.toLowerCase())
-  ) : [];
+  ) ?? [];
 
   const now = new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
@@ -311,39 +307,6 @@ export default function DataRoomTab({
             <span className="text-[7px] font-bold text-[#BC9C45] uppercase tracking-[2px]">Categories</span>
           </div>
           <div className="p-1.5">
-            {/* Pipeline Tasks virtual folder */}
-            {tasks.length > 0 && (
-              <button
-                onClick={() => setActiveFolder('__tasks__')}
-                className={`w-full text-left px-2.5 py-2 rounded-md mb-1 transition-all ${
-                  activeFolder === '__tasks__' ? 'bg-[#BC9C45]/10 border-l-[3px] border-l-[#BC9C45]' : 'border-l-[3px] border-l-transparent hover:bg-white/[0.04]'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] w-[18px] text-center">📋</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-center">
-                      <span className={`text-[9px] truncate ${activeFolder === '__tasks__' ? 'font-bold text-white' : 'font-medium text-white/50'}`}>
-                        Pipeline Tasks
-                      </span>
-                      <span className={`text-[7px] font-bold ${activeFolder === '__tasks__' ? 'text-[#BC9C45]' : 'text-white/20'}`}>{tasks.length}</span>
-                    </div>
-                    <div className="h-[2px] bg-white/[0.08] rounded-full mt-1 overflow-hidden">
-                      <div className="h-full rounded-full transition-all duration-500" style={{
-                        width: `${taskStats.total > 0 ? (taskStats.completed / taskStats.total) * 100 : 0}%`,
-                        backgroundColor: activeFolder === '__tasks__' ? '#BC9C45' : 'rgba(255,255,255,0.15)',
-                      }} />
-                    </div>
-                  </div>
-                </div>
-              </button>
-            )}
-
-            {/* Separator */}
-            {tasks.length > 0 && folders.length > 0 && (
-              <div className="h-px bg-white/[0.06] mx-2 my-1" />
-            )}
-
             {folders.map((folder) => {
               const fc = getFolderColor(folder.name);
               const folderDocs = folder.documents;
@@ -389,11 +352,9 @@ export default function DataRoomTab({
           <div className="px-4 py-3 border-b border-[#EEF0F4] flex items-center justify-between">
             <div>
               <h3 className="text-[13px] font-bold text-[#0E3470] font-[family-name:var(--font-playfair)]">
-                {isTasksView ? 'Pipeline Tasks' : (activeFolderData?.name.replace(/^\d+_/, '').replace(/_/g, ' ') || 'Documents')}
+                {activeFolderData?.name.replace(/^\d+_/, '').replace(/_/g, ' ') || 'Documents'}
               </h3>
-              <span className="text-[9px] text-[#9CA3AF]">
-                {isTasksView ? `${filteredTasks.length} tasks · ${taskStats.completed} completed` : `${filteredDocs.length} documents`}
-              </span>
+              <span className="text-[9px] text-[#9CA3AF]">{filteredDocs.length} documents</span>
             </div>
             <div className="relative">
               <input
@@ -414,60 +375,7 @@ export default function DataRoomTab({
 
           {/* Rows */}
           <div className="overflow-y-auto" style={{ maxHeight: 380 }}>
-            {/* Tasks view */}
-            {isTasksView && (
-              filteredTasks.length === 0 ? (
-                <div className="text-center py-12 text-[11px] text-[#9CA3AF]">No tasks found</div>
-              ) : (
-                filteredTasks.map((task, i) => {
-                  const isComplete = task.status === 'completed';
-                  const isInProgress = task.status === 'in_progress';
-                  const statusColor = isComplete ? '#0B8A4D' : isInProgress ? '#1D5FB8' : '#D97706';
-                  const statusBg = isComplete ? '#ECFDF5' : isInProgress ? '#EFF6FF' : '#FFFBEB';
-                  const statusLabel = isComplete ? 'Completed' : isInProgress ? 'In Progress' : 'Pending';
-                  const statusIcon = isComplete ? '✓' : isInProgress ? '↑' : '◷';
-
-                  return (
-                    <div
-                      key={task.id}
-                      className="grid px-4 py-2.5 border-b border-[#EEF0F4] last:border-b-0 transition-all duration-150 group"
-                      style={{
-                        gridTemplateColumns: '2.8fr 70px 55px 95px 50px',
-                        borderLeft: '3px solid transparent',
-                        animation: `fadeUp 0.25s ease ${i * 0.03}s both`,
-                      }}
-                      onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLElement).style.borderLeftColor = isComplete ? '#0B8A4D' : '#BC9C45';
-                        (e.currentTarget as HTMLElement).style.backgroundColor = isComplete ? 'rgba(236,253,245,0.4)' : 'rgba(253,248,237,0.4)';
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLElement).style.borderLeftColor = 'transparent';
-                        (e.currentTarget as HTMLElement).style.backgroundColor = '';
-                      }}
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-[10px] shrink-0">{isComplete ? '✅' : '📋'}</span>
-                        <span className={`text-[10.5px] font-semibold truncate ${isComplete ? 'text-[#0B8A4D]' : 'text-[#0E3470]'}`}>
-                          {task.name}
-                        </span>
-                      </div>
-                      <span className="text-[9px] text-[#6B7280] flex items-center capitalize">{task.stage.replace(/_/g, ' ')}</span>
-                      <span className="text-[9px] text-[#6B7280] flex items-center">—</span>
-                      <div className="flex items-center">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[8px] font-semibold"
-                          style={{ backgroundColor: statusBg, color: statusColor, border: `1px solid ${statusColor}15` }}>
-                          <span className="font-bold">{statusIcon}</span> {statusLabel}
-                        </span>
-                      </div>
-                      <div />
-                    </div>
-                  );
-                })
-              )
-            )}
-
-            {/* Documents view */}
-            {!isTasksView && (filteredDocs.length === 0 ? (
+            {filteredDocs.length === 0 ? (
               <div className="text-center py-12 text-[11px] text-[#9CA3AF]">No documents in this folder</div>
             ) : (
               filteredDocs.map((doc, i) => {
@@ -525,10 +433,10 @@ export default function DataRoomTab({
                   </div>
                 );
               })
-            ))}
+            )}
           </div>
           <div className="px-4 py-2 border-t border-[#EEF0F4] bg-[#FAFBFC] text-[8px] text-[#9CA3AF] flex justify-between">
-            <span>{isTasksView ? `${filteredTasks.length} tasks` : `${filteredDocs.length} docs`} · {combinedTotal} total items</span>
+            <span>{filteredDocs.length} docs · {total} total items</span>
             <span>{now}</span>
           </div>
         </div>
