@@ -771,6 +771,15 @@ export default function EditDealPage() {
               </svg>
               Pipeline
             </Link>
+            <Link
+              href={`/${locale}/admin/deals/${dealId}/dataroom`}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-[#0E3470] rounded-lg hover:-translate-y-0.5 hover:shadow-lg transition-all"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
+              </svg>
+              Data Room
+            </Link>
           </div>
         </div>
 
