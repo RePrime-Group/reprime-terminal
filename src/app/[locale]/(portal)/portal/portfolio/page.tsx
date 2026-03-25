@@ -10,13 +10,13 @@ interface Deal {
   city: string;
   state: string;
   property_type: string;
-  purchase_price: number;
-  noi: number;
-  cap_rate: number;
-  irr: number;
-  coc: number;
-  dscr: number;
-  equity_required: number;
+  purchase_price: string | null;
+  noi: string | null;
+  cap_rate: string | null;
+  irr: string | null;
+  coc: string | null;
+  dscr: string | null;
+  equity_required: string | null;
   status: string;
   assigned_to: string | null;
 }
@@ -56,7 +56,6 @@ export default async function PortfolioPage({
     .from('terminal_deals')
     .select('*')
     .eq('assigned_to', user.id)
-    .in('status', ['assigned', 'closed'])
     .order('name', { ascending: true });
 
   const { data: committedDeals } = committedDealIds.length > 0
@@ -65,7 +64,7 @@ export default async function PortfolioPage({
         .select('*')
         .in('id', committedDealIds)
         .order('name', { ascending: true })
-    : { data: [] };
+    : { data: [] as never[] };
 
   // Merge and deduplicate
   const dealMap = new Map();
@@ -73,14 +72,14 @@ export default async function PortfolioPage({
   (committedDeals ?? []).forEach((d) => { if (!dealMap.has(d.id)) dealMap.set(d.id, d); });
   const deals = Array.from(dealMap.values());
 
-  const activeDealCount = deals.filter((d) => d.status === 'assigned' || d.status === 'published').length;
+  const activeDealCount = deals.filter((d) => ['published', 'assigned', 'coming_soon', 'loi_signed'].includes(d.status)).length;
 
   const avgIrr =
     deals && deals.length > 0
-      ? deals.reduce((sum: number, d: Deal) => sum + (d.irr ?? 0), 0) / deals.length
+      ? deals.reduce((sum: number, d: Deal) => sum + (parseFloat(d.irr ?? '0') || 0), 0) / deals.length
       : 0;
 
-  const totalEquity = deals?.reduce((sum: number, d: Deal) => sum + (d.equity_required ?? 0), 0) ?? 0;
+  const totalEquity = deals?.reduce((sum: number, d: Deal) => sum + (parseFloat(d.equity_required ?? '0') || 0), 0) ?? 0;
 
   const metrics = [
     {

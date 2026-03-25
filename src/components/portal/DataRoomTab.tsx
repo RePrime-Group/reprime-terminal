@@ -123,12 +123,25 @@ export default function DataRoomTab({
   const [activeFolder, setActiveFolder] = useState(folders[0]?.id ?? '');
   const [searchQuery, setSearchQuery] = useState('');
   const [activities, setActivities] = useState<{ action: string; created_at: string }[]>([]);
+  const [taskStats, setTaskStats] = useState({ total: 0, completed: 0 });
 
   useEffect(() => {
     const supabase = createClient();
+    // Fetch activity
     supabase.from('terminal_activity_log').select('action, created_at')
       .eq('deal_id', dealId).order('created_at', { ascending: false }).limit(5)
       .then(({ data }) => setActivities(data ?? []));
+    // Fetch pipeline task stats
+    supabase.from('terminal_deal_tasks').select('status')
+      .eq('deal_id', dealId)
+      .then(({ data }) => {
+        if (data) {
+          setTaskStats({
+            total: data.length,
+            completed: data.filter((t) => t.status === 'completed').length,
+          });
+        }
+      });
   }, [dealId]);
 
   const allDocs = folders.flatMap((f) => f.documents);
@@ -140,7 +153,10 @@ export default function DataRoomTab({
     requested: allDocs.filter((d) => getDocStatus(d) === 'requested').length,
     notuploaded: allDocs.filter((d) => getDocStatus(d) === 'notuploaded').length,
   };
-  const completePct = total > 0 ? Math.round(((statusCounts.verified + statusCounts.uploaded) / total) * 100) : 0;
+  // Combined progress: documents + pipeline tasks
+  const combinedTotal = total + taskStats.total;
+  const combinedComplete = statusCounts.verified + statusCounts.uploaded + taskStats.completed;
+  const completePct = combinedTotal > 0 ? Math.round((combinedComplete / combinedTotal) * 100) : 0;
 
   const activeFolderData = folders.find((f) => f.id === activeFolder);
   const filteredDocs = activeFolderData?.documents.filter(
@@ -222,15 +238,15 @@ export default function DataRoomTab({
             <div>
               <div className="text-[8px] font-bold text-[#0E3470] uppercase tracking-[1.5px]">Diligence Progress</div>
               <div className="text-[17px] font-extrabold text-[#0E3470] mt-0.5">
-                {statusCounts.verified + statusCounts.uploaded} <span className="text-[11px] font-normal text-[#9CA3AF]">of {total}</span>
+                {combinedComplete} <span className="text-[11px] font-normal text-[#9CA3AF]">of {combinedTotal}</span>
               </div>
               <div className="flex gap-2 mt-1 flex-wrap">
                 {[
-                  { l: 'Verified', c: '#0B8A4D', n: statusCounts.verified },
-                  { l: 'Uploaded', c: '#1D5FB8', n: statusCounts.uploaded },
-                  { l: 'Pending', c: '#D97706', n: statusCounts.pending },
-                  { l: 'Requested', c: '#BC9C45', n: statusCounts.requested },
-                  { l: 'Missing', c: '#9CA3AF', n: statusCounts.notuploaded },
+                  { l: 'Tasks Done', c: '#0B8A4D', n: taskStats.completed },
+                  { l: 'Tasks Remaining', c: '#D97706', n: taskStats.total - taskStats.completed },
+                  { l: 'Docs Verified', c: '#0B8A4D', n: statusCounts.verified },
+                  { l: 'Docs Uploaded', c: '#1D5FB8', n: statusCounts.uploaded },
+                  { l: 'Docs Pending', c: '#D97706', n: statusCounts.pending },
                 ].filter((s) => s.n > 0).map((s) => (
                   <div key={s.l} className="flex items-center gap-1">
                     <div className="w-[5px] h-[5px] rounded-sm" style={{ backgroundColor: s.c }} />
