@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import PortalNavbar from '@/components/portal/PortalNavbar';
 import MarketTicker from '@/components/portal/MarketTicker';
+import OnboardingOverlay from '@/components/portal/OnboardingOverlay';
 
 export default async function PortalLayout({
   children,
@@ -31,6 +32,10 @@ export default async function PortalLayout({
       <PortalNavbar
         firstName={terminalUser.full_name?.split(' ')[0] ?? ''}
         locale={locale}
+      />
+      <OnboardingOverlay
+        firstName={terminalUser.full_name?.split(' ')[0] ?? ''}
+        userId={user.id}
       />
       <main>
         {children}
