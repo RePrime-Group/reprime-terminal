@@ -108,7 +108,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
   // Fetch pipeline progress — per-stage task completion
   const { data: pipelineTasks } = await supabase
     .from('terminal_deal_tasks')
-    .select('status, stage')
+    .select('id, name, status, stage')
     .eq('deal_id', id);
 
   const pipelineTotal = pipelineTasks?.length ?? 0;
@@ -227,6 +227,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
       investorName={investorProfile?.full_name ?? 'Member'}
       investorEmail={investorProfile?.email ?? ''}
       addresses={dealAddresses}
+      pipelineTasks={(pipelineTasks ?? []) as { id: string; name: string; status: string; stage: string }[]}
     />
   );
 }

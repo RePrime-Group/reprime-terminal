@@ -40,15 +40,15 @@ export async function GET(
     return NextResponse.json({ error: 'Deal not found' }, { status: 404 });
   }
 
-  // Fetch all verified documents for this deal, including folder_id
+  // Fetch ALL documents with files for this deal
   const { data: docs } = await supabase
     .from('terminal_dd_documents')
     .select('id, name, storage_path, file_type, is_verified, folder_id')
     .eq('deal_id', id)
-    .eq('is_verified', true);
+    .not('storage_path', 'is', null);
 
   if (!docs || docs.length === 0) {
-    return NextResponse.json({ error: 'No verified documents found' }, { status: 404 });
+    return NextResponse.json({ error: 'No files found' }, { status: 404 });
   }
 
   // Fetch all folder names for the documents that have a folder_id

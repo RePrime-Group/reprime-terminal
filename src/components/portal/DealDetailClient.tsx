@@ -38,6 +38,7 @@ interface DealDetailClientProps {
   investorName?: string;
   investorEmail?: string;
   addresses?: { id: string; label: string; address: string | null; city: string | null; state: string | null; square_footage: string | null; units: string | null; om_storage_path: string | null }[];
+  pipelineTasks?: { id: string; name: string; status: string; stage: string }[];
 }
 
 type TabKey = 'overview' | 'due-diligence' | 'financial-modeling' | 'deal-structure' | 'schedule';
@@ -1329,6 +1330,7 @@ export default function DealDetailClient({
   investorName = 'Member',
   investorEmail = '',
   addresses = [],
+  pipelineTasks = [],
 }: DealDetailClientProps) {
   const t = useTranslations('portal');
   const router = useRouter();
@@ -2156,6 +2158,7 @@ export default function DealDetailClient({
           <div className="mt-8 px-8 pb-10">
             <DataRoomTab
               folders={deal.dd_folders}
+              tasks={pipelineTasks}
               dealId={deal.id}
               dealName={deal.name}
               investorName={investorName}
