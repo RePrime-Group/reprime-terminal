@@ -465,6 +465,25 @@ export default function DataRoomPage() {
         <h1 className="text-[22px] font-bold text-rp-navy">
           Data Room &mdash; {dealName}
         </h1>
+        <button
+          onClick={async () => {
+            const res = await fetch(`/api/deals/${dealId}/populate-dd`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({}),
+            });
+            const data = await res.json();
+            if (res.ok) {
+              alert(`DD Checklist populated: ${data.docsCreated} documents added from ${data.propertyType} template`);
+              fetchData();
+            } else {
+              alert(data.error || 'Failed to populate');
+            }
+          }}
+          className="px-4 py-2 rounded-lg bg-gradient-to-r from-rp-gold to-rp-gold-soft text-white text-[12px] font-semibold hover:opacity-90 transition-opacity"
+        >
+          ⚡ Populate DD Checklist
+        </button>
       </div>
 
       {/* Two-panel layout */}
