@@ -2157,8 +2157,12 @@ export default function DealDetailClient({
             <DataRoomTab
               folders={deal.dd_folders}
               dealId={deal.id}
+              dealName={deal.name}
               investorName={investorName}
               investorEmail={investorEmail}
+              ddDeadline={deal.dd_deadline}
+              closeDeadline={deal.close_deadline}
+              extensionDeadline={deal.extension_deadline}
               onViewDocument={handleViewDocument}
               onDocumentDownload={handleDocumentDownload}
             />

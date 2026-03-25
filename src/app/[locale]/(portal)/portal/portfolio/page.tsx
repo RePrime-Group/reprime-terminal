@@ -43,14 +43,37 @@ export default async function PortfolioPage({
 
   if (!user) redirect(`/${locale}/login`);
 
-  const { data: deals } = await supabase
+  // Get deals assigned to investor OR committed to by investor
+  const { data: commitments } = await supabase
+    .from('terminal_deal_commitments')
+    .select('deal_id')
+    .eq('user_id', user.id)
+    .in('status', ['pending', 'wire_sent', 'confirmed']);
+
+  const committedDealIds = commitments?.map((c) => c.deal_id) ?? [];
+
+  const { data: assignedDeals } = await supabase
     .from('terminal_deals')
     .select('*')
     .eq('assigned_to', user.id)
     .in('status', ['assigned', 'closed'])
     .order('name', { ascending: true });
 
-  const activeDealCount = deals?.filter((d) => d.status === 'assigned').length ?? 0;
+  const { data: committedDeals } = committedDealIds.length > 0
+    ? await supabase
+        .from('terminal_deals')
+        .select('*')
+        .in('id', committedDealIds)
+        .order('name', { ascending: true })
+    : { data: [] };
+
+  // Merge and deduplicate
+  const dealMap = new Map();
+  (assignedDeals ?? []).forEach((d) => dealMap.set(d.id, d));
+  (committedDeals ?? []).forEach((d) => { if (!dealMap.has(d.id)) dealMap.set(d.id, d); });
+  const deals = Array.from(dealMap.values());
+
+  const activeDealCount = deals.filter((d) => d.status === 'assigned' || d.status === 'published').length;
 
   const avgIrr =
     deals && deals.length > 0

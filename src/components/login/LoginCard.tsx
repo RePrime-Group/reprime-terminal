@@ -14,6 +14,12 @@ export default function LoginCard({ locale }: LoginCardProps) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [inviteCode, setInviteCode] = useState('');
+
+  const handleInviteCode = () => {
+    if (!inviteCode.trim()) return;
+    window.location.href = `/${locale}/invite/${inviteCode.trim()}`;
+  };
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -128,9 +134,33 @@ export default function LoginCard({ locale }: LoginCardProps) {
         </button>
       </form>
 
-      <p className="text-[11px] text-white/20 text-center mt-8">
-        {t('membershipByInvitation')}
-      </p>
+      {/* Invite code + Apply */}
+      <div className="mt-8 pt-6 border-t border-white/[0.06]">
+        <p className="text-[11px] text-white/30 text-center mb-3">Have an invitation code?</p>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Enter code (e.g. RPT-2026-AXYZ)"
+            value={inviteCode}
+            onChange={(e) => setInviteCode(e.target.value)}
+            className="flex-1 px-3.5 py-2.5 rounded-lg bg-white/[0.04] border border-white/[0.08] text-white text-[13px] placeholder:text-white/20 focus:outline-none focus:border-[#BC9C45]/40 transition-colors"
+          />
+          <button
+            onClick={handleInviteCode}
+            className="px-4 py-2.5 rounded-lg border border-[#BC9C45]/30 text-[#BC9C45] text-[12px] font-semibold hover:bg-[#BC9C45]/10 transition-colors"
+          >
+            Go
+          </button>
+        </div>
+        <div className="text-center mt-4">
+          <a
+            href={`/${locale}/join`}
+            className="text-[12px] text-[#BC9C45] hover:text-[#D4B96A] font-medium transition-colors"
+          >
+            Apply for Membership →
+          </a>
+        </div>
+      </div>
     </div>
   );
 }

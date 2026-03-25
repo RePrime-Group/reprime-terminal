@@ -1,42 +1,55 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useCountdown } from '@/lib/hooks/useCountdown';
+import { createClient } from '@/lib/supabase/client';
 import type { TerminalDDFolder, TerminalDDDocument } from '@/lib/types/database';
 
 interface DataRoomTabProps {
   folders: (TerminalDDFolder & { documents: TerminalDDDocument[] })[];
   dealId: string;
+  dealName: string;
   investorName: string;
   investorEmail: string;
+  ddDeadline: string | null;
+  closeDeadline: string | null;
+  extensionDeadline: string | null;
   onViewDocument: (url: string, name: string) => void;
   onDocumentDownload: (docId: string) => void;
 }
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: string }> = {
-  verified: { label: 'Verified', color: '#0B8A4D', bg: '#ECFDF5', icon: '✓' },
-  pending: { label: 'Pending Review', color: '#D97706', bg: '#FFFBEB', icon: '◷' },
-  requested: { label: 'Requested', color: '#9CA3AF', bg: '#F7F8FA', icon: '↗' },
-  notrequired: { label: 'Not Required', color: '#D1D5DB', bg: '#F7F8FA', icon: '—' },
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: string; rank: number }> = {
+  verified:     { label: 'Verified',       color: '#0B8A4D', bg: '#ECFDF5', icon: '✓',  rank: 5 },
+  uploaded:     { label: 'Uploaded',        color: '#1D5FB8', bg: '#EFF6FF', icon: '↑',  rank: 4 },
+  pending:      { label: 'Pending Review',  color: '#D97706', bg: '#FFFBEB', icon: '◷',  rank: 3 },
+  requested:    { label: 'Requested',       color: '#BC9C45', bg: '#FDF8ED', icon: '↗',  rank: 2 },
+  notuploaded:  { label: 'Not Uploaded',    color: '#9CA3AF', bg: '#F7F8FA', icon: '○',  rank: 1 },
+  doesnotexist: { label: 'Does Not Exist',  color: '#D1D5DB', bg: '#F7F8FA', icon: '—',  rank: 0 },
+  na:           { label: 'N/A',            color: '#D1D5DB', bg: '#F7F8FA', icon: '—',  rank: 0 },
 };
 
 function getDocStatus(doc: TerminalDDDocument): string {
-  if (doc.doc_status) return doc.doc_status;
-  return doc.is_verified ? 'verified' : 'pending';
+  if (doc.doc_status && doc.doc_status in STATUS_CONFIG) return doc.doc_status;
+  if (doc.is_verified) return 'verified';
+  if (doc.storage_path) return 'uploaded';
+  return 'pending';
 }
 
-function getFolderColor(name: string): { color: string; bg: string } {
+function getFolderColor(name: string): string {
   const n = name.toLowerCase();
-  if (n.includes('financial') || n.includes('fiscal')) return { color: '#1D5FB8', bg: '#EFF6FF' };
-  if (n.includes('legal') || n.includes('lease')) return { color: '#0E3470', bg: '#EEF0F8' };
-  if (n.includes('environment')) return { color: '#0B8A4D', bg: '#ECFDF5' };
-  if (n.includes('property') || n.includes('condition') || n.includes('site')) return { color: '#D97706', bg: '#FFFBEB' };
-  if (n.includes('tenant') || n.includes('investor')) return { color: '#009080', bg: '#ECFDF8' };
-  if (n.includes('fire') || n.includes('safety')) return { color: '#DC2626', bg: '#FEF2F2' };
-  if (n.includes('insurance')) return { color: '#6B7280', bg: '#F7F8FA' };
-  if (n.includes('elevator') || n.includes('operation')) return { color: '#D97706', bg: '#FFFBEB' };
-  if (n.includes('photo') || n.includes('plan')) return { color: '#1D5FB8', bg: '#EFF6FF' };
-  if (n.includes('market') || n.includes('research') || n.includes('om')) return { color: '#BC9C45', bg: '#FDF8ED' };
-  return { color: '#0E3470', bg: '#EEF0F8' };
+  if (n.includes('financial') || n.includes('fiscal')) return '#1D5FB8';
+  if (n.includes('legal') || n.includes('lease')) return '#0E3470';
+  if (n.includes('environment')) return '#0B8A4D';
+  if (n.includes('property') || n.includes('condition') || n.includes('inspection')) return '#D97706';
+  if (n.includes('tenant') || n.includes('investor')) return '#009080';
+  if (n.includes('fire') || n.includes('safety')) return '#DC2626';
+  if (n.includes('insurance')) return '#6B7280';
+  if (n.includes('elevator') || n.includes('operation')) return '#D97706';
+  if (n.includes('photo') || n.includes('plan') || n.includes('site')) return '#1D5FB8';
+  if (n.includes('market') || n.includes('research') || n.includes('om') || n.includes('presentation')) return '#BC9C45';
+  if (n.includes('financing') || n.includes('lender')) return '#0E3470';
+  if (n.includes('post') || n.includes('closing')) return '#0B8A4D';
+  return '#0E3470';
 }
 
 function formatFileSize(size: string | null): string {
@@ -48,7 +61,6 @@ function formatFileSize(size: string | null): string {
   return `${n} B`;
 }
 
-/* Animated number counter */
 function AnimNum({ target }: { target: number }) {
   const [val, setVal] = useState(0);
   const started = useRef(false);
@@ -67,23 +79,68 @@ function AnimNum({ target }: { target: number }) {
   return <>{val}</>;
 }
 
+function CountdownRing({ targetDate, label, size = 110 }: { targetDate: string | null; label: string; size?: number }) {
+  const { days, hours, minutes, seconds, isExpired, totalMs } = useCountdown(targetDate);
+  const r = (size - 10) / 2;
+  const circ = 2 * Math.PI * r;
+  const pct = Math.min(100, (totalMs / (30 * 86400000)) * 100);
+  const offset = circ - (pct / 100) * circ;
+  const color = isExpired ? '#9CA3AF' : days >= 14 ? '#0B8A4D' : days >= 7 ? '#D97706' : '#DC2626';
+
+  if (!targetDate) return null;
+
+  return (
+    <div className="flex flex-col items-center gap-1.5">
+      <div className="relative" style={{ width: size, height: size }}>
+        <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#EEF0F4" strokeWidth={5} />
+          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={5}
+            strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={offset}
+            style={{ transition: 'stroke-dashoffset 1.5s ease' }} />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-[26px] font-extrabold tabular-nums" style={{ color, lineHeight: 1 }}>
+            {isExpired ? '0' : days}
+          </span>
+          <span className="text-[8px] font-semibold text-[#9CA3AF] uppercase tracking-[1px] mt-0.5">DAYS</span>
+          {!isExpired && (
+            <span className="text-[11px] font-semibold text-[#6B7280] tabular-nums mt-1">
+              {String(hours).padStart(2, '0')}:{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+            </span>
+          )}
+        </div>
+      </div>
+      <span className="text-[9px] font-bold uppercase tracking-[1.5px]" style={{ color }}>{label}</span>
+    </div>
+  );
+}
+
 export default function DataRoomTab({
-  folders,
-  dealId,
-  investorName,
-  investorEmail,
-  onViewDocument,
-  onDocumentDownload,
+  folders, dealId, dealName, investorName, investorEmail,
+  ddDeadline, closeDeadline, extensionDeadline,
+  onViewDocument, onDocumentDownload,
 }: DataRoomTabProps) {
   const [activeFolder, setActiveFolder] = useState(folders[0]?.id ?? '');
   const [searchQuery, setSearchQuery] = useState('');
+  const [activities, setActivities] = useState<{ action: string; created_at: string }[]>([]);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.from('terminal_activity_log').select('action, created_at')
+      .eq('deal_id', dealId).order('created_at', { ascending: false }).limit(5)
+      .then(({ data }) => setActivities(data ?? []));
+  }, [dealId]);
 
   const allDocs = folders.flatMap((f) => f.documents);
-  const totalDocs = allDocs.length;
-  const verifiedDocs = allDocs.filter((d) => getDocStatus(d) === 'verified').length;
-  const pendingDocs = allDocs.filter((d) => getDocStatus(d) === 'pending').length;
-  const requestedDocs = allDocs.filter((d) => getDocStatus(d) === 'requested').length;
-  const verifiedPct = totalDocs > 0 ? Math.round((verifiedDocs / totalDocs) * 100) : 0;
+  const total = allDocs.length;
+  const statusCounts = {
+    verified: allDocs.filter((d) => getDocStatus(d) === 'verified').length,
+    uploaded: allDocs.filter((d) => getDocStatus(d) === 'uploaded').length,
+    pending: allDocs.filter((d) => getDocStatus(d) === 'pending').length,
+    requested: allDocs.filter((d) => getDocStatus(d) === 'requested').length,
+    notuploaded: allDocs.filter((d) => getDocStatus(d) === 'notuploaded').length,
+  };
+  const completePct = total > 0 ? Math.round(((statusCounts.verified + statusCounts.uploaded) / total) * 100) : 0;
 
   const activeFolderData = folders.find((f) => f.id === activeFolder);
   const filteredDocs = activeFolderData?.documents.filter(
@@ -92,114 +149,185 @@ export default function DataRoomTab({
 
   const now = new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
+  const actLabels: Record<string, string> = {
+    deal_viewed: 'Deal viewed', document_downloaded: 'Document downloaded', om_downloaded: 'OM downloaded',
+    dataroom_viewed: 'Data room accessed', meeting_requested: 'Meeting scheduled',
+    expressed_interest: 'Interest expressed', irr_calculator_used: 'Returns modeled',
+  };
+
+  function timeAgo(dateStr: string): string {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    return `${Math.floor(hrs / 24)}d ago`;
+  }
+
   return (
     <div>
-      {/* Watermark notice bar */}
-      <div className="bg-gradient-to-r from-[#FDF8ED] to-[#FBF3DC] border-b border-[#ECD9A0]/25 px-6 py-3 rounded-t-xl flex items-center gap-3">
-        <div className="w-7 h-7 rounded-lg bg-[#BC9C45]/10 flex items-center justify-center shrink-0" style={{ animation: 'pulse 3s ease-in-out infinite' }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#BC9C45" strokeWidth="2">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-            <path d="M7 11V7a5 5 0 0110 0v4" />
-          </svg>
+      {/* Watermark notice */}
+      <div className="bg-gradient-to-r from-[#FDF8ED] to-[#FBF3DC] border-b border-[#ECD9A0]/25 px-5 py-2.5 rounded-t-xl flex items-center gap-2.5 text-[11px]">
+        <span className="text-[12px]">🔒</span>
+        <span className="font-semibold text-[#0E3470]">View-only.</span>
+        <span className="text-[#4B5563]">Watermarked: <strong className="text-[#0E3470]">{investorName}</strong> · {investorEmail} · Downloads disabled.</span>
+      </div>
+
+      {/* Deal Timeline */}
+      <div className="bg-white border-b border-[#EEF0F4] px-6 py-5">
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-[10px] font-bold text-[#0E3470] uppercase tracking-[1.5px]">Deal Timeline</span>
         </div>
-        <div className="text-[12px]">
-          <span className="font-semibold text-[#0E3470]">All documents are view-only.</span>{' '}
-          <span className="text-[#4B5563]">Watermarked with</span>{' '}
-          <span className="font-bold text-[#0E3470]">{investorName}</span>{' '}
-          <span className="text-[#6B7280]">· {investorEmail} · {now}. Downloads disabled.</span>
+        <div className="flex justify-around items-center">
+          <CountdownRing targetDate={ddDeadline} label="DD Expiration" />
+          <div className="flex flex-col items-center gap-1">
+            <div className="w-12 h-[2px] bg-gradient-to-r from-[#BC9C45] to-[#EEF0F4]" />
+            <span className="text-[7px] text-[#9CA3AF] font-semibold uppercase tracking-[1px]">then</span>
+            <div className="w-12 h-[2px] bg-gradient-to-r from-[#EEF0F4] to-[#BC9C45]" />
+          </div>
+          <CountdownRing targetDate={closeDeadline} label="Closing" />
+          {extensionDeadline && (
+            <>
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-12 h-[2px] bg-gradient-to-r from-[#BC9C45] to-[#EEF0F4]" />
+                <span className="text-[7px] text-[#9CA3AF] font-semibold uppercase tracking-[1px]">option</span>
+                <div className="w-12 h-[2px] bg-gradient-to-r from-[#EEF0F4] to-[#BC9C45]" />
+              </div>
+              <CountdownRing targetDate={extensionDeadline} label="Extension" />
+            </>
+          )}
         </div>
       </div>
 
-      {/* Summary stats panel */}
-      <div className="bg-white border-b border-[#EEF0F4] px-6 py-5">
-        <div className="flex items-center gap-6">
+      {/* Summary panel */}
+      <div className="bg-white border-b border-[#EEF0F4] px-6 py-4">
+        <div className="grid grid-cols-[auto_1fr_auto] gap-5 items-center">
           {/* Progress ring */}
-          <div className="relative w-[72px] h-[72px] shrink-0">
-            <svg width="72" height="72" style={{ transform: 'rotate(-90deg)' }}>
-              <circle cx="36" cy="36" r="29" fill="none" stroke="#EEF0F4" strokeWidth="5" />
-              <circle
-                cx="36" cy="36" r="29" fill="none" stroke="#0B8A4D" strokeWidth="5"
-                strokeLinecap="round"
-                strokeDasharray={2 * Math.PI * 29}
-                strokeDashoffset={2 * Math.PI * 29 * (1 - verifiedPct / 100)}
-                style={{ transition: 'stroke-dashoffset 1.5s cubic-bezier(0.4,0,0.2,1)' }}
-              />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-[18px] font-bold text-[#0E3470] tabular-nums"><AnimNum target={verifiedPct} />%</span>
+          <div className="flex items-center gap-4">
+            <div className="relative w-[70px] h-[70px]">
+              <svg width="70" height="70" style={{ transform: 'rotate(-90deg)' }}>
+                <circle cx="35" cy="35" r="27" fill="none" stroke="#EEF0F4" strokeWidth={5} />
+                <circle cx="35" cy="35" r="27" fill="none"
+                  stroke={completePct >= 80 ? '#0B8A4D' : completePct >= 50 ? '#BC9C45' : '#D97706'}
+                  strokeWidth={5} strokeLinecap="round"
+                  strokeDasharray={2 * Math.PI * 27}
+                  strokeDashoffset={2 * Math.PI * 27 * (1 - completePct / 100)}
+                  style={{ transition: 'stroke-dashoffset 1.5s ease' }} />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-[16px] font-bold text-[#0E3470] tabular-nums"><AnimNum target={completePct} />%</span>
+              </div>
+            </div>
+            <div>
+              <div className="text-[8px] font-bold text-[#0E3470] uppercase tracking-[1.5px]">Diligence Progress</div>
+              <div className="text-[17px] font-extrabold text-[#0E3470] mt-0.5">
+                {statusCounts.verified + statusCounts.uploaded} <span className="text-[11px] font-normal text-[#9CA3AF]">of {total}</span>
+              </div>
+              <div className="flex gap-2 mt-1 flex-wrap">
+                {[
+                  { l: 'Verified', c: '#0B8A4D', n: statusCounts.verified },
+                  { l: 'Uploaded', c: '#1D5FB8', n: statusCounts.uploaded },
+                  { l: 'Pending', c: '#D97706', n: statusCounts.pending },
+                  { l: 'Requested', c: '#BC9C45', n: statusCounts.requested },
+                  { l: 'Missing', c: '#9CA3AF', n: statusCounts.notuploaded },
+                ].filter((s) => s.n > 0).map((s) => (
+                  <div key={s.l} className="flex items-center gap-1">
+                    <div className="w-[5px] h-[5px] rounded-sm" style={{ backgroundColor: s.c }} />
+                    <span className="text-[8px] font-semibold text-[#6B7280]">{s.n} {s.l}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* Stat cards */}
-          <div className="flex gap-4 flex-1">
-            {[
-              { label: 'TOTAL', value: totalDocs, color: '#0E3470', border: '#0E3470' },
-              { label: 'VERIFIED', value: verifiedDocs, color: '#0B8A4D', border: '#0B8A4D' },
-              { label: 'PENDING', value: pendingDocs, color: '#D97706', border: '#D97706' },
-              { label: 'REQUESTED', value: requestedDocs, color: '#9CA3AF', border: '#9CA3AF' },
-            ].map((s) => (
-              <div
-                key={s.label}
-                className="flex-1 rounded-xl p-3.5 bg-[#F7F8FA] border-l-[3px]"
-                style={{ borderLeftColor: s.border }}
-              >
-                <div className="text-[8px] font-bold uppercase tracking-[2px]" style={{ color: s.color }}>{s.label}</div>
-                <div className="text-[24px] font-bold tabular-nums mt-0.5" style={{ color: s.color }}>
-                  <AnimNum target={s.value} />
+          {/* Status heatmap */}
+          <div className="px-4 border-l border-r border-[#EEF0F4]">
+            <div className="text-[7px] font-bold text-[#9CA3AF] uppercase tracking-[1.5px] mb-1.5">Status Map</div>
+            <div className="flex gap-[2px] flex-wrap">
+              {allDocs.map((d, i) => {
+                const st = getDocStatus(d);
+                const cfg = STATUS_CONFIG[st];
+                return (
+                  <div
+                    key={i}
+                    className="w-[9px] h-[9px] rounded-sm transition-all"
+                    style={{ backgroundColor: cfg?.color ?? '#D1D5DB' }}
+                    title={`${d.name} — ${cfg?.label}`}
+                  />
+                );
+              })}
+            </div>
+            <div className="flex gap-2 mt-1.5">
+              {[
+                { c: '#0B8A4D', l: '✓' }, { c: '#1D5FB8', l: '↑' }, { c: '#D97706', l: '◷' },
+                { c: '#BC9C45', l: '↗' }, { c: '#9CA3AF', l: '○' }, { c: '#D1D5DB', l: '—' },
+              ].map((s) => (
+                <div key={s.l} className="flex items-center gap-1">
+                  <div className="w-[6px] h-[6px] rounded-sm" style={{ backgroundColor: s.c }} />
+                  <span className="text-[7px] text-[#9CA3AF]">{s.l}</span>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+          </div>
+
+          {/* Download buttons */}
+          <div className="flex flex-col gap-1.5">
+            <a href={`/api/deals/${dealId}/package`}
+              className="px-4 py-1.5 rounded-md bg-[#0E3470] text-white text-[9px] font-bold text-center hover:opacity-90 transition-opacity">
+              ⬇ Download All ({total})
+            </a>
+            <button className="px-4 py-1.5 rounded-md border border-[#EEF0F4] bg-white text-[#0E3470] text-[9px] font-bold">
+              ✓ Verified Only ({statusCounts.verified})
+            </button>
+            <button className="px-4 py-1.5 rounded-md border border-[#BC9C45]/30 bg-[#FDF8ED] text-[#0E3470] text-[9px] font-bold">
+              📋 DD Checklist
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Main layout: dark sidebar + content */}
-      <div className="flex gap-0 bg-white rounded-b-xl border border-[#EEF0F4] border-t-0 overflow-hidden" style={{ minHeight: 480 }}>
-        {/* Dark category sidebar */}
-        <div className="w-[240px] shrink-0" style={{ background: 'linear-gradient(180deg, #0A1628 0%, #0E3470 100%)' }}>
-          <div className="p-3">
+      {/* 3-column layout: sidebar + table + activity */}
+      <div className="grid grid-cols-[210px_1fr_200px] gap-0 bg-white rounded-b-xl border border-[#EEF0F4] border-t-0 overflow-hidden" style={{ minHeight: 460 }}>
+        {/* Dark sidebar */}
+        <div className="shrink-0 overflow-y-auto" style={{ background: 'linear-gradient(180deg, #0A1628 0%, #091e3f 100%)', maxHeight: 460 }}>
+          <div className="px-3 pt-2 pb-1 border-b border-white/[0.05]">
+            <span className="text-[7px] font-bold text-[#BC9C45] uppercase tracking-[2px]">Folders ({folders.length})</span>
+          </div>
+          <div className="p-1.5">
             {folders.map((folder) => {
               const fc = getFolderColor(folder.name);
               const folderDocs = folder.documents;
-              const folderVerified = folderDocs.filter((d) => getDocStatus(d) === 'verified').length;
-              const folderTotal = folderDocs.length;
+              const fVerified = folderDocs.filter((d) => getDocStatus(d) === 'verified' || getDocStatus(d) === 'uploaded').length;
+              const fTotal = folderDocs.length;
+              const pct = fTotal > 0 ? Math.round((fVerified / fTotal) * 100) : 0;
               const isActive = activeFolder === folder.id;
 
               return (
                 <button
                   key={folder.id}
                   onClick={() => setActiveFolder(folder.id)}
-                  className={`w-full text-left px-3.5 py-3 rounded-lg mb-1 transition-all ${
-                    isActive
-                      ? 'bg-white/[0.12] border border-white/[0.08]'
-                      : 'hover:bg-white/[0.06]'
+                  className={`w-full text-left px-2.5 py-2 rounded-md mb-0.5 transition-all ${
+                    isActive ? 'bg-[#BC9C45]/10 border-l-[3px] border-l-[#BC9C45]' : 'border-l-[3px] border-l-transparent hover:bg-white/[0.04]'
                   }`}
                 >
-                  <div className="flex items-center gap-2.5">
-                    <div
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-[14px] shrink-0"
-                      style={{ backgroundColor: `${fc.color}25` }}
-                    >
-                      {folder.icon || '📁'}
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] w-[18px] text-center">{folder.icon || '📁'}</span>
                     <div className="flex-1 min-w-0">
-                      <div className={`text-[11px] font-semibold truncate ${isActive ? 'text-white' : 'text-white/70'}`}>
-                        {folder.name.replace(/^\d+_/, '').replace(/_/g, ' ')}
+                      <div className="flex justify-between items-center">
+                        <span className={`text-[9px] truncate ${isActive ? 'font-bold text-white' : 'font-medium text-white/50'}`}>
+                          {folder.name.replace(/^\d+_/, '').replace(/_/g, ' ')}
+                        </span>
+                        {fTotal > 0 && (
+                          <span className={`text-[7px] font-bold ${isActive ? 'text-[#BC9C45]' : 'text-white/20'}`}>{fTotal}</span>
+                        )}
                       </div>
-                      <div className="text-[10px] text-white/30 mt-0.5 tabular-nums">
-                        {folderVerified}/{folderTotal} verified
-                      </div>
+                      {fTotal > 0 && (
+                        <div className="h-[2px] bg-white/[0.08] rounded-full mt-1 overflow-hidden">
+                          <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: isActive ? '#BC9C45' : 'rgba(255,255,255,0.15)' }} />
+                        </div>
+                      )}
                     </div>
-                  </div>
-                  {/* Mini progress bar */}
-                  <div className="h-[3px] rounded-full bg-white/[0.08] mt-2 overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-700"
-                      style={{
-                        width: `${folderTotal > 0 ? (folderVerified / folderTotal) * 100 : 0}%`,
-                        backgroundColor: fc.color,
-                      }}
-                    />
                   </div>
                 </button>
               );
@@ -207,69 +335,50 @@ export default function DataRoomTab({
           </div>
         </div>
 
-        {/* Document list */}
-        <div className="flex-1 min-w-0">
-          {/* Search + folder header */}
-          <div className="px-5 py-4 border-b border-[#EEF0F4] flex items-center justify-between bg-white">
-            <div className="flex items-center gap-3">
-              <div
-                className="w-9 h-9 rounded-lg flex items-center justify-center text-[16px]"
-                style={{
-                  backgroundColor: activeFolderData ? `${getFolderColor(activeFolderData.name).color}10` : '#F7F8FA',
-                }}
-              >
-                {activeFolderData?.icon || '📁'}
-              </div>
-              <div>
-                <h3 className="text-[14px] font-semibold text-[#0E3470]">
-                  {activeFolderData?.name.replace(/^\d+_/, '').replace(/_/g, ' ') || 'Documents'}
-                </h3>
-                <span className="text-[11px] text-[#9CA3AF]">{filteredDocs.length} document{filteredDocs.length !== 1 ? 's' : ''}</span>
-              </div>
+        {/* Document table */}
+        <div className="min-w-0 border-r border-[#EEF0F4]">
+          <div className="px-4 py-3 border-b border-[#EEF0F4] flex items-center justify-between">
+            <div>
+              <h3 className="text-[13px] font-bold text-[#0E3470] font-[family-name:var(--font-playfair)]">
+                {activeFolderData?.name.replace(/^\d+_/, '').replace(/_/g, ' ') || 'Documents'}
+              </h3>
+              <span className="text-[9px] text-[#9CA3AF]">{filteredDocs.length} documents</span>
             </div>
             <div className="relative">
               <input
-                type="text"
-                placeholder="Search documents..."
-                value={searchQuery}
+                type="text" placeholder="Search..." value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 pr-3 py-2 text-[12px] border border-[#EEF0F4] rounded-lg w-[220px] focus:outline-none focus:ring-[3px] focus:ring-[#BC9C45]/15 focus:border-[#BC9C45] transition-all"
+                className="pl-7 pr-3 py-1.5 text-[10px] border border-[#EEF0F4] rounded-md w-[180px] focus:outline-none focus:ring-[2px] focus:ring-[#BC9C45]/15 focus:border-[#BC9C45]"
               />
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" className="absolute left-2.5 top-1/2 -translate-y-1/2">
-                <circle cx="11" cy="11" r="8" />
-                <path d="M21 21l-4.35-4.35" />
-              </svg>
+              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-[#9CA3AF]">🔍</span>
             </div>
           </div>
 
           {/* Column headers */}
-          <div className="grid px-5 py-2.5 border-b border-[#EEF0F4] bg-[#FAFBFC]" style={{ gridTemplateColumns: '2.2fr 100px 70px 80px 130px 80px' }}>
-            {['Document', 'Date', 'Pages', 'Size', 'Status', ''].map((h) => (
-              <div key={h} className="text-[9px] font-bold text-[#9CA3AF] uppercase tracking-[2px]">{h}</div>
+          <div className="grid px-4 py-2 bg-[#FAFBFC] border-b border-[#EEF0F4]" style={{ gridTemplateColumns: '2.8fr 70px 55px 95px 50px' }}>
+            {['Document', 'Owner', 'Day', 'Status', ''].map((h) => (
+              <div key={h} className="text-[7px] font-bold text-[#9CA3AF] uppercase tracking-[1.5px]">{h}</div>
             ))}
           </div>
 
-          {/* Document rows */}
-          <div className="overflow-y-auto" style={{ maxHeight: 420 }}>
+          {/* Rows */}
+          <div className="overflow-y-auto" style={{ maxHeight: 380 }}>
             {filteredDocs.length === 0 ? (
-              <div className="text-center py-12 text-[13px] text-[#9CA3AF]">
-                {totalDocs === 0 ? 'Documents pending upload' : 'No documents match your search'}
-              </div>
+              <div className="text-center py-12 text-[11px] text-[#9CA3AF]">No documents in this folder</div>
             ) : (
               filteredDocs.map((doc, i) => {
                 const status = getDocStatus(doc);
-                const statusCfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending;
-                const canView = status === 'verified' || status === 'pending';
-                const fc = activeFolderData ? getFolderColor(activeFolderData.name) : { color: '#0E3470' };
+                const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending;
+                const canView = ['verified', 'uploaded', 'pending'].includes(status);
 
                 return (
                   <div
                     key={doc.id}
-                    className="grid px-5 py-3.5 border-b border-[#EEF0F4] last:border-b-0 transition-all duration-200 group cursor-default"
+                    className="grid px-4 py-2.5 border-b border-[#EEF0F4] last:border-b-0 transition-all duration-150 group"
                     style={{
-                      gridTemplateColumns: '2.2fr 100px 70px 80px 130px 80px',
+                      gridTemplateColumns: '2.8fr 70px 55px 95px 50px',
                       borderLeft: '3px solid transparent',
-                      animation: `fadeUp 0.3s ease ${i * 0.04}s both`,
+                      animation: `fadeUp 0.25s ease ${i * 0.03}s both`,
                     }}
                     onMouseEnter={(e) => {
                       (e.currentTarget as HTMLElement).style.borderLeftColor = '#BC9C45';
@@ -280,75 +389,75 @@ export default function DataRoomTab({
                       (e.currentTarget as HTMLElement).style.backgroundColor = '';
                     }}
                   >
-                    {/* Name */}
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div
-                        className="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center text-[12px] transition-transform duration-200 group-hover:scale-110"
-                        style={{ backgroundColor: `${fc.color}08`, border: `1px solid ${fc.color}15` }}
-                      >
-                        📄
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-[10px] shrink-0">📄</span>
+                      <div className="min-w-0">
+                        <div className={`text-[10.5px] font-semibold truncate ${canView ? 'text-[#0E3470] group-hover:text-[#1D5FB8]' : 'text-[#9CA3AF]'} transition-colors`}>
+                          {doc.name}
+                        </div>
                       </div>
-                      <span className={`text-[12.5px] font-semibold truncate transition-colors duration-200 ${
-                        canView ? 'text-[#0E3470] group-hover:text-[#1D5FB8]' : 'text-[#9CA3AF]'
-                      }`}>
-                        {doc.name}
-                      </span>
                     </div>
-
-                    {/* Date */}
-                    <div className="text-[11px] text-[#6B7280] tabular-nums flex items-center">
-                      {doc.created_at ? new Date(doc.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
-                    </div>
-
-                    {/* Pages */}
-                    <div className="text-[11px] text-[#4B5563] font-medium flex items-center">—</div>
-
-                    {/* Size */}
-                    <div className="text-[11px] text-[#6B7280] flex items-center">{formatFileSize(doc.file_size)}</div>
-
-                    {/* Status */}
+                    <span className="text-[9px] text-[#6B7280] flex items-center">—</span>
+                    <span className="text-[9px] text-[#6B7280] flex items-center">—</span>
                     <div className="flex items-center">
-                      <span
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-semibold"
-                        style={{ backgroundColor: statusCfg.bg, color: statusCfg.color, border: `1px solid ${statusCfg.color}18` }}
-                      >
-                        <span className="font-bold text-[11px]">{statusCfg.icon}</span>
-                        {statusCfg.label}
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[8px] font-semibold"
+                        style={{ backgroundColor: cfg.bg, color: cfg.color, border: `1px solid ${cfg.color}15` }}>
+                        <span className="font-bold">{cfg.icon}</span> {cfg.label}
                       </span>
                     </div>
-
-                    {/* Action */}
-                    <div className="flex items-center justify-end gap-1.5">
+                    <div className="flex items-center justify-end">
                       {canView && (
                         <button
                           onClick={() => {
                             onDocumentDownload(doc.id);
                             onViewDocument(`/api/documents/${doc.id}/download?view=true`, doc.name);
                           }}
-                          className="px-3.5 py-1.5 rounded-md text-[11px] font-semibold border border-[#0E3470]/15 text-[#0E3470] group-hover:bg-[#0E3470] group-hover:text-white transition-all duration-200"
+                          className="px-2 py-1 rounded text-[8px] font-semibold border border-[#0E3470]/12 text-[#0E3470] group-hover:bg-[#0E3470] group-hover:text-white transition-all"
                         >
                           View
                         </button>
-                      )}
-                      {doc.is_downloadable && canView && (
-                        <a
-                          href={`/api/documents/${doc.id}/download`}
-                          onClick={() => onDocumentDownload(doc.id)}
-                          className="px-2 py-1.5 rounded-md text-[11px] text-[#6B7280] hover:text-[#0E3470] transition-colors"
-                          title="Download"
-                        >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                            <polyline points="7 10 12 15 17 10" />
-                            <line x1="12" y1="15" x2="12" y2="3" />
-                          </svg>
-                        </a>
                       )}
                     </div>
                   </div>
                 );
               })
             )}
+          </div>
+          <div className="px-4 py-2 border-t border-[#EEF0F4] bg-[#FAFBFC] text-[8px] text-[#9CA3AF] flex justify-between">
+            <span>{filteredDocs.length} docs · {total} total</span>
+            <span>{now}</span>
+          </div>
+        </div>
+
+        {/* Activity panel */}
+        <div className="bg-[#FAFBFC] p-3 overflow-y-auto" style={{ maxHeight: 460 }}>
+          <div className="flex items-center gap-1.5 mb-3">
+            <div className="w-1 h-1 rounded-full bg-[#0B8A4D] live-dot" />
+            <span className="text-[8px] font-bold text-[#0E3470] uppercase tracking-[1px]">Activity</span>
+          </div>
+          {activities.length === 0 ? (
+            <p className="text-[9px] text-[#9CA3AF]">No activity yet</p>
+          ) : (
+            activities.map((a, i) => (
+              <div key={i} className="flex gap-2 py-2 border-b border-[#EEF0F4] last:border-b-0">
+                <div className="w-1 h-1 rounded-full bg-[#BC9C45] mt-1.5 shrink-0" />
+                <div>
+                  <div className="text-[9px] text-[#374151] leading-tight">{actLabels[a.action] ?? a.action}</div>
+                  <div className="text-[8px] text-[#9CA3AF] mt-0.5">{timeAgo(a.created_at)}</div>
+                </div>
+              </div>
+            ))
+          )}
+
+          {/* Missing document request */}
+          <div className="mt-4 p-3 bg-[#FDF8ED] border border-[#ECD9A0]/30 rounded-lg">
+            <div className="text-[9px] font-bold text-[#0E3470] mb-1">Missing a document?</div>
+            <div className="text-[8px] text-[#6B7280] mb-2">Request from our team and we'll source it from the seller.</div>
+            <a href="https://wa.me/19177030365?text=Hi, I need a document for the data room"
+              target="_blank" rel="noopener noreferrer"
+              className="block text-center py-1.5 rounded-md bg-[#BC9C45] text-white text-[9px] font-bold hover:opacity-90 transition-opacity">
+              Request from Team
+            </a>
           </div>
         </div>
       </div>
