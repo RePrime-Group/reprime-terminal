@@ -245,9 +245,9 @@ export default function DataRoomTab({
                   { l: 'Docs Uploaded', c: '#1D5FB8', n: statusCounts.uploaded },
                   { l: 'Docs Pending', c: '#D97706', n: statusCounts.pending },
                 ].filter((s) => s.n > 0).map((s) => (
-                  <div key={s.l} className="flex items-center gap-1">
-                    <div className="w-[5px] h-[5px] rounded-sm" style={{ backgroundColor: s.c }} />
-                    <span className="text-[8px] font-semibold text-[#6B7280]">{s.n} {s.l}</span>
+                  <div key={s.l} className="flex items-center gap-1.5">
+                    <div className="w-[6px] h-[6px] rounded-sm" style={{ backgroundColor: s.c }} />
+                    <span className="text-[11px] font-semibold text-[#6B7280]">{s.n} {s.l}</span>
                   </div>
                 ))}
               </div>
@@ -301,9 +301,9 @@ export default function DataRoomTab({
       </div>
 
       {/* 3-column layout: sidebar + table + activity */}
-      <div className="grid grid-cols-[210px_1fr_200px] gap-0 bg-white rounded-b-xl border border-[#EEF0F4] border-t-0 overflow-hidden" style={{ minHeight: 460 }}>
+      <div className="grid grid-cols-[250px_1fr] gap-0 bg-white rounded-b-xl border border-[#EEF0F4] border-t-0 overflow-hidden" style={{ minHeight: 520 }}>
         {/* Dark sidebar */}
-        <div className="shrink-0 overflow-y-auto" style={{ background: 'linear-gradient(180deg, #0A1628 0%, #091e3f 100%)', maxHeight: 460 }}>
+        <div className="shrink-0 overflow-y-auto" style={{ background: 'linear-gradient(180deg, #0A1628 0%, #091e3f 100%)', maxHeight: 520 }}>
           <div className="px-3 pt-2 pb-1 border-b border-white/[0.05]">
             <span className="text-[7px] font-bold text-[#BC9C45] uppercase tracking-[2px]">Categories</span>
           </div>
@@ -328,7 +328,7 @@ export default function DataRoomTab({
                     <span className="text-[11px] w-[18px] text-center">{folder.icon || '📁'}</span>
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-center">
-                        <span className={`text-[9px] truncate ${isActive ? 'font-bold text-white' : 'font-medium text-white/50'}`}>
+                        <span className={`text-[11px] truncate ${isActive ? 'font-bold text-white' : 'font-medium text-white/60'}`}>
                           {folder.name.replace(/^\d+_/, '').replace(/_/g, ' ')}
                         </span>
                         {fTotal > 0 && (
@@ -368,14 +368,14 @@ export default function DataRoomTab({
           </div>
 
           {/* Column headers */}
-          <div className="grid px-4 py-2 bg-[#FAFBFC] border-b border-[#EEF0F4]" style={{ gridTemplateColumns: '2.8fr 70px 55px 95px 50px' }}>
+          <div className="grid px-4 py-2 bg-[#FAFBFC] border-b border-[#EEF0F4]" style={{ gridTemplateColumns: '2.5fr 90px 65px 120px 70px' }}>
             {['Document', 'Owner', 'Day', 'Status', ''].map((h) => (
-              <div key={h} className="text-[7px] font-bold text-[#9CA3AF] uppercase tracking-[1.5px]">{h}</div>
+              <div key={h} className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-[1.5px]">{h}</div>
             ))}
           </div>
 
           {/* Rows */}
-          <div className="overflow-y-auto" style={{ maxHeight: 380 }}>
+          <div className="overflow-y-auto" style={{ maxHeight: 500 }}>
             {filteredDocs.length === 0 ? (
               <div className="text-center py-12 text-[11px] text-[#9CA3AF]">No documents in this folder</div>
             ) : (
@@ -387,9 +387,9 @@ export default function DataRoomTab({
                 return (
                   <div
                     key={doc.id}
-                    className="grid px-4 py-2.5 border-b border-[#EEF0F4] last:border-b-0 transition-all duration-150 group"
+                    className="grid px-5 py-3.5 border-b border-[#EEF0F4] last:border-b-0 transition-all duration-150 group"
                     style={{
-                      gridTemplateColumns: '2.8fr 70px 55px 95px 50px',
+                      gridTemplateColumns: '2.5fr 90px 65px 120px 70px',
                       borderLeft: '3px solid transparent',
                       animation: `fadeUp 0.25s ease ${i * 0.03}s both`,
                     }}
@@ -405,15 +405,15 @@ export default function DataRoomTab({
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="text-[10px] shrink-0">📄</span>
                       <div className="min-w-0">
-                        <div className={`text-[10.5px] font-semibold truncate ${canView ? 'text-[#0E3470] group-hover:text-[#1D5FB8]' : 'text-[#9CA3AF]'} transition-colors`}>
+                        <div className={`text-[13px] font-semibold truncate ${canView ? 'text-[#0E3470] group-hover:text-[#1D5FB8]' : 'text-[#9CA3AF]'} transition-colors`}>
                           {doc.name}
                         </div>
                       </div>
                     </div>
-                    <span className="text-[9px] text-[#6B7280] flex items-center">—</span>
-                    <span className="text-[9px] text-[#6B7280] flex items-center">—</span>
+                    <span className="text-[12px] text-[#6B7280] flex items-center">—</span>
+                    <span className="text-[12px] text-[#6B7280] flex items-center">—</span>
                     <div className="flex items-center">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[8px] font-semibold"
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-semibold"
                         style={{ backgroundColor: cfg.bg, color: cfg.color, border: `1px solid ${cfg.color}15` }}>
                         <span className="font-bold">{cfg.icon}</span> {cfg.label}
                       </span>
@@ -425,7 +425,7 @@ export default function DataRoomTab({
                             onDocumentDownload(doc.id);
                             onViewDocument(`/api/documents/${doc.id}/download?view=true`, doc.name);
                           }}
-                          className="px-2 py-1 rounded text-[8px] font-semibold border border-[#0E3470]/12 text-[#0E3470] group-hover:bg-[#0E3470] group-hover:text-white transition-all"
+                          className="px-4 py-1.5 rounded-md text-[11px] font-semibold border border-[#0E3470]/12 text-[#0E3470] group-hover:bg-[#0E3470] group-hover:text-white transition-all"
                         >
                           View
                         </button>
@@ -442,37 +442,19 @@ export default function DataRoomTab({
           </div>
         </div>
 
-        {/* Activity panel */}
-        <div className="bg-[#FAFBFC] p-3 overflow-y-auto" style={{ maxHeight: 460 }}>
-          <div className="flex items-center gap-1.5 mb-3">
-            <div className="w-1 h-1 rounded-full bg-[#0B8A4D] live-dot" />
-            <span className="text-[8px] font-bold text-[#0E3470] uppercase tracking-[1px]">Activity</span>
-          </div>
-          {activities.length === 0 ? (
-            <p className="text-[9px] text-[#9CA3AF]">No activity yet</p>
-          ) : (
-            activities.map((a, i) => (
-              <div key={i} className="flex gap-2 py-2 border-b border-[#EEF0F4] last:border-b-0">
-                <div className="w-1 h-1 rounded-full bg-[#BC9C45] mt-1.5 shrink-0" />
-                <div>
-                  <div className="text-[9px] text-[#374151] leading-tight">{actLabels[a.action] ?? a.action}</div>
-                  <div className="text-[8px] text-[#9CA3AF] mt-0.5">{timeAgo(a.created_at)}</div>
-                </div>
-              </div>
-            ))
-          )}
+      </div>
 
-          {/* Missing document request */}
-          <div className="mt-4 p-3 bg-[#FDF8ED] border border-[#ECD9A0]/30 rounded-lg">
-            <div className="text-[9px] font-bold text-[#0E3470] mb-1">Missing a document?</div>
-            <div className="text-[8px] text-[#6B7280] mb-2">Request from our team and we'll source it from the seller.</div>
-            <a href="https://wa.me/19177030365?text=Hi, I need a document for the data room"
-              target="_blank" rel="noopener noreferrer"
-              className="block text-center py-1.5 rounded-md bg-[#BC9C45] text-white text-[9px] font-bold hover:opacity-90 transition-opacity">
-              Request from Team
-            </a>
-          </div>
+      {/* Missing document request — below the table */}
+      <div className="mt-4 p-4 bg-[#FDF8ED] border border-[#ECD9A0]/30 rounded-xl flex items-center justify-between">
+        <div>
+          <div className="text-[13px] font-semibold text-[#0E3470]">Missing a document?</div>
+          <div className="text-[12px] text-[#6B7280] mt-0.5">Request from our team and we&apos;ll source it from the seller.</div>
         </div>
+        <a href="https://wa.me/19177030365?text=Hi, I need a document for the data room"
+          target="_blank" rel="noopener noreferrer"
+          className="px-5 py-2.5 rounded-lg bg-[#BC9C45] text-white text-[12px] font-bold hover:opacity-90 transition-opacity shrink-0">
+          Request from Team
+        </a>
       </div>
     </div>
   );
