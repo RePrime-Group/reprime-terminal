@@ -34,6 +34,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
   notuploaded:  { label: 'Not Uploaded',    color: '#9CA3AF', bg: '#F7F8FA', icon: '○',  rank: 1 },
   doesnotexist: { label: 'Does Not Exist',  color: '#D1D5DB', bg: '#F7F8FA', icon: '—',  rank: 0 },
   na:           { label: 'N/A',            color: '#D1D5DB', bg: '#F7F8FA', icon: '—',  rank: 0 },
+  notrequired:  { label: 'Not Required',   color: '#D1D5DB', bg: '#F7F8FA', icon: '—',  rank: 0 },
 };
 
 function getDocStatus(doc: TerminalDDDocument): string {

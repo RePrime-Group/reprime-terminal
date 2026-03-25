@@ -118,7 +118,7 @@ export interface TerminalDDDocument {
   storage_path: string | null;
   is_verified: boolean;
   is_downloadable: boolean;
-  doc_status: 'verified' | 'pending' | 'requested' | 'notrequired';
+  doc_status: 'verified' | 'uploaded' | 'pending' | 'requested' | 'notuploaded' | 'doesnotexist' | 'na' | 'notrequired';
   uploaded_by: string | null;
   created_at: string;
 }

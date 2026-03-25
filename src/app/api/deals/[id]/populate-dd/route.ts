@@ -44,13 +44,21 @@ export async function POST(
     .select('id, name')
     .eq('deal_id', id);
 
+  // Normalize folder names: "01_Marketing" → "marketing", "02_Market_Research" → "market research"
+  function normalizeFolderName(name: string): string {
+    return name.toLowerCase().replace(/^\d+_/, '').replace(/_/g, ' ').trim();
+  }
+
   const folderMap = new Map<string, string>();
-  existingFolders?.forEach(f => folderMap.set(f.name.toLowerCase(), f.id));
+  existingFolders?.forEach(f => {
+    folderMap.set(normalizeFolderName(f.name), f.id);
+    folderMap.set(f.name.toLowerCase(), f.id); // also map raw name
+  });
 
   // Create folders that don't exist
   let order = existingFolders?.length ?? 0;
   for (const folder of DD_FOLDERS) {
-    const key = folder.name.toLowerCase();
+    const key = normalizeFolderName(folder.name);
     if (!folderMap.has(key)) {
       const { data: newFolder } = await supabase
         .from('terminal_dd_folders')
