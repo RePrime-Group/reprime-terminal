@@ -55,11 +55,14 @@ export async function POST(
     folderMap.set(f.name.toLowerCase(), f.id); // also map raw name
   });
 
-  // Create folders that don't exist
+  // Only create folders if the deal has NO folders yet (first-time setup)
+  // This prevents duplicate folder creation
   let order = existingFolders?.length ?? 0;
+  const shouldCreateFolders = !existingFolders || existingFolders.length === 0;
+
   for (const folder of DD_FOLDERS) {
     const key = normalizeFolderName(folder.name);
-    if (!folderMap.has(key)) {
+    if (shouldCreateFolders && !folderMap.has(key)) {
       const { data: newFolder } = await supabase
         .from('terminal_dd_folders')
         .insert({
