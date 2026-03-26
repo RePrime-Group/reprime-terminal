@@ -55,10 +55,12 @@ const FILE_ICON: Record<string, string> = {
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+function formatFileSize(bytes: string | number | null): string {
+  const n = typeof bytes === 'string' ? parseInt(bytes) : bytes;
+  if (!n || isNaN(n)) return '—';
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function formatDate(iso: string): string {
