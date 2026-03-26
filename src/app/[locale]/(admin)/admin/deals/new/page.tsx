@@ -263,8 +263,9 @@ export default function NewDealPage() {
       if (d.source_notes) {
         setAiNotes(d.source_notes);
       }
-    } catch {
-      setAiError('Network error during extraction');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      setAiError(`Network error: ${msg}. If using large PDFs, this may be a timeout issue. Try uploading smaller files or check Vercel plan limits.`);
     } finally {
       setAiExtracting(false);
       if (aiFileRef.current) aiFileRef.current.value = '';
