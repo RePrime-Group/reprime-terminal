@@ -4,6 +4,8 @@ import { cookies } from 'next/headers';
 import JSZip from 'jszip';
 import { classifyDocuments, DD_CATEGORIES } from '@/lib/ai/classify-documents';
 
+export const maxDuration = 60; // Allow up to 60s for AI classification
+
 const MAX_ZIP_SIZE = 500 * 1024 * 1024; // 500MB
 
 export async function POST(request: NextRequest) {
@@ -95,14 +97,32 @@ export async function POST(request: NextRequest) {
   const folderMap = new Map<string, string>(); // categoryId -> folderId
   let maxOrder = existingFolders?.reduce((max, f) => Math.max(max, f.display_order), 0) ?? 0;
 
-  // Map existing folders by name similarity
+  // Normalize folder name: "01_Marketing" → "marketing"
+  function norm(n: string) { return n.toLowerCase().replace(/^\d+_/, '').replace(/_/g, ' ').trim(); }
+
+  // Map AI category IDs to existing folders by normalized name matching
   existingFolders?.forEach((f) => {
-    const lower = f.name.toLowerCase();
+    const normalized = norm(f.name);
     for (const cat of DD_CATEGORIES) {
-      if (lower.includes(cat.name.toLowerCase()) || cat.name.toLowerCase().includes(lower.replace(/^\d+_/, '').replace(/_/g, ' '))) {
+      const catNorm = cat.name.toLowerCase().replace(/[\/&]/g, ' ').replace(/\s+/g, ' ').trim();
+      if (normalized.includes(catNorm) || catNorm.includes(normalized) ||
+          normalized.replace(/\s/g, '') === catNorm.replace(/\s/g, '')) {
         folderMap.set(cat.id, f.id);
       }
     }
+    // Also map by direct ID match for common patterns
+    if (normalized.includes('marketing')) folderMap.set('marketing', f.id);
+    if (normalized.includes('market') && normalized.includes('research')) folderMap.set('market_research', f.id);
+    if (normalized.includes('legal')) folderMap.set('legal', f.id);
+    if (normalized.includes('financial')) folderMap.set('financials', f.id);
+    if (normalized.includes('lease')) folderMap.set('leases', f.id);
+    if (normalized.includes('dd') && normalized.includes('report')) folderMap.set('dd_reports', f.id);
+    if (normalized.includes('financing') || normalized.includes('lender')) folderMap.set('financing', f.id);
+    if (normalized.includes('insurance')) folderMap.set('insurance', f.id);
+    if (normalized.includes('presentation')) folderMap.set('presentations', f.id);
+    if (normalized.includes('site') && normalized.includes('visit')) folderMap.set('site_visit', f.id);
+    if (normalized.includes('investor')) folderMap.set('investor_materials', f.id);
+    if (normalized.includes('post') && normalized.includes('closing')) folderMap.set('post_closing', f.id);
   });
 
   let foldersCreated = 0;
