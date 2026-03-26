@@ -104,26 +104,26 @@ export default function InviteRegistrationPage() {
         return;
       }
 
-      const { error: insertError } = await supabase
-        .from('terminal_users')
-        .insert({
-          id: userId,
+      // Use server API to create profile (bypasses RLS + auto-confirms email)
+      const profileRes = await fetch('/api/auth/create-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
           email: validation.email,
-          full_name: fullName.trim(),
+          fullName: fullName.trim(),
           role: validation.role,
-          company_name: companyName.trim() || null,
-        });
+          companyName: companyName.trim() || null,
+          token,
+        }),
+      });
 
-      if (insertError) {
-        setError(insertError.message);
+      if (!profileRes.ok) {
+        const errData = await profileRes.json();
+        setError(errData.error || 'Failed to create profile');
         setSubmitting(false);
         return;
       }
-
-      await supabase
-        .from('terminal_invite_tokens')
-        .update({ accepted_at: new Date().toISOString() })
-        .eq('token', token);
 
       // Use window.location.href to force a full page reload so the
       // Supabase auth cookie is available when middleware runs.
