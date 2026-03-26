@@ -700,7 +700,7 @@ export default function DataRoomPage() {
                       className="bg-white rounded-xl border border-rp-gray-200 px-4 py-3 flex items-center gap-4 shadow-sm"
                     >
                       {/* File icon */}
-                      <span className="text-xl shrink-0">{fileIconFor(doc.file_type)}</span>
+                      <span className="text-xl shrink-0">{fileIconFor(doc.file_type ?? '')}</span>
 
                       {/* File info */}
                       <div className="flex-1 min-w-0">
@@ -708,7 +708,7 @@ export default function DataRoomPage() {
                           {doc.name}
                         </p>
                         <p className="text-xs text-rp-gray-400">
-                          {MIME_LABEL[doc.file_type] ?? 'File'} &middot;{' '}
+                          {MIME_LABEL[doc.file_type ?? ''] ?? 'File'} &middot;{' '}
                           {formatFileSize(doc.file_size)} &middot;{' '}
                           {formatDate(doc.created_at)}
                         </p>
