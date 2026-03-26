@@ -60,7 +60,7 @@ export default function JoinPage() {
   const [submitted, setSubmitted] = useState(false);
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #07090F 0%, #0A1628 30%, #0E3470 80%, #163D7A 100%)' }}>
+    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #07090F 0%, #0A1628 40%, #0F1A2E 70%, #07090F 100%)' }}>
       {/* Nav */}
       <nav className="flex items-center justify-between px-10 py-6">
         <div className="flex items-center gap-3">
@@ -221,6 +221,42 @@ export default function JoinPage() {
               </p>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Have a code? */}
+      <div className="max-w-[1200px] mx-auto px-10 pb-12">
+        <div className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-8 text-center">
+          <h3 className="text-[18px] font-semibold text-white mb-2">Already have an invitation code?</h3>
+          <p className="text-[13px] text-white/40 mb-5">Enter your code below to activate your membership.</p>
+          <div className="max-w-[400px] mx-auto flex gap-2">
+            <input
+              type="text"
+              placeholder="Enter invitation code"
+              id="invite-code-input"
+              className="flex-1 px-4 py-3.5 bg-white/[0.04] border border-white/[0.08] rounded-lg text-white text-[14px] placeholder:text-white/25 focus:outline-none focus:border-[#D4A843]/40 transition-colors"
+            />
+            <button
+              onClick={() => {
+                const input = document.getElementById('invite-code-input') as HTMLInputElement;
+                if (input?.value.trim()) {
+                  window.location.href = `/${locale}/invite/${input.value.trim()}`;
+                }
+              }}
+              className="px-6 py-3.5 rounded-lg bg-[#BC9C45] text-[#0E3470] text-[14px] font-bold hover:opacity-90 transition-opacity shrink-0"
+            >
+              Activate
+            </button>
+          </div>
+          <div className="mt-4">
+            <Link
+              href="/login"
+              locale={locale}
+              className="text-[12px] text-[#BC9C45] hover:text-[#D4B96A] font-medium transition-colors"
+            >
+              ← Back to Login
+            </Link>
+          </div>
         </div>
       </div>
 
