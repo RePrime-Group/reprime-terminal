@@ -11,8 +11,8 @@ import { createClient } from '@/lib/supabase/client';
 import FadeInOnScroll from '@/components/ui/FadeInOnScroll';
 import NDAModal from '@/components/portal/NDAModal';
 import DataRoomTab from '@/components/portal/DataRoomTab';
-import FinancialOverview from '@/components/portal/FinancialOverview';
-import { parseDealInputs, calculateDeal } from '@/lib/utils/deal-calculator';
+import { OverviewFinancials, DealStructureFinancials } from '@/components/portal/FinancialOverview';
+import { parseDealInputs, calculateDeal, calculateTraditionalClose } from '@/lib/utils/deal-calculator';
 import type {
   DealWithDetails,
   TerminalDDFolder,
@@ -1417,9 +1417,16 @@ export default function DealDetailClient({
     setShowExpressModal(false);
   };
 
-  // Computed financial metrics from calculation engine
+  // Computed financial metrics from calculation engine — SINGLE SOURCE OF TRUTH
   const dealInputs = useMemo(() => parseDealInputs(deal as unknown as Record<string, unknown>), [deal]);
   const computed = useMemo(() => calculateDeal(dealInputs), [dealInputs]);
+  const traditionalMetrics = useMemo(() => dealInputs.sellerFinancing ? calculateTraditionalClose(dealInputs) : null, [dealInputs]);
+  const financialProps = useMemo(() => ({
+    inputs: dealInputs,
+    metrics: computed,
+    traditional: traditionalMetrics,
+    isEstimated: !(deal as unknown as Record<string, unknown>).debt_terms_quoted,
+  }), [dealInputs, computed, traditionalMetrics, deal]);
 
   // DD progress calculation
   const totalDocs = deal.dd_folders.reduce(
@@ -1902,49 +1909,19 @@ export default function DealDetailClient({
                 </FadeInOnScroll>
               )}
 
-              {/* Financing Summary */}
+              {/* Capital Stack + Return Comparison + Cash Flow Summary */}
               <FadeInOnScroll delay={0.2}>
-                <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 rp-card-shadow">
-                  <h3 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#0E3470] mb-4">
-                    Financing Summary
-                  </h3>
-                  <div className="space-y-0">
-                    {[
-                      { label: 'Loan Estimate', value: formatPrice(deal.loan_estimate), color: '' },
-                      {
-                        label: 'Seller Financing',
-                        value: deal.seller_financing ? 'Yes' : 'No',
-                        color: deal.seller_financing ? 'text-[#0B8A4D]' : 'text-[#9CA3AF]',
-                      },
-                      { label: 'Loan Fee', value: deal.loan_fee, color: '' },
-                      { label: 'Equity Required', value: formatPrice(deal.equity_required), color: '' },
-                    ].map((row) => (
-                      <div
-                        key={row.label}
-                        className="flex justify-between py-2.5 border-b border-[#EEF0F4] last:border-b-0"
-                      >
-                        <span className="data-label">
-                          {row.label}
-                        </span>
-                        <span className={`text-sm font-semibold ${row.color || 'text-[#0E3470]'}`}>
-                          {row.value ?? '--'}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {deal.special_terms && deal.special_terms !== 'None' && (
-                    <div className="mt-4 bg-[#FDF8ED] border-l-4 border-[#BC9C45] p-4 rounded-r-lg">
-                      <div className="text-[11px] font-semibold text-[#BC9C45] uppercase tracking-wider mb-1">
-                        Special Terms
-                      </div>
-                      <p className="text-sm text-[#4B5563]">
-                        {deal.special_terms}
-                      </p>
-                    </div>
-                  )}
-                </div>
+                <OverviewFinancials {...financialProps} />
               </FadeInOnScroll>
+
+              {deal.special_terms && deal.special_terms !== 'None' && (
+                <FadeInOnScroll delay={0.25}>
+                  <div className="bg-[#FDF8ED] border-l-4 border-[#BC9C45] p-4 rounded-r-lg">
+                    <div className="text-[11px] font-semibold text-[#BC9C45] uppercase tracking-wider mb-1">Special Terms</div>
+                    <p className="text-sm text-[#4B5563]">{deal.special_terms}</p>
+                  </div>
+                </FadeInOnScroll>
+              )}
 
               {/* Market Context - with emoji icons */}
               <FadeInOnScroll delay={0.3}>
@@ -2194,8 +2171,8 @@ export default function DealDetailClient({
           style={{ display: activeTab === 'deal-structure' ? 'block' : 'none' }}
         >
           <div className="mt-8 px-8 pb-10">
-            {/* Financial Overview — Capital Stack, Waterfall, Financing, Comparison, Fees */}
-            <FinancialOverview deal={deal} />
+            {/* Full Financial Detail — Capital Stack, Waterfall, Financing, Comparison, Fees */}
+            <DealStructureFinancials {...financialProps} />
 
             <div className="mt-8" />
 
