@@ -60,7 +60,10 @@ export const ACCEPTED_DOC_TYPES = [
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'application/zip',
+  'application/x-zip-compressed',
+  'application/x-zip',
+  'application/octet-stream',
 ];
 export const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
-export const MAX_DOC_SIZE = 50 * 1024 * 1024; // 50MB
+export const MAX_DOC_SIZE = 1024 * 1024 * 1024; // 1GB — no limit for DD uploads
 export const MAX_IMAGE_WIDTH = 1600;

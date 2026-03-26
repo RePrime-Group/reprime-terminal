@@ -244,13 +244,11 @@ export default function DataRoomPage() {
 
     setUploadError('');
 
-    if (!ACCEPTED_DOC_TYPES.includes(file.type)) {
-      setUploadError(`Unsupported file type. Accepted: PDF, XLSX, DOCX, ZIP.`);
-      return;
-    }
-
-    if (file.size > MAX_DOC_SIZE) {
-      setUploadError(`File exceeds the 50 MB limit (${formatFileSize(file.size)}).`);
+    // Check by MIME type OR file extension
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+    const acceptedExtensions = ['pdf', 'xlsx', 'xls', 'docx', 'doc', 'zip', 'csv', 'txt', 'jpg', 'jpeg', 'png'];
+    if (!ACCEPTED_DOC_TYPES.includes(file.type) && !acceptedExtensions.includes(ext)) {
+      setUploadError(`Unsupported file type (${file.type || ext}). Accepted: PDF, XLSX, DOCX, ZIP, images.`);
       return;
     }
 
@@ -271,7 +269,10 @@ export default function DataRoomPage() {
     clearInterval(progressInterval);
 
     if (storageError) {
-      setUploadError(`Upload failed: ${storageError.message}`);
+      const sizeMsg = file.size > 50 * 1024 * 1024
+        ? ` Your file is ${(file.size / 1024 / 1024).toFixed(0)}MB. Try splitting large ZIPs into smaller parts, or upload files individually.`
+        : '';
+      setUploadError(`Upload failed: ${storageError.message}${sizeMsg}`);
       setUploading(false);
       setUploadProgress(0);
       return;
