@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
 
   contentBlocks.push({
     type: 'text',
-    text: `You are a commercial real estate underwriter. I've uploaded ${files.length} document(s):
+    text: `You are a commercial real estate underwriter. I've uploaded ${storagePaths.length} document(s):
 ${fileDescriptions.join('\n')}
 
 These may include an Offering Memorandum (OM) and/or a Letter of Intent (LOI).
