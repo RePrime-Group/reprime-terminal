@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import PipelineView from '@/components/admin/PipelineView';
+import DealSubNav from '@/components/admin/DealSubNav';
 
 export const metadata = { title: 'Pipeline — RePrime Terminal Admin' };
 
@@ -23,5 +24,10 @@ export default async function PipelinePage({
 
   if (!deal) redirect(`/${locale}/admin/deals`);
 
-  return <PipelineView dealId={id} dealName={deal.name} locale={locale} />;
+  return (
+    <div>
+      <DealSubNav dealId={id} dealName={deal.name} locale={locale} />
+      <PipelineView dealId={id} dealName={deal.name} locale={locale} />
+    </div>
+  );
 }

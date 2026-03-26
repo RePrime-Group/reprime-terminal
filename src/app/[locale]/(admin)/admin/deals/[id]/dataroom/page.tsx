@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import { ACCEPTED_DOC_TYPES, MAX_DOC_SIZE } from '@/lib/constants';
+import DealSubNav from '@/components/admin/DealSubNav';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -444,27 +445,12 @@ export default function DataRoomPage() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <button
-          onClick={() => router.push(`/${locale}/admin/deals/${dealId}`)}
-          className="text-rp-gray-400 hover:text-rp-navy transition-colors p-1 rounded-lg hover:bg-rp-gray-100"
-          aria-label="Back to deal"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h1 className="text-[22px] font-bold text-rp-navy">
-          Data Room &mdash; {dealName}
-        </h1>
+      {/* Navigation tabs */}
+      <DealSubNav dealId={dealId} dealName={dealName || 'Deal'} locale={locale} />
+
+      {/* Populate button */}
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-[18px] font-semibold text-rp-navy">Documents & Folders</h2>
         <button
           onClick={async () => {
             const res = await fetch(`/api/deals/${dealId}/populate-dd`, {
@@ -487,6 +473,7 @@ export default function DataRoomPage() {
       </div>
 
       {/* Two-panel layout */}
+
       <div className="flex gap-6">
         {/* ─── Left Panel: Folders ─────────────────────────────────────── */}
         <div className="w-72 shrink-0">

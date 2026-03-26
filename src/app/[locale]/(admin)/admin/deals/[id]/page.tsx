@@ -7,6 +7,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Badge from '@/components/ui/Badge';
 import Modal from '@/components/ui/Modal';
+import DealSubNav from '@/components/admin/DealSubNav';
 import { createClient } from '@/lib/supabase/client';
 import {
   DEAL_STATUS_LABELS,
@@ -706,82 +707,7 @@ export default function EditDealPage() {
     <div className="max-w-4xl font-[family-name:var(--font-poppins)]">
       {/* Header */}
       <div className="mb-8">
-        <Link
-          href={`/${locale}/admin/deals`}
-          className="inline-flex items-center gap-1.5 text-sm text-rp-gray-500 hover:text-rp-navy transition-colors mb-3"
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M10 12L6 8l4-4" />
-          </svg>
-          Deals
-        </Link>
-        <div className="flex items-center justify-between">
-          <h1 className="text-[24px] font-bold text-rp-navy">Edit Deal</h1>
-          <div className="flex items-center gap-2">
-            <a
-              href={`/${locale}/admin/deals/${dealId}/preview`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-[#0E3470] border-2 border-[#0E3470] rounded-lg hover:bg-[#0E3470] hover:text-white transition-all"
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
-              Preview as Investor
-            </a>
-            <Link
-              href={`/${locale}/admin/deals/${dealId}/pipeline`}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-[#0E3470] bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] rounded-lg shadow-[0_2px_8px_rgba(188,156,69,0.2)] hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(188,156,69,0.25)] transition-all"
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="5" cy="6" r="2" />
-                <circle cx="12" cy="6" r="2" />
-                <circle cx="19" cy="18" r="2" />
-                <path d="M5 8v2a4 4 0 004 4h2" />
-                <path d="M12 8v2a4 4 0 004 4h1" />
-                <line x1="7" y1="14" x2="17" y2="14" />
-              </svg>
-              Pipeline
-            </Link>
-            <Link
-              href={`/${locale}/admin/deals/${dealId}/dataroom`}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-[#0E3470] rounded-lg hover:-translate-y-0.5 hover:shadow-lg transition-all"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
-              </svg>
-              Data Room
-            </Link>
-          </div>
-        </div>
+        <DealSubNav dealId={dealId} dealName={deal?.name ?? 'Deal'} locale={locale} />
 
         {/* Pipeline Stage Indicator */}
         {(() => {
