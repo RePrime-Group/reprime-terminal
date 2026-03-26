@@ -8,6 +8,7 @@ import Input from '@/components/ui/Input';
 import Badge from '@/components/ui/Badge';
 import Modal from '@/components/ui/Modal';
 import DealSubNav from '@/components/admin/DealSubNav';
+import { parseDealInputs, calculateDeal } from '@/lib/utils/deal-calculator';
 import { createClient } from '@/lib/supabase/client';
 import {
   DEAL_STATUS_LABELS,
@@ -64,6 +65,24 @@ interface DealFormData {
   asset_mgmt_fee: string;
   gp_carry: string;
   loan_fee: string;
+  // Senior Debt
+  ltv: string;
+  interest_rate: string;
+  amortization_years: string;
+  loan_fee_points: string;
+  io_period_months: string;
+  // Mezzanine
+  mezz_percent: string;
+  mezz_rate: string;
+  mezz_term_months: string;
+  // Credits
+  seller_credit: string;
+  pref_return: string;
+  // Exit
+  hold_period_years: string;
+  exit_cap_rate: string;
+  debt_terms_quoted: boolean;
+  // Asset mgmt fee already exists as asset_mgmt_fee
   dd_deadline: string;
   close_deadline: string;
   extension_deadline: string;
@@ -170,6 +189,19 @@ function dealToForm(deal: TerminalDeal): DealFormData {
     asset_mgmt_fee: deal.asset_mgmt_fee,
     gp_carry: deal.gp_carry,
     loan_fee: deal.loan_fee,
+    ltv: deal.ltv ?? '75',
+    interest_rate: deal.interest_rate ?? '6.00',
+    amortization_years: deal.amortization_years ?? '30',
+    loan_fee_points: deal.loan_fee_points ?? '1',
+    io_period_months: deal.io_period_months ?? '0',
+    mezz_percent: deal.mezz_percent ?? '15',
+    mezz_rate: deal.mezz_rate ?? '5.00',
+    mezz_term_months: deal.mezz_term_months ?? '60',
+    seller_credit: deal.seller_credit ?? '0',
+    pref_return: deal.pref_return ?? '8',
+    hold_period_years: deal.hold_period_years ?? '5',
+    exit_cap_rate: deal.exit_cap_rate ?? '',
+    debt_terms_quoted: deal.debt_terms_quoted ?? false,
     dd_deadline: toDatetimeLocal(deal.dd_deadline),
     close_deadline: toDatetimeLocal(deal.close_deadline),
     extension_deadline: toDatetimeLocal(deal.extension_deadline),
@@ -427,6 +459,19 @@ export default function EditDealPage() {
         asset_mgmt_fee: form.asset_mgmt_fee,
         gp_carry: form.gp_carry,
         loan_fee: form.loan_fee,
+        ltv: form.ltv || '75',
+        interest_rate: form.interest_rate || '6.00',
+        amortization_years: form.amortization_years || '30',
+        loan_fee_points: form.loan_fee_points || '1',
+        io_period_months: form.io_period_months || '0',
+        mezz_percent: form.mezz_percent || '15',
+        mezz_rate: form.mezz_rate || '5.00',
+        mezz_term_months: form.mezz_term_months || '60',
+        seller_credit: form.seller_credit || '0',
+        pref_return: form.pref_return || '8',
+        hold_period_years: form.hold_period_years || '5',
+        exit_cap_rate: form.exit_cap_rate || null,
+        debt_terms_quoted: form.debt_terms_quoted,
         dd_deadline: form.dd_deadline || null,
         close_deadline: form.close_deadline || null,
         extension_deadline: form.extension_deadline || null,
@@ -898,63 +943,139 @@ export default function EditDealPage() {
         </div>
       </div>
 
-      {/* Section 2: Financial Metrics */}
-      <div className="bg-white rounded-2xl border border-rp-gray-200 p-6 mb-6">
-        <h2 className="text-[16px] font-semibold text-rp-navy mb-5">
-          Financial Metrics
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Input
-            label="Purchase Price *"
-            value={form.purchase_price}
-            onChange={(e) => updateField('purchase_price', e.target.value)}
-            error={errors.purchase_price}
-            placeholder="e.g. 12,500,000"
-          />
-          <Input
-            label="NOI"
-            value={form.noi}
-            onChange={(e) => updateField('noi', e.target.value)}
-            placeholder="e.g. 850,000"
-          />
-          <Input
-            label="Cap Rate"
-            value={form.cap_rate}
-            onChange={(e) => updateField('cap_rate', e.target.value)}
-            placeholder="e.g. 6.8%"
-          />
-          <Input
-            label="IRR"
-            value={form.irr}
-            onChange={(e) => updateField('irr', e.target.value)}
-            placeholder="e.g. 18%"
-          />
-          <Input
-            label="CoC"
-            value={form.coc}
-            onChange={(e) => updateField('coc', e.target.value)}
-            placeholder="e.g. 8.5%"
-          />
-          <Input
-            label="DSCR"
-            value={form.dscr}
-            onChange={(e) => updateField('dscr', e.target.value)}
-            placeholder="e.g. 1.25"
-          />
-          <Input
-            label="Equity Required"
-            value={form.equity_required}
-            onChange={(e) => updateField('equity_required', e.target.value)}
-            placeholder="e.g. 4,500,000"
-          />
-          <Input
-            label="Loan Estimate"
-            value={form.loan_estimate}
-            onChange={(e) => updateField('loan_estimate', e.target.value)}
-            placeholder="e.g. 8,000,000"
-          />
-        </div>
-      </div>
+      {/* Section 2: Financial Inputs + Computed Metrics */}
+      {(() => {
+        const inputs = parseDealInputs({
+          purchase_price: form.purchase_price, noi: form.noi, ltv: form.ltv,
+          interest_rate: form.interest_rate, amortization_years: form.amortization_years,
+          loan_fee_points: form.loan_fee_points, io_period_months: form.io_period_months,
+          seller_financing: form.seller_financing, mezz_percent: form.mezz_percent,
+          mezz_rate: form.mezz_rate, mezz_term_months: form.mezz_term_months,
+          seller_credit: form.seller_credit, assignment_fee: form.assignment_fee,
+          acq_fee: form.acq_fee, asset_mgmt_fee: form.asset_mgmt_fee,
+          gp_carry: form.gp_carry, pref_return: form.pref_return,
+          hold_period_years: form.hold_period_years, exit_cap_rate: form.exit_cap_rate,
+        });
+        const m = calculateDeal(inputs);
+        const fmt = (n: number) => '$' + Math.round(n).toLocaleString();
+        const pct = (n: number, d = 1) => n.toFixed(d) + '%';
+
+        return (<>
+          {/* Core Inputs */}
+          <div className="bg-white rounded-2xl border border-rp-gray-200 p-6 mb-6">
+            <h2 className="text-[16px] font-semibold text-rp-navy mb-5">Property Financials</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input label="Purchase Price *" value={form.purchase_price} onChange={(e) => updateField('purchase_price', e.target.value)} error={errors.purchase_price} placeholder="e.g. 12500000" />
+              <Input label="NOI *" value={form.noi} onChange={(e) => updateField('noi', e.target.value)} placeholder="e.g. 850000" />
+            </div>
+          </div>
+
+          {/* Senior Debt */}
+          <div className="bg-white rounded-2xl border border-rp-gray-200 p-6 mb-6">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-[16px] font-semibold text-rp-navy">Senior Debt Parameters</h2>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={form.debt_terms_quoted} onChange={(e) => updateField('debt_terms_quoted', e.target.checked)} className="w-4 h-4 rounded border-rp-gray-300 text-rp-gold focus:ring-rp-gold" />
+                <span className="text-[12px] font-medium text-rp-gray-500">Actual lender quote received</span>
+              </label>
+            </div>
+            {!form.debt_terms_quoted && (
+              <div className="mb-4 p-3 bg-rp-amber-light border border-rp-amber-border rounded-lg text-[12px] text-rp-amber font-medium">
+                ⚠ Using estimated defaults — update when lender quote is received
+              </div>
+            )}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <Input label="LTV %" value={form.ltv} onChange={(e) => updateField('ltv', e.target.value)} placeholder="75" />
+              <Input label="Interest Rate %" value={form.interest_rate} onChange={(e) => updateField('interest_rate', e.target.value)} placeholder="6.00" />
+              <Input label="Amortization (yrs)" value={form.amortization_years} onChange={(e) => updateField('amortization_years', e.target.value)} placeholder="30" />
+              <Input label="Loan Fee (pts)" value={form.loan_fee_points} onChange={(e) => updateField('loan_fee_points', e.target.value)} placeholder="1" />
+              <Input label="IO Period (mo)" value={form.io_period_months} onChange={(e) => updateField('io_period_months', e.target.value)} placeholder="0" />
+            </div>
+          </div>
+
+          {/* Mezzanine */}
+          <div className="bg-white rounded-2xl border border-rp-gray-200 p-6 mb-6">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-[16px] font-semibold text-rp-navy">Seller Mezzanine</h2>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={form.seller_financing} onChange={(e) => updateField('seller_financing', e.target.checked)} className="w-4 h-4 rounded border-rp-gray-300 text-rp-gold focus:ring-rp-gold" />
+                <span className="text-[12px] font-medium text-rp-gray-500">Seller financing available</span>
+              </label>
+            </div>
+            {form.seller_financing && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Input label="Mezz % of Purchase" value={form.mezz_percent} onChange={(e) => updateField('mezz_percent', e.target.value)} placeholder="15" />
+                <Input label="Mezz Rate %" value={form.mezz_rate} onChange={(e) => updateField('mezz_rate', e.target.value)} placeholder="5.00" />
+                <Input label="Mezz Term (months)" value={form.mezz_term_months} onChange={(e) => updateField('mezz_term_months', e.target.value)} placeholder="60" />
+              </div>
+            )}
+            {!form.seller_financing && <p className="text-[13px] text-rp-gray-400">No seller financing for this deal.</p>}
+          </div>
+
+          {/* Credits & Exit */}
+          <div className="bg-white rounded-2xl border border-rp-gray-200 p-6 mb-6">
+            <h2 className="text-[16px] font-semibold text-rp-navy mb-5">Credits & Exit Assumptions</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Input label="Seller Credit ($)" value={form.seller_credit} onChange={(e) => updateField('seller_credit', e.target.value)} placeholder="0" />
+              <Input label="Hold Period (yrs)" value={form.hold_period_years} onChange={(e) => updateField('hold_period_years', e.target.value)} placeholder="5" />
+              <Input label="Exit Cap Rate %" value={form.exit_cap_rate} onChange={(e) => updateField('exit_cap_rate', e.target.value)} placeholder="Same as entry" />
+              <Input label="Pref Return %" value={form.pref_return} onChange={(e) => updateField('pref_return', e.target.value)} placeholder="8" />
+            </div>
+          </div>
+
+          {/* LIVE COMPUTED METRICS */}
+          <div className="bg-gradient-to-br from-[#07090F] via-[#0A1628] to-[#0E3470] rounded-2xl p-6 mb-6 text-white">
+            <div className="flex items-center gap-2 mb-5">
+              <span className="text-[18px]">⚡</span>
+              <h2 className="text-[16px] font-semibold">Live Computed Metrics</h2>
+              <span className="text-[11px] text-white/40 ml-2">Auto-calculated from inputs above</span>
+            </div>
+
+            {m.warnings.length > 0 && (
+              <div className="mb-4 space-y-1">
+                {m.warnings.map((w, i) => (
+                  <div key={i} className="flex items-center gap-2 p-2 bg-[#DC2626]/15 rounded-lg text-[11px] text-[#FF6B6B] font-medium">⚠ {w}</div>
+                ))}
+              </div>
+            )}
+
+            <div className="grid grid-cols-4 gap-3 mb-4">
+              {[
+                { label: 'Cap Rate', value: pct(m.capRate), color: '#BC9C45' },
+                { label: 'Cash-on-Cash', value: pct(m.cocReturn), color: m.cocReturn >= 0 ? '#0B8A4D' : '#DC2626' },
+                { label: 'IRR', value: m.irr !== null ? pct(m.irr) : 'N/A', color: '#0B8A4D' },
+                { label: 'Equity Multiple', value: m.equityMultiple.toFixed(2) + 'x', color: '#BC9C45' },
+              ].map((metric) => (
+                <div key={metric.label} className="bg-white/[0.06] rounded-xl p-3.5 border border-white/[0.06]">
+                  <div className="text-[9px] font-bold text-white/30 uppercase tracking-[2px]">{metric.label}</div>
+                  <div className="text-[22px] font-bold tabular-nums mt-1" style={{ color: metric.color }}>{metric.value}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              {[
+                { label: 'Loan Amount', value: fmt(m.loanAmount) },
+                { label: 'Annual Senior DS', value: fmt(m.annualSeniorDS) },
+                { label: 'Lender DSCR', value: m.lenderDSCR.toFixed(2) + 'x' },
+                ...(form.seller_financing ? [
+                  { label: 'Mezz Amount', value: fmt(m.mezzAmount) },
+                  { label: 'Annual Mezz IO', value: fmt(m.annualMezzPayment) },
+                  { label: 'Combined DSCR', value: m.combinedDSCR.toFixed(2) + 'x' },
+                ] : []),
+                { label: 'Net Equity (Check Size)', value: fmt(m.netEquity) },
+                { label: 'Distributable CF', value: fmt(m.distributableCashFlow) },
+                { label: 'Total Leverage', value: pct(m.totalLeverage) },
+              ].map((row) => (
+                <div key={row.label} className="flex justify-between items-center py-2 px-3 bg-white/[0.03] rounded-lg">
+                  <span className="text-[11px] text-white/40">{row.label}</span>
+                  <span className="text-[13px] font-semibold text-white tabular-nums">{row.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>);
+      })()}
 
       {/* Section 3: Deal Terms */}
       <div className="bg-white rounded-2xl border border-rp-gray-200 p-6 mb-6">
