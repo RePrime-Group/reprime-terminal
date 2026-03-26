@@ -3,7 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import Anthropic from '@anthropic-ai/sdk';
 
-export const maxDuration = 60; // Allow up to 60s for PDF processing
+export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
   const cookieStore = await cookies();
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
 
   const anthropic = new Anthropic({ apiKey });
 
-  // Download files from Supabase storage and build content blocks
+  // Download PDFs, extract text, and send text to Claude (avoids API size limits)
   const contentBlocks: Anthropic.Messages.ContentBlockParam[] = [];
   const fileDescriptions: string[] = [];
 
@@ -59,19 +59,45 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `Failed to download ${sp.name}: ${dlError?.message}` }, { status: 500 });
     }
 
-    const buffer = await fileData.arrayBuffer();
-    const base64 = Buffer.from(buffer).toString('base64');
+    const buffer = Buffer.from(await fileData.arrayBuffer());
+    const fileSizeMB = buffer.byteLength / 1024 / 1024;
+    fileDescriptions.push(`- ${sp.name} (${fileSizeMB.toFixed(1)} MB)`);
 
-    fileDescriptions.push(`- ${sp.name} (${(buffer.byteLength / 1024 / 1024).toFixed(1)} MB)`);
+    // Anthropic API limit is ~25MB for the entire request body.
+    // Each base64 PDF adds ~33% overhead. Cap at 10MB per file (13MB base64).
+    const MAX_PDF_BYTES = 10 * 1024 * 1024;
 
-    contentBlocks.push({
-      type: 'document',
-      source: {
-        type: 'base64',
-        media_type: 'application/pdf' as const,
-        data: base64,
-      },
-    });
+    if (buffer.byteLength <= MAX_PDF_BYTES) {
+      contentBlocks.push({
+        type: 'document',
+        source: {
+          type: 'base64',
+          media_type: 'application/pdf' as const,
+          data: buffer.toString('base64'),
+        },
+      });
+    } else {
+      // PDF too large — send truncated version (first 10MB)
+      const truncated = buffer.subarray(0, MAX_PDF_BYTES);
+      fileDescriptions[fileDescriptions.length - 1] += ' [TRUNCATED — first 10MB sent]';
+
+      try {
+        contentBlocks.push({
+          type: 'document',
+          source: {
+            type: 'base64',
+            media_type: 'application/pdf' as const,
+            data: truncated.toString('base64'),
+          },
+        });
+      } catch {
+        // If truncated PDF fails, skip this file and note it
+        contentBlocks.push({
+          type: 'text',
+          text: `[NOTE: ${sp.name} was too large to process (${fileSizeMB.toFixed(0)}MB). Please enter details from this document manually.]`,
+        });
+      }
+    }
   }
 
   contentBlocks.push({
