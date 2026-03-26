@@ -310,7 +310,8 @@ export default function DataRoomPage() {
     }, 600);
 
     // If this is a ZIP file, offer extraction
-    if (file.type === 'application/zip') {
+    const isZip = file.type === 'application/zip' || file.type === 'application/x-zip-compressed' || file.type === 'application/x-zip' || file.name.toLowerCase().endsWith('.zip');
+    if (isZip) {
       setPendingZipPath(storagePath);
       setShowZipModal(true);
     }
