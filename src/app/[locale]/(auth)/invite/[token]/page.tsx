@@ -125,8 +125,19 @@ export default function InviteRegistrationPage() {
         return;
       }
 
-      // Use window.location.href to force a full page reload so the
-      // Supabase auth cookie is available when middleware runs.
+      // Sign in immediately (profile API auto-confirmed the email)
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: validation.email,
+        password,
+      });
+
+      if (signInError) {
+        // If sign-in fails, send to login page with success message
+        window.location.href = `/${locale}/login`;
+        return;
+      }
+
+      // Redirect to the appropriate dashboard
       if (validation.role === 'employee') {
         window.location.href = `/${locale}/admin`;
       } else {
