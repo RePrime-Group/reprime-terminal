@@ -183,15 +183,29 @@ export default function NewDealPage() {
     setAiError(null);
     setAiNotes(null);
 
-    const formData = new FormData();
-    for (let i = 0; i < files.length; i++) {
-      formData.append('files', files[i]);
-    }
-
     try {
+      // Upload files to Supabase storage first (avoids Vercel body size limit)
+      const supabase = createClient();
+      const storagePaths: { name: string; path: string }[] = [];
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const path = `_temp/extract/${Date.now()}-${i}-${file.name}`;
+        const { error: uploadErr } = await supabase.storage
+          .from('terminal-dd-documents')
+          .upload(path, file);
+
+        if (uploadErr) {
+          setAiError(`Upload failed for ${file.name}: ${uploadErr.message}`);
+          return;
+        }
+        storagePaths.push({ name: file.name, path });
+      }
+
       const res = await fetch('/api/deals/extract-from-docs', {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ storagePaths }),
       });
 
       const result = await res.json();

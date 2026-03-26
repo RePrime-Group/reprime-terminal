@@ -31,11 +31,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const formData = await request.formData();
-  const files = formData.getAll('files') as File[];
+  const body = await request.json();
+  const { storagePaths } = body;
 
-  if (files.length === 0) {
-    return NextResponse.json({ error: 'No files uploaded' }, { status: 400 });
+  // Support both: direct file upload (small files) and storage paths (large files)
+  if (!storagePaths || !Array.isArray(storagePaths) || storagePaths.length === 0) {
+    return NextResponse.json({ error: 'No files provided. Send storagePaths array.' }, { status: 400 });
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -45,22 +46,29 @@ export async function POST(request: NextRequest) {
 
   const anthropic = new Anthropic({ apiKey });
 
-  // Build content blocks with PDFs
+  // Download files from Supabase storage and build content blocks
   const contentBlocks: Anthropic.Messages.ContentBlockParam[] = [];
-
   const fileDescriptions: string[] = [];
-  for (const file of files) {
-    const buffer = await file.arrayBuffer();
-    const base64 = Buffer.from(buffer).toString('base64');
-    const mediaType = file.type === 'application/pdf' ? 'application/pdf' as const : 'application/pdf' as const;
 
-    fileDescriptions.push(`- ${file.name} (${(file.size / 1024 / 1024).toFixed(1)} MB)`);
+  for (const sp of storagePaths) {
+    const { data: fileData, error: dlError } = await supabase.storage
+      .from('terminal-dd-documents')
+      .download(sp.path);
+
+    if (dlError || !fileData) {
+      return NextResponse.json({ error: `Failed to download ${sp.name}: ${dlError?.message}` }, { status: 500 });
+    }
+
+    const buffer = await fileData.arrayBuffer();
+    const base64 = Buffer.from(buffer).toString('base64');
+
+    fileDescriptions.push(`- ${sp.name} (${(buffer.byteLength / 1024 / 1024).toFixed(1)} MB)`);
 
     contentBlocks.push({
       type: 'document',
       source: {
         type: 'base64',
-        media_type: mediaType,
+        media_type: 'application/pdf' as const,
         data: base64,
       },
     });
