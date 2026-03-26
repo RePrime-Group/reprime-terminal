@@ -76,6 +76,23 @@ export interface TerminalDeal {
   deposit_amount: string | null;
   deposit_held_by: string | null;
   om_storage_path: string | null;
+  // Senior Debt
+  ltv: string | null;
+  interest_rate: string | null;
+  amortization_years: string | null;
+  loan_fee_points: string | null;
+  io_period_months: string | null;
+  // Mezzanine
+  mezz_percent: string | null;
+  mezz_rate: string | null;
+  mezz_term_months: string | null;
+  // Credits & Fees
+  seller_credit: string | null;
+  pref_return: string | null;
+  // Hold/Exit
+  hold_period_years: string | null;
+  exit_cap_rate: string | null;
+  debt_terms_quoted: boolean;
   status: DealStatus;
   neighborhood: string | null;
   metro_population: string | null;
