@@ -137,11 +137,11 @@ export default function InviteRegistrationPage() {
         return;
       }
 
-      // Redirect to the appropriate dashboard
+      // Redirect: employees to admin, investors to welcome page
       if (validation.role === 'employee') {
         window.location.href = `/${locale}/admin`;
       } else {
-        window.location.href = `/${locale}/portal`;
+        window.location.href = `/${locale}/welcome`;
       }
     } catch {
       setError('An unexpected error occurred. Please try again.');

@@ -1,25 +1,66 @@
+'use client';
+
+import { useState } from 'react';
 import { Link } from '@/i18n/navigation';
+import { useParams } from 'next/navigation';
 
-export const metadata = { title: 'Join RePrime Terminal — Institutional CRE Investment Access' };
-
-const features = [
-  { icon: '🏢', title: 'Institutional Deals', desc: 'Access off-market CRE opportunities with institutional-grade underwriting.' },
-  { icon: '📊', title: 'Full Data Room', desc: 'Complete due diligence materials — financials, legal, environmental, property condition.' },
-  { icon: '⚡', title: 'Real-Time Pipeline', desc: 'Track deal progress from LOI through closing with live task completion.' },
-  { icon: '📈', title: 'Financial Modeling', desc: 'Interactive tools to model returns with custom assumptions.' },
-  { icon: '🔒', title: 'NDA-Protected', desc: 'Confidential access with watermarked documents and audit trails.' },
-  { icon: '📅', title: 'Direct Access', desc: 'Schedule meetings directly with our acquisition team.' },
+const tiers = [
+  {
+    name: 'Standard',
+    price: '$30,000',
+    annual: '$30,000/yr',
+    lane: 'Standard Lane',
+    color: '#0E3470',
+    features: [
+      'Access to all published deals',
+      'Full due diligence data room',
+      'Financial modeling tools',
+      'Meeting scheduling with team',
+      'Market intelligence dashboard',
+    ],
+  },
+  {
+    name: 'Accelerated',
+    price: '$75,000',
+    annual: '$75,000/yr',
+    lane: 'Accelerated Lane',
+    color: '#BC9C45',
+    featured: true,
+    features: [
+      'Everything in Standard',
+      'Priority deal access (48hr head start)',
+      'Non-refundable deposit deals',
+      'Direct line to acquisition team',
+      'Custom financial modeling',
+      'Quarterly portfolio reviews',
+    ],
+  },
+  {
+    name: 'Institutional',
+    price: '$100,000',
+    annual: '$100,000/yr',
+    lane: 'Rapid Lane',
+    color: '#0B8A4D',
+    features: [
+      'Everything in Accelerated',
+      '14-21 day rapid close deals',
+      'Co-investment opportunities',
+      'Board-level market briefings',
+      'White-glove concierge service',
+      'First look at all acquisitions',
+      'Custom deal sourcing',
+    ],
+  },
 ];
 
-export default async function JoinPage({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}) {
-  const { locale } = await params;
+export default function JoinPage() {
+  const params = useParams();
+  const locale = (params?.locale as string) || 'en';
+  const [formData, setFormData] = useState({ name: '', email: '', company: '', phone: '', message: '' });
+  const [submitted, setSubmitted] = useState(false);
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #07090F 0%, #0A1628 40%, #0E3470 100%)' }}>
+    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #07090F 0%, #0A1628 30%, #0E3470 80%, #163D7A 100%)' }}>
       {/* Nav */}
       <nav className="flex items-center justify-between px-10 py-6">
         <div className="flex items-center gap-3">
@@ -39,92 +80,147 @@ export default async function JoinPage({
       </nav>
 
       {/* Hero */}
-      <div className="max-w-[1100px] mx-auto px-10 pt-16 pb-20">
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] mb-6">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#0B8A4D] live-dot" />
-            <span className="text-[10px] font-medium tracking-[2px] text-[#D4A843] uppercase">Now Accepting Qualified Members</span>
-          </div>
-          <h1 className="font-[family-name:var(--font-playfair)] text-[52px] font-semibold text-white leading-[1.1] tracking-[-0.02em] mb-5">
-            Institutional-Grade CRE<br />Investment Access
-          </h1>
-          <p className="text-[16px] text-white/40 max-w-[600px] mx-auto leading-relaxed font-light">
-            The RePrime Terminal connects qualified investors with off-market commercial real
-            estate opportunities backed by 30+ years of institutional diligence.
-          </p>
+      <div className="max-w-[1200px] mx-auto px-10 pt-12 pb-8 text-center">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] mb-6">
+          <div className="w-1.5 h-1.5 rounded-full bg-[#0B8A4D] live-dot" />
+          <span className="text-[10px] font-medium tracking-[2px] text-[#D4A843] uppercase">Founding Members — Limited Positions</span>
         </div>
+        <h1 className="font-[family-name:var(--font-playfair)] text-[48px] font-semibold text-white leading-[1.1] tracking-[-0.02em] mb-5">
+          Institutional CRE Access
+        </h1>
+        <p className="text-[16px] text-white/40 max-w-[600px] mx-auto leading-relaxed font-light mb-3">
+          The RePrime Terminal connects qualified investors with off-market commercial real
+          estate opportunities backed by 30+ years of institutional diligence.
+        </p>
+        <p className="text-[14px] text-[#D4A843] font-semibold">
+          Founding members receive complimentary access through December 2027
+        </p>
+      </div>
 
-        {/* Features Grid */}
-        <div className="grid grid-cols-3 gap-5 mb-16">
-          {features.map((f, i) => (
+      {/* Pricing Tiers */}
+      <div className="max-w-[1200px] mx-auto px-10 pb-12">
+        <div className="grid grid-cols-3 gap-5">
+          {tiers.map((tier) => (
             <div
-              key={i}
-              className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-6 hover:bg-white/[0.06] hover:border-white/10 transition-all"
+              key={tier.name}
+              className={`rounded-2xl p-[1px] ${
+                tier.featured
+                  ? 'bg-gradient-to-b from-[#BC9C45] to-[#BC9C45]/20'
+                  : 'bg-white/[0.08]'
+              }`}
             >
-              <div className="text-[24px] mb-3">{f.icon}</div>
-              <h3 className="text-[14px] font-semibold text-white mb-2">{f.title}</h3>
-              <p className="text-[12px] text-white/40 leading-relaxed">{f.desc}</p>
+              <div className={`rounded-2xl p-7 h-full flex flex-col ${
+                tier.featured ? 'bg-[#0A1628]' : 'bg-white/[0.03]'
+              }`}>
+                {tier.featured && (
+                  <div className="text-center mb-4">
+                    <span className="text-[9px] font-bold tracking-[2px] text-[#D4A843] uppercase bg-[#BC9C45]/10 px-3 py-1 rounded-full">
+                      Most Popular
+                    </span>
+                  </div>
+                )}
+                <h3 className="text-[18px] font-semibold text-white mb-1">{tier.name}</h3>
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span className="text-[32px] font-bold text-white">{tier.price}</span>
+                  <span className="text-[13px] text-white/30">/year</span>
+                </div>
+                <div className="mb-5">
+                  <span className="text-[12px] font-semibold text-[#0B8A4D] bg-[#0B8A4D]/10 px-2.5 py-1 rounded-full">
+                    Complimentary for Founding Members
+                  </span>
+                </div>
+                <div className="text-[11px] text-white/30 mb-4 pb-4 border-b border-white/[0.06]">
+                  <span className="font-semibold text-white/50">{tier.lane}</span> — {
+                    tier.name === 'Standard' ? 'Access to all published deals' :
+                    tier.name === 'Accelerated' ? 'Priority access + non-refundable deposit deals' :
+                    '14-21 day rapid close + co-investment'
+                  }
+                </div>
+                <ul className="space-y-3 flex-1">
+                  {tier.features.map((f, i) => (
+                    <li key={i} className="flex items-start gap-2.5 text-[13px] text-white/60">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={tier.color} strokeWidth="2.5" className="shrink-0 mt-0.5">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           ))}
         </div>
+      </div>
 
-        {/* CTA Section */}
-        <div className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-10 text-center">
-          <h2 className="font-[family-name:var(--font-playfair)] text-[28px] font-semibold text-white mb-3">
-            Request Access
+      {/* Founding Member Banner */}
+      <div className="max-w-[1200px] mx-auto px-10 pb-12">
+        <div className="bg-white/[0.03] border border-[#BC9C45]/20 rounded-2xl p-8 text-center">
+          <div className="inline-flex items-center gap-2 mb-4">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#BC9C45] to-[#D4B96A] flex items-center justify-center">
+              <span className="text-white text-[18px]">★</span>
+            </div>
+          </div>
+          <h2 className="font-[family-name:var(--font-playfair)] text-[24px] font-semibold text-white mb-2">
+            Founding Member Access
           </h2>
-          <p className="text-[14px] text-white/40 mb-8 max-w-[500px] mx-auto">
-            Terminal membership is by invitation. Submit your information and our team will
-            review your application within 48 hours.
+          <p className="text-[14px] text-white/40 max-w-[500px] mx-auto mb-2">
+            All founding members receive our highest membership level, valued at $100,000 annually.
+            No membership fees apply during the founding period.
           </p>
-
-          <form className="max-w-[440px] mx-auto flex flex-col gap-4">
-            <input
-              type="text"
-              placeholder="Full Name"
-              className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.08] rounded-lg text-white text-[14px] placeholder:text-white/25 focus:outline-none focus:border-[#D4A843]/40 transition-colors"
-            />
-            <input
-              type="email"
-              placeholder="Email Address"
-              className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.08] rounded-lg text-white text-[14px] placeholder:text-white/25 focus:outline-none focus:border-[#D4A843]/40 transition-colors"
-            />
-            <input
-              type="text"
-              placeholder="Company / Fund Name"
-              className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.08] rounded-lg text-white text-[14px] placeholder:text-white/25 focus:outline-none focus:border-[#D4A843]/40 transition-colors"
-            />
-            <input
-              type="tel"
-              placeholder="Phone Number"
-              className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.08] rounded-lg text-white text-[14px] placeholder:text-white/25 focus:outline-none focus:border-[#D4A843]/40 transition-colors"
-            />
-            <button
-              type="submit"
-              className="w-full py-3.5 rounded-lg bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] text-[14px] font-bold hover:opacity-90 transition-opacity shadow-[0_6px_24px_rgba(188,156,69,0.3)] mt-2"
-            >
-              Request Access
-            </button>
-          </form>
-
-          <p className="text-[11px] text-white/20 mt-6">
-            By submitting, you agree to our confidentiality terms. Membership is subject to verification.
+          <p className="text-[12px] text-[#D4A843] font-semibold">
+            Limited founding positions remaining
           </p>
         </div>
+      </div>
 
-        {/* Stats Bar */}
-        <div className="grid grid-cols-4 gap-6 mt-16 pb-10">
-          {[
-            { value: '$200M+', label: 'Deal Volume' },
-            { value: '30+', label: 'Years Experience' },
-            { value: '100%', label: 'Institutional Diligence' },
-            { value: '48hr', label: 'Application Review' },
-          ].map((s, i) => (
-            <div key={i} className="text-center">
-              <div className="text-[28px] font-bold text-white tabular-nums">{s.value}</div>
-              <div className="text-[11px] text-white/30 font-medium uppercase tracking-[1.5px] mt-1">{s.label}</div>
+      {/* Application Form */}
+      <div className="max-w-[1200px] mx-auto px-10 pb-16">
+        <div className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-10">
+          <h2 className="font-[family-name:var(--font-playfair)] text-[24px] font-semibold text-white mb-2 text-center">
+            {submitted ? 'Application Received' : 'Membership Application'}
+          </h2>
+          <p className="text-[13px] text-white/40 mb-8 text-center">
+            {submitted
+              ? 'Our team will review your application within 48 hours.'
+              : 'Founding membership is by invitation only. Applications reviewed within 48 hours.'
+            }
+          </p>
+
+          {submitted ? (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 rounded-full bg-[#0B8A4D]/20 flex items-center justify-center mx-auto mb-4">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0B8A4D" strokeWidth="2.5">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+              <p className="text-[15px] text-white font-semibold mb-2">Thank you, {formData.name.split(' ')[0]}.</p>
+              <p className="text-[13px] text-white/40">We&apos;ll be in touch shortly.</p>
             </div>
-          ))}
+          ) : (
+            <div className="max-w-[500px] mx-auto flex flex-col gap-4">
+              <input type="text" placeholder="Full Name" value={formData.name}
+                onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))}
+                className="w-full px-4 py-3.5 bg-white/[0.04] border border-white/[0.08] rounded-lg text-white text-[14px] placeholder:text-white/25 focus:outline-none focus:border-[#D4A843]/40 transition-colors" />
+              <input type="email" placeholder="Email Address" value={formData.email}
+                onChange={(e) => setFormData(p => ({ ...p, email: e.target.value }))}
+                className="w-full px-4 py-3.5 bg-white/[0.04] border border-white/[0.08] rounded-lg text-white text-[14px] placeholder:text-white/25 focus:outline-none focus:border-[#D4A843]/40 transition-colors" />
+              <input type="text" placeholder="Company / Fund Name" value={formData.company}
+                onChange={(e) => setFormData(p => ({ ...p, company: e.target.value }))}
+                className="w-full px-4 py-3.5 bg-white/[0.04] border border-white/[0.08] rounded-lg text-white text-[14px] placeholder:text-white/25 focus:outline-none focus:border-[#D4A843]/40 transition-colors" />
+              <input type="tel" placeholder="Phone Number" value={formData.phone}
+                onChange={(e) => setFormData(p => ({ ...p, phone: e.target.value }))}
+                className="w-full px-4 py-3.5 bg-white/[0.04] border border-white/[0.08] rounded-lg text-white text-[14px] placeholder:text-white/25 focus:outline-none focus:border-[#D4A843]/40 transition-colors" />
+              <button
+                onClick={() => setSubmitted(true)}
+                className="w-full py-4 rounded-lg bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] text-[15px] font-bold hover:opacity-90 transition-opacity shadow-[0_6px_24px_rgba(188,156,69,0.3)] mt-2"
+              >
+                Apply for Membership
+              </button>
+              <p className="text-[11px] text-white/20 text-center">
+                Membership is restricted to accredited investors and qualified purchasers.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
