@@ -23,12 +23,13 @@ interface DDDocument {
   id: string;
   deal_id: string;
   folder_id: string;
-  file_name: string;
-  file_size: number;
-  mime_type: string;
-  storage_path: string;
+  name: string;
+  file_size: string | null;
+  file_type: string | null;
+  storage_path: string | null;
   is_verified: boolean;
-  uploaded_at: string;
+  doc_status: string;
+  created_at: string;
 }
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -128,7 +129,7 @@ export default function DataRoomPage() {
         .from('terminal_dd_documents')
         .select('*')
         .eq('deal_id', dealId)
-        .order('uploaded_at', { ascending: false }),
+        .order('created_at', { ascending: false }),
     ]);
 
     if (dealRes.data) setDealName(dealRes.data.name as string);
@@ -189,7 +190,7 @@ export default function DataRoomPage() {
     if (folderDocs.length > 0) {
       await supabase.storage
         .from('terminal-dd-documents')
-        .remove(folderDocs.map((d) => d.storage_path));
+        .remove(folderDocs.map((d) => d.storage_path).filter((p): p is string => !!p));
 
       await supabase
         .from('terminal_dd_documents')
@@ -285,9 +286,9 @@ export default function DataRoomPage() {
       .insert({
         deal_id: dealId,
         folder_id: selectedFolderId,
-        file_name: file.name,
-        file_size: file.size,
-        mime_type: file.type,
+        name: file.name,
+        file_size: String(file.size),
+        file_type: file.type,
         storage_path: storagePath,
         is_verified: false,
       })
@@ -392,7 +393,7 @@ export default function DataRoomPage() {
 
     await supabase.storage
       .from('terminal-dd-documents')
-      .remove([deleteDocTarget.storage_path]);
+      .remove(deleteDocTarget.storage_path ? [deleteDocTarget.storage_path] : []);
 
     await supabase.from('terminal_dd_documents').delete().eq('id', deleteDocTarget.id);
 
@@ -698,17 +699,17 @@ export default function DataRoomPage() {
                       className="bg-white rounded-xl border border-rp-gray-200 px-4 py-3 flex items-center gap-4 shadow-sm"
                     >
                       {/* File icon */}
-                      <span className="text-xl shrink-0">{fileIconFor(doc.mime_type)}</span>
+                      <span className="text-xl shrink-0">{fileIconFor(doc.file_type)}</span>
 
                       {/* File info */}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-rp-gray-700 truncate">
-                          {doc.file_name}
+                          {doc.name}
                         </p>
                         <p className="text-xs text-rp-gray-400">
-                          {MIME_LABEL[doc.mime_type] ?? 'File'} &middot;{' '}
+                          {MIME_LABEL[doc.file_type] ?? 'File'} &middot;{' '}
                           {formatFileSize(doc.file_size)} &middot;{' '}
-                          {formatDate(doc.uploaded_at)}
+                          {formatDate(doc.created_at)}
                         </p>
                       </div>
 
@@ -855,7 +856,7 @@ export default function DataRoomPage() {
       >
         <p className="text-sm text-rp-gray-600 mb-6">
           Are you sure you want to delete{' '}
-          <span className="font-semibold text-rp-navy">{deleteDocTarget?.file_name}</span>?
+          <span className="font-semibold text-rp-navy">{deleteDocTarget?.name}</span>?
           This action cannot be undone.
         </p>
         <div className="flex justify-end gap-3">
