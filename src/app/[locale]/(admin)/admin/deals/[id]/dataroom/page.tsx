@@ -403,6 +403,7 @@ export default function DataRoomPage() {
   }
 
   function handleDownload(doc: DDDocument) {
+    if (!doc.storage_path) return;
     const { data } = supabase.storage
       .from('terminal-dd-documents')
       .getPublicUrl(doc.storage_path);
