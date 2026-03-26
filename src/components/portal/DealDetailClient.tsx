@@ -11,6 +11,8 @@ import { createClient } from '@/lib/supabase/client';
 import FadeInOnScroll from '@/components/ui/FadeInOnScroll';
 import NDAModal from '@/components/portal/NDAModal';
 import DataRoomTab from '@/components/portal/DataRoomTab';
+import FinancialOverview from '@/components/portal/FinancialOverview';
+import { parseDealInputs, calculateDeal } from '@/lib/utils/deal-calculator';
 import type {
   DealWithDetails,
   TerminalDDFolder,
@@ -1415,6 +1417,10 @@ export default function DealDetailClient({
     setShowExpressModal(false);
   };
 
+  // Computed financial metrics from calculation engine
+  const dealInputs = useMemo(() => parseDealInputs(deal as unknown as Record<string, unknown>), [deal]);
+  const computed = useMemo(() => calculateDeal(dealInputs), [dealInputs]);
+
   // DD progress calculation
   const totalDocs = deal.dd_folders.reduce(
     (sum, f) => sum + f.documents.length,
@@ -1699,11 +1705,11 @@ export default function DealDetailClient({
           {[
             { label: 'Purchase Price', value: formatPrice(deal.purchase_price), borderColor: '#0E3470' },
             { label: 'NOI', value: formatPrice(deal.noi), borderColor: '#0E3470' },
-            { label: 'Cap Rate', value: formatPercent(deal.cap_rate), borderColor: '#BC9C45' },
-            { label: 'IRR', value: formatPercent(deal.irr), borderColor: '#0B8A4D', valueColor: '#0B8A4D' },
-            { label: 'CoC', value: formatPercent(deal.coc), borderColor: '#0B8A4D', valueColor: '#0B8A4D' },
-            { label: 'DSCR', value: formatDSCR(deal.dscr), borderColor: '#0E3470' },
-            { label: 'Equity', value: formatPrice(deal.equity_required), borderColor: '#BC9C45' },
+            { label: 'Cap Rate', value: computed.capRate > 0 ? computed.capRate.toFixed(1) + '%' : formatPercent(deal.cap_rate), borderColor: '#BC9C45' },
+            { label: 'IRR', value: computed.irr !== null ? computed.irr.toFixed(1) + '%' : (deal.irr ? formatPercent(deal.irr) : '—'), borderColor: '#0B8A4D', valueColor: '#0B8A4D' },
+            { label: 'CoC', value: computed.cocReturn !== 0 ? computed.cocReturn.toFixed(1) + '%' : (deal.coc ? formatPercent(deal.coc) : '—'), borderColor: '#0B8A4D', valueColor: '#0B8A4D' },
+            { label: 'Combined DSCR', value: computed.combinedDSCR > 0 ? computed.combinedDSCR.toFixed(2) + 'x' : formatDSCR(deal.dscr), borderColor: '#0E3470' },
+            { label: 'Equity', value: computed.netEquity > 0 ? '$' + Math.round(computed.netEquity).toLocaleString() : formatPrice(deal.equity_required), borderColor: '#BC9C45' },
           ].map((m, idx) => (
             <FadeInOnScroll key={m.label} delay={idx * 0.05}>
               <MetricCard
@@ -2188,6 +2194,11 @@ export default function DealDetailClient({
           style={{ display: activeTab === 'deal-structure' ? 'block' : 'none' }}
         >
           <div className="mt-8 px-8 pb-10">
+            {/* Financial Overview — Capital Stack, Waterfall, Financing, Comparison, Fees */}
+            <FinancialOverview deal={deal} />
+
+            <div className="mt-8" />
+
             {/* Two option cards side by side */}
             <div className="grid grid-cols-2 gap-6">
               {/* Option A: Assignment */}
