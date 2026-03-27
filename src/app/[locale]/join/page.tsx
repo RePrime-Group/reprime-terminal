@@ -56,8 +56,38 @@ const tiers = [
 export default function JoinPage() {
   const params = useParams();
   const locale = (params?.locale as string) || 'en';
-  const [formData, setFormData] = useState({ name: '', email: '', company: '', phone: '', message: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', company: '', phone: '' });
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async () => {
+    if (!formData.name.trim() || !formData.email.trim()) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          full_name: formData.name.trim(),
+          email: formData.email.trim(),
+          company_name: formData.company.trim() || null,
+          phone: formData.phone.trim() || null,
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json();
+        setError(body.error || 'Something went wrong. Please try again.');
+      } else {
+        setSubmitted(true);
+      }
+    } catch {
+      setError('Failed to submit application. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #07090F 0%, #0A1628 40%, #0F1A2E 70%, #07090F 100%)' }}>
@@ -210,11 +240,15 @@ export default function JoinPage() {
               <input type="tel" placeholder="Phone Number" value={formData.phone}
                 onChange={(e) => setFormData(p => ({ ...p, phone: e.target.value }))}
                 className="w-full px-4 py-3.5 bg-white/[0.04] border border-white/[0.08] rounded-lg text-white text-[14px] placeholder:text-white/25 focus:outline-none focus:border-[#D4A843]/40 transition-colors" />
+              {error && (
+                <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-2.5">{error}</p>
+              )}
               <button
-                onClick={() => setSubmitted(true)}
-                className="w-full py-4 rounded-lg bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] text-[15px] font-bold hover:opacity-90 transition-opacity shadow-[0_6px_24px_rgba(188,156,69,0.3)] mt-2"
+                onClick={handleSubmit}
+                disabled={loading || !formData.name.trim() || !formData.email.trim()}
+                className="w-full py-4 rounded-lg bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] text-[15px] font-bold hover:opacity-90 transition-opacity shadow-[0_6px_24px_rgba(188,156,69,0.3)] mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Apply for Membership
+                {loading ? 'Submitting...' : 'Apply for Membership'}
               </button>
               <p className="text-[11px] text-white/20 text-center">
                 Membership is restricted to accredited investors and qualified purchasers.
