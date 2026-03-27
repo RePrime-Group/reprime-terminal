@@ -30,19 +30,24 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const { email, inviteUrl } = await request.json();
+  const { email, inviteUrl, inviteCode, expiresAt } = await request.json();
 
   if (!email || !inviteUrl) {
     return NextResponse.json({ error: 'email and inviteUrl are required' }, { status: 400 });
   }
 
   try {
-    const { error } = await sendInviteEmail(email, inviteUrl);
+    const { error } = await sendInviteEmail(email, inviteUrl, inviteCode, expiresAt);
     if (error) {
+      console.error('[send-invite] Resend error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
     return NextResponse.json({ success: true });
   } catch (err) {
-    return NextResponse.json({ error: 'Failed to send email' }, { status: 500 });
+    console.error('[send-invite] Exception:', err);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'Failed to send email' },
+      { status: 500 },
+    );
   }
 }

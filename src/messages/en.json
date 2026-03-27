@@ -53,6 +53,7 @@
     "sidebar": {
       "deals": "Deals",
       "investors": "Investors",
+      "applications": "Applications",
       "activity": "Activity",
       "settings": "Settings"
     },

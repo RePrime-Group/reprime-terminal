@@ -4,15 +4,25 @@ import WelcomeEmail from './templates/welcome-email';
 import DealNotificationEmail from './templates/deal-notification';
 import MeetingConfirmation from './templates/meeting-confirmation';
 import CommitmentConfirmation from './templates/commitment-confirmation';
+import ApplicationAckEmail from './templates/application-ack-email';
+import ApplicationNotifyEmail from './templates/application-notify-email';
+import ApplicationRejectionEmail from './templates/application-rejection-email';
 
 const from = `${FROM_NAME} <${FROM_EMAIL}>`;
 
-export async function sendInviteEmail(recipientEmail: string, inviteUrl: string) {
+export async function sendInviteEmail(
+  recipientEmail: string,
+  inviteUrl: string,
+  inviteCode?: string,
+  expiresAt?: string,
+) {
+
+  console.error("from", from)
   return getResend().emails.send({
     from,
     to: recipientEmail,
     subject: 'You\'ve been invited to RePrime Terminal',
-    react: InviteEmail({ inviteUrl, recipientEmail }),
+    react: InviteEmail({ inviteUrl, recipientEmail, inviteCode, expiresAt }),
   });
 }
 
@@ -66,6 +76,44 @@ export async function sendMeetingConfirmation(
     to: recipientEmail,
     subject: `Meeting Confirmed: ${data.dealName} — ${new Date(data.dateTime).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}`,
     react: MeetingConfirmation(data),
+  });
+}
+
+export async function sendApplicationAckEmail(recipientEmail: string, applicantName: string) {
+  return getResend().emails.send({
+    from,
+    to: recipientEmail,
+    subject: 'Application Received — RePrime Terminal',
+    react: ApplicationAckEmail({ applicantName }),
+  });
+}
+
+export async function sendApplicationNotifyEmail(
+  applicant: { full_name: string; email: string; company_name?: string | null; phone?: string | null },
+  origin: string,
+) {
+  const adminUrl = `${origin}/en/admin/applications`;
+  return getResend().emails.send({
+    from,
+    to: 'g@reprime.com',
+    cc: ['steve@reprime.com', 'shirel@reprime.com'],
+    subject: `New Membership Application: ${applicant.full_name}`,
+    react: ApplicationNotifyEmail({
+      applicantName: applicant.full_name,
+      applicantEmail: applicant.email,
+      companyName: applicant.company_name,
+      phone: applicant.phone,
+      adminUrl,
+    }),
+  });
+}
+
+export async function sendApplicationRejectionEmail(recipientEmail: string, applicantName: string) {
+  return getResend().emails.send({
+    from,
+    to: recipientEmail,
+    subject: 'Update on Your Application — RePrime Terminal',
+    react: ApplicationRejectionEmail({ applicantName }),
   });
 }
 

@@ -39,6 +39,18 @@ const navItems = [
     ),
   },
   {
+    labelKey: 'sidebar.applications' as const,
+    href: '/admin/applications',
+    ownerOnly: true,
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="3" y="2" width="14" height="16" rx="2" stroke="#0E3470" strokeWidth="1.5" />
+        <path d="M7 7h6M7 10.5h4" stroke="#0E3470" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M7 14h2" stroke="#0E3470" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
     labelKey: 'sidebar.activity' as const,
     href: '/admin/activity',
     ownerOnly: true,
