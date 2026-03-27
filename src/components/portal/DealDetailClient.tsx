@@ -868,10 +868,12 @@ function DDFolderCard({
 function IRRCalculatorPanel({
   deal,
   baseIRR: baseIRRProp,
+  assignmentIRRProp,
   onSliderChange,
 }: {
   deal: DealWithDetails;
   baseIRR: number;
+  assignmentIRRProp: number | null;
   onSliderChange: () => void;
 }) {
   const [mode, setMode] = useState<CalculatorMode>('assignment');
@@ -930,7 +932,7 @@ function IRRCalculatorPanel({
           <div className="mb-4">
             <div className="text-white/60 text-xs mb-1">Projected IRR</div>
             <div className="text-[52px] font-[800] text-[#34D399] leading-none">
-              {computed.assignmentIRR !== null ? computed.assignmentIRR.toFixed(1) + '%' : '--'}
+              {assignmentIRRProp !== null ? assignmentIRRProp.toFixed(1) + '%' : '--'}
             </div>
           </div>
           <div className="text-xs text-white/60 mt-2">
@@ -961,7 +963,7 @@ function IRRCalculatorPanel({
           <div className="mb-4">
             <div className="text-white/60 text-xs mb-1">Projected IRR</div>
             <div className="text-[52px] font-[800] text-[#34D399] leading-none">
-              {computed.irr !== null ? computed.irr.toFixed(1) + '%' : '--'}
+              {baseIRRProp > 0 ? baseIRRProp.toFixed(1) + '%' : '--'}
             </div>
           </div>
         </div>
@@ -2210,7 +2212,7 @@ export default function DealDetailClient({
                       Projected IRR
                     </div>
                     <div className="text-2xl font-bold text-[#0B8A4D]">
-                      {computed.assignmentIRR !== null ? computed.assignmentIRR.toFixed(1) + '%' : '--'}
+                      {assignmentIRRProp !== null ? assignmentIRRProp.toFixed(1) + '%' : '--'}
                     </div>
                     <div className="text-[11px] text-[#6B7280] mt-1">
                       Fee included
@@ -2276,6 +2278,7 @@ export default function DealDetailClient({
                 <IRRCalculatorPanel
                   deal={deal}
                   baseIRR={computed.irr ?? 0}
+                  assignmentIRRProp={computed.assignmentIRR}
                   onSliderChange={handleIRRSliderChange}
                 />
               </div>
