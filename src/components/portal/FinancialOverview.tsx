@@ -27,7 +27,7 @@ export function OverviewFinancials({ inputs, metrics, traditional }: FinancialPr
         <ReturnComparison inputs={inputs} metrics={metrics} traditional={traditional} />
       )}
 
-      {/* Quick Cash Flow Summary */}
+      {/* Quick Cash Flow Summary — every deduction visible */}
       <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 rp-card-shadow">
         <h4 className="text-[13px] font-semibold text-[#0E3470] mb-3">Cash Flow Summary</h4>
         <div className="space-y-0">
@@ -37,7 +37,11 @@ export function OverviewFinancials({ inputs, metrics, traditional }: FinancialPr
           </div>
           <div className="flex justify-between py-2 border-b border-[#EEF0F4]">
             <span className="text-[13px] text-[#6B7280]">− Total Debt Service</span>
-            <span className="text-[14px] font-semibold text-[#DC2626] tabular-nums">{fmtFull(metrics.annualSeniorDS + metrics.annualMezzPayment)}</span>
+            <span className="text-[14px] font-semibold text-[#DC2626]/80 tabular-nums">{fmtFull(metrics.annualSeniorDS + metrics.annualMezzPayment)}</span>
+          </div>
+          <div className="flex justify-between py-2 border-b border-[#EEF0F4]">
+            <span className="text-[13px] text-[#6B7280]">− Asset Management Fee ({pct(inputs.assetMgmtFee)})</span>
+            <span className="text-[14px] font-semibold text-[#DC2626]/80 tabular-nums">{fmtFull(metrics.assetMgmtFeeDollar)}</span>
           </div>
           <div className="flex justify-between py-3 border-t-2 border-[#0E3470] mt-1">
             <span className="text-[13px] font-bold text-[#374151]">Distributable Cash Flow</span>
@@ -189,24 +193,26 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
 // SHARED: Capital Stack Visual
 // ═══════════════════════════════════════════════════════════
 function CapitalStackVisual({ inputs, metrics, isEstimated }: { inputs: DealInputs; metrics: DealMetrics; isEstimated: boolean }) {
-  const equityPct = inputs.purchasePrice > 0 ? 100 - inputs.ltv - (inputs.sellerFinancing ? inputs.mezzPercent : 0) : 0;
+  // Total Capital Deployed = actual sum of all components
+  const totalCapital = metrics.loanAmount + metrics.mezzAmount + metrics.netEquity;
 
   return (
     <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 rp-card-shadow">
       <h4 className="text-[14px] font-semibold text-[#0E3470] mb-4">Capital Stack</h4>
+      {/* Bar proportional to actual dollar amounts */}
       <div className="h-9 rounded-lg overflow-hidden flex mb-3">
         {metrics.loanAmount > 0 && (
-          <div className="flex items-center justify-center text-white text-[10px] font-bold" style={{ width: `${(metrics.loanAmount / inputs.purchasePrice) * 100}%`, backgroundColor: '#0E3470' }}>
-            Senior {pct(inputs.ltv, 0)}
+          <div className="flex items-center justify-center text-white text-[10px] font-bold" style={{ width: `${(metrics.loanAmount / totalCapital) * 100}%`, backgroundColor: '#0E3470' }}>
+            Senior {pct((metrics.loanAmount / totalCapital) * 100, 0)}
           </div>
         )}
         {metrics.mezzAmount > 0 && (
-          <div className="flex items-center justify-center text-white text-[10px] font-bold" style={{ width: `${(metrics.mezzAmount / inputs.purchasePrice) * 100}%`, backgroundColor: '#BC9C45' }}>
-            Mezz {pct(inputs.mezzPercent, 0)}
+          <div className="flex items-center justify-center text-white text-[10px] font-bold" style={{ width: `${(metrics.mezzAmount / totalCapital) * 100}%`, backgroundColor: '#BC9C45' }}>
+            Mezz {pct((metrics.mezzAmount / totalCapital) * 100, 0)}
           </div>
         )}
-        <div className="flex items-center justify-center text-white text-[10px] font-bold" style={{ width: `${equityPct}%`, backgroundColor: '#0B8A4D', minWidth: '40px' }}>
-          Equity
+        <div className="flex items-center justify-center text-white text-[10px] font-bold" style={{ width: `${(metrics.netEquity / totalCapital) * 100}%`, backgroundColor: '#0B8A4D', minWidth: '40px' }}>
+          Equity {pct((metrics.netEquity / totalCapital) * 100, 0)}
         </div>
       </div>
       <div className="space-y-1.5">
@@ -234,9 +240,13 @@ function CapitalStackVisual({ inputs, metrics, isEstimated }: { inputs: DealInpu
           </div>
           <span className="text-[13px] font-bold text-[#0B8A4D] tabular-nums">{fmtFull(metrics.netEquity)}</span>
         </div>
-        <div className="flex justify-between items-center py-1.5">
-          <span className="text-[12px] font-semibold text-[#374151]">Total</span>
-          <span className="text-[14px] font-bold text-[#0E3470] tabular-nums">{fmtFull(inputs.purchasePrice)}</span>
+        <div className="flex justify-between items-center pt-2 pb-1 border-t border-[#0E3470]/20">
+          <span className="text-[12px] font-semibold text-[#374151]">Total Capital Deployed</span>
+          <span className="text-[14px] font-bold text-[#0E3470] tabular-nums">{fmtFull(totalCapital)}</span>
+        </div>
+        <div className="flex justify-between items-center py-1 text-[11px] text-[#9CA3AF]">
+          <span>Purchase Price</span>
+          <span className="tabular-nums">{fmtFull(inputs.purchasePrice)}</span>
         </div>
       </div>
     </div>
