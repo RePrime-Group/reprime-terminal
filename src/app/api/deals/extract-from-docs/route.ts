@@ -63,9 +63,9 @@ export async function POST(request: NextRequest) {
     const fileSizeMB = buffer.byteLength / 1024 / 1024;
     fileDescriptions.push(`- ${sp.name} (${fileSizeMB.toFixed(1)} MB)`);
 
-    // Anthropic API limit is ~25MB for the entire request body.
-    // Each base64 PDF adds ~33% overhead. Cap at 10MB per file (13MB base64).
-    const MAX_PDF_BYTES = 10 * 1024 * 1024;
+    // Anthropic API limit is ~25MB total request. Base64 adds 33% overhead.
+    // Only send PDFs under 15MB as documents. Larger ones get skipped with a note.
+    const MAX_PDF_BYTES = 15 * 1024 * 1024;
 
     if (buffer.byteLength <= MAX_PDF_BYTES) {
       contentBlocks.push({
@@ -77,26 +77,11 @@ export async function POST(request: NextRequest) {
         },
       });
     } else {
-      // PDF too large — send truncated version (first 10MB)
-      const truncated = buffer.subarray(0, MAX_PDF_BYTES);
-      fileDescriptions[fileDescriptions.length - 1] += ' [TRUNCATED — first 10MB sent]';
-
-      try {
-        contentBlocks.push({
-          type: 'document',
-          source: {
-            type: 'base64',
-            media_type: 'application/pdf' as const,
-            data: truncated.toString('base64'),
-          },
-        });
-      } catch {
-        // If truncated PDF fails, skip this file and note it
-        contentBlocks.push({
-          type: 'text',
-          text: `[NOTE: ${sp.name} was too large to process (${fileSizeMB.toFixed(0)}MB). Please enter details from this document manually.]`,
-        });
-      }
+      // PDF too large to send — add a text note so Claude knows it exists
+      contentBlocks.push({
+        type: 'text',
+        text: `[DOCUMENT: ${sp.name} — ${fileSizeMB.toFixed(0)}MB — TOO LARGE TO PROCESS DIRECTLY. This is likely an Offering Memorandum. Extract what you can from the other uploaded documents. The admin will need to verify and supplement any missing data from this large document.]`,
+      });
     }
   }
 
