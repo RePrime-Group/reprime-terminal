@@ -2216,7 +2216,7 @@ export default function DealDetailClient({
                       Projected IRR
                     </div>
                     <div className="text-2xl font-bold text-[#0B8A4D]">
-                      {assignmentIRRProp !== null ? assignmentIRRProp.toFixed(1) + '%' : '--'}
+                      {computed.assignmentIRR !== null ? computed.assignmentIRR.toFixed(1) + '%' : '--'}
                     </div>
                     <div className="text-[11px] text-[#6B7280] mt-1">
                       Fee included
