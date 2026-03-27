@@ -88,7 +88,7 @@ export default function PortalNavbar({ firstName, locale, activeTab = 'dashboard
           <div className="h-5 w-px bg-white/10 ml-1" />
 
           {/* Nav Tabs */}
-          <div className="flex items-center gap-1 ml-1">
+          <div className="flex items-center gap-1 ml-1" data-tour="nav-tabs">
             {navTabs.map((tab) => (
               <Link
                 key={tab.key}
@@ -109,7 +109,7 @@ export default function PortalNavbar({ firstName, locale, activeTab = 'dashboard
         {/* Right */}
         <div className="flex items-center gap-3">
           {/* Notification Bell */}
-          <div className="relative" ref={notifRef}>
+          <div className="relative" ref={notifRef} data-tour="notif-bell">
             <button
               onClick={() => setShowNotifications(!showNotifications)}
               className="w-[34px] h-[34px] rounded-full border border-[#EEF0F4] bg-white flex items-center justify-center hover:border-[#BC9C45] transition-colors relative"

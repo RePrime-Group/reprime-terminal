@@ -50,7 +50,7 @@ export default function MarketIntelSidebar() {
   return (
     <aside className="w-[320px] flex flex-col gap-4">
       {/* Card 1: Market Cycle */}
-      <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 rp-card-shadow">
+      <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 rp-card-shadow" data-tour="market-sidebar">
         <h3
           className="uppercase font-[700] tracking-[1px] mb-4"
           style={{ fontSize: '11px', color: '#0E3470', letterSpacing: '1px' }}

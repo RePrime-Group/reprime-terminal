@@ -112,7 +112,7 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
           </div>
 
           {activeCount > 0 && (
-            <div className="grid grid-cols-5 gap-[1px] rounded-xl overflow-hidden border border-white/[0.06]" style={{ background: 'rgba(255,255,255,0.04)' }}>
+            <div className="grid grid-cols-5 gap-[1px] rounded-xl overflow-hidden border border-white/[0.06]" data-tour="hero-metrics" style={{ background: 'rgba(255,255,255,0.04)' }}>
               {summaryMetrics.map((m) => (
                 <div key={m.label} className="px-5 py-5" style={{ background: 'rgba(14, 52, 112, 0.25)', backdropFilter: 'blur(8px)' }}>
                   <div className="text-[9px] font-semibold tracking-[2px] uppercase text-white/30 mb-2">
@@ -183,7 +183,9 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
                   )}
                   <div className="grid grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-7">
                     {activeDeals.map((deal, index) => (
-                      <DealCard key={deal.id} deal={deal} locale={locale} index={index} />
+                      <div key={deal.id} {...(index === 0 ? { 'data-tour': 'first-deal' } : {})}>
+                        <DealCard deal={deal} locale={locale} index={index} />
+                      </div>
                     ))}
                   </div>
                 </div>
