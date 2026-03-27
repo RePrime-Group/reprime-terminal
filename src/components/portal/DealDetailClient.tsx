@@ -869,11 +869,15 @@ function IRRCalculatorPanel({
   deal,
   baseIRR: baseIRRProp,
   assignmentIRRProp,
+  acqFeeDollar,
+  assetMgmtFeeDollar,
   onSliderChange,
 }: {
   deal: DealWithDetails;
   baseIRR: number;
   assignmentIRRProp: number | null;
+  acqFeeDollar: number;
+  assetMgmtFeeDollar: number;
   onSliderChange: () => void;
 }) {
   const [mode, setMode] = useState<CalculatorMode>('assignment');
@@ -946,8 +950,8 @@ function IRRCalculatorPanel({
         <div>
           <div className="space-y-2 mb-4">
             {[
-              { label: 'Acquisition Fee', value: `${deal.acq_fee} ($${Math.round(computed.acqFeeDollar).toLocaleString()})` },
-              { label: 'Asset Mgmt Fee', value: `${deal.asset_mgmt_fee} ($${Math.round(computed.assetMgmtFeeDollar).toLocaleString()}/yr)` },
+              { label: 'Acquisition Fee', value: `${deal.acq_fee} ($${Math.round(acqFeeDollar).toLocaleString()})` },
+              { label: 'Asset Mgmt Fee', value: `${deal.asset_mgmt_fee} ($${Math.round(assetMgmtFeeDollar).toLocaleString()}/yr)` },
               { label: 'GP Carry', value: deal.gp_carry },
               { label: 'Equity Required', value: formatPrice(deal.equity_required) },
             ].map((row) => (
@@ -2239,8 +2243,8 @@ export default function DealDetailClient({
                   </h3>
                   <div className="space-y-2 mb-4">
                     {[
-                      { label: 'Acquisition Fee', value: deal.acq_fee },
-                      { label: 'Asset Mgmt Fee', value: deal.asset_mgmt_fee },
+                      { label: 'Acquisition Fee', value: `${deal.acq_fee} ($${Math.round(computed.acqFeeDollar).toLocaleString()})` },
+                      { label: 'Asset Mgmt Fee', value: `${deal.asset_mgmt_fee} ($${Math.round(computed.assetMgmtFeeDollar).toLocaleString()}/yr)` },
                       { label: 'GP Carry', value: deal.gp_carry },
                       { label: 'Equity Required', value: formatPrice(deal.equity_required) },
                     ].map((row) => (
@@ -2279,6 +2283,8 @@ export default function DealDetailClient({
                   deal={deal}
                   baseIRR={computed.irr ?? 0}
                   assignmentIRRProp={computed.assignmentIRR}
+                  acqFeeDollar={computed.acqFeeDollar}
+                  assetMgmtFeeDollar={computed.assetMgmtFeeDollar}
                   onSliderChange={handleIRRSliderChange}
                 />
               </div>
