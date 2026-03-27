@@ -878,9 +878,9 @@ function IRRCalculatorPanel({
   const [acqFee, setAcqFee] = useState(1);
 
   const customIRR = useMemo(() => {
-    const baseIRR = parseFloat(deal.gplp_irr ?? '0');
+    const baseIRR = computed.irr ?? 0;
     return calculateCustomIRR(baseIRR, { lpSplit, prefReturn, acqFee });
-  }, [deal.gplp_irr, lpSplit, prefReturn, acqFee]);
+  }, [computed.irr, lpSplit, prefReturn, acqFee]);
 
   const handleSliderChange = (
     setter: (v: number) => void,
@@ -929,7 +929,7 @@ function IRRCalculatorPanel({
           <div className="mb-4">
             <div className="text-white/60 text-xs mb-1">Projected IRR</div>
             <div className="text-[52px] font-[800] text-[#34D399] leading-none">
-              {deal.assignment_irr ?? '--'}
+              {computed.assignmentIRR !== null ? computed.assignmentIRR.toFixed(1) + '%' : '--'}
             </div>
           </div>
           <div className="text-xs text-white/60 mt-2">
@@ -943,8 +943,8 @@ function IRRCalculatorPanel({
         <div>
           <div className="space-y-2 mb-4">
             {[
-              { label: 'Acquisition Fee', value: deal.acq_fee },
-              { label: 'Asset Mgmt Fee', value: deal.asset_mgmt_fee },
+              { label: 'Acquisition Fee', value: `${deal.acq_fee} ($${Math.round(computed.acqFeeDollar).toLocaleString()})` },
+              { label: 'Asset Mgmt Fee', value: `${deal.asset_mgmt_fee} ($${Math.round(computed.assetMgmtFeeDollar).toLocaleString()}/yr)` },
               { label: 'GP Carry', value: deal.gp_carry },
               { label: 'Equity Required', value: formatPrice(deal.equity_required) },
             ].map((row) => (
@@ -960,7 +960,7 @@ function IRRCalculatorPanel({
           <div className="mb-4">
             <div className="text-white/60 text-xs mb-1">Projected IRR</div>
             <div className="text-[52px] font-[800] text-[#34D399] leading-none">
-              {deal.gplp_irr ?? '--'}
+              {computed.irr !== null ? computed.irr.toFixed(1) + '%' : '--'}
             </div>
           </div>
         </div>
@@ -2209,7 +2209,7 @@ export default function DealDetailClient({
                       Projected IRR
                     </div>
                     <div className="text-2xl font-bold text-[#0B8A4D]">
-                      {deal.assignment_irr ?? '--'}
+                      {computed.assignmentIRR !== null ? computed.assignmentIRR.toFixed(1) + '%' : '--'}
                     </div>
                     <div className="text-[11px] text-[#6B7280] mt-1">
                       Fee included
@@ -2259,7 +2259,7 @@ export default function DealDetailClient({
                       Projected IRR
                     </div>
                     <div className="text-2xl font-bold text-[#0B8A4D]">
-                      {deal.gplp_irr ?? '--'}
+                      {computed.irr !== null ? computed.irr.toFixed(1) + '%' : '--'}
                     </div>
                     <div className="text-[11px] text-[#6B7280] mt-1">
                       All fees included

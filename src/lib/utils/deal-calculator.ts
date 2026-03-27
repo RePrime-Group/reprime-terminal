@@ -65,7 +65,8 @@ export interface DealMetrics {
   combinedDSCR: number;
 
   // IRR (multi-year)
-  irr: number | null;
+  irr: number | null;          // GP/LP net IRR (after all fees and carry)
+  assignmentIRR: number | null; // Assignment structure IRR (net of assignment fee)
   equityMultiple: number;
 
   // Fee Dollars
@@ -221,6 +222,15 @@ export function calculateDeal(inputs: DealInputs): DealMetrics {
 
   const irr = solveIRR(irrCashFlows);
 
+  // Assignment IRR: same deal but assignment fee deducted from Year 0 equity
+  const assignmentFeeDollarCalc = purchasePrice * (assignmentFee / 100);
+  const assignmentEquity = netEquity + assignmentFeeDollarCalc; // fee increases investor outlay
+  const assignmentCashFlows = [-assignmentEquity, ...annualCashFlows.slice(0, -1)];
+  if (annualCashFlows.length > 0) {
+    assignmentCashFlows.push(annualCashFlows[annualCashFlows.length - 1] + netSaleProceeds);
+  }
+  const assignmentIRR = solveIRR(assignmentCashFlows);
+
   const equityMultiple = netEquity > 0
     ? (cumulativeDistributions + netSaleProceeds) / netEquity
     : 0;
@@ -231,7 +241,7 @@ export function calculateDeal(inputs: DealInputs): DealMetrics {
     closingCosts, grossEquity, netEquity, totalLeverage,
     capRate, cashFlowAfterSenior, cashFlowAfterAllDS, assetMgmtFeeDollar,
     distributableCashFlow, cocReturn, lenderDSCR, combinedDSCR,
-    irr, equityMultiple,
+    irr, assignmentIRR, equityMultiple,
     assignmentFeeDollar, acqFeeDollar,
     annualCashFlows, exitPrice, seniorPayoffAtExit, netSaleProceeds,
     warnings,
