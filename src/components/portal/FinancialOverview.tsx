@@ -193,28 +193,35 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
 // SHARED: Capital Stack Visual
 // ═══════════════════════════════════════════════════════════
 function CapitalStackVisual({ inputs, metrics, isEstimated }: { inputs: DealInputs; metrics: DealMetrics; isEstimated: boolean }) {
-  // Total Capital Deployed = actual sum of all components
+  // Bar percentages based on Purchase Price (LTV, Mezz%, Equity gap)
+  const pp = inputs.purchasePrice;
+  const seniorPct = pp > 0 ? (metrics.loanAmount / pp) * 100 : 0;
+  const mezzPct = pp > 0 && metrics.mezzAmount > 0 ? (metrics.mezzAmount / pp) * 100 : 0;
+  const equityGapPct = pp > 0 ? ((pp - metrics.loanAmount - metrics.mezzAmount) / pp) * 100 : 0;
   const totalCapital = metrics.loanAmount + metrics.mezzAmount + metrics.netEquity;
 
   return (
     <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 rp-card-shadow">
       <h4 className="text-[14px] font-semibold text-[#0E3470] mb-4">Capital Stack</h4>
-      {/* Bar proportional to actual dollar amounts */}
+      {/* Bar segments based on Purchase Price (LTV structure) */}
       <div className="h-9 rounded-lg overflow-hidden flex mb-3">
-        {metrics.loanAmount > 0 && (
-          <div className="flex items-center justify-center text-white text-[10px] font-bold" style={{ width: `${(metrics.loanAmount / totalCapital) * 100}%`, backgroundColor: '#0E3470' }}>
-            Senior {pct((metrics.loanAmount / totalCapital) * 100, 0)}
+        {seniorPct > 0 && (
+          <div className="flex items-center justify-center text-white text-[10px] font-bold" style={{ width: `${seniorPct}%`, backgroundColor: '#0E3470' }}>
+            Senior {Math.round(seniorPct)}%
           </div>
         )}
-        {metrics.mezzAmount > 0 && (
-          <div className="flex items-center justify-center text-white text-[10px] font-bold" style={{ width: `${(metrics.mezzAmount / totalCapital) * 100}%`, backgroundColor: '#BC9C45' }}>
-            Mezz {pct((metrics.mezzAmount / totalCapital) * 100, 0)}
+        {mezzPct > 0 && (
+          <div className="flex items-center justify-center text-white text-[10px] font-bold" style={{ width: `${mezzPct}%`, backgroundColor: '#BC9C45' }}>
+            Mezz {Math.round(mezzPct)}%
           </div>
         )}
-        <div className="flex items-center justify-center text-white text-[10px] font-bold" style={{ width: `${(metrics.netEquity / totalCapital) * 100}%`, backgroundColor: '#0B8A4D', minWidth: '40px' }}>
-          Equity {pct((metrics.netEquity / totalCapital) * 100, 0)}
-        </div>
+        {equityGapPct > 0 && (
+          <div className="flex items-center justify-center text-white text-[10px] font-bold" style={{ width: `${equityGapPct}%`, backgroundColor: '#0B8A4D', minWidth: '40px' }}>
+            Equity {Math.round(equityGapPct)}%
+          </div>
+        )}
       </div>
+      {/* Dollar amounts — equity shows actual investor check size */}
       <div className="space-y-1.5">
         <div className="flex justify-between items-center py-1.5 border-b border-[#EEF0F4]">
           <div className="flex items-center gap-2">
@@ -240,13 +247,16 @@ function CapitalStackVisual({ inputs, metrics, isEstimated }: { inputs: DealInpu
           </div>
           <span className="text-[13px] font-bold text-[#0B8A4D] tabular-nums">{fmtFull(metrics.netEquity)}</span>
         </div>
-        <div className="flex justify-between items-center pt-2 pb-1 border-t border-[#0E3470]/20">
-          <span className="text-[12px] font-semibold text-[#374151]">Total Capital Deployed</span>
-          <span className="text-[14px] font-bold text-[#0E3470] tabular-nums">{fmtFull(totalCapital)}</span>
+      </div>
+      {/* Summary lines */}
+      <div className="mt-3 pt-3 border-t border-[#EEF0F4] space-y-1">
+        <div className="flex justify-between items-center text-[12px]">
+          <span className="text-[#6B7280]">Purchase Price</span>
+          <span className="font-semibold text-[#0E3470] tabular-nums">{fmtFull(pp)}</span>
         </div>
-        <div className="flex justify-between items-center py-1 text-[11px] text-[#9CA3AF]">
-          <span>Purchase Price</span>
-          <span className="tabular-nums">{fmtFull(inputs.purchasePrice)}</span>
+        <div className="flex justify-between items-center text-[12px]">
+          <span className="text-[#6B7280]">Total Capital Required <span className="text-[10px]">(incl. closing costs)</span></span>
+          <span className="font-bold text-[#0E3470] tabular-nums">{fmtFull(totalCapital)}</span>
         </div>
       </div>
     </div>
