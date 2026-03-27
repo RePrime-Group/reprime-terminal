@@ -493,6 +493,16 @@ export default function EditDealPage() {
         updateData.assigned_to = selectedInvestor;
       }
 
+      // Persist computed metrics from calculation engine
+      const computedInputs = parseDealInputs(updateData as Record<string, unknown>);
+      const computedMetrics = calculateDeal(computedInputs);
+      updateData.cap_rate = computedMetrics.capRate > 0 ? computedMetrics.capRate.toFixed(2) : null;
+      updateData.irr = computedMetrics.irr !== null ? computedMetrics.irr.toFixed(2) : null;
+      updateData.coc = computedMetrics.cocReturn !== 0 ? computedMetrics.cocReturn.toFixed(2) : null;
+      updateData.dscr = computedMetrics.lenderDSCR > 0 ? computedMetrics.lenderDSCR.toFixed(2) : null;
+      updateData.equity_required = computedMetrics.netEquity > 0 ? String(Math.round(computedMetrics.netEquity)) : null;
+      updateData.loan_estimate = computedMetrics.loanAmount > 0 ? String(Math.round(computedMetrics.loanAmount)) : null;
+
       const { error } = await supabase
         .from('terminal_deals')
         .update(updateData)
@@ -1077,77 +1087,27 @@ export default function EditDealPage() {
         </>);
       })()}
 
-      {/* Section 3: Deal Terms */}
+      {/* Fee Structure */}
       <div className="bg-white rounded-2xl border border-rp-gray-200 p-6 mb-6">
-        <h2 className="text-[16px] font-semibold text-rp-navy mb-5">
-          Deal Terms
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="flex items-center gap-3 col-span-full">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.seller_financing}
-                onChange={(e) =>
-                  updateField('seller_financing', e.target.checked)
-                }
-                className="w-4 h-4 rounded border-rp-gray-300 text-rp-gold focus:ring-rp-gold/20"
-              />
-              <span className="text-[13px] font-medium text-rp-gray-700">
-                Seller Financing Available
-              </span>
-            </label>
-          </div>
-          <Input
-            label="Special Terms"
-            value={form.special_terms}
-            onChange={(e) => updateField('special_terms', e.target.value)}
-            placeholder="Any special deal terms"
-            className="col-span-full"
-          />
-          <Input
-            label="Assignment Fee"
-            value={form.assignment_fee}
-            onChange={(e) => updateField('assignment_fee', e.target.value)}
-            placeholder="3%"
-          />
-          <Input
-            label="Assignment IRR"
-            value={form.assignment_irr}
-            onChange={(e) => updateField('assignment_irr', e.target.value)}
-            placeholder="e.g. 22%"
-          />
-          <Input
-            label="GP/LP IRR"
-            value={form.gplp_irr}
-            onChange={(e) => updateField('gplp_irr', e.target.value)}
-            placeholder="e.g. 15% / 12%"
-          />
-          <Input
-            label="Acquisition Fee"
-            value={form.acq_fee}
-            onChange={(e) => updateField('acq_fee', e.target.value)}
-            placeholder="1%"
-          />
-          <Input
-            label="Asset Mgmt Fee"
-            value={form.asset_mgmt_fee}
-            onChange={(e) => updateField('asset_mgmt_fee', e.target.value)}
-            placeholder="2%"
-          />
-          <Input
-            label="GP Carry"
-            value={form.gp_carry}
-            onChange={(e) => updateField('gp_carry', e.target.value)}
-            placeholder="20% above 8% pref"
-          />
-          <Input
-            label="Loan Fee"
-            value={form.loan_fee}
-            onChange={(e) => updateField('loan_fee', e.target.value)}
-            placeholder="1 point"
-          />
+        <h2 className="text-[16px] font-semibold text-rp-navy mb-5">Fee Structure</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Input label="Assignment Fee %" value={form.assignment_fee} onChange={(e) => updateField('assignment_fee', e.target.value)} placeholder="3" />
+          <Input label="Acquisition Fee %" value={form.acq_fee} onChange={(e) => updateField('acq_fee', e.target.value)} placeholder="1" />
+          <Input label="Asset Mgmt Fee %" value={form.asset_mgmt_fee} onChange={(e) => updateField('asset_mgmt_fee', e.target.value)} placeholder="2" />
+          <Input label="GP Carry %" value={form.gp_carry} onChange={(e) => updateField('gp_carry', e.target.value)} placeholder="20" />
         </div>
+      </div>
+
+      {/* Special Terms */}
+      <div className="bg-white rounded-2xl border border-rp-gray-200 p-6 mb-6">
+        <h2 className="text-[16px] font-semibold text-rp-navy mb-3">Special Terms</h2>
+        <textarea
+          value={form.special_terms}
+          onChange={(e) => updateField('special_terms', e.target.value)}
+          placeholder="Additional terms not captured in structured fields above (personal guarantees, special conditions, assignment restrictions, etc.)"
+          rows={3}
+          className="w-full px-3.5 py-2.5 border border-rp-gray-300 rounded-lg text-sm text-rp-gray-700 focus:outline-none focus:ring-[3px] focus:ring-rp-gold/15 focus:border-rp-gold placeholder:text-rp-gray-400 transition-all resize-vertical"
+        />
       </div>
 
       {/* Section 4: Timeline */}

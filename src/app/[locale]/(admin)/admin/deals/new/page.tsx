@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { createClient } from '@/lib/supabase/client';
+import { parseDealInputs, calculateDeal } from '@/lib/utils/deal-calculator';
 import type { DealStatus } from '@/lib/types/database';
 
 const PROPERTY_TYPES = [
@@ -48,6 +49,23 @@ interface DealFormData {
   asset_mgmt_fee: string;
   gp_carry: string;
   loan_fee: string;
+  // Senior Debt
+  ltv: string;
+  interest_rate: string;
+  amortization_years: string;
+  loan_fee_points: string;
+  io_period_months: string;
+  // Mezzanine
+  mezz_percent: string;
+  mezz_rate: string;
+  mezz_term_months: string;
+  // Credits
+  seller_credit: string;
+  pref_return: string;
+  // Exit
+  hold_period_years: string;
+  exit_cap_rate: string;
+  debt_terms_quoted: boolean;
   dd_deadline: string;
   close_deadline: string;
   extension_deadline: string;
@@ -91,6 +109,19 @@ const initialFormData: DealFormData = {
   asset_mgmt_fee: '2%',
   gp_carry: '20% above 8% pref',
   loan_fee: '1 point',
+  ltv: '75',
+  interest_rate: '6.00',
+  amortization_years: '30',
+  loan_fee_points: '1',
+  io_period_months: '0',
+  mezz_percent: '15',
+  mezz_rate: '5.00',
+  mezz_term_months: '60',
+  seller_credit: '0',
+  pref_return: '8',
+  hold_period_years: '5',
+  exit_cap_rate: '',
+  debt_terms_quoted: false,
   dd_deadline: '',
   close_deadline: '',
   extension_deadline: '',
@@ -387,9 +418,48 @@ export default function NewDealPage() {
         quarter_release: form.quarter_release || null,
         investment_highlights: highlights.length > 0 ? highlights : null,
         acquisition_thesis: form.acquisition_thesis || null,
+        // Financial engine fields
+        ltv: form.ltv || '75',
+        interest_rate: form.interest_rate || '6.00',
+        amortization_years: form.amortization_years || '30',
+        loan_fee_points: form.loan_fee_points || '1',
+        io_period_months: form.io_period_months || '0',
+        mezz_percent: form.mezz_percent || '15',
+        mezz_rate: form.mezz_rate || '5.00',
+        mezz_term_months: form.mezz_term_months || '60',
+        seller_credit: form.seller_credit || '0',
+        pref_return: form.pref_return || '8',
+        hold_period_years: form.hold_period_years || '5',
+        exit_cap_rate: form.exit_cap_rate || null,
+        debt_terms_quoted: form.debt_terms_quoted || false,
         status,
         created_by: user?.id ?? null,
       }).select('id').single();
+
+      // Persist computed metrics
+      if (newDeal) {
+        const insertData: Record<string, unknown> = {
+          purchase_price: form.purchase_price, noi: form.noi, ltv: form.ltv,
+          interest_rate: form.interest_rate, amortization_years: form.amortization_years,
+          loan_fee_points: form.loan_fee_points, seller_financing: form.seller_financing,
+          mezz_percent: form.mezz_percent, mezz_rate: form.mezz_rate,
+          mezz_term_months: form.mezz_term_months, seller_credit: form.seller_credit,
+          assignment_fee: form.assignment_fee, acq_fee: form.acq_fee,
+          asset_mgmt_fee: form.asset_mgmt_fee, gp_carry: form.gp_carry,
+          pref_return: form.pref_return, hold_period_years: form.hold_period_years,
+          exit_cap_rate: form.exit_cap_rate,
+        };
+        const ci = parseDealInputs(insertData);
+        const cm = calculateDeal(ci);
+        await supabase.from('terminal_deals').update({
+          cap_rate: cm.capRate > 0 ? cm.capRate.toFixed(2) : null,
+          irr: cm.irr !== null ? cm.irr.toFixed(2) : null,
+          coc: cm.cocReturn !== 0 ? cm.cocReturn.toFixed(2) : null,
+          dscr: cm.lenderDSCR > 0 ? cm.lenderDSCR.toFixed(2) : null,
+          equity_required: cm.netEquity > 0 ? String(Math.round(cm.netEquity)) : null,
+          loan_estimate: cm.loanAmount > 0 ? String(Math.round(cm.loanAmount)) : null,
+        }).eq('id', newDeal.id);
+      }
 
       if (error || !newDeal) {
         console.error('Failed to create deal:', error);
@@ -711,135 +781,123 @@ export default function NewDealPage() {
         </div>
       </div>
 
-      {/* Section 2: Financial Metrics */}
+      {/* Financial Inputs */}
+      {(() => {
+        const ci = parseDealInputs({
+          purchase_price: form.purchase_price, noi: form.noi, ltv: form.ltv,
+          interest_rate: form.interest_rate, amortization_years: form.amortization_years,
+          loan_fee_points: form.loan_fee_points, io_period_months: form.io_period_months,
+          seller_financing: form.seller_financing, mezz_percent: form.mezz_percent,
+          mezz_rate: form.mezz_rate, mezz_term_months: form.mezz_term_months,
+          seller_credit: form.seller_credit, assignment_fee: form.assignment_fee,
+          acq_fee: form.acq_fee, asset_mgmt_fee: form.asset_mgmt_fee,
+          gp_carry: form.gp_carry, pref_return: form.pref_return,
+          hold_period_years: form.hold_period_years, exit_cap_rate: form.exit_cap_rate,
+        });
+        const m = calculateDeal(ci);
+        const fmt = (n: number) => '$' + Math.round(n).toLocaleString();
+        const pct = (n: number, d = 1) => n.toFixed(d) + '%';
+        return (<>
+          <div className="bg-white rounded-2xl border border-rp-gray-200 p-6 mb-6">
+            <h2 className="text-[16px] font-semibold text-rp-navy mb-5">Financial Inputs</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <Input label="Purchase Price *" value={form.purchase_price} onChange={(e) => updateField('purchase_price', e.target.value)} error={errors.purchase_price} placeholder="e.g. 5000000" />
+              <Input label="NOI" value={form.noi} onChange={(e) => updateField('noi', e.target.value)} placeholder="e.g. 450000" />
+            </div>
+
+            <h3 className="text-[13px] font-semibold text-rp-gray-500 mb-3">Senior Debt Assumptions</h3>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+              <Input label="LTV %" value={form.ltv} onChange={(e) => updateField('ltv', e.target.value)} placeholder="75" />
+              <Input label="Rate %" value={form.interest_rate} onChange={(e) => updateField('interest_rate', e.target.value)} placeholder="6.00" />
+              <Input label="Amort (yrs)" value={form.amortization_years} onChange={(e) => updateField('amortization_years', e.target.value)} placeholder="30" />
+              <Input label="Loan Fee (pts)" value={form.loan_fee_points} onChange={(e) => updateField('loan_fee_points', e.target.value)} placeholder="1" />
+              <Input label="IO Period (mo)" value={form.io_period_months} onChange={(e) => updateField('io_period_months', e.target.value)} placeholder="0" />
+            </div>
+
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-[13px] font-semibold text-rp-gray-500">Seller Mezzanine</h3>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={form.seller_financing} onChange={(e) => updateField('seller_financing', e.target.checked)} className="w-4 h-4 rounded border-rp-gray-300 text-rp-gold focus:ring-rp-gold" />
+                <span className="text-[12px] text-rp-gray-500">Seller financing available</span>
+              </label>
+            </div>
+            {form.seller_financing && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-2">
+                <Input label="Mezz %" value={form.mezz_percent} onChange={(e) => updateField('mezz_percent', e.target.value)} placeholder="15" />
+                <Input label="Mezz Rate %" value={form.mezz_rate} onChange={(e) => updateField('mezz_rate', e.target.value)} placeholder="5.00" />
+                <Input label="Mezz Term (mo)" value={form.mezz_term_months} onChange={(e) => updateField('mezz_term_months', e.target.value)} placeholder="60" />
+              </div>
+            )}
+            {form.seller_financing && <p className="text-[11px] text-rp-gray-400 mb-4">Mezzanine is interest-only with balloon payment at maturity.</p>}
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+              <Input label="Seller Credit $" value={form.seller_credit} onChange={(e) => updateField('seller_credit', e.target.value)} placeholder="0" />
+              <Input label="Hold (yrs)" value={form.hold_period_years} onChange={(e) => updateField('hold_period_years', e.target.value)} placeholder="5" />
+              <Input label="Exit Cap %" value={form.exit_cap_rate} onChange={(e) => updateField('exit_cap_rate', e.target.value)} placeholder="Same as entry" />
+              <Input label="Pref Return %" value={form.pref_return} onChange={(e) => updateField('pref_return', e.target.value)} placeholder="8" />
+            </div>
+          </div>
+
+          {/* Live Computed Metrics */}
+          <div className="bg-gradient-to-br from-[#07090F] via-[#0A1628] to-[#0E3470] rounded-2xl p-6 mb-6 text-white">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-[16px]">⚡</span>
+              <h2 className="text-[15px] font-semibold">Computed Metrics</h2>
+              <span className="text-[10px] text-white/30 ml-1">Updates live</span>
+            </div>
+            <div className="grid grid-cols-4 gap-2 mb-3">
+              {[
+                { l: 'Cap Rate', v: pct(m.capRate), c: '#BC9C45' },
+                { l: 'CoC Return', v: pct(m.cocReturn), c: m.cocReturn >= 0 ? '#0B8A4D' : '#DC2626' },
+                { l: 'IRR', v: m.irr !== null ? pct(m.irr) : 'N/A', c: '#0B8A4D' },
+                { l: 'Eq. Multiple', v: m.equityMultiple.toFixed(2) + 'x', c: '#BC9C45' },
+              ].map((x) => (
+                <div key={x.l} className="bg-white/[0.05] rounded-lg p-3 border border-white/[0.05]">
+                  <div className="text-[8px] font-bold text-white/25 uppercase tracking-[1.5px]">{x.l}</div>
+                  <div className="text-[20px] font-bold tabular-nums mt-0.5" style={{ color: x.c }}>{x.v}</div>
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { l: 'Loan Amount', v: fmt(m.loanAmount) },
+                { l: 'Net Equity', v: fmt(m.netEquity) },
+                { l: 'Lender DSCR', v: m.lenderDSCR.toFixed(2) + 'x' },
+                { l: 'Distributable CF', v: fmt(m.distributableCashFlow) },
+                { l: 'Total Leverage', v: pct(m.totalLeverage) },
+                ...(form.seller_financing ? [{ l: 'Combined DSCR', v: m.combinedDSCR.toFixed(2) + 'x' }] : [{ l: 'Annual DS', v: fmt(m.annualSeniorDS) }]),
+              ].map((x) => (
+                <div key={x.l} className="flex justify-between items-center py-1.5 px-2.5 bg-white/[0.03] rounded">
+                  <span className="text-[10px] text-white/30">{x.l}</span>
+                  <span className="text-[12px] font-semibold text-white tabular-nums">{x.v}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>);
+      })()}
+
+      {/* Fee Structure */}
       <div className="bg-white rounded-2xl border border-rp-gray-200 p-6 mb-6">
-        <h2 className="text-[16px] font-semibold text-rp-navy mb-5">
-          Financial Metrics
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Input
-            label="Purchase Price *"
-            value={form.purchase_price}
-            onChange={(e) => updateField('purchase_price', e.target.value)}
-            error={errors.purchase_price}
-            placeholder="e.g. 12,500,000"
-          />
-          <Input
-            label="NOI"
-            value={form.noi}
-            onChange={(e) => updateField('noi', e.target.value)}
-            placeholder="e.g. 850,000"
-          />
-          <Input
-            label="Cap Rate"
-            value={form.cap_rate}
-            onChange={(e) => updateField('cap_rate', e.target.value)}
-            placeholder="e.g. 6.8%"
-          />
-          <Input
-            label="IRR"
-            value={form.irr}
-            onChange={(e) => updateField('irr', e.target.value)}
-            placeholder="e.g. 18%"
-          />
-          <Input
-            label="CoC"
-            value={form.coc}
-            onChange={(e) => updateField('coc', e.target.value)}
-            placeholder="e.g. 8.5%"
-          />
-          <Input
-            label="DSCR"
-            value={form.dscr}
-            onChange={(e) => updateField('dscr', e.target.value)}
-            placeholder="e.g. 1.25"
-          />
-          <Input
-            label="Equity Required"
-            value={form.equity_required}
-            onChange={(e) => updateField('equity_required', e.target.value)}
-            placeholder="e.g. 4,500,000"
-          />
-          <Input
-            label="Loan Estimate"
-            value={form.loan_estimate}
-            onChange={(e) => updateField('loan_estimate', e.target.value)}
-            placeholder="e.g. 8,000,000"
-          />
+        <h2 className="text-[16px] font-semibold text-rp-navy mb-5">Fee Structure</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Input label="Assignment Fee %" value={form.assignment_fee} onChange={(e) => updateField('assignment_fee', e.target.value)} placeholder="3" />
+          <Input label="Acquisition Fee %" value={form.acq_fee} onChange={(e) => updateField('acq_fee', e.target.value)} placeholder="1" />
+          <Input label="Asset Mgmt Fee %" value={form.asset_mgmt_fee} onChange={(e) => updateField('asset_mgmt_fee', e.target.value)} placeholder="2" />
+          <Input label="GP Carry %" value={form.gp_carry} onChange={(e) => updateField('gp_carry', e.target.value)} placeholder="20" />
         </div>
       </div>
 
-      {/* Section 3: Deal Terms */}
+      {/* Special Terms */}
       <div className="bg-white rounded-2xl border border-rp-gray-200 p-6 mb-6">
-        <h2 className="text-[16px] font-semibold text-rp-navy mb-5">
-          Deal Terms
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="flex items-center gap-3 col-span-full">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.seller_financing}
-                onChange={(e) =>
-                  updateField('seller_financing', e.target.checked)
-                }
-                className="w-4 h-4 rounded border-rp-gray-300 text-rp-gold focus:ring-rp-gold/20"
-              />
-              <span className="text-[13px] font-medium text-rp-gray-700">
-                Seller Financing Available
-              </span>
-            </label>
-          </div>
-          <Input
-            label="Special Terms"
-            value={form.special_terms}
-            onChange={(e) => updateField('special_terms', e.target.value)}
-            placeholder="Any special deal terms"
-            className="col-span-full"
-          />
-          <Input
-            label="Assignment Fee"
-            value={form.assignment_fee}
-            onChange={(e) => updateField('assignment_fee', e.target.value)}
-            placeholder="3%"
-          />
-          <Input
-            label="Assignment IRR"
-            value={form.assignment_irr}
-            onChange={(e) => updateField('assignment_irr', e.target.value)}
-            placeholder="e.g. 22%"
-          />
-          <Input
-            label="GP/LP IRR"
-            value={form.gplp_irr}
-            onChange={(e) => updateField('gplp_irr', e.target.value)}
-            placeholder="e.g. 15% / 12%"
-          />
-          <Input
-            label="Acquisition Fee"
-            value={form.acq_fee}
-            onChange={(e) => updateField('acq_fee', e.target.value)}
-            placeholder="1%"
-          />
-          <Input
-            label="Asset Mgmt Fee"
-            value={form.asset_mgmt_fee}
-            onChange={(e) => updateField('asset_mgmt_fee', e.target.value)}
-            placeholder="2%"
-          />
-          <Input
-            label="GP Carry"
-            value={form.gp_carry}
-            onChange={(e) => updateField('gp_carry', e.target.value)}
-            placeholder="20% above 8% pref"
-          />
-          <Input
-            label="Loan Fee"
-            value={form.loan_fee}
-            onChange={(e) => updateField('loan_fee', e.target.value)}
-            placeholder="1 point"
-          />
-        </div>
+        <h2 className="text-[16px] font-semibold text-rp-navy mb-3">Special Terms</h2>
+        <textarea
+          value={form.special_terms}
+          onChange={(e) => updateField('special_terms', e.target.value)}
+          placeholder="Additional terms not captured in structured fields above (personal guarantees, special conditions, assignment restrictions, etc.)"
+          rows={3}
+          className="w-full px-3.5 py-2.5 border border-rp-gray-300 rounded-lg text-sm text-rp-gray-700 focus:outline-none focus:ring-[3px] focus:ring-rp-gold/15 focus:border-rp-gold placeholder:text-rp-gray-400 transition-all resize-vertical"
+        />
       </div>
 
       {/* Section 4: Pre-Pipeline / Coming Soon */}
