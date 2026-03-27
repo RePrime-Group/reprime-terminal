@@ -867,9 +867,11 @@ function DDFolderCard({
 
 function IRRCalculatorPanel({
   deal,
+  baseIRR: baseIRRProp,
   onSliderChange,
 }: {
   deal: DealWithDetails;
+  baseIRR: number;
   onSliderChange: () => void;
 }) {
   const [mode, setMode] = useState<CalculatorMode>('assignment');
@@ -878,9 +880,8 @@ function IRRCalculatorPanel({
   const [acqFee, setAcqFee] = useState(1);
 
   const customIRR = useMemo(() => {
-    const baseIRR = computed.irr ?? 0;
-    return calculateCustomIRR(baseIRR, { lpSplit, prefReturn, acqFee });
-  }, [computed.irr, lpSplit, prefReturn, acqFee]);
+    return calculateCustomIRR(baseIRRProp, { lpSplit, prefReturn, acqFee });
+  }, [baseIRRProp, lpSplit, prefReturn, acqFee]);
 
   const handleSliderChange = (
     setter: (v: number) => void,
@@ -2274,6 +2275,7 @@ export default function DealDetailClient({
               <div className="mt-6">
                 <IRRCalculatorPanel
                   deal={deal}
+                  baseIRR={computed.irr ?? 0}
                   onSliderChange={handleIRRSliderChange}
                 />
               </div>
