@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import type { ActivityAction } from '@/lib/types/database';
@@ -23,19 +24,6 @@ interface ActivityLogClientProps {
   activities: ActivityRow[];
   filterOptions: FilterOptions;
 }
-
-const ACTION_LABELS: Record<ActivityAction, string> = {
-  deal_viewed: 'Viewed Deal',
-  document_downloaded: 'Downloaded Document',
-  dataroom_viewed: 'Viewed Data Room',
-  structure_viewed: 'Viewed Structure',
-  irr_calculator_used: 'Used IRR Calculator',
-  meeting_requested: 'Requested Meeting',
-  page_time: 'Time on Page',
-  expressed_interest: 'Expressed Interest',
-  om_downloaded: 'Downloaded OM',
-  portal_viewed: 'Viewed Portal',
-};
 
 const ALL_ACTIONS: ActivityAction[] = [
   'deal_viewed',
@@ -71,14 +59,14 @@ function formatDetails(metadata: Record<string, unknown>): string {
     .join(', ');
 }
 
-function generateCSV(rows: ActivityRow[]): string {
-  const header = 'Timestamp,Investor,Deal,Action,Details\n';
+function generateCSV(rows: ActivityRow[], csvHeader: string, actionLabels: Record<ActivityAction, string>): string {
+  const header = csvHeader + '\n';
   const body = rows
     .map((r) => {
       const ts = new Date(r.created_at).toISOString();
       const investor = (r.investor_name ?? '').replace(/"/g, '""');
       const deal = (r.deal_name ?? '').replace(/"/g, '""');
-      const action = ACTION_LABELS[r.action];
+      const action = actionLabels[r.action];
       const details = formatDetails(r.metadata).replace(/"/g, '""');
       return `"${ts}","${investor}","${deal}","${action}","${details}"`;
     })
@@ -87,6 +75,22 @@ function generateCSV(rows: ActivityRow[]): string {
 }
 
 export default function ActivityLogClient({ activities, filterOptions }: ActivityLogClientProps) {
+  const t = useTranslations('admin.activity');
+  const tc = useTranslations('common');
+
+  const ACTION_LABELS: Record<ActivityAction, string> = {
+    deal_viewed: t('viewedDeal'),
+    document_downloaded: t('downloadedDocument'),
+    dataroom_viewed: t('viewedDataRoom'),
+    structure_viewed: t('viewedStructure'),
+    irr_calculator_used: t('usedIrrCalc'),
+    meeting_requested: t('requestedMeeting'),
+    page_time: t('timeOnPage'),
+    expressed_interest: t('expressedInterest'),
+    om_downloaded: t('downloadedOm'),
+    portal_viewed: t('viewedPortal'),
+  };
+
   const [investorFilter, setInvestorFilter] = useState('');
   const [dealFilter, setDealFilter] = useState('');
   const [actionFilter, setActionFilter] = useState('');
@@ -116,7 +120,7 @@ export default function ActivityLogClient({ activities, filterOptions }: Activit
   const hasMore = visibleCount < filtered.length;
 
   const handleExportCSV = useCallback(() => {
-    const csv = generateCSV(filtered);
+    const csv = generateCSV(filtered, t('csvHeader'), ACTION_LABELS);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -126,7 +130,7 @@ export default function ActivityLogClient({ activities, filterOptions }: Activit
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-  }, [filtered]);
+  }, [filtered, t, ACTION_LABELS]);
 
   const selectClass =
     'px-3 py-2 border border-rp-gray-300 rounded-lg text-sm text-rp-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-rp-gold/20 focus:border-rp-gold transition-colors';
@@ -135,22 +139,22 @@ export default function ActivityLogClient({ activities, filterOptions }: Activit
     <div>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-[24px] font-bold text-rp-navy">Activity Log</h1>
+        <h1 className="text-[24px] font-bold text-rp-navy">{t('title')}</h1>
         <Button variant="secondary" onClick={handleExportCSV} size="sm">
-          Export CSV
+          {t('exportCsv')}
         </Button>
       </div>
 
       {/* Filters */}
       <div className="flex flex-wrap items-end gap-3 mb-5">
         <div>
-          <label className="block text-[12px] font-medium text-rp-gray-500 mb-1">Investor</label>
+          <label className="block text-[12px] font-medium text-rp-gray-500 mb-1">{t('investor')}</label>
           <select
             value={investorFilter}
             onChange={(e) => { setInvestorFilter(e.target.value); setVisibleCount(PAGE_SIZE); }}
             className={selectClass}
           >
-            <option value="">All Investors</option>
+            <option value="">{t('allInvestors')}</option>
             {filterOptions.investors.map((inv) => (
               <option key={inv.id} value={inv.name}>
                 {inv.name}
@@ -160,13 +164,13 @@ export default function ActivityLogClient({ activities, filterOptions }: Activit
         </div>
 
         <div>
-          <label className="block text-[12px] font-medium text-rp-gray-500 mb-1">Deal</label>
+          <label className="block text-[12px] font-medium text-rp-gray-500 mb-1">{t('deal')}</label>
           <select
             value={dealFilter}
             onChange={(e) => { setDealFilter(e.target.value); setVisibleCount(PAGE_SIZE); }}
             className={selectClass}
           >
-            <option value="">All Deals</option>
+            <option value="">{t('allDeals')}</option>
             {filterOptions.deals.map((deal) => (
               <option key={deal.id} value={deal.name}>
                 {deal.name}
@@ -176,13 +180,13 @@ export default function ActivityLogClient({ activities, filterOptions }: Activit
         </div>
 
         <div>
-          <label className="block text-[12px] font-medium text-rp-gray-500 mb-1">Action</label>
+          <label className="block text-[12px] font-medium text-rp-gray-500 mb-1">{t('action')}</label>
           <select
             value={actionFilter}
             onChange={(e) => { setActionFilter(e.target.value); setVisibleCount(PAGE_SIZE); }}
             className={selectClass}
           >
-            <option value="">All Actions</option>
+            <option value="">{t('allActions')}</option>
             {ALL_ACTIONS.map((action) => (
               <option key={action} value={action}>
                 {ACTION_LABELS[action]}
@@ -193,7 +197,7 @@ export default function ActivityLogClient({ activities, filterOptions }: Activit
 
         <div>
           <Input
-            label="Start Date"
+            label={t('startDate')}
             type="date"
             value={startDate}
             onChange={(e) => { setStartDate(e.target.value); setVisibleCount(PAGE_SIZE); }}
@@ -202,7 +206,7 @@ export default function ActivityLogClient({ activities, filterOptions }: Activit
 
         <div>
           <Input
-            label="End Date"
+            label={t('endDate')}
             type="date"
             value={endDate}
             onChange={(e) => { setEndDate(e.target.value); setVisibleCount(PAGE_SIZE); }}
@@ -216,19 +220,19 @@ export default function ActivityLogClient({ activities, filterOptions }: Activit
           <thead>
             <tr className="border-b border-rp-gray-200">
               <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">
-                Timestamp
+                {t('timestamp')}
               </th>
               <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">
-                Investor
+                {t('investor')}
               </th>
               <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">
-                Deal
+                {t('deal')}
               </th>
               <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">
-                Action
+                {t('action')}
               </th>
               <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">
-                Details
+                {t('details')}
               </th>
             </tr>
           </thead>
@@ -236,7 +240,7 @@ export default function ActivityLogClient({ activities, filterOptions }: Activit
             {visibleRows.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-5 py-12 text-center text-sm text-rp-gray-400">
-                  No activity found.
+                  {t('noActivity')}
                 </td>
               </tr>
             ) : (
@@ -274,7 +278,7 @@ export default function ActivityLogClient({ activities, filterOptions }: Activit
               size="sm"
               onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
             >
-              Load More ({filtered.length - visibleCount} remaining)
+              {t('loadMore', { count: filtered.length - visibleCount })}
             </Button>
           </div>
         )}

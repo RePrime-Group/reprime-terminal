@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 import { STAGE_LABELS, STAGE_DURATIONS, STAGE_ORDER } from '@/lib/pipeline/stage-templates';
 import type { PipelineStage } from '@/lib/pipeline/stage-templates';
@@ -87,6 +88,8 @@ function formatTimestamp(iso: string): string {
 
 export default function PipelineView({ dealId, dealName, locale }: PipelineViewProps) {
   const supabase = createClient();
+  const t = useTranslations('admin.pipeline');
+  const tc = useTranslations('common');
 
   /* ── State ── */
   const [stages, setStages] = useState<DealStage[]>([]);
@@ -538,13 +541,13 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
             <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
           </svg>
         </div>
-        <p className="text-[15px] text-[#6B7280] mb-6">No pipeline has been created for this deal yet.</p>
+        <p className="text-[15px] text-[#6B7280] mb-6">{t('noPipeline')}</p>
         <button
           onClick={initializePipeline}
           disabled={initializing}
           className="bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] font-semibold px-8 py-3 rounded-lg shadow-[0_2px_8px_rgba(188,156,69,0.2)] hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(188,156,69,0.25)] transition-all disabled:opacity-50"
         >
-          {initializing ? 'Initializing...' : 'Initialize Pipeline'}
+          {initializing ? t('initializing') : t('initializePipeline')}
         </button>
       </div>
     );
@@ -608,9 +611,9 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
         {/* Header row */}
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-[16px] font-bold text-[#0E3470]">
-            {STAGE_LABELS[selectedStage]} Tasks
+            {STAGE_LABELS[selectedStage]} {t('tasks')}
             <span className="ml-2 text-[12px] font-normal text-[#9CA3AF]">
-              {stageTasks.filter((t) => t.status === 'completed').length}/{stageTasks.length} completed
+              {stageTasks.filter((t) => t.status === 'completed').length}/{stageTasks.length} {t('completed')}
             </span>
           </h2>
           {isOwner && currentStageRecord && currentStageRecord.stage === selectedStage && !currentStageRecord.completed_at && (
@@ -618,7 +621,7 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
               onClick={handleAdvanceStage}
               className="bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] font-semibold px-5 py-2 rounded-lg text-[12px] shadow-[0_2px_8px_rgba(188,156,69,0.2)] hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(188,156,69,0.25)] transition-all"
             >
-              Advance to Next Stage
+              {t('advanceToNextStage')}
             </button>
           )}
         </div>
@@ -627,7 +630,7 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
         {advanceError && (
           <div className="mb-3 p-3 bg-[#FEF2F2] border border-[#FECACA] rounded-lg text-[12px] text-[#DC2626] whitespace-pre-line">
             {advanceError}
-            <button onClick={() => setAdvanceError(null)} className="ml-3 underline">Dismiss</button>
+            <button onClick={() => setAdvanceError(null)} className="ml-3 underline">{tc('dismiss')}</button>
           </div>
         )}
 
@@ -635,10 +638,10 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
         <div className="flex-1 overflow-y-auto bg-white rounded-xl border border-[#EEF0F4] rp-card-shadow">
           {/* Table header */}
           <div className="grid grid-cols-[40px_1fr_150px_120px_48px] gap-2 px-4 py-2.5 border-b border-[#EEF0F4] bg-[#FAFBFC] sticky top-0 z-10">
-            <span className="text-[9px] uppercase tracking-[0.1em] font-semibold text-[#9CA3AF]">St.</span>
-            <span className="text-[9px] uppercase tracking-[0.1em] font-semibold text-[#9CA3AF]">Task Name</span>
-            <span className="text-[9px] uppercase tracking-[0.1em] font-semibold text-[#9CA3AF]">Assignee</span>
-            <span className="text-[9px] uppercase tracking-[0.1em] font-semibold text-[#9CA3AF]">Due Date</span>
+            <span className="text-[9px] uppercase tracking-[0.1em] font-semibold text-[#9CA3AF]">{t('status')}</span>
+            <span className="text-[9px] uppercase tracking-[0.1em] font-semibold text-[#9CA3AF]">{t('taskName')}</span>
+            <span className="text-[9px] uppercase tracking-[0.1em] font-semibold text-[#9CA3AF]">{t('assignee')}</span>
+            <span className="text-[9px] uppercase tracking-[0.1em] font-semibold text-[#9CA3AF]">{t('dueDate')}</span>
             <span className="text-[9px] uppercase tracking-[0.1em] font-semibold text-[#9CA3AF]"></span>
           </div>
 
@@ -659,19 +662,19 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
                   {/* Status icon */}
                   <div className="flex items-center justify-center">
                     {task.status === 'completed' ? (
-                      <span className="text-[16px]" title="Completed">
+                      <span className="text-[16px]" title={t('markComplete')}>
                         <svg width="18" height="18" viewBox="0 0 20 20" fill="#0B8A4D"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
                       </span>
                     ) : overdue ? (
-                      <span className="w-[18px] h-[18px] rounded-full bg-[#DC2626] flex items-center justify-center" title="Overdue">
+                      <span className="w-[18px] h-[18px] rounded-full bg-[#DC2626] flex items-center justify-center" title={t('markInProgress')}>
                         <svg width="10" height="10" viewBox="0 0 10 10" fill="white"><circle cx="5" cy="5" r="3"/></svg>
                       </span>
                     ) : task.status === 'in_progress' ? (
-                      <span className="w-[18px] h-[18px] rounded-full bg-[#F59E0B] flex items-center justify-center" title="In Progress">
+                      <span className="w-[18px] h-[18px] rounded-full bg-[#F59E0B] flex items-center justify-center" title={t('markInProgress')}>
                         <svg width="10" height="10" viewBox="0 0 10 10" fill="white"><circle cx="5" cy="5" r="3"/></svg>
                       </span>
                     ) : (
-                      <span className="w-[18px] h-[18px] rounded-full border-2 border-[#D1D5DB]" title="Pending" />
+                      <span className="w-[18px] h-[18px] rounded-full border-2 border-[#D1D5DB]" title={t('reassign')} />
                     )}
                   </div>
 
@@ -694,7 +697,7 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
                         <span className="text-[12px] text-[#4B5563] truncate">{assigneeName}</span>
                       </>
                     ) : (
-                      <span className="text-[12px] text-[#9CA3AF]">Unassigned</span>
+                      <span className="text-[12px] text-[#9CA3AF]">{t('unassigned')}</span>
                     )}
                   </div>
 
@@ -720,25 +723,25 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
                           onClick={() => { updateTaskStatus(task.id, 'completed'); }}
                           className="w-full text-left px-3 py-2 text-[12px] text-[#1F2937] hover:bg-[#F7F8FA]"
                         >
-                          Mark Complete
+                          {t('markComplete')}
                         </button>
                         <button
                           onClick={() => { updateTaskStatus(task.id, 'in_progress'); }}
                           className="w-full text-left px-3 py-2 text-[12px] text-[#1F2937] hover:bg-[#F7F8FA]"
                         >
-                          Mark In Progress
+                          {t('markInProgress')}
                         </button>
                         <button
                           onClick={() => { setReassignTaskId(task.id); setMenuTaskId(null); }}
                           className="w-full text-left px-3 py-2 text-[12px] text-[#1F2937] hover:bg-[#F7F8FA]"
                         >
-                          Reassign
+                          {t('reassign')}
                         </button>
                         <button
                           onClick={() => { setExpandedTaskId(task.id); setMenuTaskId(null); }}
                           className="w-full text-left px-3 py-2 text-[12px] text-[#1F2937] hover:bg-[#F7F8FA]"
                         >
-                          Add Note
+                          {t('addNote')}
                         </button>
                       </div>
                     )}
@@ -746,12 +749,12 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
                     {/* Reassign dropdown */}
                     {reassignTaskId === task.id && (
                       <div className="absolute right-0 top-8 z-30 bg-white rounded-lg border border-[#EEF0F4] shadow-lg py-1 w-52">
-                        <div className="px-3 py-1.5 text-[9px] uppercase tracking-[0.1em] text-[#9CA3AF] font-semibold">Assign To</div>
+                        <div className="px-3 py-1.5 text-[9px] uppercase tracking-[0.1em] text-[#9CA3AF] font-semibold">{t('assignTo')}</div>
                         <button
                           onClick={() => reassignTask(task.id, null)}
                           className="w-full text-left px-3 py-2 text-[12px] text-[#9CA3AF] hover:bg-[#F7F8FA]"
                         >
-                          Unassign
+                          {t('unassign')}
                         </button>
                         {teamMembers.map((m) => (
                           <button
@@ -776,13 +779,13 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
                     <div className="pt-3 space-y-4">
                       {/* Notes */}
                       <div>
-                        <label className="text-[9px] uppercase tracking-[0.1em] font-semibold text-[#9CA3AF] block mb-1">Notes</label>
+                        <label className="text-[9px] uppercase tracking-[0.1em] font-semibold text-[#9CA3AF] block mb-1">{t('notes')}</label>
                         <textarea
                           defaultValue={task.notes ?? ''}
                           onBlur={(e) => saveTaskNotes(task.id, e.target.value)}
                           rows={3}
                           className="w-full px-3 py-2 border border-[#EEF0F4] rounded-lg text-[13px] text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#BC9C45]/20 focus:border-[#BC9C45] resize-none"
-                          placeholder="Add notes..."
+                          placeholder={t('addNotesPlaceholder')}
                         />
                       </div>
 
@@ -792,13 +795,13 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
                           onClick={() => updateTaskStatus(task.id, 'completed')}
                           className="bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] font-semibold px-5 py-2 rounded-lg text-[12px] shadow-[0_2px_8px_rgba(188,156,69,0.2)] hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(188,156,69,0.25)] transition-all"
                         >
-                          Mark Complete
+                          {t('markComplete')}
                         </button>
                       )}
 
                       {/* Attachments */}
                       <div>
-                        <label className="text-[9px] uppercase tracking-[0.1em] font-semibold text-[#9CA3AF] block mb-2">Attachments</label>
+                        <label className="text-[9px] uppercase tracking-[0.1em] font-semibold text-[#9CA3AF] block mb-2">{t('attachments')}</label>
 
                         {attachments.length > 0 && (
                           <div className="space-y-2 mb-3">
@@ -818,7 +821,7 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
                                 {/* Transparency toggle */}
                                 <div className="flex items-center gap-2 shrink-0">
                                   <label className="flex items-center gap-1.5 cursor-pointer">
-                                    <span className="text-[10px] text-[#6B7280]">Show to investors</span>
+                                    <span className="text-[10px] text-[#6B7280]">{t('showToInvestors')}</span>
                                     <button
                                       onClick={() => toggleTransparency(att, !att.show_to_investors)}
                                       className={`relative w-8 h-[18px] rounded-full transition-colors ${att.show_to_investors ? 'bg-[#0B8A4D]' : 'bg-[#D1D5DB]'}`}
@@ -833,7 +836,7 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
                                       onChange={(e) => setAttachmentFolder(att, e.target.value || null)}
                                       className="text-[10px] border border-[#EEF0F4] rounded px-1.5 py-1 bg-white text-[#4B5563] focus:outline-none focus:ring-1 focus:ring-[#BC9C45]/30"
                                     >
-                                      <option value="">Select folder...</option>
+                                      <option value="">{t('selectFolder')}</option>
                                       {ddFolders.map((f) => (
                                         <option key={f.id} value={f.id}>
                                           {f.icon} {f.name}
@@ -850,7 +853,7 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
                         {/* Upload button */}
                         <label className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-dashed border-[#CBD5E1] rounded-lg text-[11px] text-[#6B7280] cursor-pointer hover:border-[#BC9C45] hover:text-[#BC9C45] transition-colors">
                           <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd"/></svg>
-                          {uploading ? 'Uploading...' : 'Upload File'}
+                          {uploading ? tc('uploading') : t('uploadFile')}
                           <input
                             type="file"
                             className="hidden"
@@ -873,7 +876,7 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
           {/* Empty state */}
           {stageTasks.length === 0 && (
             <div className="flex items-center justify-center h-32 text-[13px] text-[#9CA3AF]">
-              No tasks for this stage yet.
+              {t('noTasks')}
             </div>
           )}
 
@@ -886,7 +889,7 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
                   value={newTaskName}
                   onChange={(e) => setNewTaskName(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') addTask(); if (e.key === 'Escape') setShowAddTask(false); }}
-                  placeholder="Task name..."
+                  placeholder={t('taskNamePlaceholder')}
                   autoFocus
                   className="flex-1 px-3 py-2 border border-[#EEF0F4] rounded-lg text-[13px] text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#BC9C45]/20 focus:border-[#BC9C45]"
                 />
@@ -894,13 +897,13 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
                   onClick={addTask}
                   className="bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] font-semibold px-4 py-2 rounded-lg text-[12px]"
                 >
-                  Add
+                  {tc('add')}
                 </button>
                 <button
                   onClick={() => { setShowAddTask(false); setNewTaskName(''); }}
                   className="text-[#9CA3AF] hover:text-[#6B7280] text-[12px] px-2 py-2"
                 >
-                  Cancel
+                  {tc('cancel')}
                 </button>
               </div>
             ) : (
@@ -911,7 +914,7 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
                 <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
                 </svg>
-                Add Task
+                {t('addTask')}
               </button>
             )}
           </div>
@@ -922,14 +925,14 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
       <div className="w-[35%] flex flex-col min-h-0 bg-white rounded-xl border border-[#EEF0F4] rp-card-shadow">
         {/* Header */}
         <div className="px-4 py-3 border-b border-[#EEF0F4]">
-          <h3 className="text-[13px] font-bold text-[#0E3470] uppercase tracking-[0.06em]">Deal Messages</h3>
+          <h3 className="text-[13px] font-bold text-[#0E3470] uppercase tracking-[0.06em]">{t('dealMessages')}</h3>
         </div>
 
         {/* Messages list */}
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
           {messages.length === 0 && (
             <div className="flex items-center justify-center h-32 text-[12px] text-[#9CA3AF]">
-              No messages yet. Start the conversation.
+              {t('noMessages')}
             </div>
           )}
           {messages.map((msg) => (
@@ -957,7 +960,7 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
               value={msgInput}
               onChange={(e) => setMsgInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-              placeholder="Type a message..."
+              placeholder={t('typeMessage')}
               className="flex-1 px-3 py-2 border border-[#EEF0F4] rounded-lg text-[13px] text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#BC9C45]/20 focus:border-[#BC9C45]"
             />
             <button
@@ -965,7 +968,7 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
               disabled={!msgInput.trim()}
               className="bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] font-semibold px-4 py-2 rounded-lg text-[12px] disabled:opacity-40 shadow-[0_2px_8px_rgba(188,156,69,0.2)] hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(188,156,69,0.25)] transition-all"
             >
-              Send
+              {tc('send')}
             </button>
           </div>
         </div>
@@ -975,26 +978,26 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
       {showAdvanceModal && currentStageRecord && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowAdvanceModal(false)}>
           <div className="bg-white rounded-2xl border border-[#EEF0F4] shadow-2xl p-6 w-[420px] max-w-[90vw]" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-[16px] font-bold text-[#0E3470] mb-2">Advance Pipeline Stage</h3>
+            <h3 className="text-[16px] font-bold text-[#0E3470] mb-2">{t('advancePipelineStage')}</h3>
             <p className="text-[13px] text-[#6B7280] mb-4">
               Mark <strong>{STAGE_LABELS[currentStageRecord.stage as PipelineStage]}</strong> as completed and advance to{' '}
               <strong>{STAGE_LABELS[getNextStage(currentStageRecord.stage as PipelineStage) ?? 'post_closing']}</strong>?
             </p>
             <p className="text-[11px] text-[#9CA3AF] mb-5">
-              This will create all tasks for the next stage. This action cannot be undone.
+              {t('advanceWarning')}
             </p>
             <div className="flex items-center justify-end gap-3">
               <button
                 onClick={() => setShowAdvanceModal(false)}
                 className="px-4 py-2 rounded-lg text-[12px] text-[#6B7280] border border-[#EEF0F4] hover:bg-[#F7F8FA] transition-colors"
               >
-                Cancel
+                {tc('cancel')}
               </button>
               <button
                 onClick={confirmAdvance}
                 className="bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] font-semibold px-5 py-2 rounded-lg text-[12px] shadow-[0_2px_8px_rgba(188,156,69,0.2)] hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(188,156,69,0.25)] transition-all"
               >
-                Confirm Advance
+                {t('confirmAdvance')}
               </button>
             </div>
           </div>

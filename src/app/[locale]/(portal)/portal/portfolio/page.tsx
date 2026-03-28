@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { formatPrice, formatPriceCompact, formatPercent } from '@/lib/utils/format';
+import { getTranslations } from 'next-intl/server';
 
 export const metadata = { title: 'Portfolio — RePrime Terminal' };
 
@@ -21,24 +22,25 @@ interface Deal {
   assigned_to: string | null;
 }
 
-function getStatusBadge(status: string) {
-  const map: Record<string, { label: string; bg: string; text: string }> = {
-    assigned: { label: 'Performing', bg: 'bg-green-50', text: 'text-green-700' },
-    renovation: { label: 'Under Renovation', bg: 'bg-amber-50', text: 'text-amber-700' },
-    stabilized: { label: 'Stabilized', bg: 'bg-blue-50', text: 'text-blue-700' },
-    closed: { label: 'Closed', bg: 'bg-[#0A1628]/5', text: 'text-[#0A1628]' },
-  };
-  const badge = map[status] ?? map.assigned;
-  return badge;
-}
-
 export default async function PortfolioPage({
   params,
 }: {
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  const t = await getTranslations('portal.portfolio');
   const supabase = await createClient();
+
+  function getStatusBadge(status: string) {
+    const map: Record<string, { label: string; bg: string; text: string }> = {
+      assigned: { label: t('performing'), bg: 'bg-green-50', text: 'text-green-700' },
+      renovation: { label: t('underRenovation'), bg: 'bg-amber-50', text: 'text-amber-700' },
+      stabilized: { label: t('stabilized'), bg: 'bg-blue-50', text: 'text-blue-700' },
+      closed: { label: t('closed'), bg: 'bg-[#0A1628]/5', text: 'text-[#0A1628]' },
+    };
+    const badge = map[status] ?? map.assigned;
+    return badge;
+  }
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) redirect(`/${locale}/login`);
@@ -83,22 +85,22 @@ export default async function PortfolioPage({
 
   const metrics = [
     {
-      label: 'TOTAL EQUITY COMMITTED',
+      label: t('totalEquityCommitted'),
       value: formatPriceCompact(totalEquity),
       border: 'border-[#0A1628]',
     },
     {
-      label: 'ACTIVE DEALS',
+      label: t('activeDeals'),
       value: String(activeDealCount),
       border: 'border-[#1E40AF]',
     },
     {
-      label: 'AVG. PROJECTED IRR',
+      label: t('avgProjectedIrr'),
       value: formatPercent(avgIrr),
       border: 'border-[#0B8A4D]',
     },
     {
-      label: 'TOTAL DEALS',
+      label: t('totalDeals'),
       value: String(deals?.length ?? 0),
       border: 'border-[#0B8A4D]',
     },
@@ -126,7 +128,7 @@ export default async function PortfolioPage({
 
       {/* Heading */}
       <h2 className="font-[family-name:var(--font-playfair)] text-[20px] font-bold text-[#0A1628]">
-        Your Investments
+        {t('yourInvestments')}
       </h2>
 
       {/* Investments List */}
@@ -203,7 +205,7 @@ export default async function PortfolioPage({
       ) : (
         <div className="bg-white rounded-lg shadow-sm border border-gray-100 px-6 py-12 text-center">
           <p className="text-[14px] text-gray-400">
-            Your investments will appear here once you close your first deal.
+            {t('noInvestmentsYet')}
           </p>
         </div>
       )}

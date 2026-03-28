@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 
@@ -82,20 +83,13 @@ const statusStyles: Record<string, string> = {
   expired: 'bg-red-50 text-red-500 border border-red-200',
 };
 
-const filterLabels: Record<InviteFilter, string> = {
-  all: 'All Invitations',
-  pending: 'Pending',
-  accepted: 'Accepted',
-  expired: 'Expired',
-};
-
-function Pagination({ page, totalPages, onPageChange }: { page: number; totalPages: number; onPageChange: (p: number) => void }) {
+function Pagination({ page, totalPages, onPageChange, labels }: { page: number; totalPages: number; onPageChange: (p: number) => void; labels: { page: string; of: string; previous: string; next: string } }) {
   if (totalPages <= 1) return null;
 
   return (
     <div className="flex items-center justify-between px-5 py-3 border-t border-rp-gray-200">
       <p className="text-xs text-rp-gray-400">
-        Page {page} of {totalPages}
+        {labels.page} {page} {labels.of} {totalPages}
       </p>
       <div className="flex gap-1">
         <button
@@ -103,14 +97,14 @@ function Pagination({ page, totalPages, onPageChange }: { page: number; totalPag
           disabled={page <= 1}
           className="px-3 py-1.5 text-xs font-medium rounded-md border border-rp-gray-200 text-rp-gray-600 hover:bg-rp-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
-          Previous
+          {labels.previous}
         </button>
         <button
           onClick={() => onPageChange(page + 1)}
           disabled={page >= totalPages}
           className="px-3 py-1.5 text-xs font-medium rounded-md border border-rp-gray-200 text-rp-gray-600 hover:bg-rp-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
-          Next
+          {labels.next}
         </button>
       </div>
     </div>
@@ -134,8 +128,17 @@ export default function InvestorListClient({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const supabase = createClient();
+  const t = useTranslations('admin.investors');
+  const tc = useTranslations('common');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+
+  const filterLabels: Record<InviteFilter, string> = {
+    all: t('allInvitations'),
+    pending: t('pending'),
+    accepted: t('accepted'),
+    expired: t('expired'),
+  };
 
   const investorTotalPages = Math.ceil(investorTotal / pageSize);
   const invitationTotalPages = Math.ceil(invitationTotal / pageSize);
@@ -155,8 +158,8 @@ export default function InvestorListClient({
     [router, pathname, searchParams],
   );
 
-  const handleTabChange = (t: Tab) => {
-    updateParams({ tab: t });
+  const handleTabChange = (newTab: Tab) => {
+    updateParams({ tab: newTab });
   };
 
   const handleInvestorPage = (p: number) => {
@@ -172,7 +175,7 @@ export default function InvestorListClient({
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this invitation?')) return;
+    if (!confirm(t('confirmDeleteInvitation'))) return;
     setDeleting(id);
     await supabase.from('terminal_invite_tokens').delete().eq('id', id);
     setDeleting(null);
@@ -182,9 +185,9 @@ export default function InvestorListClient({
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-[24px] font-bold text-rp-navy">Investors</h1>
+        <h1 className="text-[24px] font-bold text-rp-navy">{t('title')}</h1>
         <Link href={`/${locale}/admin/investors/invite`}>
-          <Button variant="gold">Invite New Investor</Button>
+          <Button variant="gold">{t('inviteNew')}</Button>
         </Link>
       </div>
 
@@ -198,7 +201,7 @@ export default function InvestorListClient({
               : 'text-rp-gray-500 hover:text-rp-gray-700'
           }`}
         >
-          Active Investors
+          {t('activeInvestors')}
           <span className="ml-1.5 text-xs text-rp-gray-400">{investorTotal}</span>
         </button>
         <button
@@ -209,7 +212,7 @@ export default function InvestorListClient({
               : 'text-rp-gray-500 hover:text-rp-gray-700'
           }`}
         >
-          Invitations
+          {t('invitations')}
           <span className="ml-1.5 text-xs text-rp-gray-400">{inviteCounts.all}</span>
         </button>
       </div>
@@ -225,20 +228,20 @@ export default function InvestorListClient({
                 <path d="M19 8v6M22 11h-6" stroke="#94A3B8" strokeWidth="1.5" strokeLinecap="round" />
               </svg>
             </div>
-            <p className="text-rp-gray-500 text-sm mb-1">No investors yet</p>
-            <p className="text-rp-gray-400 text-xs">Invite your first investor to get started.</p>
+            <p className="text-rp-gray-500 text-sm mb-1">{t('noInvestorsYet')}</p>
+            <p className="text-rp-gray-400 text-xs">{t('inviteFirst')}</p>
           </div>
         ) : (
           <div className="bg-white rounded-2xl border border-rp-gray-200 overflow-hidden">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-rp-gray-200">
-                  <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">Name</th>
-                  <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">Email</th>
-                  <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">Company</th>
-                  <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">Joined</th>
-                  <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">Last Active</th>
-                  <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">Deals Viewed</th>
+                  <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('name')}</th>
+                  <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('email')}</th>
+                  <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('company')}</th>
+                  <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('joined')}</th>
+                  <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('lastActive')}</th>
+                  <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('dealsViewed')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -260,7 +263,7 @@ export default function InvestorListClient({
                 ))}
               </tbody>
             </table>
-            <Pagination page={investorPage} totalPages={investorTotalPages} onPageChange={handleInvestorPage} />
+            <Pagination page={investorPage} totalPages={investorTotalPages} onPageChange={handleInvestorPage} labels={{ page: tc('page'), of: tc('of'), previous: tc('previous'), next: tc('next') }} />
           </div>
         )
       )}
@@ -271,7 +274,7 @@ export default function InvestorListClient({
           {/* Filter Dropdown */}
           <div className="flex items-center gap-3 mb-4">
             <label htmlFor="invite-filter" className="text-xs font-medium text-rp-gray-500">
-              Status:
+              {t('status')}:
             </label>
             <select
               id="invite-filter"
@@ -289,11 +292,11 @@ export default function InvestorListClient({
 
           {invitationTotal === 0 ? (
             <div className="bg-white rounded-2xl border border-rp-gray-200 p-12 text-center">
-              <p className="text-rp-gray-500 text-sm mb-1">No {inviteFilter === 'all' ? '' : inviteFilter} invitations</p>
+              <p className="text-rp-gray-500 text-sm mb-1">{t('noInvitations', { status: inviteFilter === 'all' ? '' : inviteFilter })}</p>
               <p className="text-rp-gray-400 text-xs">
                 {inviteFilter === 'all'
-                  ? 'Invite someone to get started.'
-                  : `No invitations with status "${inviteFilter}".`}
+                  ? t('inviteSomeone')
+                  : t('noInvitations', { status: inviteFilter })}
               </p>
             </div>
           ) : (
@@ -301,12 +304,12 @@ export default function InvestorListClient({
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-rp-gray-200">
-                    <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">Email</th>
-                    <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">Role</th>
-                    <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">Status</th>
-                    <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">Sent</th>
-                    <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">Expires</th>
-                    <th className="text-right text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">Actions</th>
+                    <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('email')}</th>
+                    <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('role')}</th>
+                    <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('status')}</th>
+                    <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('sent')}</th>
+                    <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('expires')}</th>
+                    <th className="text-right text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{tc('actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -318,7 +321,7 @@ export default function InvestorListClient({
                         <td className="px-5 py-3.5 text-sm text-rp-gray-600 capitalize">{inv.role}</td>
                         <td className="px-5 py-3.5">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusStyles[status]}`}>
-                            {status.charAt(0).toUpperCase() + status.slice(1)}
+                            {t(status)}
                           </span>
                         </td>
                         <td className="px-5 py-3.5 text-sm text-rp-gray-600">{formatDate(inv.created_at)}</td>
@@ -333,7 +336,7 @@ export default function InvestorListClient({
                             disabled={deleting === inv.id}
                             className="text-xs font-medium text-red-500 hover:text-red-700 disabled:opacity-50 transition-colors"
                           >
-                            {deleting === inv.id ? 'Deleting...' : 'Delete'}
+                            {deleting === inv.id ? tc('deleting') : tc('delete')}
                           </button>
                         </td>
                       </tr>
@@ -341,7 +344,7 @@ export default function InvestorListClient({
                   })}
                 </tbody>
               </table>
-              <Pagination page={invitationPage} totalPages={invitationTotalPages} onPageChange={handleInvitationPage} />
+              <Pagination page={invitationPage} totalPages={invitationTotalPages} onPageChange={handleInvitationPage} labels={{ page: tc('page'), of: tc('of'), previous: tc('previous'), next: tc('next') }} />
             </div>
           )}
         </>

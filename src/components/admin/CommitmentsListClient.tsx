@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 interface CommitmentRow {
   id: string;
@@ -40,21 +41,6 @@ const statusStyles: Record<string, string> = {
   cancelled: 'bg-red-50 text-red-500 border border-red-200',
 };
 
-const statusLabels: Record<string, string> = {
-  pending: 'Pending',
-  wire_sent: 'Wire Sent',
-  confirmed: 'Confirmed',
-  cancelled: 'Cancelled',
-};
-
-const filterLabels: Record<StatusFilter, string> = {
-  all: 'All',
-  pending: 'Pending',
-  wire_sent: 'Wire Sent',
-  confirmed: 'Confirmed',
-  cancelled: 'Cancelled',
-};
-
 const typeStyles: Record<string, string> = {
   primary: 'bg-[#BC9C45]/10 text-[#BC9C45] border border-[#BC9C45]/20',
   backup: 'bg-[#0E3470]/10 text-[#0E3470] border border-[#0E3470]/20',
@@ -70,7 +56,24 @@ export default function CommitmentsListClient({
   pageSize,
 }: CommitmentsListClientProps) {
   const router = useRouter();
+  const t = useTranslations('admin.commitments');
+  const tc = useTranslations('common');
   const totalPages = Math.ceil(total / pageSize);
+
+  const statusLabels: Record<string, string> = {
+    pending: t('pending'),
+    wire_sent: t('wireSent'),
+    confirmed: t('confirmed'),
+    cancelled: t('cancelled'),
+  };
+
+  const filterLabels: Record<StatusFilter, string> = {
+    all: t('all'),
+    pending: t('pending'),
+    wire_sent: t('wireSent'),
+    confirmed: t('confirmed'),
+    cancelled: t('cancelled'),
+  };
 
   const navigate = (newPage: number, newStatus?: StatusFilter) => {
     const status = newStatus ?? statusFilter;
@@ -87,10 +90,10 @@ export default function CommitmentsListClient({
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="font-[family-name:var(--font-playfair)] text-[28px] font-semibold text-[#0E3470]">
-            Commitments
+            {t('title')}
           </h1>
           <p className="text-[13px] text-[#6B7280] mt-1">
-            {total} commitment{total !== 1 ? 's' : ''} total
+            {t('total', { count: total })}
           </p>
         </div>
       </div>
@@ -118,18 +121,18 @@ export default function CommitmentsListClient({
         <table className="w-full">
           <thead>
             <tr className="border-b border-[#EEF0F4] bg-[#F7F8FA]">
-              <th className="text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-[1.5px] px-5 py-3">Investor</th>
-              <th className="text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-[1.5px] px-5 py-3">Deal</th>
-              <th className="text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-[1.5px] px-5 py-3">Type</th>
-              <th className="text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-[1.5px] px-5 py-3">Status</th>
-              <th className="text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-[1.5px] px-5 py-3">Date</th>
+              <th className="text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-[1.5px] px-5 py-3">{t('investor')}</th>
+              <th className="text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-[1.5px] px-5 py-3">{t('deal')}</th>
+              <th className="text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-[1.5px] px-5 py-3">{t('type')}</th>
+              <th className="text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-[1.5px] px-5 py-3">{t('status')}</th>
+              <th className="text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-[1.5px] px-5 py-3">{t('date')}</th>
             </tr>
           </thead>
           <tbody>
             {commitments.length === 0 ? (
               <tr>
                 <td colSpan={5} className="text-center py-12 text-[#9CA3AF] text-sm">
-                  No commitments found
+                  {t('noCommitmentsFound')}
                 </td>
               </tr>
             ) : (
@@ -170,7 +173,7 @@ export default function CommitmentsListClient({
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-5">
           <span className="text-[12px] text-[#9CA3AF]">
-            Page {page} of {totalPages}
+            {tc('page')} {page} {tc('of')} {totalPages}
           </span>
           <div className="flex gap-2">
             <button
@@ -178,14 +181,14 @@ export default function CommitmentsListClient({
               disabled={page <= 1}
               className="px-4 py-2 rounded-lg border border-[#EEF0F4] text-[12px] font-medium text-[#6B7280] hover:border-[#BC9C45] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
-              Previous
+              {tc('previous')}
             </button>
             <button
               onClick={() => navigate(page + 1)}
               disabled={page >= totalPages}
               className="px-4 py-2 rounded-lg border border-[#EEF0F4] text-[12px] font-medium text-[#6B7280] hover:border-[#BC9C45] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
-              Next
+              {tc('next')}
             </button>
           </div>
         </div>

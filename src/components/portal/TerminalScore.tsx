@@ -1,11 +1,14 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 interface TerminalScoreProps {
   score: number;
   compact?: boolean;
 }
 
 export default function TerminalScore({ score, compact = false }: TerminalScoreProps) {
+  const t = useTranslations('portal.terminalScore');
   const ringColor = score >= 90 ? '#0B8A4D' : score >= 70 ? '#BC9C45' : '#DC2626';
   const size = compact ? 56 : 80;
   const strokeWidth = compact ? 4 : 5;
@@ -100,9 +103,9 @@ export default function TerminalScore({ score, compact = false }: TerminalScoreP
       </svg>
       <div className="flex flex-col gap-1">
         <span className="text-[11px] font-bold text-[#0E3470] uppercase tracking-[1px]">
-          Terminal Score
+          {t('label')}
         </span>
-        <span className="text-[10px] text-[#9CA3AF]">Institutional-grade analysis</span>
+        <span className="text-[10px] text-[#9CA3AF]">{t('subtitle')}</span>
         <div className="flex gap-0.5 mt-0.5">
           {subScores.map((bar, i) => (
             <div

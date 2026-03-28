@@ -63,6 +63,7 @@ function CountdownRing({
 }) {
   const { days, hours, minutes, seconds, isExpired, isUrgent } =
     useCountdown(targetDate);
+  const t = useTranslations('portal.dealDetail');
 
   const size = 130;
   const strokeWidth = 6;
@@ -118,7 +119,7 @@ function CountdownRing({
             {isExpired ? '00' : days}
           </span>
           <span className="text-[9px] font-[700] uppercase tracking-[2px] text-[#9CA3AF] mt-0.5">
-            DAYS
+            {t('daysUpper')}
           </span>
           <span className="text-[13px] text-[#9CA3AF] mt-1 font-mono">
             {hh}:{mm}:{ss}
@@ -139,7 +140,7 @@ function CountdownRing({
       </div>
       {isUrgent && !isExpired && (
         <span className="bg-[#DC2626] text-white text-[9px] px-2 py-0.5 rounded-full font-semibold mt-1.5">
-          URGENT
+          {t('urgent')}
         </span>
       )}
     </div>
@@ -304,6 +305,8 @@ function FileTypeBadge({ fileType }: { fileType: string | null }) {
 /* ---------- Commitment Card ---------- */
 
 function CommitmentCard({ deal }: { deal: DealWithDetails }) {
+  const t = useTranslations('portal.dealDetail');
+  const tcom = useTranslations('common');
   const [showWire, setShowWire] = useState(false);
   const [committed, setCommitted] = useState(false);
   const [commitType, setCommitType] = useState<string | null>(null);
@@ -381,13 +384,13 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
               </div>
               <div>
                 <div className="text-[10px] font-semibold text-[#BC9C45] uppercase tracking-[2px] mb-1">
-                  DEAL COMMITTED
+                  {t('dealCommitted')}
                 </div>
                 <h3 className="text-[22px] font-semibold text-[#0E3470] font-[family-name:var(--font-playfair)]">
-                  {commitType === 'backup' ? 'Backup Position Registered' : 'You Are Committed to This Deal'}
+                  {commitType === 'backup' ? t('backupPositionRegistered') : t('youAreCommitted')}
                 </h3>
                 <p className="text-[13px] text-[#6B7280] mt-1">
-                  Our team will contact you with next steps within 24 hours.
+                  {t('contactWithin24')}
                 </p>
               </div>
             </div>
@@ -395,14 +398,14 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
               {totalCommitments > 1 && (
                 <div className="text-right">
                   <div className="text-[28px] font-bold text-[#BC9C45]">{totalCommitments}</div>
-                  <div className="text-[10px] text-[#9CA3AF] uppercase tracking-[1.5px]">Groups Committed</div>
+                  <div className="text-[10px] text-[#9CA3AF] uppercase tracking-[1.5px]">{t('groupsCommitted')}</div>
                 </div>
               )}
               <button
                 onClick={() => setShowWithdrawConfirm(true)}
                 className="text-[11px] text-[#9CA3AF] hover:text-[#DC2626] transition-colors font-medium"
               >
-                Withdraw
+                {t('withdraw')}
               </button>
             </div>
           </div>
@@ -412,10 +415,10 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-[13px] font-semibold text-[#DC2626]">
-                    Are you sure you want to withdraw?
+                    {t('withdrawConfirmTitle')}
                   </p>
                   <p className="text-[11px] text-[#6B7280] mt-0.5">
-                    Your position will no longer be reserved and may be taken by another investor.
+                    {t('withdrawConfirmDesc')}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -423,14 +426,14 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
                     onClick={() => setShowWithdrawConfirm(false)}
                     className="px-4 py-2 rounded-lg border border-[#EEF0F4] bg-white text-[#6B7280] text-[12px] font-medium hover:bg-[#F7F8FA] transition-colors"
                   >
-                    Cancel
+                    {tcom('cancel')}
                   </button>
                   <button
                     onClick={handleWithdraw}
                     disabled={withdrawing}
                     className="px-4 py-2 rounded-lg bg-[#DC2626] text-white text-[12px] font-semibold hover:bg-[#B91C1C] transition-colors disabled:opacity-50"
                   >
-                    {withdrawing ? 'Withdrawing...' : 'Confirm Withdrawal'}
+                    {withdrawing ? t('withdrawing') : t('confirmWithdrawal')}
                   </button>
                 </div>
               </div>
@@ -451,9 +454,9 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
           <div className="text-[20px]">🔥</div>
           <div>
             <span className="text-[13px] font-bold text-[#DC2626]">
-              {totalCommitments} group{totalCommitments > 1 ? 's' : ''} already committed to this deal
+              {t('groupsAlreadyCommitted', { count: totalCommitments })}
             </span>
-            <p className="text-[11px] text-[#DC2626]/60 mt-0.5">Positions are limited. Commit now to secure your allocation.</p>
+            <p className="text-[11px] text-[#DC2626]/60 mt-0.5">{t('positionsLimited')}</p>
           </div>
         </div>
       )}
@@ -461,12 +464,12 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
       <div className="flex justify-between items-start mb-5">
         <div>
           <h3 className="font-[family-name:var(--font-playfair)] text-[22px] font-semibold text-[#0E3470]">
-            Commit to This Deal
+            {t('commitToThisDeal')}
           </h3>
           <p className="text-[13px] text-[#6B7280] mt-2">
-            {deal.deposit_amount && <>Deposit: {deal.deposit_amount}</>}
-            {deal.deposit_held_by && <> · Held by: {deal.deposit_held_by}</>}
-            {!deal.deposit_amount && 'Contact us to discuss commitment terms'}
+            {deal.deposit_amount && <>{t('deposit')} {deal.deposit_amount}</>}
+            {deal.deposit_held_by && <> · {t('heldBy')} {deal.deposit_held_by}</>}
+            {!deal.deposit_amount && t('contactToDiscuss')}
           </p>
         </div>
         <button
@@ -474,19 +477,19 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
           disabled={committing}
           className="px-8 py-4 rounded-xl bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] text-[15px] font-bold shadow-[0_6px_24px_rgba(188,156,69,0.3)] hover:opacity-90 transition-opacity disabled:opacity-50"
         >
-          Lock This Deal
+          {t('lockThisDeal')}
         </button>
       </div>
 
       {showWire && (
         <div className="p-6 bg-[#FDF8ED] rounded-xl border border-[#ECD9A0]/30 animate-slide-down mb-5">
           <div className="text-[14px] font-semibold text-[#0E3470] mb-3">
-            Wire {deal.deposit_amount || 'deposit'} to:
+            {t('wire', { amount: deal.deposit_amount || 'deposit' })}
           </div>
           <div className="bg-white rounded-lg p-4 text-[13px] text-[#4B5563] leading-[2] border border-[#EEF0F4]">
-            {deal.deposit_held_by || 'Title Company'} · Escrow Account<br />
-            Wire deadline: 72 hours from confirmation<br />
-            Contact our team for full wiring details
+            {deal.deposit_held_by || t('titleCompany')} · {t('escrowAccount')}<br />
+            {t('wireDeadline')}<br />
+            {t('contactForWiring')}
           </div>
           <div className="flex gap-3 mt-4">
             <button
@@ -494,13 +497,13 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
               disabled={committing}
               className="flex-1 py-3.5 rounded-xl bg-[#BC9C45] hover:bg-[#A88A3D] text-[#0E3470] text-[13px] font-bold transition-colors disabled:opacity-50"
             >
-              {committing ? 'Processing...' : 'Confirm — Send Wire Instructions'}
+              {committing ? t('processing') : t('confirmSendWire')}
             </button>
             <button
               onClick={() => setShowWire(false)}
               className="px-6 py-3.5 rounded-xl border border-[#EEF0F4] text-[#6B7280] text-[12px] font-medium hover:bg-[#F7F8FA] transition-colors"
             >
-              Cancel
+              {tcom('cancel')}
             </button>
           </div>
         </div>
@@ -509,9 +512,9 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
       {/* Backup position */}
       <div className="p-4 bg-[#F7F8FA] rounded-xl flex justify-between items-center">
         <div>
-          <div className="text-[12px] font-semibold text-[#0E3470]">Backup Position Available</div>
+          <div className="text-[12px] font-semibold text-[#0E3470]">{t('backupPositionAvailable')}</div>
           <div className="text-[11px] text-[#6B7280] mt-1">
-            If the primary buyer&apos;s wire expires, backup buyers are notified immediately.
+            {t('backupDescription')}
           </div>
         </div>
         <button
@@ -519,7 +522,7 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
           disabled={committing}
           className="px-5 py-2.5 rounded-lg border border-[#EEF0F4] bg-white text-[#0E3470] text-[11px] font-semibold hover:border-[#BC9C45] transition-colors whitespace-nowrap disabled:opacity-50"
         >
-          Register as Backup
+          {t('registerAsBackup')}
         </button>
       </div>
     </div>
@@ -529,6 +532,7 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
 /* ---------- Financial Modeling Tab ---------- */
 
 function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
+  const t = useTranslations('portal.dealDetail');
   const [exitCap, setExitCap] = useState('7.5');
   const [holdYears, setHoldYears] = useState('5');
   const [rentGrowth, setRentGrowth] = useState('3');
@@ -557,20 +561,20 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
   const fmt = (n: number) => '$' + Math.round(n).toLocaleString();
 
   const sliders = [
-    { label: 'Exit Cap Rate (%)', val: exitCap, set: setExitCap, min: '4', max: '15', step: '0.25' },
-    { label: 'Hold Period (years)', val: holdYears, set: setHoldYears, min: '1', max: '15', step: '1' },
-    { label: 'Annual Rent Growth (%)', val: rentGrowth, set: setRentGrowth, min: '0', max: '10', step: '0.5' },
-    { label: 'Loan-to-Value (%)', val: ltv, set: setLtv, min: '0', max: '85', step: '5' },
-    { label: 'Interest Rate (%)', val: rate, set: setRate, min: '3', max: '10', step: '0.25' },
+    { label: t('exitCapRate'), val: exitCap, set: setExitCap, min: '4', max: '15', step: '0.25' },
+    { label: t('holdPeriod'), val: holdYears, set: setHoldYears, min: '1', max: '15', step: '1' },
+    { label: t('annualRentGrowth'), val: rentGrowth, set: setRentGrowth, min: '0', max: '10', step: '0.5' },
+    { label: t('loanToValue'), val: ltv, set: setLtv, min: '0', max: '85', step: '5' },
+    { label: t('interestRatePercent'), val: rate, set: setRate, min: '3', max: '10', step: '0.25' },
   ];
 
   const results = [
-    { l: 'Exit Value', v: fmt(exitValue), c: '#0E3470' },
-    { l: 'Total Profit', v: fmt(totalReturn), c: totalReturn > 0 ? '#0B8A4D' : '#DC2626' },
-    { l: 'Equity Multiple', v: equityMultiple + 'x', c: '#BC9C45' },
-    { l: 'Est. Levered IRR', v: irrEst.toFixed(1) + '%', c: '#0B8A4D' },
-    { l: 'Annual Debt Service', v: fmt(annualDebt), c: '#0E3470' },
-    { l: 'Equity Required', v: fmt(equityIn), c: '#BC9C45' },
+    { l: t('exitValue'), v: fmt(exitValue), c: '#0E3470' },
+    { l: t('totalProfit'), v: fmt(totalReturn), c: totalReturn > 0 ? '#0B8A4D' : '#DC2626' },
+    { l: t('equityMultiple'), v: equityMultiple + 'x', c: '#BC9C45' },
+    { l: t('estLeveredIrr'), v: irrEst.toFixed(1) + '%', c: '#0B8A4D' },
+    { l: t('annualDebtService'), v: fmt(annualDebt), c: '#0E3470' },
+    { l: t('equityRequired'), v: fmt(equityIn), c: '#BC9C45' },
   ];
 
   return (
@@ -578,7 +582,7 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
       {/* Assumptions Panel */}
       <div className="bg-white rounded-xl border border-[#EEF0F4] p-6 rp-card-shadow">
         <h3 className="font-[family-name:var(--font-playfair)] text-[16px] font-semibold text-[#0E3470] mb-5">
-          Assumptions
+          {t('assumptions')}
         </h3>
         {sliders.map((inp, i) => {
           const pct = ((parseFloat(inp.val) - parseFloat(inp.min)) / (parseFloat(inp.max) - parseFloat(inp.min))) * 100;
@@ -606,9 +610,9 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
           );
         })}
         <div className="mt-4 p-3.5 bg-[#FDF8ED] rounded-lg border border-[#ECD9A0]/30">
-          <div className="text-[9px] font-semibold text-[#BC9C45] uppercase tracking-[2px] mb-1">BASIS</div>
+          <div className="text-[9px] font-semibold text-[#BC9C45] uppercase tracking-[2px] mb-1">{t('basis')}</div>
           <div className="text-[11px] text-[#4B5563]">
-            Purchase: {formatPrice(deal.purchase_price)} · Cap: {formatPercent(deal.cap_rate)} · NOI: {formatPrice(deal.noi)}
+            {t('purchase')} {formatPrice(deal.purchase_price)} · {t('cap')} {formatPercent(deal.cap_rate)} · {t('noi')} {formatPrice(deal.noi)}
           </div>
         </div>
       </div>
@@ -631,7 +635,7 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
 
         {/* Cash flow chart */}
         <div className="bg-white rounded-xl p-6 border border-[#EEF0F4] rp-card-shadow">
-          <h4 className="text-[13px] font-semibold text-[#0E3470] mb-4">Projected Annual Cash Flow</h4>
+          <h4 className="text-[13px] font-semibold text-[#0E3470] mb-4">{t('projectedAnnualCashFlow')}</h4>
           <div className="flex items-end gap-2" style={{ height: 180 }}>
             {(() => {
               const cashFlows = Array.from({ length: holdNum }, (_, i) =>
@@ -656,7 +660,7 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
                         minHeight: 24,
                       }}
                     />
-                    <span className="text-[9px] text-[#9CA3AF] font-semibold">Yr {i + 1}</span>
+                    <span className="text-[9px] text-[#9CA3AF] font-semibold">{t('yr')} {i + 1}</span>
                   </div>
                 );
               });
@@ -666,7 +670,7 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
 
         {/* Cap rate sensitivity */}
         <div className="bg-white rounded-xl p-6 border border-[#EEF0F4] rp-card-shadow">
-          <h4 className="text-[13px] font-semibold text-[#0E3470] mb-3">Cap Rate Sensitivity — Exit Value</h4>
+          <h4 className="text-[13px] font-semibold text-[#0E3470] mb-3">{t('capRateSensitivity')}</h4>
           <div className="grid grid-cols-5 gap-2">
             {[6.0, 6.5, 7.0, 7.5, 8.0].map((cr) => {
               const ev = futureNOI / (cr / 100);
@@ -692,6 +696,8 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
 /* ---------- Real Activity Feed ---------- */
 
 function RealActivityFeed({ dealId }: { dealId: string }) {
+  const t = useTranslations('portal.dealDetail');
+  const tcom = useTranslations('common');
   const [activities, setActivities] = useState<{ action: string; created_at: string }[]>([]);
   const [loaded, setLoaded] = useState(false);
 
@@ -710,38 +716,38 @@ function RealActivityFeed({ dealId }: { dealId: string }) {
   }, [dealId]);
 
   const actionLabels: Record<string, { text: string; dot: string }> = {
-    deal_viewed: { text: 'Deal viewed by a Terminal member', dot: 'bg-[#6B7280]' },
-    document_downloaded: { text: 'Document downloaded', dot: 'bg-[#1D5FB8]' },
-    om_downloaded: { text: 'OM downloaded', dot: 'bg-[#BC9C45]' },
-    dataroom_viewed: { text: 'Data room accessed', dot: 'bg-[#0E3470]' },
-    meeting_requested: { text: 'Meeting requested', dot: 'bg-[#BC9C45]' },
-    expressed_interest: { text: 'Interest expressed', dot: 'bg-[#0B8A4D]' },
-    irr_calculator_used: { text: 'IRR calculator used', dot: 'bg-[#1D5FB8]' },
-    structure_viewed: { text: 'Deal structure viewed', dot: 'bg-[#6B7280]' },
-    portal_viewed: { text: 'Portal accessed', dot: 'bg-[#9CA3AF]' },
+    deal_viewed: { text: t('dealViewedByMember'), dot: 'bg-[#6B7280]' },
+    document_downloaded: { text: t('documentDownloaded'), dot: 'bg-[#1D5FB8]' },
+    om_downloaded: { text: t('omDownloaded'), dot: 'bg-[#BC9C45]' },
+    dataroom_viewed: { text: t('dataRoomAccessed'), dot: 'bg-[#0E3470]' },
+    meeting_requested: { text: t('meetingRequested'), dot: 'bg-[#BC9C45]' },
+    expressed_interest: { text: t('interestExpressedActivity'), dot: 'bg-[#0B8A4D]' },
+    irr_calculator_used: { text: t('irrCalculatorUsed'), dot: 'bg-[#1D5FB8]' },
+    structure_viewed: { text: t('dealStructureViewed'), dot: 'bg-[#6B7280]' },
+    portal_viewed: { text: t('portalAccessed'), dot: 'bg-[#9CA3AF]' },
   };
 
   function timeAgo(dateStr: string): string {
     const diff = Date.now() - new Date(dateStr).getTime();
     const mins = Math.floor(diff / 60000);
-    if (mins < 1) return 'just now';
-    if (mins < 60) return `${mins} min ago`;
+    if (mins < 1) return t('justNow');
+    if (mins < 60) return t('minAgo', { count: mins });
     const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs} hr${hrs > 1 ? 's' : ''} ago`;
+    if (hrs < 24) return hrs > 1 ? t('hrsAgo', { count: hrs }) : t('hrAgo', { count: hrs });
     const days = Math.floor(hrs / 24);
-    return `${days} day${days > 1 ? 's' : ''} ago`;
+    return days > 1 ? t('daysAgo', { count: days }) : t('dayAgo', { count: days });
   }
 
   return (
     <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 rp-card-shadow">
       <h4 className="text-sm font-semibold text-[#0E3470] mb-3">
-        Recent Activity
+        {t('recentActivity')}
       </h4>
       <div className="space-y-3">
         {!loaded ? (
-          <div className="text-xs text-[#9CA3AF]">Loading...</div>
+          <div className="text-xs text-[#9CA3AF]">{tcom('loading')}</div>
         ) : activities.length === 0 ? (
-          <div className="text-xs text-[#9CA3AF]">No activity yet</div>
+          <div className="text-xs text-[#9CA3AF]">{t('noActivityYet')}</div>
         ) : (
           activities.map((item, idx) => {
             const info = actionLabels[item.action] ?? { text: item.action, dot: 'bg-[#9CA3AF]' };
@@ -778,6 +784,7 @@ function DDFolderCard({
   onDocumentDownload: (docId: string) => void;
   onViewDocument: (url: string, name: string) => void;
 }) {
+  const t = useTranslations('portal.dealDetail');
   const [expanded, setExpanded] = useState(false);
   const docCount = folder.documents.length;
   const verifiedCount = folder.documents.filter((d) => d.is_verified).length;
@@ -803,8 +810,8 @@ function DDFolderCard({
             {folder.name}
           </div>
           <div className="text-[11px] text-[#9CA3AF]">
-            {docCount} document{docCount !== 1 ? 's' : ''} &middot;{' '}
-            {verifiedCount} verified
+            {t('documentsCount', { count: docCount })} &middot;{' '}
+            {verifiedCount} {t('verified').toLowerCase()}
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -852,16 +859,16 @@ function DDFolderCard({
                   {doc.name}
                 </div>
                 <div className="text-[11px] text-[#9CA3AF]">
-                  {doc.file_size ?? 'Unknown size'}
+                  {doc.file_size ?? t('unknownSize')}
                 </div>
               </div>
               {doc.is_verified ? (
                 <span className="bg-[#ECFDF5] text-[#0B8A4D] text-[10px] font-semibold px-2 py-0.5 rounded-full">
-                  Verified
+                  {t('verified')}
                 </span>
               ) : (
                 <span className="bg-[#FFFBEB] text-[#D97706] text-[10px] font-semibold px-2 py-0.5 rounded-full">
-                  Pending
+                  {t('pending')}
                 </span>
               )}
               {/* View button for PDFs and images */}
@@ -906,7 +913,7 @@ function DDFolderCard({
           {folder.documents.length === 0 && (
             <div className="px-4 py-6 text-center text-sm text-[#9CA3AF]">
               <span className="text-2xl block mb-2">{'\u231B'}</span>
-              Documents pending upload
+              {t('documentsPendingUpload')}
             </div>
           )}
         </div>
@@ -932,6 +939,8 @@ function IRRCalculatorPanel({
   assetMgmtFeeDollar: number;
   onSliderChange: () => void;
 }) {
+  const t = useTranslations('portal.dealDetail');
+  const ts = useTranslations('portal.structure');
   const [mode, setMode] = useState<CalculatorMode>('assignment');
   const [lpSplit, setLpSplit] = useState(80);
   const [prefReturn, setPrefReturn] = useState(8);
@@ -950,15 +959,15 @@ function IRRCalculatorPanel({
   };
 
   const modes: { key: CalculatorMode; label: string }[] = [
-    { key: 'assignment', label: 'Assignment' },
-    { key: 'gplp', label: 'GP/LP' },
-    { key: 'custom', label: 'Custom Terms' },
+    { key: 'assignment', label: ts('assignment') },
+    { key: 'gplp', label: t('gpLp') },
+    { key: 'custom', label: ts('customTerms') },
   ];
 
   return (
     <div className="bg-white rounded-2xl p-6 border border-[#EEF0F4] rp-card-shadow">
       <div className="data-label !text-[#BC9C45] !tracking-[2px] mb-4">
-        RETURNS CALCULATOR
+        {t('returnsCalc')}
       </div>
 
       {/* Mode tabs */}
@@ -982,17 +991,17 @@ function IRRCalculatorPanel({
       {mode === 'assignment' && (
         <div>
           <div className="mb-4">
-            <div className="text-[#9CA3AF] text-xs mb-1">Assignment Fee</div>
+            <div className="text-[#9CA3AF] text-xs mb-1">{t('assignmentFee')}</div>
             <div className="text-xl font-bold text-[#0E3470]">{deal.assignment_fee}</div>
           </div>
           <div className="mb-4">
-            <div className="text-[#9CA3AF] text-xs mb-1">Projected IRR</div>
+            <div className="text-[#9CA3AF] text-xs mb-1">{t('projectedIrr')}</div>
             <div className="text-[52px] font-[800] text-[#0B8A4D] leading-none">
               {assignmentIRRProp !== null ? assignmentIRRProp.toFixed(1) + '%' : '--'}
             </div>
           </div>
           <div className="text-xs text-[#9CA3AF] mt-2">
-            Fee breakdown included in projected returns
+            {t('feeBreakdownIncluded')}
           </div>
         </div>
       )}
@@ -1002,10 +1011,10 @@ function IRRCalculatorPanel({
         <div>
           <div className="space-y-2 mb-4">
             {[
-              { label: 'Acquisition Fee', value: `${deal.acq_fee} ($${Math.round(acqFeeDollar).toLocaleString()})` },
-              { label: 'Asset Mgmt Fee', value: `${deal.asset_mgmt_fee} ($${Math.round(assetMgmtFeeDollar).toLocaleString()}/yr)` },
-              { label: 'GP Carry', value: deal.gp_carry },
-              { label: 'Equity Required', value: formatPrice(deal.equity_required) },
+              { label: t('acquisitionFee'), value: `${deal.acq_fee} ($${Math.round(acqFeeDollar).toLocaleString()})` },
+              { label: t('assetMgmtFee'), value: `${deal.asset_mgmt_fee} ($${Math.round(assetMgmtFeeDollar).toLocaleString()}/yr)` },
+              { label: t('gpCarry'), value: deal.gp_carry },
+              { label: t('equityRequired'), value: formatPrice(deal.equity_required) },
             ].map((row) => (
               <div
                 key={row.label}
@@ -1017,7 +1026,7 @@ function IRRCalculatorPanel({
             ))}
           </div>
           <div className="mb-4">
-            <div className="text-[#9CA3AF] text-xs mb-1">Projected IRR</div>
+            <div className="text-[#9CA3AF] text-xs mb-1">{t('projectedIrr')}</div>
             <div className="text-[52px] font-[800] text-[#0B8A4D] leading-none">
               {baseIRRProp > 0 ? baseIRRProp.toFixed(1) + '%' : '--'}
             </div>
@@ -1032,7 +1041,7 @@ function IRRCalculatorPanel({
             {/* LP Split slider */}
             <div>
               <div className="flex justify-between text-xs mb-2">
-                <span className="text-[#6B7280]">LP Split</span>
+                <span className="text-[#6B7280]">{t('lpSplit')}</span>
                 <span className="font-semibold text-[#0E3470]">{lpSplit}%</span>
               </div>
               <input
@@ -1056,7 +1065,7 @@ function IRRCalculatorPanel({
             {/* Preferred Return slider */}
             <div>
               <div className="flex justify-between text-xs mb-2">
-                <span className="text-[#6B7280]">Preferred Return</span>
+                <span className="text-[#6B7280]">{t('preferredReturn')}</span>
                 <span className="font-semibold text-[#0E3470]">{prefReturn}%</span>
               </div>
               <input
@@ -1080,7 +1089,7 @@ function IRRCalculatorPanel({
             {/* Acquisition Fee slider */}
             <div>
               <div className="flex justify-between text-xs mb-2">
-                <span className="text-[#6B7280]">Acquisition Fee</span>
+                <span className="text-[#6B7280]">{t('acquisitionFee')}</span>
                 <span className="font-semibold text-[#0E3470]">{acqFee}%</span>
               </div>
               <input
@@ -1103,7 +1112,7 @@ function IRRCalculatorPanel({
           </div>
 
           <div>
-            <div className="text-[#9CA3AF] text-xs mb-1">Calculated IRR</div>
+            <div className="text-[#9CA3AF] text-xs mb-1">{t('calculatedIrr')}</div>
             <div className="text-[52px] font-[800] text-[#0B8A4D] leading-none">
               {customIRR.toFixed(2)}%
             </div>
@@ -1112,7 +1121,7 @@ function IRRCalculatorPanel({
       )}
 
       <div className="mt-4 pt-4 border-t border-[#EEF0F4] text-xs text-[#9CA3AF]">
-        All fees included in projected IRR
+        {t('allFeesIncluded')}
       </div>
     </div>
   );
@@ -1131,6 +1140,7 @@ function MeetingScheduler({
   bookedTimes: string[];
   onMeetingRequested: () => void;
 }) {
+  const t = useTranslations('portal.dealDetail');
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -1212,7 +1222,7 @@ function MeetingScheduler({
           });
 
           if (!isBooked && !isGcalBusy(iso)) {
-            const ampm = h >= 12 ? 'PM' : 'AM';
+            const ampm = h >= 12 ? t('pm') : t('am');
             const displayH = h > 12 ? h - 12 : h === 0 ? 12 : h;
             const displayMin = String(min).padStart(2, '0');
             result.push({
@@ -1248,9 +1258,9 @@ function MeetingScheduler({
     }
   };
 
-  const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const dayLabels = [t('sun'), t('mon'), t('tue'), t('wed'), t('thu'), t('fri'), t('sat')];
   const [selectedDay, setSelectedDay] = useState(0);
-  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const monthNames = [t('jan'), t('feb'), t('mar'), t('apr'), t('may'), t('jun'), t('jul'), t('aug'), t('sep'), t('oct'), t('nov'), t('dec')];
 
   if (success) {
     return (
@@ -1270,10 +1280,10 @@ function MeetingScheduler({
           </svg>
         </div>
         <h4 className="text-lg font-bold text-[#0E3470] mb-1">
-          Meeting Scheduled!
+          {t('meetingScheduled')}
         </h4>
         <p className="text-sm text-[#6B7280]">
-          You will receive a confirmation email shortly with meeting details.
+          {t('confirmationEmail')}
         </p>
       </div>
     );
@@ -1312,7 +1322,7 @@ function MeetingScheduler({
         if (daySlots.length === 0) {
           return (
             <div className="text-center py-6 text-[13px] text-[#9CA3AF]">
-              No available slots on this day
+              {t('noSlotsAvailable')}
             </div>
           );
         }
@@ -1339,8 +1349,8 @@ function MeetingScheduler({
       {selectedSlot && (
         <div className="mt-4 p-3 bg-[#FDF8ED] border border-[#ECD9A0]/30 rounded-xl">
           <div className="text-[11px] text-[#6B7280] mb-2">
-            Selected: <span className="font-semibold text-[#0E3470]">
-              {new Date(selectedSlot).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} at{' '}
+            {t('selected')} <span className="font-semibold text-[#0E3470]">
+              {new Date(selectedSlot).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} {t('at')}{' '}
               {new Date(selectedSlot).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
             </span>
           </div>
@@ -1349,21 +1359,21 @@ function MeetingScheduler({
             disabled={confirming}
             className="w-full py-3 bg-[#BC9C45] hover:bg-[#A88A3D] text-white font-semibold text-sm rounded-xl transition-colors disabled:opacity-50"
           >
-            {confirming ? 'Scheduling...' : 'Confirm Meeting'}
+            {confirming ? t('scheduling') : t('confirmMeeting')}
           </button>
         </div>
       )}
 
       <div className="mt-3 text-center">
         <span className="text-xs text-[#9CA3AF]">
-          None of these work?{' '}
+          {t('noneOfTheseWork')}{' '}
           <a
             href="https://wa.me/19177030365?text=Hi, I'd like to schedule a meeting"
             target="_blank"
             rel="noopener noreferrer"
             className="text-[#BC9C45] hover:underline"
           >
-            Message us on WhatsApp
+            {t('messageOnWhatsApp')}
           </a>
         </span>
       </div>
@@ -1393,7 +1403,11 @@ export default function DealDetailClient({
   addresses = [],
   pipelineTasks = [],
 }: DealDetailClientProps) {
-  const t = useTranslations('portal');
+  const t = useTranslations('portal.dealDetail');
+  const tc = useTranslations('portal.dealCard');
+  const tcd = useTranslations('portal.countdown');
+  const tcom = useTranslations('common');
+  const ts = useTranslations('portal.structure');
   const router = useRouter();
   const { trackActivity } = useActivityTracker();
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
@@ -1533,11 +1547,11 @@ export default function DealDetailClient({
   };
 
   const tabs: { key: TabKey; label: string }[] = [
-    { key: 'overview', label: t('dealDetail.overview') },
-    { key: 'due-diligence', label: t('dealDetail.dueDiligence') },
-    { key: 'financial-modeling', label: 'Financial Modeling' },
-    { key: 'deal-structure', label: t('dealDetail.dealStructure') },
-    { key: 'schedule', label: t('dealDetail.scheduleContact') },
+    { key: 'overview', label: t('overview') },
+    { key: 'due-diligence', label: t('dueDiligence') },
+    { key: 'financial-modeling', label: t('financialModeling') },
+    { key: 'deal-structure', label: t('dealStructure') },
+    { key: 'schedule', label: t('scheduleContact') },
   ];
 
   // Social proof visibility
@@ -1589,7 +1603,7 @@ export default function DealDetailClient({
             {expressedInterest ? (
               <span className="px-5 py-2 bg-[#ECFDF5] text-[#0B8A4D] text-[12px] font-semibold rounded-lg flex items-center gap-1.5">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#0B8A4D" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8l4 4 6-7"/></svg>
-                Interest Expressed
+                {t('interestExpressed')}
               </span>
             ) : (
               <button
@@ -1597,21 +1611,21 @@ export default function DealDetailClient({
                 disabled={checkingInterest}
                 className="px-5 py-2 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[12px] font-semibold rounded-lg transition-colors shadow-[0_2px_6px_rgba(188,156,69,0.25)] disabled:opacity-50"
               >
-                Express Interest
+                {t('expressInterest')}
               </button>
             )}
             {/* OM buttons */}
             {deal.om_storage_path ? (
               <>
                 <button
-                  onClick={() => handleViewDocument(`/api/deals/${deal.id}/om?view=true`, `${deal.name} — Offering Memorandum`)}
+                  onClick={() => handleViewDocument(`/api/deals/${deal.id}/om?view=true`, `${deal.name} — ${t('offeringMemorandum')}`)}
                   className="px-4 py-2 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[12px] font-semibold rounded-lg transition-colors inline-flex items-center gap-1.5 shadow-[0_2px_6px_rgba(188,156,69,0.25)]"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                     <circle cx="12" cy="12" r="3" />
                   </svg>
-                  View OM
+                  {t('viewOm')}
                 </button>
                 <a
                   href={`/api/deals/${deal.id}/om`}
@@ -1622,7 +1636,7 @@ export default function DealDetailClient({
                     <polyline points="7 10 12 15 17 10"/>
                     <line x1="12" y1="15" x2="12" y2="3"/>
                   </svg>
-                  Download
+                  {tcom('download')}
                 </a>
               </>
             ) : (
@@ -1631,12 +1645,12 @@ export default function DealDetailClient({
                   <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
                   <polyline points="14 2 14 8 20 8"/>
                 </svg>
-                OM Pending
+                {t('omPending')}
               </span>
             )}
             <div className="h-4 w-px bg-[#EEF0F4]" />
             <span className="text-[9px] font-semibold tracking-[2px] uppercase text-[#9CA3AF]">
-              CONFIDENTIAL
+              {t('confidential')}
             </span>
             <div className="h-4 w-px bg-[#EEF0F4]" />
             <div className="w-8 h-8 bg-gradient-to-br from-[#BC9C45] to-[#A88A3D] rounded-lg flex items-center justify-center shadow-[0_2px_6px_rgba(188,156,69,0.2)]">
@@ -1662,14 +1676,14 @@ export default function DealDetailClient({
               <p className="text-[12px] text-[#9CA3AF] mt-1">
                 {deal.city}, {deal.state} &middot; {deal.property_type}
                 {deal.square_footage ? ` \u00B7 ${deal.square_footage} SF` : ''}
-                {deal.units ? ` \u00B7 ${deal.units} Units` : ''}
-                {deal.class_type ? ` \u00B7 Class ${deal.class_type}` : ''}
+                {deal.units ? ` \u00B7 ${tc('units', { count: deal.units })}` : ''}
+                {deal.class_type ? ` \u00B7 ${tc('classType', { type: deal.class_type })}` : ''}
               </p>
             </div>
             <div className="flex items-center gap-3">
               {deal.seller_financing && (
                 <span className="bg-[#BC9C45] text-white text-[10px] font-semibold px-3 py-1.5 rounded-full">
-                  Seller Financing
+                  {t('sellerFinancing')}
                 </span>
               )}
               <span className="bg-[#F7F8FA] border border-[#EEF0F4] text-[#6B7280] text-[10px] font-semibold px-3 py-1.5 rounded-full">
@@ -1691,17 +1705,17 @@ export default function DealDetailClient({
             <div className="bg-white rounded-2xl border border-[#EEF0F4] p-6 rp-card-shadow">
               <div className="flex items-center justify-around">
                 <CountdownRing
-                  label="Due Diligence"
+                  label={t('dueDiligence')}
                   targetDate={deal.dd_deadline}
                   accentColor="#BC9C45"
                 />
                 <CountdownRing
-                  label="Closing"
+                  label={t('closing')}
                   targetDate={deal.close_deadline}
                   accentColor="#0E3470"
                 />
                 <CountdownRing
-                  label="Extension"
+                  label={t('extension')}
                   targetDate={deal.extension_deadline}
                   accentColor="#1D5FB8"
                 />
@@ -1720,10 +1734,10 @@ export default function DealDetailClient({
                   </div>
                   <div>
                     <div className="text-[12px] font-[700] uppercase tracking-[2px] text-[#BC9C45]">
-                      TERMINAL INTELLIGENCE
+                      {t('terminalIntelligence')}
                     </div>
                     <div className="text-[9px] text-[#9CA3AF]">
-                      Institutional analysis by RePrime research team
+                      {t('institutionalAnalysis')}
                     </div>
                   </div>
                 </div>
@@ -1735,27 +1749,27 @@ export default function DealDetailClient({
                 <div className="flex items-center gap-3 mt-5">
                   {deal.om_storage_path ? (
                     <button
-                      onClick={() => handleViewDocument(`/api/deals/${deal.id}/om?view=true`, `${deal.name} — Full Report`)}
+                      onClick={() => handleViewDocument(`/api/deals/${deal.id}/om?view=true`, `${deal.name} — ${t('fullReport')}`)}
                       className="px-4 py-2 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[11px] font-semibold rounded-lg transition-colors"
                     >
-                      Full Report
+                      {t('fullReport')}
                     </button>
                   ) : (
                     <span className="px-4 py-2 bg-[#F7F8FA] text-[#9CA3AF] text-[11px] font-semibold rounded-lg cursor-default">
-                      Full Report — Pending
+                      {t('fullReportPending')}
                     </span>
                   )}
                   <button
                     onClick={() => setActiveTab('overview')}
                     className="px-4 py-2 border border-[#EEF0F4] hover:border-[#BC9C45] text-[#0E3470] text-[11px] font-semibold rounded-lg transition-colors"
                   >
-                    Deal Analysis
+                    {t('dealAnalysis')}
                   </button>
                   <button
                     onClick={() => setActiveTab('deal-structure')}
                     className="px-4 py-2 border border-[#EEF0F4] hover:border-[#BC9C45] text-[#0E3470] text-[11px] font-semibold rounded-lg transition-colors"
                   >
-                    Returns Calculator
+                    {t('returnsCalculator')}
                   </button>
                 </div>
               </div>
@@ -1768,13 +1782,13 @@ export default function DealDetailClient({
         {/* ------------------------------------------------------------------ */}
         <div className="grid grid-cols-7 gap-3 px-8 mt-8">
           {[
-            { label: 'Purchase Price', value: formatPrice(deal.purchase_price), borderColor: '#0E3470' },
-            { label: 'NOI', value: formatPrice(deal.noi), borderColor: '#0E3470' },
-            { label: 'Cap Rate', value: computed.capRate > 0 ? computed.capRate.toFixed(1) + '%' : formatPercent(deal.cap_rate), borderColor: '#BC9C45' },
-            { label: 'IRR', value: computed.irr !== null ? computed.irr.toFixed(1) + '%' : (deal.irr ? formatPercent(deal.irr) : '—'), borderColor: '#0B8A4D', valueColor: '#0B8A4D' },
-            { label: 'CoC', value: computed.cocReturn !== 0 ? computed.cocReturn.toFixed(1) + '%' : (deal.coc ? formatPercent(deal.coc) : '—'), borderColor: '#0B8A4D', valueColor: '#0B8A4D' },
-            { label: 'Combined DSCR', value: computed.combinedDSCR > 0 ? computed.combinedDSCR.toFixed(2) + 'x' : formatDSCR(deal.dscr), borderColor: '#0E3470' },
-            { label: 'Equity', value: computed.netEquity > 0 ? '$' + Math.round(computed.netEquity).toLocaleString() : formatPrice(deal.equity_required), borderColor: '#BC9C45' },
+            { label: tc('purchasePrice'), value: formatPrice(deal.purchase_price), borderColor: '#0E3470' },
+            { label: tc('noi'), value: formatPrice(deal.noi), borderColor: '#0E3470' },
+            { label: tc('capRate'), value: computed.capRate > 0 ? computed.capRate.toFixed(1) + '%' : formatPercent(deal.cap_rate), borderColor: '#BC9C45' },
+            { label: tc('irr'), value: computed.irr !== null ? computed.irr.toFixed(1) + '%' : (deal.irr ? formatPercent(deal.irr) : '—'), borderColor: '#0B8A4D', valueColor: '#0B8A4D' },
+            { label: tc('coc'), value: computed.cocReturn !== 0 ? computed.cocReturn.toFixed(1) + '%' : (deal.coc ? formatPercent(deal.coc) : '—'), borderColor: '#0B8A4D', valueColor: '#0B8A4D' },
+            { label: tc('dscr'), value: computed.combinedDSCR > 0 ? computed.combinedDSCR.toFixed(2) + 'x' : formatDSCR(deal.dscr), borderColor: '#0E3470' },
+            { label: tc('equityRequired'), value: computed.netEquity > 0 ? '$' + Math.round(computed.netEquity).toLocaleString() : formatPrice(deal.equity_required), borderColor: '#BC9C45' },
           ].map((m, idx) => (
             <FadeInOnScroll key={m.label} delay={idx * 0.05}>
               <MetricCard
@@ -1803,13 +1817,13 @@ export default function DealDetailClient({
               <div className="flex-1 flex items-center gap-8">
                 {deal.deposit_amount && (
                   <div>
-                    <div className="text-[9px] font-semibold tracking-[2px] uppercase text-[#BC9C45]">Deposit Amount</div>
+                    <div className="text-[9px] font-semibold tracking-[2px] uppercase text-[#BC9C45]">{t('depositAmount')}</div>
                     <div className="text-[18px] font-semibold text-[#0E3470] tabular-nums">{deal.deposit_amount}</div>
                   </div>
                 )}
                 {deal.deposit_held_by && (
                   <div>
-                    <div className="text-[9px] font-semibold tracking-[2px] uppercase text-[#BC9C45]">Held By</div>
+                    <div className="text-[9px] font-semibold tracking-[2px] uppercase text-[#BC9C45]">{t('heldBy')}</div>
                     <div className="text-[15px] font-medium text-[#0E3470]">{deal.deposit_held_by}</div>
                   </div>
                 )}
@@ -1868,7 +1882,7 @@ export default function DealDetailClient({
                 <FadeInOnScroll delay={0}>
                   <div>
                     <h3 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#0E3470] mb-4">
-                      Portfolio Properties
+                      {t('portfolioProperties')}
                     </h3>
                     <div className="grid grid-cols-2 gap-3">
                       {addresses.map((addr, i) => (
@@ -1898,11 +1912,11 @@ export default function DealDetailClient({
                           {/* Address OM */}
                           {addr.om_storage_path && (
                             <button
-                              onClick={() => handleViewDocument(`/api/deals/${deal.id}/om?addressId=${addr.id}&view=true`, `${addr.label} — Offering Memorandum`)}
+                              onClick={() => handleViewDocument(`/api/deals/${deal.id}/om?addressId=${addr.id}&view=true`, `${addr.label} — ${t('offeringMemorandum')}`)}
                               className="mt-3 w-full py-2 rounded-lg text-[11px] font-semibold bg-[#BC9C45]/10 text-[#BC9C45] hover:bg-[#BC9C45]/20 transition-colors flex items-center justify-center gap-1.5"
                             >
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                              View OM
+                              {t('viewOm')}
                             </button>
                           )}
                         </div>
@@ -1918,7 +1932,7 @@ export default function DealDetailClient({
                   <FadeInOnScroll delay={0}>
                     <div>
                       <h3 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#0E3470] mb-4">
-                        Investment Highlights
+                        {t('investmentHighlights')}
                       </h3>
                       <div className="grid grid-cols-2 gap-3">
                         {deal.investment_highlights.map((highlight, idx) => (
@@ -1958,7 +1972,7 @@ export default function DealDetailClient({
                 <FadeInOnScroll delay={0.1}>
                   <div>
                     <h3 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#0E3470] mb-3">
-                      Acquisition Thesis
+                      {t('acquisitionThesis')}
                     </h3>
                     <p className="text-sm text-[#4B5563] leading-[1.8]">
                       {deal.acquisition_thesis}
@@ -1975,7 +1989,7 @@ export default function DealDetailClient({
               {deal.special_terms && deal.special_terms !== 'None' && (
                 <FadeInOnScroll delay={0.25}>
                   <div className="bg-[#FDF8ED] border-l-4 border-[#BC9C45] p-4 rounded-r-lg">
-                    <div className="text-[11px] font-semibold text-[#BC9C45] uppercase tracking-wider mb-1">Special Terms</div>
+                    <div className="text-[11px] font-semibold text-[#BC9C45] uppercase tracking-wider mb-1">{t('specialTerms')}</div>
                     <p className="text-sm text-[#4B5563]">{deal.special_terms}</p>
                   </div>
                 </FadeInOnScroll>
@@ -1985,13 +1999,13 @@ export default function DealDetailClient({
               <FadeInOnScroll delay={0.3}>
                 <div>
                   <h3 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#0E3470] mb-4">
-                    Market Context
+                    {t('marketContext')}
                   </h3>
                   <div className="flex gap-4">
                     <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 flex-1 rp-card-shadow">
                       <div className="flex items-center gap-1.5 mb-1">
                         <span className="text-base">{'\uD83D\uDC65'}</span>
-                        <span className="data-label">Metro Population</span>
+                        <span className="data-label">{t('metroPopulation')}</span>
                       </div>
                       <div className="text-lg font-bold text-[#0E3470]">
                         {formatNumber(deal.metro_population)}
@@ -2000,7 +2014,7 @@ export default function DealDetailClient({
                     <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 flex-1 rp-card-shadow">
                       <div className="flex items-center gap-1.5 mb-1">
                         <span className="text-base">{'\uD83D\uDCC8'}</span>
-                        <span className="data-label">Job Growth</span>
+                        <span className="data-label">{t('jobGrowth')}</span>
                       </div>
                       <div className="text-lg font-bold text-[#0B8A4D]">
                         {deal.job_growth ? `+${deal.job_growth}` : '--'}
@@ -2009,7 +2023,7 @@ export default function DealDetailClient({
                     <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 flex-1 rp-card-shadow">
                       <div className="flex items-center gap-1.5 mb-1">
                         <span className="text-base">{'\uD83C\uDFE2'}</span>
-                        <span className="data-label">Occupancy</span>
+                        <span className="data-label">{t('occupancy')}</span>
                       </div>
                       <div className="text-lg font-bold text-[#0E3470]">
                         {deal.occupancy ? `${deal.occupancy}%` : '--'}
@@ -2025,7 +2039,7 @@ export default function DealDetailClient({
                   <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 mt-4 rp-card-shadow">
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="text-sm font-semibold text-[#0E3470]">
-                        Deal Progress
+                        {t('dealProgress')}
                       </h3>
                       <span className="text-[12px] font-semibold text-[#0B8A4D] tabular-nums">
                         {pipelineProgress !== undefined && pipelineProgress >= 0 ? `${pipelineProgress}%` : '—'}
@@ -2046,10 +2060,10 @@ export default function DealDetailClient({
                     {/* Stage breakdown */}
                     <div className="space-y-2.5">
                       {([
-                        { key: 'post_loi', label: 'Post LOI', duration: '10 Days' },
-                        { key: 'due_diligence', label: 'Due Diligence', duration: '30 Days' },
-                        { key: 'pre_closing', label: 'Pre-Closing', duration: '30-60 Days' },
-                        { key: 'post_closing', label: 'Post-Closing', duration: '7 Days' },
+                        { key: 'post_loi', label: t('postLoi'), duration: '10 Days' },
+                        { key: 'due_diligence', label: t('dueDiligence'), duration: '30 Days' },
+                        { key: 'pre_closing', label: t('preClosing'), duration: '30-60 Days' },
+                        { key: 'post_closing', label: t('postClosing'), duration: '7 Days' },
                       ] as const).map((stage) => {
                         const sp = stageProgress[stage.key] || { total: 0, completed: 0 };
                         const pct = sp.total > 0 ? Math.round((sp.completed / sp.total) * 100) : 0;
@@ -2113,16 +2127,16 @@ export default function DealDetailClient({
               {/* Property Details */}
               <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 rp-card-shadow">
                 <h3 className="text-sm font-semibold text-[#0E3470] mb-4">
-                  Property Details
+                  {t('propertyDetails')}
                 </h3>
                 <div className="space-y-0">
                   {[
-                    { label: 'Type', value: deal.property_type },
-                    { label: 'Class', value: deal.class_type },
-                    { label: 'Year Built', value: deal.year_built?.toString() },
-                    { label: 'Sq Ft', value: formatSqFt(deal.square_footage) },
-                    { label: 'Units', value: deal.units },
-                    { label: 'Neighborhood', value: deal.neighborhood },
+                    { label: t('type'), value: deal.property_type },
+                    { label: t('class'), value: deal.class_type },
+                    { label: t('yearBuilt'), value: deal.year_built?.toString() },
+                    { label: t('sqFt'), value: formatSqFt(deal.square_footage) },
+                    { label: t('units'), value: deal.units },
+                    { label: t('neighborhood'), value: deal.neighborhood },
                   ].map((row, idx) => (
                     <div
                       key={row.label}
@@ -2144,7 +2158,7 @@ export default function DealDetailClient({
               {/* Cap Rate Sparkline */}
               <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 rp-card-shadow">
                 <h4 className="text-sm font-semibold text-[#0E3470] mb-3">
-                  Cap Rate Trend
+                  {t('capRateTrend')}
                 </h4>
                 <svg viewBox="0 0 200 60" className="w-full h-14">
                   {/* Subtle fill under the line */}
@@ -2179,11 +2193,11 @@ export default function DealDetailClient({
                     <div className="text-[32px] font-[800] text-[#DC2626]">
                       {deal.viewing_count}
                     </div>
-                    <div className="text-xs text-[#6B7280] mb-2">investors reviewing</div>
+                    <div className="text-xs text-[#6B7280] mb-2">{t('investorsReviewing')}</div>
                     <div className="text-[32px] font-[800] text-[#DC2626]">
                       {deal.meetings_count}
                     </div>
-                    <div className="text-xs text-[#6B7280]">meetings scheduled</div>
+                    <div className="text-xs text-[#6B7280]">{t('meetingsScheduled')}</div>
                   </div>
                 </div>
               )}
@@ -2248,7 +2262,7 @@ export default function DealDetailClient({
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[10px] font-[700] uppercase tracking-[2px] text-[#BC9C45]">
-                      OPTION A
+                      {t('optionA')}
                     </span>
                     {/* Assignment fee large number top-right */}
                     <span className="text-[32px] font-[800] text-[#BC9C45] leading-none">
@@ -2256,21 +2270,20 @@ export default function DealDetailClient({
                     </span>
                   </div>
                   <h3 className="font-[700] text-[#0E3470] text-[20px] mb-4">
-                    Assignment
+                    {t('assignment')}
                   </h3>
                   <p className="text-sm text-[#6B7280] mb-4">
-                    Clean assignment of contract with fixed fee. All projected
-                    returns account for the assignment fee.
+                    {t('assignmentDesc')}
                   </p>
                   <div className="bg-[#ECFDF5] border border-[#A7F3D0] rounded-xl p-4">
                     <div className="data-label !text-[#0B8A4D] mb-1">
-                      Projected IRR
+                      {t('projectedIrr')}
                     </div>
                     <div className="text-2xl font-bold text-[#0B8A4D]">
                       {computed.assignmentIRR !== null ? computed.assignmentIRR.toFixed(1) + '%' : '--'}
                     </div>
                     <div className="text-[11px] text-[#6B7280] mt-1">
-                      Fee included
+                      {t('feeIncluded')}
                     </div>
                   </div>
                 </button>
@@ -2287,17 +2300,17 @@ export default function DealDetailClient({
                   }`}
                 >
                   <span className="text-[10px] font-[700] uppercase tracking-[2px] text-[#BC9C45] block mb-2">
-                    OPTION B
+                    {t('optionB')}
                   </span>
                   <h3 className="font-[700] text-[#0E3470] text-[20px] mb-4">
-                    GP/LP Partnership
+                    {t('gpLpPartnership')}
                   </h3>
                   <div className="space-y-2 mb-4">
                     {[
-                      { label: 'Acquisition Fee', value: `${deal.acq_fee} ($${Math.round(computed.acqFeeDollar).toLocaleString()})` },
-                      { label: 'Asset Mgmt Fee', value: `${deal.asset_mgmt_fee} ($${Math.round(computed.assetMgmtFeeDollar).toLocaleString()}/yr)` },
-                      { label: 'GP Carry', value: deal.gp_carry },
-                      { label: 'Equity Required', value: formatPrice(deal.equity_required) },
+                      { label: t('acquisitionFee'), value: `${deal.acq_fee} ($${Math.round(computed.acqFeeDollar).toLocaleString()})` },
+                      { label: t('assetMgmtFee'), value: `${deal.asset_mgmt_fee} ($${Math.round(computed.assetMgmtFeeDollar).toLocaleString()}/yr)` },
+                      { label: t('gpCarry'), value: deal.gp_carry },
+                      { label: t('equityRequired'), value: formatPrice(deal.equity_required) },
                     ].map((row) => (
                       <div
                         key={row.label}
@@ -2314,13 +2327,13 @@ export default function DealDetailClient({
                   </div>
                   <div className="bg-[#ECFDF5] border border-[#A7F3D0] rounded-xl p-4">
                     <div className="data-label !text-[#0B8A4D] mb-1">
-                      Projected IRR
+                      {t('projectedIrr')}
                     </div>
                     <div className="text-2xl font-bold text-[#0B8A4D]">
                       {computed.irr !== null ? computed.irr.toFixed(1) + '%' : '--'}
                     </div>
                     <div className="text-[11px] text-[#6B7280] mt-1">
-                      All fees included
+                      {t('allFeesIncludedShort')}
                     </div>
                   </div>
                 </button>
@@ -2352,7 +2365,7 @@ export default function DealDetailClient({
             {/* Left: Meeting Scheduler */}
             <div className="bg-white rounded-xl border border-[#EEF0F4] p-6 rp-card-shadow">
               <h3 className="text-sm font-semibold text-[#0E3470] mb-4">
-                Schedule a Meeting
+                {t('scheduleMeeting')}
               </h3>
               <MeetingScheduler
                 dealId={deal.id}
@@ -2374,10 +2387,10 @@ export default function DealDetailClient({
                   </div>
                   <div>
                     <div className="font-semibold text-[#0E3470]">
-                      {contactName || 'RePrime Team'}
+                      {contactName || t('reprimeTeam')}
                     </div>
                     <div className="text-xs text-[#9CA3AF]">
-                      {contactTitle || 'Investment Advisor'}
+                      {contactTitle || t('investmentAdvisor')}
                     </div>
                   </div>
                 </div>
@@ -2400,7 +2413,7 @@ export default function DealDetailClient({
                       <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                       <polyline points="22,6 12,13 2,6" />
                     </svg>
-                    Email {contactName?.split(' ')[0] || 'Shirel'} About This Deal
+                    {t('emailAboutDeal', { name: contactName?.split(' ')[0] || 'Shirel' })}
                   </a>
                   <a
                     href={`mailto:${contactEmail}?subject=${encodeURIComponent(`Callback Request: ${deal.name}`)}`}
@@ -2418,7 +2431,7 @@ export default function DealDetailClient({
                     >
                       <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" />
                     </svg>
-                    Request a Call Back
+                    {t('requestACallBack')}
                   </a>
                 </div>
               </div>
@@ -2427,29 +2440,29 @@ export default function DealDetailClient({
               <div className="bg-[#FDF8ED] border border-[#BC9C45]/30 rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-2 h-2 rounded-full bg-[#0B8A4D] live-dot" />
-                  <span className="text-sm font-semibold text-[#0E3470]">Available via Email</span>
+                  <span className="text-sm font-semibold text-[#0E3470]">{t('availableViaEmail')}</span>
                 </div>
                 <p className="text-xs text-[#6B7280]">
-                  Typical response time: within 2 business hours
+                  {t('typicalResponseTime')}
                 </p>
               </div>
 
               {/* Notification Preferences */}
               <div className="bg-white rounded-xl border border-[#EEF0F4] p-6 rp-card-shadow">
                 <h4 className="data-label mb-3">
-                  Notification Preferences
+                  {t('notificationPreferences')}
                 </h4>
                 <div className="space-y-2.5">
                   {(
                     [
-                      { key: 'deadline' as const, label: 'New deals matching your criteria' },
+                      { key: 'deadline' as const, label: t('newDealsMatching') },
                       {
                         key: 'documents' as const,
-                        label: 'New document uploads',
+                        label: t('newDocumentUploads'),
                       },
                       {
                         key: 'meetings' as const,
-                        label: 'Deal activity updates',
+                        label: t('dealActivityUpdates'),
                       },
                     ] as const
                   ).map((pref) => (
@@ -2470,7 +2483,7 @@ export default function DealDetailClient({
                   ))}
                 </div>
                 <p className="text-[10px] text-[#9CA3AF] mt-3">
-                  You control your notifications
+                  {t('youControlNotifications')}
                 </p>
               </div>
 
@@ -2482,11 +2495,11 @@ export default function DealDetailClient({
                     <path d="M7 11V7a5 5 0 0110 0v4" />
                   </svg>
                   <span className="text-sm font-semibold text-[#0E3470]">
-                    CONFIDENTIAL
+                    {t('confidential')}
                   </span>
                 </div>
                 <p className="text-xs text-[#6B7280]">
-                  This material is for authorized Terminal members only. All investments involve risk.
+                  {t('confidentialAccess')}
                 </p>
               </div>
             </div>
@@ -2499,12 +2512,12 @@ export default function DealDetailClient({
 
           {/* Deal Timeline Countdowns */}
           <div className="bg-white rounded-xl p-8 rp-card-shadow border border-[#EEF0F4] mb-6">
-            <div className="text-[11px] font-semibold text-[#0E3470] uppercase tracking-[2px] mb-7">Deal Timeline</div>
+            <div className="text-[11px] font-semibold text-[#0E3470] uppercase tracking-[2px] mb-7">{t('dealTimeline')}</div>
             <div className="flex justify-around items-center">
-              <CountdownRing label="Due Diligence" targetDate={deal.dd_deadline} accentColor="#0E3470" />
-              <CountdownRing label="Closing" targetDate={deal.close_deadline} accentColor="#BC9C45" />
+              <CountdownRing label={t('dueDiligence')} targetDate={deal.dd_deadline} accentColor="#0E3470" />
+              <CountdownRing label={t('closing')} targetDate={deal.close_deadline} accentColor="#BC9C45" />
               {deal.extension_deadline && (
-                <CountdownRing label="Extension" targetDate={deal.extension_deadline} accentColor="#6B7280" />
+                <CountdownRing label={t('extension')} targetDate={deal.extension_deadline} accentColor="#6B7280" />
               )}
             </div>
           </div>
@@ -2515,32 +2528,21 @@ export default function DealDetailClient({
           {/* How We Source Deals */}
           <div className="bg-white rounded-xl p-8 rp-card-shadow border border-[#EEF0F4] mb-6">
             <h3 className="font-[family-name:var(--font-playfair)] text-[20px] font-semibold text-[#0E3470] mb-5">
-              How we source deals at deeper discounts
+              {t('howWeSourceDeals')}
             </h3>
             <div className="text-[14px] text-[#4B5563] leading-[1.9] space-y-4">
-              <p>
-                Every deal on this platform goes through the same institutional diligence — regardless
-                of deposit terms. The analysis, the inspections, the title work, the environmental
-                review — nothing changes. We complete diligence BEFORE the deposit goes hard, not after.
-              </p>
-              <p>
-                The difference is speed and certainty. When we approach a seller with a non-refundable
-                deposit, they accept a lower price because the risk of deal collapse disappears. Same
-                diligence. Same protections. Lower price.
-              </p>
-              <p>
-                Members who pre-commit deposit capital enable us to secure more of these opportunities.
-                In return, they receive fixed 3% economics on every transaction. Positions are limited.
-              </p>
+              <p>{t('howWeSourceP1')}</p>
+              <p>{t('howWeSourceP2')}</p>
+              <p>{t('howWeSourceP3')}</p>
             </div>
           </div>
 
           {/* Contact Bar */}
           <div className="bg-white rounded-xl p-7 border border-[#EEF0F4] rp-card-shadow flex items-center justify-between">
             <div>
-              <div className="text-[14px] font-medium text-[#0E3470]">Questions before committing?</div>
+              <div className="text-[14px] font-medium text-[#0E3470]">{t('questionsBeforeCommitting')}</div>
               <div className="text-[11px] text-[#9CA3AF] mt-1">
-                {contactName || 'RePrime Team'}{contactTitle ? ` · ${contactTitle}` : ''}
+                {contactName || t('reprimeTeam')}{contactTitle ? ` · ${contactTitle}` : ''}
               </div>
             </div>
             <div className="flex gap-3">
@@ -2550,13 +2552,13 @@ export default function DealDetailClient({
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#25D366] text-white text-[12px] font-semibold transition-opacity hover:opacity-90"
               >
-                💬 WhatsApp
+                💬 {t('whatsApp')}
               </a>
               <button
                 onClick={() => setActiveTab('schedule')}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-lg border border-[#EEF0F4] text-[#6B7280] text-[12px] font-medium hover:border-[#BC9C45] hover:text-[#0E3470] transition-colors"
               >
-                📅 Schedule a Call
+                📅 {t('scheduleACall')}
               </button>
             </div>
           </div>
@@ -2570,12 +2572,11 @@ export default function DealDetailClient({
                 <span className="text-white text-[8px] font-bold font-[family-name:var(--font-playfair)] italic">R</span>
               </div>
               <span className="text-[10px] text-[#9CA3AF] tracking-wide">
-                REPRIME TERMINAL
+                {t('reprimeterminal')}
               </span>
             </div>
             <p className="text-[10px] text-[#9CA3AF] max-w-[600px] text-right leading-relaxed">
-              This material is confidential and intended solely for the use of authorized Terminal members.
-              Any reproduction or distribution is strictly prohibited. All investments involve risk.
+              {t('footerConfidential')}
             </p>
           </div>
         </div>
@@ -2589,23 +2590,23 @@ export default function DealDetailClient({
                 <span className="text-2xl">&#x1F4BC;</span>
               </div>
               <h3 className="font-[family-name:var(--font-playfair)] text-[18px] font-semibold text-[#0E3470] mb-2">
-                Express Interest in {deal.name}
+                {t('expressInterestIn', { name: deal.name })}
               </h3>
               <p className="text-[13px] text-[#4B5563] mb-6">
-                The RePrime team will contact you within 24 hours to discuss this opportunity.
+                {t('expressInterestDesc')}
               </p>
               <div className="flex items-center gap-3 w-full">
                 <button
                   onClick={() => setShowExpressModal(false)}
                   className="flex-1 py-2.5 text-[13px] font-medium text-[#6B7280] hover:text-[#0E3470] transition-colors"
                 >
-                  Cancel
+                  {tcom('cancel')}
                 </button>
                 <button
                   onClick={handleExpressInterest}
                   className="flex-1 py-2.5 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[13px] font-semibold rounded-lg transition-colors"
                 >
-                  Confirm
+                  {tcom('confirm')}
                 </button>
               </div>
             </div>
@@ -2658,7 +2659,7 @@ export default function DealDetailClient({
                 </div>
                 <div>
                   <div className="text-white text-[14px] font-semibold truncate max-w-[500px]">{viewerName}</div>
-                  <div className="text-white/40 text-[11px] mt-0.5">View Only · Watermarked · All activity logged</div>
+                  <div className="text-white/40 text-[11px] mt-0.5">{t('viewOnlyWatermarked')}</div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -2713,14 +2714,14 @@ export default function DealDetailClient({
             {/* Footer */}
             <div className="flex items-center justify-between px-6 py-3 bg-white border-t border-[#EEF0F4] shrink-0">
               <div className="text-[11px] text-[#9CA3AF]">
-                Viewed by <span className="font-semibold text-[#0E3470]">{investorName}</span> · {new Date().toLocaleString()}
+                {t('viewedBy')} <span className="font-semibold text-[#0E3470]">{investorName}</span> · {new Date().toLocaleString()}
               </div>
               <div className="flex items-center gap-2 px-3.5 py-1.5 bg-[#FEF2F2] rounded-lg border border-[#DC2626]/10">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2">
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                   <path d="M7 11V7a5 5 0 0110 0v4" />
                 </svg>
-                <span className="text-[10px] font-semibold text-[#DC2626]">View only · All activity logged</span>
+                <span className="text-[10px] font-semibold text-[#DC2626]">{t('viewOnlyLogged')}</span>
               </div>
             </div>
           </div>

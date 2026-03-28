@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -18,16 +19,6 @@ interface DaySlot {
 }
 
 type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
-
-const DAY_LABELS: Record<DayOfWeek, string> = {
-  1: 'Monday',
-  2: 'Tuesday',
-  3: 'Wednesday',
-  4: 'Thursday',
-  5: 'Friday',
-  6: 'Saturday',
-  0: 'Sunday',
-};
 
 const DAY_ORDER: DayOfWeek[] = [1, 2, 3, 4, 5, 6, 0];
 
@@ -70,7 +61,19 @@ function getDefaultSlots(): Record<DayOfWeek, DaySlot> {
 }
 
 export default function SettingsPage() {
+  const t = useTranslations('admin.settings');
+  const tc = useTranslations('common');
   const supabase = createClient();
+
+  const DAY_LABELS: Record<DayOfWeek, string> = {
+    1: t('monday'),
+    2: t('tuesday'),
+    3: t('wednesday'),
+    4: t('thursday'),
+    5: t('friday'),
+    6: t('saturday'),
+    0: t('sunday'),
+  };
 
   // Contact info state
   const [contact, setContact] = useState<ContactInfo>({
@@ -217,9 +220,9 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div>
-        <h1 className="text-[24px] font-bold text-rp-navy mb-6">Settings</h1>
+        <h1 className="text-[24px] font-bold text-rp-navy mb-6">{t('title')}</h1>
         <div className="bg-white rounded-2xl border border-rp-gray-200 p-8 text-center">
-          <p className="text-sm text-rp-gray-400">Loading settings...</p>
+          <p className="text-sm text-rp-gray-400">{t('loadingSettings')}</p>
         </div>
       </div>
     );
@@ -227,37 +230,37 @@ export default function SettingsPage() {
 
   return (
     <div>
-      <h1 className="text-[24px] font-bold text-rp-navy mb-6">Settings</h1>
+      <h1 className="text-[24px] font-bold text-rp-navy mb-6">{t('title')}</h1>
 
       {/* Section 1: Contact Information */}
       <div className="bg-white rounded-2xl border border-rp-gray-200 p-6 mb-6">
-        <h2 className="text-[16px] font-semibold text-rp-navy mb-5">Contact Information</h2>
+        <h2 className="text-[16px] font-semibold text-rp-navy mb-5">{t('contactInfo')}</h2>
         <div className="flex flex-col gap-4 max-w-lg">
           <Input
-            label="Contact Name"
+            label={t('contactName')}
             value={contact.contact_name}
             onChange={(e) => setContact((prev) => ({ ...prev, contact_name: e.target.value }))}
-            placeholder="John Smith"
+            placeholder={t('contactNamePlaceholder')}
           />
           <Input
-            label="Contact Title"
+            label={t('contactTitle')}
             value={contact.contact_title}
             onChange={(e) => setContact((prev) => ({ ...prev, contact_title: e.target.value }))}
-            placeholder="Managing Partner"
+            placeholder={t('contactTitlePlaceholder')}
           />
           <Input
-            label="Contact Email"
+            label={t('contactEmail')}
             type="email"
             value={contact.contact_email}
             onChange={(e) => setContact((prev) => ({ ...prev, contact_email: e.target.value }))}
-            placeholder="john@reprime.com"
+            placeholder={t('contactEmailPlaceholder')}
           />
           <div className="flex items-center gap-3 mt-1">
             <Button variant="gold" loading={contactSaving} onClick={handleSaveContact}>
-              Save Contact Info
+              {t('saveContactInfo')}
             </Button>
             {contactSaved && (
-              <span className="text-sm text-green-600 font-medium">Saved!</span>
+              <span className="text-sm text-green-600 font-medium">{tc('saved')}</span>
             )}
           </div>
         </div>
@@ -265,7 +268,7 @@ export default function SettingsPage() {
 
       {/* Section 2: Meeting Availability */}
       <div className="bg-white rounded-2xl border border-rp-gray-200 p-6">
-        <h2 className="text-[16px] font-semibold text-rp-navy mb-5">Meeting Availability</h2>
+        <h2 className="text-[16px] font-semibold text-rp-navy mb-5">{t('meetingAvailability')}</h2>
 
         {/* Day rows */}
         <div className="flex flex-col gap-3 mb-6">
@@ -306,27 +309,27 @@ export default function SettingsPage() {
                       onChange={(e) => updateSlot(day, { start_time: e.target.value })}
                       className={selectClass}
                     >
-                      {TIME_OPTIONS.map((t) => (
-                        <option key={t} value={t}>
-                          {formatTime(t)}
+                      {TIME_OPTIONS.map((time) => (
+                        <option key={time} value={time}>
+                          {formatTime(time)}
                         </option>
                       ))}
                     </select>
-                    <span className="text-rp-gray-400 text-sm">to</span>
+                    <span className="text-rp-gray-400 text-sm">{t('to')}</span>
                     <select
                       value={slot.end_time}
                       onChange={(e) => updateSlot(day, { end_time: e.target.value })}
                       className={selectClass}
                     >
-                      {TIME_OPTIONS.map((t) => (
-                        <option key={t} value={t}>
-                          {formatTime(t)}
+                      {TIME_OPTIONS.map((time) => (
+                        <option key={time} value={time}>
+                          {formatTime(time)}
                         </option>
                       ))}
                     </select>
                   </div>
                 ) : (
-                  <span className="text-sm text-rp-gray-400">Unavailable</span>
+                  <span className="text-sm text-rp-gray-400">{t('unavailable')}</span>
                 )}
               </div>
             );
@@ -337,7 +340,7 @@ export default function SettingsPage() {
         <div className="flex flex-wrap gap-6 mb-6">
           <div>
             <label className="block text-[13px] font-medium text-rp-gray-700 mb-1.5">
-              Meeting Duration
+              {t('meetingDuration')}
             </label>
             <select
               value={meetingDuration}
@@ -346,14 +349,14 @@ export default function SettingsPage() {
             >
               {DURATION_OPTIONS.map((d) => (
                 <option key={d} value={d}>
-                  {d} minutes
+                  {t('minutes', { count: d })}
                 </option>
               ))}
             </select>
           </div>
           <div>
             <label className="block text-[13px] font-medium text-rp-gray-700 mb-1.5">
-              Buffer Time
+              {t('bufferTime')}
             </label>
             <select
               value={bufferTime}
@@ -362,7 +365,7 @@ export default function SettingsPage() {
             >
               {BUFFER_OPTIONS.map((b) => (
                 <option key={b} value={b}>
-                  {b} minutes
+                  {t('minutes', { count: b })}
                 </option>
               ))}
             </select>
@@ -371,10 +374,10 @@ export default function SettingsPage() {
 
         <div className="flex items-center gap-3">
           <Button variant="gold" loading={availSaving} onClick={handleSaveAvailability}>
-            Save Availability
+            {t('saveAvailability')}
           </Button>
           {availSaved && (
-            <span className="text-sm text-green-600 font-medium">Saved!</span>
+            <span className="text-sm text-green-600 font-medium">{tc('saved')}</span>
           )}
         </div>
       </div>

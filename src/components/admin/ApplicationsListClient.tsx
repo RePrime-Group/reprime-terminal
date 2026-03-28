@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 interface ApplicationRow {
   id: string;
@@ -55,20 +56,14 @@ const statusStyles: Record<string, string> = {
   rejected: 'bg-red-50 text-red-500 border border-red-200',
 };
 
-const filterLabels: Record<StatusFilter, string> = {
-  all: 'All Applications',
-  pending: 'Pending',
-  approved: 'Approved',
-  rejected: 'Rejected',
-};
-
 function Pagination({ page, totalPages, onPageChange }: { page: number; totalPages: number; onPageChange: (p: number) => void }) {
+  const tc = useTranslations('common');
   if (totalPages <= 1) return null;
 
   return (
     <div className="flex items-center justify-between px-5 py-3 border-t border-rp-gray-200">
       <p className="text-xs text-rp-gray-400">
-        Page {page} of {totalPages}
+        {tc('page')} {page} {tc('of')} {totalPages}
       </p>
       <div className="flex gap-1">
         <button
@@ -76,14 +71,14 @@ function Pagination({ page, totalPages, onPageChange }: { page: number; totalPag
           disabled={page <= 1}
           className="px-3 py-1.5 text-xs font-medium rounded-md border border-rp-gray-200 text-rp-gray-600 hover:bg-rp-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
-          Previous
+          {tc('previous')}
         </button>
         <button
           onClick={() => onPageChange(page + 1)}
           disabled={page >= totalPages}
           className="px-3 py-1.5 text-xs font-medium rounded-md border border-rp-gray-200 text-rp-gray-600 hover:bg-rp-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
-          Next
+          {tc('next')}
         </button>
       </div>
     </div>
@@ -100,6 +95,8 @@ function ApplicationDetailModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const t = useTranslations('admin.applications');
+  const tc = useTranslations('common');
   const [detail, setDetail] = useState<ApplicationDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState('');
@@ -163,7 +160,7 @@ function ApplicationDetailModal({
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-5 pb-4">
-          <h2 className="text-lg font-bold text-rp-navy">Application Details</h2>
+          <h2 className="text-lg font-bold text-rp-navy">{t('applicationDetails')}</h2>
           <button
             onClick={onClose}
             className="p-1.5 rounded-lg text-rp-gray-400 hover:bg-rp-gray-100 hover:text-rp-gray-600 transition-colors"
@@ -204,20 +201,20 @@ function ApplicationDetailModal({
 
                 <div className="grid grid-cols-2 gap-3 pt-2 border-t border-rp-gray-200">
                   <div>
-                    <p className="text-[10px] font-semibold text-rp-gray-400 uppercase tracking-wider mb-0.5">Company</p>
+                    <p className="text-[10px] font-semibold text-rp-gray-400 uppercase tracking-wider mb-0.5">{t('company')}</p>
                     <p className="text-sm text-rp-gray-700">{detail.company_name || '\u2014'}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] font-semibold text-rp-gray-400 uppercase tracking-wider mb-0.5">Phone</p>
+                    <p className="text-[10px] font-semibold text-rp-gray-400 uppercase tracking-wider mb-0.5">{t('phone')}</p>
                     <p className="text-sm text-rp-gray-700">{detail.phone || '\u2014'}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] font-semibold text-rp-gray-400 uppercase tracking-wider mb-0.5">Applied</p>
+                    <p className="text-[10px] font-semibold text-rp-gray-400 uppercase tracking-wider mb-0.5">{t('applied')}</p>
                     <p className="text-sm text-rp-gray-700">{formatDateTime(detail.created_at)}</p>
                   </div>
                   {detail.reviewed_at && (
                     <div>
-                      <p className="text-[10px] font-semibold text-rp-gray-400 uppercase tracking-wider mb-0.5">Reviewed</p>
+                      <p className="text-[10px] font-semibold text-rp-gray-400 uppercase tracking-wider mb-0.5">{t('reviewed')}</p>
                       <p className="text-sm text-rp-gray-700">{formatDateTime(detail.reviewed_at)}</p>
                     </div>
                   )}
@@ -227,7 +224,7 @@ function ApplicationDetailModal({
               {/* Status */}
               <div>
                 <label className="block text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider mb-1.5">
-                  Status
+                  {t('status')}
                 </label>
                 <div className="flex gap-2">
                   {(['pending', 'approved', 'rejected'] as const).map((s) => (
@@ -244,18 +241,18 @@ function ApplicationDetailModal({
                           : 'bg-white text-rp-gray-500 border-rp-gray-200 hover:bg-rp-gray-50'
                       }`}
                     >
-                      {s.charAt(0).toUpperCase() + s.slice(1)}
+                      {t(s)}
                     </button>
                   ))}
                 </div>
                 {status === 'approved' && detail.status !== 'approved' && (
                   <p className="mt-2 text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-                    Approving this application will automatically send an invitation to the applicant.
+                    {t('approveNotice')}
                   </p>
                 )}
                 {status === 'rejected' && detail.status !== 'rejected' && (
                   <p className="mt-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-                    Rejecting this application will send a rejection notification to the applicant.
+                    {t('rejectNotice')}
                   </p>
                 )}
               </div>
@@ -263,13 +260,13 @@ function ApplicationDetailModal({
               {/* Admin Notes */}
               <div>
                 <label className="block text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider mb-1.5">
-                  Admin Notes
+                  {t('adminNotes')}
                 </label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={3}
-                  placeholder="Internal notes about this application..."
+                  placeholder={t('notesPlaceholder')}
                   className="w-full px-3.5 py-2.5 border border-rp-gray-300 rounded-lg text-sm text-rp-gray-700 placeholder:text-rp-gray-400 focus:outline-none focus:ring-2 focus:ring-rp-gold/20 focus:border-rp-gold transition-colors resize-none"
                 />
               </div>
@@ -284,14 +281,14 @@ function ApplicationDetailModal({
                   onClick={onClose}
                   className="flex-1 px-4 py-2.5 rounded-lg border border-rp-gray-200 text-sm font-medium text-rp-gray-600 hover:bg-rp-gray-50 transition-colors"
                 >
-                  Cancel
+                  {tc('cancel')}
                 </button>
                 <button
                   onClick={handleSave}
                   disabled={!hasChanges || saving}
                   className="flex-1 px-4 py-2.5 rounded-lg bg-rp-gold text-white text-sm font-semibold hover:bg-rp-gold/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
-                  {saving ? 'Saving...' : 'Save Changes'}
+                  {saving ? tc('saving') : tc('saveChanges')}
                 </button>
               </div>
             </>
@@ -315,7 +312,16 @@ export default function ApplicationsListClient({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const t = useTranslations('admin.applications');
+  const tc = useTranslations('common');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const filterLabels: Record<StatusFilter, string> = {
+    all: t('allApplications'),
+    pending: t('pending'),
+    approved: t('approved'),
+    rejected: t('rejected'),
+  };
 
   const totalPages = Math.ceil(total / pageSize);
 
@@ -349,12 +355,12 @@ export default function ApplicationsListClient({
 
   return (
     <div>
-      <h1 className="text-[24px] font-bold text-rp-navy mb-6">Membership Applications</h1>
+      <h1 className="text-[24px] font-bold text-rp-navy mb-6">{t('title')}</h1>
 
       {/* Filter Dropdown */}
       <div className="flex items-center gap-3 mb-4">
         <label htmlFor="app-filter" className="text-xs font-medium text-rp-gray-500">
-          Status:
+          {t('statusLabel')}
         </label>
         <select
           id="app-filter"
@@ -379,12 +385,12 @@ export default function ApplicationsListClient({
             </svg>
           </div>
           <p className="text-rp-gray-500 text-sm mb-1">
-            No {statusFilter === 'all' ? '' : statusFilter} applications
+            {t('noApplications', { status: statusFilter === 'all' ? '' : filterLabels[statusFilter] })}
           </p>
           <p className="text-rp-gray-400 text-xs">
             {statusFilter === 'all'
-              ? 'Applications will appear here when submitted.'
-              : `No applications with status "${statusFilter}".`}
+              ? t('willAppearHere')
+              : t(`${statusFilter}Message`)}
           </p>
         </div>
       ) : (
@@ -392,11 +398,11 @@ export default function ApplicationsListClient({
           <table className="w-full">
             <thead>
               <tr className="border-b border-rp-gray-200">
-                <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">Name</th>
-                <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">Email</th>
-                <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">Company</th>
-                <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">Status</th>
-                <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">Applied</th>
+                <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('name')}</th>
+                <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('email')}</th>
+                <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('company')}</th>
+                <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('status')}</th>
+                <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('applied')}</th>
               </tr>
             </thead>
             <tbody>
@@ -413,7 +419,7 @@ export default function ApplicationsListClient({
                   <td className="px-5 py-3.5 text-sm text-rp-gray-600">{app.company_name ?? '\u2014'}</td>
                   <td className="px-5 py-3.5">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusStyles[app.status]}`}>
-                      {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
+                      {t(app.status as 'pending' | 'approved' | 'rejected')}
                     </span>
                   </td>
                   <td className="px-5 py-3.5 text-sm text-rp-gray-600">{formatDate(app.created_at)}</td>

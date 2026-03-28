@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
 import DealDetailClient from '@/components/portal/DealDetailClient';
 import type {
@@ -19,6 +20,7 @@ interface DealPreviewPageProps {
 
 export default async function DealPreviewPage({ params }: DealPreviewPageProps) {
   const { locale, id } = await params;
+  const t = await getTranslations('admin.preview');
   const supabase = await createClient();
 
   // ---------- Verify admin access ----------
@@ -153,17 +155,17 @@ export default async function DealPreviewPage({ params }: DealPreviewPageProps) 
       <div className="sticky top-0 z-50 bg-[#0E3470] border-b border-[#BC9C45]/30 text-white px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span className="text-[10px] font-bold tracking-[1.5px] uppercase text-[#BC9C45]">
-            Admin Preview
+            {t('adminPreview')}
           </span>
           <span className="text-[12px] text-white/70">
-            You are viewing this deal as an investor would see it
+            {t('viewingAsInvestor')}
           </span>
         </div>
         <a
           href={`/${locale}/admin/deals/${id}`}
           className="px-4 py-1.5 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[12px] font-semibold rounded-lg transition-colors"
         >
-          Back to Admin
+          {t('backToAdmin')}
         </a>
       </div>
 

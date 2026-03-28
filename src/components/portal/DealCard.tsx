@@ -14,7 +14,8 @@ interface DealCardProps {
 }
 
 export default function DealCard({ deal, locale, index }: DealCardProps) {
-  const t = useTranslations('portal');
+  const t = useTranslations('portal.dealCard');
+  const tc = useTranslations('portal.countdown');
   const [watched, setWatched] = useState(false);
   const countdown = useCountdown(deal.dd_deadline);
   const isAssigned = deal.status === 'assigned' || deal.status === 'closed';
@@ -36,17 +37,17 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
   // Build subtitle
   const subtitleParts: string[] = [`${deal.city}, ${deal.state}`];
   if (deal.square_footage) subtitleParts.push(formatSqFt(deal.square_footage));
-  if (deal.units) subtitleParts.push(`${deal.units} Units`);
-  if (deal.class_type) subtitleParts.push(`Class ${deal.class_type}`);
+  if (deal.units) subtitleParts.push(t('units', { count: deal.units }));
+  if (deal.class_type) subtitleParts.push(t('classType', { type: deal.class_type }));
   const subtitle = subtitleParts.join(' \u00B7 ');
 
   const metrics = [
-    { label: 'PURCHASE', value: formatPriceCompact(deal.purchase_price), highlight: false },
-    { label: 'NOI', value: formatPriceCompact(deal.noi), highlight: false },
-    { label: 'CAP RATE', value: formatPercent(deal.cap_rate), highlight: false },
-    { label: 'IRR', value: formatPercent(deal.irr), highlight: true },
-    { label: 'CoC', value: formatPercent(deal.coc), highlight: true },
-    { label: 'DSCR', value: formatDSCR(deal.dscr), highlight: false },
+    { label: t('purchase'), value: formatPriceCompact(deal.purchase_price), highlight: false },
+    { label: t('noi'), value: formatPriceCompact(deal.noi), highlight: false },
+    { label: t('capRate'), value: formatPercent(deal.cap_rate), highlight: false },
+    { label: t('irr'), value: formatPercent(deal.irr), highlight: true },
+    { label: t('coc'), value: formatPercent(deal.coc), highlight: true },
+    { label: t('dscr'), value: formatDSCR(deal.dscr), highlight: false },
   ];
 
   return (
@@ -116,7 +117,7 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
                   background: 'linear-gradient(135deg, #BC9C45 0%, #D4B85A 50%, #BC9C45 100%)',
                 }}
               >
-                SELLER FINANCING
+                {t('sellerFinancing')}
               </span>
             )}
           </div>
@@ -156,11 +157,11 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
               <div className="flex items-center gap-1.5">
                 <span className="live-dot w-1.5 h-1.5 rounded-full bg-[#0B8A4D]" />
                 <span className="text-[10px] text-white">
-                  {deal.viewing_count} {t('dealCard.viewingCount')}
+                  {deal.viewing_count} {t('viewingCount')}
                 </span>
               </div>
               <span className="text-[10px] text-[#BC9C45]">
-                {deal.meetings_count} {t('dealCard.meetingsBooked')}
+                {deal.meetings_count} {t('meetingsBooked')}
               </span>
             </div>
           )}
@@ -213,7 +214,7 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
           {/* Equity required */}
           <div className="mt-4">
             <div className="text-[8px] font-bold text-gray-400 uppercase tracking-[2px]">
-              {t('dealCard.equityRequired')}
+              {t('equityRequired')}
             </div>
             <div className="text-[22px] font-bold text-[#0E3470] tracking-tight leading-tight tabular-nums">
               {formatPrice(deal.equity_required)}
@@ -224,7 +225,7 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
           {hasSpecialTerms && (
             <div className="mt-3 inline-flex flex-col bg-[#FDF8ED] border border-[#BC9C45] rounded-full px-3.5 py-1.5">
               <span className="text-[8px] font-bold text-[#BC9C45] uppercase tracking-[1.5px]">
-                SPECIAL TERMS
+                {t('specialTerms')}
               </span>
               <span className="text-[10px] font-medium text-[#0E3470]">
                 {deal.special_terms}
@@ -247,7 +248,7 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
                 className="text-[8px] font-bold uppercase tracking-[1.5px]"
                 style={{ color: urgencyTextColor }}
               >
-                DD DEADLINE
+                {t('ddDeadline')}
               </span>
             </div>
 
@@ -256,22 +257,22 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
                 className="flex items-center gap-1.5 text-[18px] font-extrabold"
                 style={{ color: urgencyTextColor }}
               >
-                &#9733; ASSIGNED
+                &#9733; {t('assigned')}
               </span>
             ) : countdown.isExpired ? (
               <span
                 className="text-[18px] font-extrabold"
                 style={{ color: urgencyTextColor }}
               >
-                EXPIRED
+                {t('expired')}
               </span>
             ) : (
               <div className="flex items-center gap-0.5">
                 {[
-                  { value: countdown.days, label: 'D' },
-                  { value: countdown.hours, label: 'H' },
-                  { value: countdown.minutes, label: 'M' },
-                  { value: countdown.seconds, label: 'S' },
+                  { value: countdown.days, label: tc('d') },
+                  { value: countdown.hours, label: tc('h') },
+                  { value: countdown.minutes, label: tc('m') },
+                  { value: countdown.seconds, label: tc('s') },
                 ].map((g, i) => (
                   <div key={g.label} className="flex items-center gap-0.5">
                     {i > 0 && (

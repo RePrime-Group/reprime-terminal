@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -18,6 +19,9 @@ export default function InviteInvestorPage() {
   const locale = params.locale;
   const router = useRouter();
   const supabase = createClient();
+  const t = useTranslations('admin.investors');
+  const tc = useTranslations('common');
+  const ta = useTranslations('auth');
 
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<InviteRole>('investor');
@@ -42,7 +46,7 @@ export default function InviteInvestorPage() {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      setError('You must be logged in to send invitations.');
+      setError(ta('mustBeLoggedIn'));
       setLoading(false);
       return;
     }
@@ -108,7 +112,7 @@ export default function InviteInvestorPage() {
             <path d="M12.5 15l-5-5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
-        <h1 className="text-[24px] font-bold text-rp-navy">Invite Investor</h1>
+        <h1 className="text-[24px] font-bold text-rp-navy">{t('invite')}</h1>
       </div>
 
       {/* Form / Success */}
@@ -121,34 +125,34 @@ export default function InviteInvestorPage() {
                 <path d="M8 14.5l4 4 8-9" stroke="#22C55E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
-            <h2 className="text-lg font-semibold text-rp-navy mb-1">Invitation Created</h2>
+            <h2 className="text-lg font-semibold text-rp-navy mb-1">{t('invitationCreated')}</h2>
             {emailSent ? (
               <p className="text-sm text-green-600 mb-5">
-                Invitation email sent to <strong>{email}</strong>
+                {t('emailSentTo')} <strong>{email}</strong>
               </p>
             ) : emailError ? (
               <p className="text-sm text-amber-600 mb-5">
-                Email could not be sent: {emailError}. Share the link manually.
+                {t('emailNotSent')}: {emailError}
               </p>
             ) : (
               <p className="text-sm text-rp-gray-500 mb-5">
-                Sending invitation email...
+                {t('sendingEmail')}
               </p>
             )}
 
             {/* Invite link */}
             <div className="bg-rp-page-bg border border-rp-gray-200 rounded-lg p-3 mb-4">
-              <p className="text-xs text-rp-gray-500 mb-1 font-medium">Invite Link</p>
+              <p className="text-xs text-rp-gray-500 mb-1 font-medium">{t('inviteLink')}</p>
               <p className="text-sm text-rp-navy break-all font-mono">{inviteLink}</p>
             </div>
 
             <Button variant="gold" onClick={handleCopy} className="w-full mb-4">
-              {copied ? 'Copied!' : 'Copy Link'}
+              {copied ? t('copied') : t('copyLink')}
             </Button>
 
             <p className="text-xs text-rp-gray-400 mb-5">
-              This invitation expires on{' '}
-              {new Date(result.expiresAt).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}.
+              {t('expiresOn')}{' '}
+              {new Date(result.expiresAt).toLocaleDateString(locale, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}.
             </p>
 
             <button
@@ -162,16 +166,16 @@ export default function InviteInvestorPage() {
               }}
               className="text-sm font-medium text-rp-gold hover:text-rp-gold/80 transition-colors"
             >
-              Invite Another
+              {t('inviteAnother')}
             </button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             <Input
-              label="Email"
+              label={t('email')}
               type="email"
               required
-              placeholder="investor@example.com"
+              placeholder={t('emailPlaceholder')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -181,7 +185,7 @@ export default function InviteInvestorPage() {
                 htmlFor="role-select"
                 className="block text-[13px] font-medium text-rp-gray-700 mb-1.5"
               >
-                Role
+                {t('role')}
               </label>
               <select
                 id="role-select"
@@ -189,8 +193,8 @@ export default function InviteInvestorPage() {
                 onChange={(e) => setRole(e.target.value as InviteRole)}
                 className="w-full px-3.5 py-2.5 border border-rp-gray-300 rounded-lg text-sm text-rp-gray-700 focus:outline-none focus:ring-2 focus:ring-rp-gold/20 focus:border-rp-gold transition-colors bg-white"
               >
-                <option value="investor">Investor</option>
-                <option value="employee">Employee</option>
+                <option value="investor">{t('investor')}</option>
+                <option value="employee">{t('employee')}</option>
               </select>
             </div>
 
@@ -199,7 +203,7 @@ export default function InviteInvestorPage() {
             )}
 
             <Button type="submit" variant="gold" loading={loading}>
-              Send Invitation
+              {t('sendInvite')}
             </Button>
           </form>
         )}

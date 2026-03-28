@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 
 interface OnboardingOverlayProps {
@@ -8,49 +9,25 @@ interface OnboardingOverlayProps {
   userId: string;
 }
 
-interface TourStep {
-  target: string; // data-tour attribute value
-  title: string;
-  description: string;
+interface TourStepDef {
+  target: string;
+  titleKey: string;
+  descriptionKey: string;
   position: 'bottom' | 'top' | 'left' | 'right';
 }
 
-const TOUR_STEPS: TourStep[] = [
-  {
-    target: 'nav-tabs',
-    title: 'Navigation',
-    description: 'Switch between your Dashboard, Portfolio tracker, and Deal Compare tool.',
-    position: 'bottom',
-  },
-  {
-    target: 'hero-metrics',
-    title: 'Portfolio Overview',
-    description: 'Key metrics across all active opportunities — deal volume, equity, IRR, and more.',
-    position: 'bottom',
-  },
-  {
-    target: 'first-deal',
-    title: 'Deal Cards',
-    description: 'Each card shows key metrics at a glance. Click any card to view full details, financials, and the data room.',
-    position: 'right',
-  },
-  {
-    target: 'market-sidebar',
-    title: 'Market Intelligence',
-    description: 'Track the CRE market cycle, maturity wall, and live terminal activity in the sidebar.',
-    position: 'left',
-  },
-  {
-    target: 'notif-bell',
-    title: 'Notifications',
-    description: 'Stay informed — deal updates, new documents, and meeting confirmations appear here.',
-    position: 'bottom',
-  },
+const TOUR_STEP_DEFS: TourStepDef[] = [
+  { target: 'nav-tabs', titleKey: 'navTabsTitle', descriptionKey: 'navTabsDescription', position: 'bottom' },
+  { target: 'hero-metrics', titleKey: 'heroMetricsTitle', descriptionKey: 'heroMetricsDescription', position: 'bottom' },
+  { target: 'first-deal', titleKey: 'firstDealTitle', descriptionKey: 'firstDealDescription', position: 'right' },
+  { target: 'market-sidebar', titleKey: 'marketSidebarTitle', descriptionKey: 'marketSidebarDescription', position: 'left' },
+  { target: 'notif-bell', titleKey: 'notifBellTitle', descriptionKey: 'notifBellDescription', position: 'bottom' },
 ];
 
 type Stage = 'welcome' | 'tour' | null;
 
 export default function OnboardingOverlay({ firstName, userId }: OnboardingOverlayProps) {
+  const t = useTranslations('portal.onboarding');
   const [stage, setStage] = useState<Stage>(null);
   const [dismissed, setDismissed] = useState(false);
   const [tourStep, setTourStep] = useState(0);
@@ -77,7 +54,7 @@ export default function OnboardingOverlay({ firstName, userId }: OnboardingOverl
 
   const updateSpotlight = useCallback(() => {
     if (stage !== 'tour') return;
-    const step = TOUR_STEPS[tourStep];
+    const step = TOUR_STEP_DEFS[tourStep];
     if (!step) return;
     const el = document.querySelector(`[data-tour="${step.target}"]`);
     if (el) {
@@ -105,7 +82,7 @@ export default function OnboardingOverlay({ firstName, userId }: OnboardingOverl
   };
 
   const handleNext = () => {
-    if (tourStep < TOUR_STEPS.length - 1) {
+    if (tourStep < TOUR_STEP_DEFS.length - 1) {
       setTourStep(tourStep + 1);
     } else {
       handleFinish();
@@ -130,27 +107,27 @@ export default function OnboardingOverlay({ firstName, userId }: OnboardingOverl
           </div>
 
           <h1 className="font-[family-name:var(--font-playfair)] text-[32px] font-semibold text-white mb-3">
-            Welcome to RePrime Terminal, {firstName}.
+            {t('welcome', { firstName })}
           </h1>
           <p className="text-[15px] text-white/50 leading-relaxed mb-2">
-            You now have access to institutional-grade commercial real estate opportunities.
+            {t('accessDescription')}
           </p>
           <p className="text-[13px] text-white/30 mb-8">
-            Take a quick tour — it only takes 30 seconds.
+            {t('tourPrompt')}
           </p>
 
           <button
             onClick={handleStartTour}
             className="px-10 py-4 rounded-xl bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] text-[15px] font-bold shadow-[0_8px_32px_rgba(188,156,69,0.3)] hover:shadow-[0_12px_40px_rgba(188,156,69,0.4)] transition-all hover:-translate-y-0.5"
           >
-            Let&apos;s Start →
+            {t('letsStart')} →
           </button>
 
           <button
             onClick={handleFinish}
             className="block mx-auto mt-4 text-[11px] text-white/20 hover:text-white/40 transition-colors"
           >
-            Skip
+            {t('skip')}
           </button>
         </div>
       </div>
@@ -158,9 +135,9 @@ export default function OnboardingOverlay({ firstName, userId }: OnboardingOverl
   }
 
   // Tour mode — spotlight + tooltip
-  const step = TOUR_STEPS[tourStep];
+  const step = TOUR_STEP_DEFS[tourStep];
   const pad = 8;
-  const isLast = tourStep === TOUR_STEPS.length - 1;
+  const isLast = tourStep === TOUR_STEP_DEFS.length - 1;
 
   // Tooltip positioning
   const getTooltipStyle = (): React.CSSProperties => {
@@ -238,7 +215,7 @@ export default function OnboardingOverlay({ firstName, userId }: OnboardingOverl
         <div className="bg-[#0F1419] rounded-xl p-5 shadow-2xl border border-white/[0.08]">
           {/* Step counter */}
           <div className="flex items-center gap-1.5 mb-3">
-            {TOUR_STEPS.map((_, i) => (
+            {TOUR_STEP_DEFS.map((_, i) => (
               <div
                 key={i}
                 className={`h-1 rounded-full transition-all duration-300 ${
@@ -246,24 +223,24 @@ export default function OnboardingOverlay({ firstName, userId }: OnboardingOverl
                 }`}
               />
             ))}
-            <span className="ml-auto text-[10px] text-white/25">{tourStep + 1}/{TOUR_STEPS.length}</span>
+            <span className="ml-auto text-[10px] text-white/25">{tourStep + 1}/{TOUR_STEP_DEFS.length}</span>
           </div>
 
-          <h3 className="text-[15px] font-semibold text-white mb-1.5">{step.title}</h3>
-          <p className="text-[13px] text-white/50 leading-relaxed mb-4">{step.description}</p>
+          <h3 className="text-[15px] font-semibold text-white mb-1.5">{t(step.titleKey)}</h3>
+          <p className="text-[13px] text-white/50 leading-relaxed mb-4">{t(step.descriptionKey)}</p>
 
           <div className="flex items-center justify-between">
             <button
               onClick={handleFinish}
               className="text-[11px] text-white/25 hover:text-white/50 transition-colors"
             >
-              Skip tour
+              {t('skipTour')}
             </button>
             <button
               onClick={handleNext}
               className="px-5 py-2 rounded-lg bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] text-[12px] font-bold hover:opacity-90 transition-opacity"
             >
-              {isLast ? 'Done' : 'Next →'}
+              {isLast ? t('done') : `${t('nextStep')} →`}
             </button>
           </div>
         </div>

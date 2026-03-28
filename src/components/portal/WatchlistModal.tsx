@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 interface WatchlistModalProps {
   dealName: string;
@@ -10,6 +11,8 @@ interface WatchlistModalProps {
 }
 
 export default function WatchlistModal({ dealName, dealId, onClose, onConfirm }: WatchlistModalProps) {
+  const t = useTranslations('portal.watchlist');
+  const tc = useTranslations('common');
   const [freq, setFreq] = useState<'every' | 'daily' | 'weekly'>('every');
   const [channels, setChannels] = useState({ email: true, whatsapp: false, sms: false });
   const [types, setTypes] = useState({ docs: true, deadlines: true, price: true, competing: true });
@@ -44,16 +47,16 @@ export default function WatchlistModal({ dealName, dealId, onClose, onConfirm }:
       >
         <div className="rp-dark-gradient px-7 py-5">
           <div className="text-[16px] font-semibold text-white font-[family-name:var(--font-playfair)]">
-            Set Alerts for {dealName}
+            {t('setAlerts', { dealName })}
           </div>
-          <div className="text-[11px] text-white/40 mt-1">Get notified about important updates</div>
+          <div className="text-[11px] text-white/40 mt-1">{t('getNotified')}</div>
         </div>
 
         <div className="p-7">
           {/* Frequency */}
-          <div className="text-[11px] font-semibold text-[#0E3470] uppercase tracking-[1.5px] mb-3">Frequency</div>
+          <div className="text-[11px] font-semibold text-[#0E3470] uppercase tracking-[1.5px] mb-3">{t('frequency')}</div>
           <div className="flex gap-2 mb-6">
-            {([['every', 'Every update'], ['daily', 'Daily digest'], ['weekly', 'Weekly summary']] as const).map(([v, l]) => (
+            {([['every', t('everyUpdate')], ['daily', t('dailyDigest')], ['weekly', t('weeklySummary')]] as const).map(([v, l]) => (
               <button
                 key={v}
                 onClick={() => setFreq(v)}
@@ -69,9 +72,9 @@ export default function WatchlistModal({ dealName, dealId, onClose, onConfirm }:
           </div>
 
           {/* Channels */}
-          <div className="text-[11px] font-semibold text-[#0E3470] uppercase tracking-[1.5px] mb-3">Channels</div>
+          <div className="text-[11px] font-semibold text-[#0E3470] uppercase tracking-[1.5px] mb-3">{t('channels')}</div>
           <div className="flex gap-2 mb-6">
-            {([['email', 'Email', '📧'], ['whatsapp', 'WhatsApp', '💬'], ['sms', 'SMS', '📱']] as const).map(([k, l, ic]) => (
+            {([['email', t('email'), '📧'], ['whatsapp', t('whatsapp'), '💬'], ['sms', t('sms'), '📱']] as const).map(([k, l, ic]) => (
               <button
                 key={k}
                 onClick={() => toggleCh(k)}
@@ -87,9 +90,9 @@ export default function WatchlistModal({ dealName, dealId, onClose, onConfirm }:
           </div>
 
           {/* Alert Types */}
-          <div className="text-[11px] font-semibold text-[#0E3470] uppercase tracking-[1.5px] mb-3">Alert Types</div>
+          <div className="text-[11px] font-semibold text-[#0E3470] uppercase tracking-[1.5px] mb-3">{t('alertTypes')}</div>
           <div className="grid grid-cols-2 gap-2 mb-6">
-            {([['docs', 'New documents'], ['deadlines', 'Deadline changes'], ['price', 'Price updates'], ['competing', 'Competing interest']] as const).map(([k, l]) => (
+            {([['docs', t('newDocuments')], ['deadlines', t('deadlineChanges')], ['price', t('priceUpdates')], ['competing', t('competingInterest')]] as const).map(([k, l]) => (
               <button
                 key={k}
                 onClick={() => toggleTy(k)}
@@ -111,13 +114,13 @@ export default function WatchlistModal({ dealName, dealId, onClose, onConfirm }:
               disabled={saving}
               className="flex-1 py-3.5 rounded-xl bg-[#BC9C45] hover:bg-[#A88A3D] text-[#0E3470] text-[13px] font-bold transition-colors disabled:opacity-50"
             >
-              {saving ? 'Saving...' : 'Start Watching'}
+              {saving ? tc('saving') : t('startWatching')}
             </button>
             <button
               onClick={onClose}
               className="px-5 py-3.5 rounded-xl border border-[#EEF0F4] text-[#6B7280] text-[12px] font-medium hover:bg-[#F7F8FA] transition-colors"
             >
-              Cancel
+              {tc('cancel')}
             </button>
           </div>
         </div>

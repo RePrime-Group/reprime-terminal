@@ -2,31 +2,33 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 
 type ValidationResult =
   | { valid: true; email: string; role: string }
   | { valid: false; reason: 'expired' | 'used' | 'not_found' };
 
-const ERROR_MESSAGES: Record<string, { title: string; description: string }> = {
-  expired: {
-    title: 'Invitation Expired',
-    description: 'This invitation link has expired.',
-  },
-  used: {
-    title: 'Invitation Already Used',
-    description: 'This invitation has already been accepted.',
-  },
-  not_found: {
-    title: 'Invalid Invitation',
-    description: 'This invitation link is not valid.',
-  },
-};
-
 export default function InviteRegistrationPage() {
+  const t = useTranslations('auth');
   const params = useParams();
   const locale = (params.locale as string) || 'en';
   const token = params.token as string;
+
+  const ERROR_MESSAGES: Record<string, { title: string; description: string }> = {
+    expired: {
+      title: t('expiredToken'),
+      description: t('expiredToken'),
+    },
+    used: {
+      title: t('usedToken'),
+      description: t('usedToken'),
+    },
+    not_found: {
+      title: t('invalidToken'),
+      description: t('invalidToken'),
+    },
+  };
 
   const [loading, setLoading] = useState(true);
   const [validation, setValidation] = useState<ValidationResult | null>(null);
@@ -155,7 +157,7 @@ export default function InviteRegistrationPage() {
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#07090F' }}>
         <div className="flex flex-col items-center gap-4">
           <div className="text-[#C9A54E] text-4xl font-bold">R</div>
-          <div className="text-white/40 text-sm">Validating invitation...</div>
+          <div className="text-white/40 text-sm">{t('validatingInvitation')}</div>
         </div>
       </div>
     );
@@ -192,15 +194,15 @@ export default function InviteRegistrationPage() {
       <div className="w-full max-w-md flex flex-col items-center gap-8">
         <div className="flex flex-col items-center gap-2">
           <div className="text-[#C9A54E] text-5xl font-bold tracking-tight">R</div>
-          <h1 className="text-white text-xl font-semibold">Create Your Account</h1>
-          <p className="text-white/40 text-sm">Complete your registration to access RePrime Terminal</p>
+          <h1 className="text-white text-xl font-semibold">{t('createYourAccount')}</h1>
+          <p className="text-white/40 text-sm">{t('completeRegistration')}</p>
         </div>
 
         <div className="w-full rounded-2xl border border-white/[0.08] bg-white/[0.02] backdrop-blur p-8">
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             {/* Email (read-only) */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-white/50 text-xs font-medium uppercase tracking-wider">Email</label>
+              <label className="text-white/50 text-xs font-medium uppercase tracking-wider">{t('email')}</label>
               <div className="rounded-lg border border-white/[0.06] bg-white/[0.03] px-4 py-3 text-white/40 text-sm">
                 {validation.email}
               </div>
@@ -209,7 +211,7 @@ export default function InviteRegistrationPage() {
             {/* Full Name */}
             <div className="flex flex-col gap-1.5">
               <label htmlFor="fullName" className="text-white/50 text-xs font-medium uppercase tracking-wider">
-                Full Name <span className="text-[#C9A54E]">*</span>
+                {t('fullName')} <span className="text-[#C9A54E]">*</span>
               </label>
               <input
                 id="fullName"
@@ -217,7 +219,7 @@ export default function InviteRegistrationPage() {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 required
-                placeholder="Enter your full name"
+                placeholder={t('enterFullName')}
                 className="rounded-lg border border-white/[0.06] bg-white/[0.03] px-4 py-3 text-white text-sm placeholder:text-white/20 outline-none focus:border-[#C9A54E]/40 transition-colors"
               />
             </div>
@@ -225,14 +227,14 @@ export default function InviteRegistrationPage() {
             {/* Company Name */}
             <div className="flex flex-col gap-1.5">
               <label htmlFor="companyName" className="text-white/50 text-xs font-medium uppercase tracking-wider">
-                Company Name <span className="text-white/20">(optional)</span>
+                {t('companyNameOptional')}
               </label>
               <input
                 id="companyName"
                 type="text"
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
-                placeholder="Enter your company name"
+                placeholder={t('enterCompanyName')}
                 className="rounded-lg border border-white/[0.06] bg-white/[0.03] px-4 py-3 text-white text-sm placeholder:text-white/20 outline-none focus:border-[#C9A54E]/40 transition-colors"
               />
             </div>
@@ -240,7 +242,7 @@ export default function InviteRegistrationPage() {
             {/* Password */}
             <div className="flex flex-col gap-1.5">
               <label htmlFor="password" className="text-white/50 text-xs font-medium uppercase tracking-wider">
-                Password <span className="text-[#C9A54E]">*</span>
+                {t('password')} <span className="text-[#C9A54E]">*</span>
               </label>
               <input
                 id="password"
@@ -249,7 +251,7 @@ export default function InviteRegistrationPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={8}
-                placeholder="Minimum 8 characters"
+                placeholder={t('minimumChars')}
                 className="rounded-lg border border-white/[0.06] bg-white/[0.03] px-4 py-3 text-white text-sm placeholder:text-white/20 outline-none focus:border-[#C9A54E]/40 transition-colors"
               />
             </div>
@@ -257,7 +259,7 @@ export default function InviteRegistrationPage() {
             {/* Confirm Password */}
             <div className="flex flex-col gap-1.5">
               <label htmlFor="confirmPassword" className="text-white/50 text-xs font-medium uppercase tracking-wider">
-                Confirm Password <span className="text-[#C9A54E]">*</span>
+                {t('confirmPassword')} <span className="text-[#C9A54E]">*</span>
               </label>
               <input
                 id="confirmPassword"
@@ -266,7 +268,7 @@ export default function InviteRegistrationPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 minLength={8}
-                placeholder="Re-enter your password"
+                placeholder={t('reenterPassword')}
                 className="rounded-lg border border-white/[0.06] bg-white/[0.03] px-4 py-3 text-white text-sm placeholder:text-white/20 outline-none focus:border-[#C9A54E]/40 transition-colors"
               />
             </div>
@@ -284,7 +286,7 @@ export default function InviteRegistrationPage() {
               disabled={submitting}
               className="mt-2 w-full rounded-lg bg-[#C9A54E] py-3 text-sm font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {submitting ? 'Creating Account...' : 'Create Account'}
+              {submitting ? t('creatingAccount') : t('createAccount')}
             </button>
           </form>
         </div>

@@ -4,6 +4,7 @@ import DealCard from '@/components/portal/DealCard';
 import ComingSoonCard from '@/components/portal/ComingSoonCard';
 import MarketIntelSidebar from '@/components/portal/MarketIntelSidebar';
 import { formatPriceCompact } from '@/lib/utils/format';
+import { useTranslations } from 'next-intl';
 
 export interface DealCardData {
   id: string;
@@ -44,6 +45,7 @@ interface PortalDashboardClientProps {
 }
 
 export default function PortalDashboardClient({ deals, locale }: PortalDashboardClientProps) {
+  const t = useTranslations('portal');
   const upcomingDeals = deals.filter((d) => d.status === 'coming_soon' || d.status === 'loi_signed');
   const activeDeals = deals.filter((d) => d.status === 'published');
   const closedDeals = deals.filter((d) => d.status === 'assigned' || d.status === 'closed');
@@ -97,16 +99,15 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
                 </div>
               )}
               <h1 className="font-[family-name:var(--font-playfair)] text-[42px] font-semibold text-white leading-[1.1] tracking-[-0.02em]">
-                Active Opportunities
+                {t('activeOpportunities')}
               </h1>
               <p className="text-[13px] text-white/35 mt-3 font-light tracking-wide leading-relaxed">
-                {upcomingDeals.length > 0 && <>{upcomingDeals.length} upcoming &middot; </>}
-                {activeCount} active &middot; {closedCount} closed &middot; All under executed PSA &middot; 30-day DD &middot; 30-day close
+                {t('heroDescription')}
               </p>
             </div>
             <div className="flex items-center gap-2">
               <span className="bg-white/[0.03] border border-white/[0.06] text-white/40 px-5 py-2.5 rounded-lg text-[9px] font-medium tracking-[2px] uppercase">
-                CONFIDENTIAL
+                {t('confidential')}
               </span>
             </div>
           </div>
@@ -144,10 +145,10 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
               </svg>
             </div>
             <p className="font-[family-name:var(--font-playfair)] text-xl font-semibold text-[#0E3470] mb-1.5">
-              No active opportunities at this time
+              {t('noActiveOpportunities')}
             </p>
             <p className="text-sm text-[#6B7280] max-w-md text-center">
-              New deals are released to qualified members on a controlled schedule.
+              {t('dealsReleasedSchedule')}
             </p>
           </div>
         ) : (
@@ -158,7 +159,7 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
                 <div>
                   <div className="flex items-center gap-3 mb-5">
                     <h2 className="font-[family-name:var(--font-playfair)] text-[20px] font-semibold text-[#0E3470] tracking-[-0.01em]">
-                      Upcoming Opportunities
+                      {t('upcomingOpportunities')}
                     </h2>
                     <div className="flex-1 h-px bg-gradient-to-r from-[#BC9C45]/30 to-transparent" />
                   </div>
@@ -176,7 +177,7 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
                   {upcomingDeals.length > 0 && (
                     <div className="flex items-center gap-3 mb-5">
                       <h2 className="font-[family-name:var(--font-playfair)] text-[20px] font-semibold text-[#0E3470] tracking-[-0.01em]">
-                        Active Deals
+                        {t('activeDeals')}
                       </h2>
                       <div className="flex-1 h-px bg-gradient-to-r from-[#BC9C45]/30 to-transparent" />
                     </div>
@@ -196,7 +197,7 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
                 <div>
                   <div className="flex items-center gap-3 mb-5">
                     <h2 className="font-[family-name:var(--font-playfair)] text-[20px] font-semibold text-[#0E3470] tracking-[-0.01em]">
-                      Closed Deals
+                      {t('closedDeals')}
                     </h2>
                     <div className="flex-1 h-px bg-gradient-to-r from-[#9CA3AF]/30 to-transparent" />
                   </div>
@@ -229,8 +230,7 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
             </span>
           </div>
           <p className="text-[10px] text-[#9CA3AF] max-w-[600px] text-right leading-relaxed">
-            This material is confidential and intended solely for the use of authorized Terminal members.
-            Any reproduction or distribution is strictly prohibited. All investments involve risk.
+            {t('footerConfidential')}
           </p>
         </div>
       </div>

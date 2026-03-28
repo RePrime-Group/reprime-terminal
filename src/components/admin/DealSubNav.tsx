@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 interface DealSubNavProps {
   dealId: string;
@@ -11,11 +12,12 @@ interface DealSubNavProps {
 
 export default function DealSubNav({ dealId, dealName, locale }: DealSubNavProps) {
   const pathname = usePathname();
+  const t = useTranslations('admin.dealSubNav');
 
   const tabs = [
     {
       key: 'edit',
-      label: 'Deal Details',
+      label: t('dealDetails'),
       href: `/${locale}/admin/deals/${dealId}`,
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -26,7 +28,7 @@ export default function DealSubNav({ dealId, dealName, locale }: DealSubNavProps
     },
     {
       key: 'pipeline',
-      label: 'Pipeline',
+      label: t('pipeline'),
       href: `/${locale}/admin/deals/${dealId}/pipeline`,
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -40,7 +42,7 @@ export default function DealSubNav({ dealId, dealName, locale }: DealSubNavProps
     },
     {
       key: 'dataroom',
-      label: 'Data Room',
+      label: t('dataRoom'),
       href: `/${locale}/admin/deals/${dealId}/dataroom`,
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -50,7 +52,7 @@ export default function DealSubNav({ dealId, dealName, locale }: DealSubNavProps
     },
     {
       key: 'preview',
-      label: 'Preview as Investor',
+      label: t('previewAsInvestor'),
       href: `/${locale}/admin/deals/${dealId}/preview`,
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -81,7 +83,7 @@ export default function DealSubNav({ dealId, dealName, locale }: DealSubNavProps
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M15 18l-6-6 6-6" />
           </svg>
-          All Deals
+          {t('allDeals')}
         </Link>
         <div className="w-px h-4 bg-rp-gray-300" />
         <h1 className="text-[22px] font-bold text-rp-navy font-[family-name:var(--font-playfair)]">

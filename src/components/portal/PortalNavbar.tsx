@@ -14,6 +14,7 @@ interface PortalNavbarProps {
 
 export default function PortalNavbar({ firstName, locale, activeTab = 'dashboard' }: PortalNavbarProps) {
   const t = useTranslations('portal');
+  const tn = useTranslations('portal.navbar');
   const tc = useTranslations('common');
   const router = useRouter();
   const pathname = usePathname();
@@ -59,8 +60,8 @@ export default function PortalNavbar({ firstName, locale, activeTab = 'dashboard
 
   const navTabs = [
     { key: 'dashboard', label: t('dashboardTitle'), href: '/portal' },
-    { key: 'portfolio', label: 'Portfolio', href: '/portal/portfolio' },
-    { key: 'compare', label: 'Compare', href: '/portal/compare' },
+    { key: 'portfolio', label: tn('portfolio'), href: '/portal/portfolio' },
+    { key: 'compare', label: tn('compare'), href: '/portal/compare' },
   ];
 
   return (
@@ -125,7 +126,7 @@ export default function PortalNavbar({ firstName, locale, activeTab = 'dashboard
             {showNotifications && (
               <div className="absolute right-0 top-[42px] w-[320px] bg-[#0F1419] rounded-xl shadow-2xl border border-white/[0.08] animate-slide-down z-50">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
-                  <span className="text-[13px] font-medium text-white">Notifications</span>
+                  <span className="text-[13px] font-medium text-white">{tn('notifications')}</span>
                   {hasUnread && (
                     <button
                       onClick={async () => {
@@ -134,14 +135,14 @@ export default function PortalNavbar({ firstName, locale, activeTab = 'dashboard
                       }}
                       className="text-[11px] font-medium text-[#D4A843] hover:underline"
                     >
-                      Mark all read
+                      {tn('markAllRead')}
                     </button>
                   )}
                 </div>
                 <div className="max-h-[320px] overflow-y-auto">
                   {notifications.length === 0 ? (
                     <div className="px-4 py-8 text-center text-[12px] text-white/30">
-                      No notifications yet
+                      {tn('noNotifications')}
                     </div>
                   ) : (
                     notifications.map((item, idx) => {
@@ -155,12 +156,12 @@ export default function PortalNavbar({ firstName, locale, activeTab = 'dashboard
                       const timeAgo = (() => {
                         const diff = Date.now() - new Date(item.created_at).getTime();
                         const mins = Math.floor(diff / 60000);
-                        if (mins < 1) return 'just now';
-                        if (mins < 60) return `${mins} min ago`;
+                        if (mins < 1) return tn('justNow');
+                        if (mins < 60) return tn('minutesAgo', { count: mins });
                         const hrs = Math.floor(mins / 60);
-                        if (hrs < 24) return `${hrs} hr ago`;
+                        if (hrs < 24) return tn('hoursAgo', { count: hrs });
                         const days = Math.floor(hrs / 24);
-                        return `${days}d ago`;
+                        return tn('daysAgo', { count: days });
                       })();
 
                       return (

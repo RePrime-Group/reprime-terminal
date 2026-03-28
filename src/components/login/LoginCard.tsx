@@ -136,11 +136,11 @@ export default function LoginCard({ locale }: LoginCardProps) {
 
       {/* Invite code + Apply */}
       <div className="mt-8 pt-6 border-t border-white/[0.06]">
-        <p className="text-[11px] text-white/30 text-center mb-3">Have an invitation code?</p>
+        <p className="text-[11px] text-white/30 text-center mb-3">{t('haveInvitationCode')}</p>
         <div className="flex gap-2">
           <input
             type="text"
-            placeholder="Enter code (e.g. RPT-2026-AXYZ)"
+            placeholder={t('enterCode')}
             value={inviteCode}
             onChange={(e) => setInviteCode(e.target.value)}
             className="flex-1 px-3.5 py-2.5 rounded-lg bg-white/[0.04] border border-white/[0.08] text-white text-[13px] placeholder:text-white/20 focus:outline-none focus:border-[#BC9C45]/40 transition-colors"
@@ -149,7 +149,7 @@ export default function LoginCard({ locale }: LoginCardProps) {
             onClick={handleInviteCode}
             className="px-4 py-2.5 rounded-lg border border-[#BC9C45]/30 text-[#BC9C45] text-[12px] font-semibold hover:bg-[#BC9C45]/10 transition-colors"
           >
-            Go
+            {t('go')}
           </button>
         </div>
         <div className="text-center mt-4">
@@ -157,7 +157,7 @@ export default function LoginCard({ locale }: LoginCardProps) {
             href={`/${locale}/join`}
             className="text-[12px] text-[#BC9C45] hover:text-[#D4B96A] font-medium transition-colors"
           >
-            Apply for Membership →
+            {t('applyForMembership')} →
           </a>
         </div>
       </div>

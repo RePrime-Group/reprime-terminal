@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import Input from '@/components/ui/Input';
 import { DEAL_STATUS_LABELS } from '@/lib/constants';
 import { formatPrice } from '@/lib/utils/format';
@@ -11,17 +12,6 @@ interface DealListClientProps {
   deals: TerminalDeal[];
   locale: string;
 }
-
-const STATUS_OPTIONS: { value: DealStatus | 'all'; label: string }[] = [
-  { value: 'all', label: 'All Statuses' },
-  { value: 'draft', label: 'Draft' },
-  { value: 'coming_soon', label: 'Coming Soon' },
-  { value: 'loi_signed', label: 'LOI Signed' },
-  { value: 'published', label: 'Published' },
-  { value: 'under_review', label: 'Under Review' },
-  { value: 'assigned', label: 'Assigned' },
-  { value: 'closed', label: 'Closed' },
-];
 
 const STATUS_PILL_STYLES: Record<DealStatus, string> = {
   draft: 'bg-[#F7F8FA] text-[#4B5563] border border-[#EEF0F4]',
@@ -48,8 +38,21 @@ function isDeadlinePast(dateStr: string | null): boolean {
 }
 
 export default function DealListClient({ deals, locale }: DealListClientProps) {
+  const t = useTranslations('admin.dealList');
+  const tc = useTranslations('common');
   const [statusFilter, setStatusFilter] = useState<DealStatus | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const STATUS_OPTIONS: { value: DealStatus | 'all'; label: string }[] = [
+    { value: 'all', label: t('allStatuses') },
+    { value: 'draft', label: t('statusDraft') },
+    { value: 'coming_soon', label: t('statusComingSoon') },
+    { value: 'loi_signed', label: t('statusLoiSigned') },
+    { value: 'published', label: t('statusPublished') },
+    { value: 'under_review', label: t('statusUnderReview') },
+    { value: 'assigned', label: t('statusAssigned') },
+    { value: 'closed', label: t('statusClosed') },
+  ];
 
   const filteredDeals = useMemo(() => {
     return deals.filter((deal) => {
@@ -67,10 +70,10 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
     <div className="font-[family-name:var(--font-poppins)]">
       {/* Top bar */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-[24px] font-bold text-rp-navy">Deals</h1>
+        <h1 className="text-[24px] font-bold text-rp-navy">{t('title')}</h1>
         <Link href={`/${locale}/admin/deals/new`}>
           <button className="bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] font-semibold px-5 py-2.5 rounded-lg shadow-[0_2px_8px_rgba(188,156,69,0.2)] hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(188,156,69,0.25)] transition-all">
-            New Deal
+            {t('newDeal')}
           </button>
         </Link>
       </div>
@@ -89,7 +92,7 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
           ))}
         </select>
         <Input
-          placeholder="Search deals..."
+          placeholder={t('searchDeals')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-64"
@@ -118,14 +121,14 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
             </svg>
           </div>
           <h3 className="font-[family-name:var(--font-playfair)] text-[20px] font-semibold text-rp-navy mb-1">
-            No deals yet
+            {t('noDealsYet')}
           </h3>
           <p className="text-sm text-rp-gray-400 mb-4">
-            Create your first deal to get started.
+            {t('createFirstDeal')}
           </p>
           <Link href={`/${locale}/admin/deals/new`}>
             <button className="bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] font-semibold px-5 py-2.5 rounded-lg shadow-[0_2px_8px_rgba(188,156,69,0.2)] hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(188,156,69,0.25)] transition-all text-sm">
-              New Deal
+              {t('newDeal')}
             </button>
           </Link>
         </div>
@@ -135,25 +138,25 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
             <thead>
               <tr className="bg-[#F7F8FA]">
                 <th className="text-left px-6 py-3.5 text-[9px] font-semibold uppercase tracking-[1.5px] text-[#9CA3AF]">
-                  Name
+                  {t('name')}
                 </th>
                 <th className="text-left px-6 py-3.5 text-[9px] font-semibold uppercase tracking-[1.5px] text-[#9CA3AF]">
-                  City / State
+                  {t('cityState')}
                 </th>
                 <th className="text-left px-6 py-3.5 text-[9px] font-semibold uppercase tracking-[1.5px] text-[#9CA3AF]">
-                  Type
+                  {t('type')}
                 </th>
                 <th className="text-left px-6 py-3.5 text-[9px] font-semibold uppercase tracking-[1.5px] text-[#9CA3AF]">
-                  Price
+                  {t('price')}
                 </th>
                 <th className="text-left px-6 py-3.5 text-[9px] font-semibold uppercase tracking-[1.5px] text-[#9CA3AF]">
-                  Status
+                  {t('status')}
                 </th>
                 <th className="text-left px-6 py-3.5 text-[9px] font-semibold uppercase tracking-[1.5px] text-[#9CA3AF]">
-                  DD Deadline
+                  {t('ddDeadline')}
                 </th>
                 <th className="text-left px-6 py-3.5 text-[9px] font-semibold uppercase tracking-[1.5px] text-[#9CA3AF]">
-                  Actions
+                  {tc('actions')}
                 </th>
               </tr>
             </thead>
@@ -203,13 +206,13 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
                         onClick={(e) => e.stopPropagation()}
                         className="text-sm text-rp-navy hover:text-rp-gold font-medium transition-colors"
                       >
-                        Edit
+                        {tc('edit')}
                       </Link>
                       <Link
                         href={`/${locale}/admin/deals/${deal.id}/pipeline`}
                         onClick={(e) => e.stopPropagation()}
                         className="text-rp-gray-400 hover:text-rp-gold transition-colors"
-                        title="Pipeline"
+                        title={t('pipeline')}
                       >
                         <svg
                           width="18"
@@ -236,7 +239,7 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
                           rel="noopener noreferrer"
                           onClick={(e) => e.stopPropagation()}
                           className="text-rp-gray-400 hover:text-rp-gold transition-colors"
-                          title="Preview as Investor"
+                          title={t('previewAsInvestor')}
                         >
                           <svg
                             width="18"

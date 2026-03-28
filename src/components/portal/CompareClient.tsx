@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import { formatPrice, formatPriceCompact, formatPercent, formatDSCR } from '@/lib/utils/format';
 import { Link } from '@/i18n/navigation';
 
@@ -53,6 +54,7 @@ function bestValue(deals: Deal[], key: keyof Deal, higher = true): string | null
 }
 
 export default function CompareClient({ deals, locale }: CompareClientProps) {
+  const t = useTranslations('portal.compare');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(deals.slice(0, 3).map(d => d.id)));
   const [capShift, setCapShift] = useState(0);
 
@@ -68,17 +70,17 @@ export default function CompareClient({ deals, locale }: CompareClientProps) {
   const selected = deals.filter(d => selectedIds.has(d.id));
 
   const metrics = [
-    { label: 'Purchase Price', key: 'purchase_price' as const, format: (d: Deal) => formatPrice(d.purchase_price), higher: false },
-    { label: 'NOI', key: 'noi' as const, format: (d: Deal) => formatPrice(d.noi), higher: true },
-    { label: 'Cap Rate', key: 'cap_rate' as const, format: (d: Deal) => formatPercent(d.cap_rate), higher: true },
-    { label: 'Projected IRR', key: 'irr' as const, format: (d: Deal) => formatPercent(d.irr), higher: true },
-    { label: 'Cash-on-Cash', key: 'coc' as const, format: (d: Deal) => formatPercent(d.coc), higher: true },
-    { label: 'DSCR', key: 'dscr' as const, format: (d: Deal) => formatDSCR(d.dscr), higher: true },
-    { label: 'Equity Required', key: 'equity_required' as const, format: (d: Deal) => formatPrice(d.equity_required), higher: false },
-    { label: 'Occupancy', key: 'occupancy' as const, format: (d: Deal) => d.occupancy ? `${d.occupancy}%` : '—', higher: true },
-    { label: 'Year Built', key: 'year_built' as const, format: (d: Deal) => d.year_built?.toString() ?? '—', higher: true },
-    { label: 'Class', key: 'class_type' as const, format: (d: Deal) => d.class_type ?? '—', higher: false },
-    { label: 'Deposit', key: 'deposit_amount' as const, format: (d: Deal) => d.deposit_amount ?? '—', higher: false },
+    { label: t('purchasePrice'), key: 'purchase_price' as const, format: (d: Deal) => formatPrice(d.purchase_price), higher: false },
+    { label: t('noi'), key: 'noi' as const, format: (d: Deal) => formatPrice(d.noi), higher: true },
+    { label: t('capRate'), key: 'cap_rate' as const, format: (d: Deal) => formatPercent(d.cap_rate), higher: true },
+    { label: t('projectedIrr'), key: 'irr' as const, format: (d: Deal) => formatPercent(d.irr), higher: true },
+    { label: t('cashOnCash'), key: 'coc' as const, format: (d: Deal) => formatPercent(d.coc), higher: true },
+    { label: t('dscr'), key: 'dscr' as const, format: (d: Deal) => formatDSCR(d.dscr), higher: true },
+    { label: t('equityRequired'), key: 'equity_required' as const, format: (d: Deal) => formatPrice(d.equity_required), higher: false },
+    { label: t('occupancy'), key: 'occupancy' as const, format: (d: Deal) => d.occupancy ? `${d.occupancy}%` : '—', higher: true },
+    { label: t('yearBuilt'), key: 'year_built' as const, format: (d: Deal) => d.year_built?.toString() ?? '—', higher: true },
+    { label: t('class'), key: 'class_type' as const, format: (d: Deal) => d.class_type ?? '—', higher: false },
+    { label: t('deposit'), key: 'deposit_amount' as const, format: (d: Deal) => d.deposit_amount ?? '—', higher: false },
   ];
 
   // Cap rate sensitivity
@@ -100,17 +102,17 @@ export default function CompareClient({ deals, locale }: CompareClientProps) {
     const results = [];
 
     const highIrr = selected.reduce((best, d) => num(d.irr) > num(best.irr) ? d : best);
-    if (num(highIrr.irr) > 0) results.push({ label: 'Highest IRR', deal: highIrr, value: `${highIrr.irr}%` });
+    if (num(highIrr.irr) > 0) results.push({ label: t('highestIrr'), deal: highIrr, value: `${highIrr.irr}%` });
 
     const lowEquity = selected.reduce((best, d) => {
       const bv = num(best.equity_required);
       const dv = num(d.equity_required);
       return (dv > 0 && (bv === 0 || dv < bv)) ? d : best;
     });
-    if (num(lowEquity.equity_required) > 0) results.push({ label: 'Lowest Equity', deal: lowEquity, value: formatPriceCompact(num(lowEquity.equity_required)) });
+    if (num(lowEquity.equity_required) > 0) results.push({ label: t('lowestEquity'), deal: lowEquity, value: formatPriceCompact(num(lowEquity.equity_required)) });
 
     const highCap = selected.reduce((best, d) => num(d.cap_rate) > num(best.cap_rate) ? d : best);
-    if (num(highCap.cap_rate) > 0) results.push({ label: 'Highest Cap Rate', deal: highCap, value: `${highCap.cap_rate}%` });
+    if (num(highCap.cap_rate) > 0) results.push({ label: t('highestCapRate'), deal: highCap, value: `${highCap.cap_rate}%` });
 
     return results;
   }, [selected]);
@@ -121,13 +123,13 @@ export default function CompareClient({ deals, locale }: CompareClientProps) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-[family-name:var(--font-playfair)] text-[24px] font-semibold text-[#0E3470]">
-            Deal Comparison
+            {t('title')}
           </h1>
-          <p className="text-[12px] text-[#9CA3AF] mt-1">Select deals to compare side-by-side</p>
+          <p className="text-[12px] text-[#9CA3AF] mt-1">{t('subtitle')}</p>
         </div>
         {selected.length > 0 && (
           <span className="px-4 py-1.5 rounded-lg bg-[#FDF8ED] border border-[#ECD9A0] text-[12px] font-bold text-[#BC9C45]">
-            {selected.length} selected
+            {selected.length} {t('selected')}
           </span>
         )}
       </div>
@@ -160,7 +162,7 @@ export default function CompareClient({ deals, locale }: CompareClientProps) {
                 <div className="min-w-0 flex-1">
                   <div className="text-[13px] font-semibold text-[#0E3470] truncate">{deal.name}</div>
                   <div className="text-[10px] text-[#6B7280]">
-                    {deal.city}, {deal.state} · {formatPercent(deal.cap_rate)} cap
+                    {deal.city}, {deal.state} · {formatPercent(deal.cap_rate)} {t('cap')}
                   </div>
                 </div>
               </div>
@@ -171,7 +173,7 @@ export default function CompareClient({ deals, locale }: CompareClientProps) {
 
       {selected.length < 2 ? (
         <div className="bg-white rounded-xl border border-[#EEF0F4] p-12 text-center">
-          <p className="text-[14px] text-[#9CA3AF]">Select at least 2 deals to compare</p>
+          <p className="text-[14px] text-[#9CA3AF]">{t('selectAtLeast')}</p>
         </div>
       ) : (
         <>
@@ -181,7 +183,7 @@ export default function CompareClient({ deals, locale }: CompareClientProps) {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-[#EEF0F4]">
-                    <th className="text-left px-5 py-4 text-[9px] font-bold uppercase tracking-[2px] text-[#9CA3AF] w-[160px]">Metric</th>
+                    <th className="text-left px-5 py-4 text-[9px] font-bold uppercase tracking-[2px] text-[#9CA3AF] w-[160px]">{t('metric')}</th>
                     {selected.map((deal, i) => (
                       <th key={deal.id} className="text-left px-5 py-4 min-w-[180px]">
                         <div className="flex items-center gap-2">
@@ -233,13 +235,13 @@ export default function CompareClient({ deals, locale }: CompareClientProps) {
           <div className="bg-white rounded-xl border border-[#EEF0F4] p-6 rp-card-shadow">
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h3 className="text-[14px] font-semibold text-[#0E3470]">Cap Rate Sensitivity</h3>
-                <p className="text-[11px] text-[#9CA3AF] mt-0.5">What happens if cap rates move?</p>
+                <h3 className="text-[14px] font-semibold text-[#0E3470]">{t('capRateSensitivity')}</h3>
+                <p className="text-[11px] text-[#9CA3AF] mt-0.5">{t('whatIfCapRates')}</p>
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-[11px] font-semibold text-[#6B7280]">
-                  Shift: <span className={`${capShift >= 0 ? 'text-[#DC2626]' : 'text-[#0B8A4D]'} font-bold`}>
-                    {capShift >= 0 ? '+' : ''}{capShift} bps
+                  {t('shift')} <span className={`${capShift >= 0 ? 'text-[#DC2626]' : 'text-[#0B8A4D]'} font-bold`}>
+                    {capShift >= 0 ? '+' : ''}{capShift} {t('bps')}
                   </span>
                 </span>
                 <input
@@ -263,15 +265,15 @@ export default function CompareClient({ deals, locale }: CompareClientProps) {
                   <div className="text-[12px] font-semibold text-[#0E3470] mb-3">{s.deal.name}</div>
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-[10px] text-[#9CA3AF]">Current Value</span>
+                      <span className="text-[10px] text-[#9CA3AF]">{t('currentValue')}</span>
                       <span className="text-[12px] font-semibold text-[#0E3470] tabular-nums">{formatPriceCompact(s.currentValue)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-[10px] text-[#9CA3AF]">Adjusted Value</span>
+                      <span className="text-[10px] text-[#9CA3AF]">{t('adjustedValue')}</span>
                       <span className="text-[12px] font-semibold text-[#0E3470] tabular-nums">{formatPriceCompact(s.shiftedValue)}</span>
                     </div>
                     <div className="flex justify-between pt-2 border-t border-[#EEF0F4]">
-                      <span className="text-[10px] text-[#9CA3AF]">Delta</span>
+                      <span className="text-[10px] text-[#9CA3AF]">{t('delta')}</span>
                       <span className={`text-[12px] font-bold tabular-nums ${s.delta >= 0 ? 'text-[#0B8A4D]' : 'text-[#DC2626]'}`}>
                         {s.delta >= 0 ? '+' : ''}{formatPriceCompact(s.delta)} ({s.pctChange >= 0 ? '+' : ''}{s.pctChange.toFixed(1)}%)
                       </span>
@@ -285,7 +287,7 @@ export default function CompareClient({ deals, locale }: CompareClientProps) {
           {/* Quick Verdict */}
           {verdicts.length > 0 && (
             <div className="bg-gradient-to-br from-[#07090F] via-[#0A1628] to-[#0E3470] rounded-xl p-6 rp-card-shadow">
-              <h3 className="text-[12px] font-bold text-[#D4A843] uppercase tracking-[2px] mb-4">Quick Verdict</h3>
+              <h3 className="text-[12px] font-bold text-[#D4A843] uppercase tracking-[2px] mb-4">{t('quickVerdict')}</h3>
               <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${verdicts.length}, 1fr)` }}>
                 {verdicts.map((v) => (
                   <div key={v.label} className="bg-white/[0.05] rounded-xl p-4 border border-white/[0.06]">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 interface NDAModalProps {
   dealName: string;
@@ -9,6 +10,8 @@ interface NDAModalProps {
 }
 
 export default function NDAModal({ dealName, onSign, onClose }: NDAModalProps) {
+  const t = useTranslations('portal.nda');
+  const tc = useTranslations('common');
   const [ndaType, setNdaType] = useState<'blanket' | 'deal'>('blanket');
   const [fullName, setFullName] = useState('');
   const [company, setCompany] = useState('');
@@ -52,10 +55,10 @@ export default function NDAModal({ dealName, onSign, onClose }: NDAModalProps) {
             </div>
             <div>
               <h2 className="text-[18px] font-semibold text-white font-[family-name:var(--font-playfair)]">
-                Non-Disclosure Agreement
+                {t('title')}
               </h2>
               <p className="text-[11px] text-white/40 mt-0.5">
-                Required before accessing confidential deal materials
+                {t('requiredBefore')}
               </p>
             </div>
           </div>
@@ -66,7 +69,7 @@ export default function NDAModal({ dealName, onSign, onClose }: NDAModalProps) {
           {/* NDA Text */}
           <div className="bg-[#F7F8FA] border border-[#EEF0F4] rounded-xl p-5 mb-6 max-h-[200px] overflow-y-auto">
             <div className="text-[12px] text-[#4B5563] leading-relaxed space-y-3">
-              <p className="font-semibold text-[#0E3470]">MUTUAL NON-DISCLOSURE AGREEMENT</p>
+              <p className="font-semibold text-[#0E3470]">{t('mutualNda')}</p>
               <p>
                 This Non-Disclosure Agreement (&ldquo;Agreement&rdquo;) is entered into as of {today} by and between
                 RePrime Group, LLC (&ldquo;Disclosing Party&rdquo;) and the undersigned recipient (&ldquo;Receiving Party&rdquo;).
@@ -90,7 +93,7 @@ export default function NDAModal({ dealName, onSign, onClose }: NDAModalProps) {
           </div>
 
           {/* NDA Type Selection */}
-          <div className="text-[11px] font-semibold text-[#0E3470] uppercase tracking-[1.5px] mb-3">Coverage</div>
+          <div className="text-[11px] font-semibold text-[#0E3470] uppercase tracking-[1.5px] mb-3">{t('coverage')}</div>
           <div className="flex flex-col gap-2.5 mb-6">
             {[
               {
@@ -129,44 +132,44 @@ export default function NDAModal({ dealName, onSign, onClose }: NDAModalProps) {
           </div>
 
           {/* E-Sign Form */}
-          <div className="text-[11px] font-semibold text-[#0E3470] uppercase tracking-[1.5px] mb-3">Electronic Signature</div>
+          <div className="text-[11px] font-semibold text-[#0E3470] uppercase tracking-[1.5px] mb-3">{t('electronicSignature')}</div>
           <div className="space-y-3 mb-5">
             <div>
               <label className="block text-[12px] font-medium text-[#4B5563] mb-1">
-                Full Legal Name <span className="text-[#DC2626]">*</span>
+                {t('fullLegalName')}
               </label>
               <input
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                placeholder="Enter your full legal name"
+                placeholder={t('enterLegalName')}
                 className="w-full px-3.5 py-2.5 border border-[#D1D5DB] rounded-lg text-[14px] text-[#0E3470] focus:outline-none focus:ring-[3px] focus:ring-[#BC9C45]/15 focus:border-[#BC9C45] placeholder:text-[#9CA3AF] transition-all"
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[12px] font-medium text-[#4B5563] mb-1">Company / Entity</label>
+                <label className="block text-[12px] font-medium text-[#4B5563] mb-1">{t('companyEntity')}</label>
                 <input
                   type="text"
                   value={company}
                   onChange={(e) => setCompany(e.target.value)}
-                  placeholder="Company name"
+                  placeholder={t('companyName')}
                   className="w-full px-3.5 py-2.5 border border-[#D1D5DB] rounded-lg text-[14px] text-[#0E3470] focus:outline-none focus:ring-[3px] focus:ring-[#BC9C45]/15 focus:border-[#BC9C45] placeholder:text-[#9CA3AF] transition-all"
                 />
               </div>
               <div>
-                <label className="block text-[12px] font-medium text-[#4B5563] mb-1">Title</label>
+                <label className="block text-[12px] font-medium text-[#4B5563] mb-1">{t('titleLabel')}</label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. Managing Partner"
+                  placeholder={t('titlePlaceholder')}
                   className="w-full px-3.5 py-2.5 border border-[#D1D5DB] rounded-lg text-[14px] text-[#0E3470] focus:outline-none focus:ring-[3px] focus:ring-[#BC9C45]/15 focus:border-[#BC9C45] placeholder:text-[#9CA3AF] transition-all"
                 />
               </div>
             </div>
             <div className="flex items-center gap-2 p-3 bg-[#F7F8FA] rounded-lg">
-              <span className="text-[12px] text-[#6B7280]">Date:</span>
+              <span className="text-[12px] text-[#6B7280]">{t('date')}</span>
               <span className="text-[12px] font-semibold text-[#0E3470]">{today}</span>
             </div>
           </div>
@@ -174,7 +177,7 @@ export default function NDAModal({ dealName, onSign, onClose }: NDAModalProps) {
           {/* Signature preview */}
           {fullName.trim() && (
             <div className="mb-5 p-4 bg-white border border-[#EEF0F4] rounded-xl">
-              <div className="text-[9px] font-semibold text-[#9CA3AF] uppercase tracking-[1.5px] mb-2">SIGNATURE PREVIEW</div>
+              <div className="text-[9px] font-semibold text-[#9CA3AF] uppercase tracking-[1.5px] mb-2">{t('signaturePreview')}</div>
               <div className="font-[family-name:var(--font-playfair)] text-[24px] italic text-[#0E3470] border-b border-[#0E3470]/20 pb-2">
                 {fullName}
               </div>
@@ -192,8 +195,7 @@ export default function NDAModal({ dealName, onSign, onClose }: NDAModalProps) {
               {agreed && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}
             </div>
             <span className="text-[12px] text-[#4B5563] leading-relaxed">
-              I have read and agree to the terms of this Non-Disclosure Agreement. I understand that
-              all materials accessed are confidential, watermarked, and subject to legal protection.
+              {t('agreeText')}
             </span>
           </label>
 
@@ -211,13 +213,13 @@ export default function NDAModal({ dealName, onSign, onClose }: NDAModalProps) {
               disabled={signing}
               className="flex-1 py-3.5 rounded-xl bg-[#BC9C45] hover:bg-[#A88A3D] text-[#0E3470] text-[13px] font-bold transition-colors disabled:opacity-50"
             >
-              {signing ? 'Signing...' : 'Sign & Access Data Room'}
+              {signing ? t('signing') : t('signAndAccess')}
             </button>
             <button
               onClick={onClose}
               className="px-5 py-3.5 rounded-xl border border-[#EEF0F4] text-[#6B7280] text-[12px] font-medium hover:bg-[#F7F8FA] transition-colors"
             >
-              Cancel
+              {tc('cancel')}
             </button>
           </div>
         </div>

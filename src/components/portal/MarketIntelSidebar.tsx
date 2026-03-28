@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 
 const maturityData = [
@@ -9,17 +10,6 @@ const maturityData = [
   { year: '2028', amount: '$390B', width: '55%' },
   { year: '2029', amount: '$310B', width: '44%' },
 ];
-
-const actionLabels: Record<string, { text: string; color: string }> = {
-  deal_viewed: { text: 'Deal viewed by member', color: 'bg-[#6B7280]' },
-  document_downloaded: { text: 'Document downloaded', color: 'bg-[#1D5FB8]' },
-  om_downloaded: { text: 'OM downloaded', color: 'bg-[#BC9C45]' },
-  dataroom_viewed: { text: 'Data room accessed', color: 'bg-[#0E3470]' },
-  meeting_requested: { text: 'Meeting requested', color: 'bg-[#BC9C45]' },
-  expressed_interest: { text: 'Interest expressed', color: 'bg-[#0B8A4D]' },
-  irr_calculator_used: { text: 'Returns modeled', color: 'bg-[#1D5FB8]' },
-  portal_viewed: { text: 'Terminal accessed', color: 'bg-[#9CA3AF]' },
-};
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -33,6 +23,20 @@ function timeAgo(dateStr: string): string {
 }
 
 export default function MarketIntelSidebar() {
+  const t = useTranslations('portal.marketIntel');
+  const ta = useTranslations('admin.activity');
+
+  const actionLabels: Record<string, { text: string; color: string }> = {
+    deal_viewed: { text: ta('viewedDeal'), color: 'bg-[#6B7280]' },
+    document_downloaded: { text: ta('downloadedDocument'), color: 'bg-[#1D5FB8]' },
+    om_downloaded: { text: ta('downloadedDocument'), color: 'bg-[#BC9C45]' },
+    dataroom_viewed: { text: ta('viewedDataRoom'), color: 'bg-[#0E3470]' },
+    meeting_requested: { text: ta('requestedMeeting'), color: 'bg-[#BC9C45]' },
+    expressed_interest: { text: ta('expressedInterest'), color: 'bg-[#0B8A4D]' },
+    irr_calculator_used: { text: ta('usedIrrCalc'), color: 'bg-[#1D5FB8]' },
+    portal_viewed: { text: ta('timeOnPage'), color: 'bg-[#9CA3AF]' },
+  };
+
   const [activities, setActivities] = useState<{ action: string; created_at: string }[]>([]);
 
   useEffect(() => {
@@ -55,7 +59,7 @@ export default function MarketIntelSidebar() {
           className="uppercase font-[700] tracking-[1px] mb-4"
           style={{ fontSize: '11px', color: '#0E3470', letterSpacing: '1px' }}
         >
-          MARKET CYCLE
+          {t('marketCycle')}
         </h3>
 
         <div className="relative mt-2 mb-3">
@@ -86,19 +90,19 @@ export default function MarketIntelSidebar() {
             className="uppercase font-[600]"
             style={{ fontSize: '9px', color: '#0B8A4D', letterSpacing: '1px' }}
           >
-            RECOVERY
+            {t('recovery')}
           </span>
           <span
             className="uppercase font-[600]"
             style={{ fontSize: '9px', color: '#BC9C45', letterSpacing: '1px' }}
           >
-            &larr; HERE
+            &larr; {t('here')}
           </span>
           <span
             className="uppercase font-[600]"
             style={{ fontSize: '9px', color: '#DC2626', letterSpacing: '1px' }}
           >
-            PEAK
+            {t('peak')}
           </span>
         </div>
       </div>
@@ -109,7 +113,7 @@ export default function MarketIntelSidebar() {
           className="uppercase font-[700] tracking-[1px] mb-4"
           style={{ fontSize: '11px', color: '#0E3470', letterSpacing: '1px' }}
         >
-          CRE MATURITY WALL
+          {t('creMaturityWall')}
         </h3>
 
         <div className="flex flex-col gap-3">
@@ -154,13 +158,13 @@ export default function MarketIntelSidebar() {
             className="uppercase font-[700] tracking-[1px]"
             style={{ fontSize: '11px', color: '#0E3470', letterSpacing: '1px' }}
           >
-            TERMINAL ACTIVITY
+            {t('terminalActivity')}
           </h3>
         </div>
 
         <div className="flex flex-col gap-3">
           {activities.length === 0 ? (
-            <p style={{ fontSize: '11px', color: '#94A3B8' }}>No recent activity</p>
+            <p style={{ fontSize: '11px', color: '#94A3B8' }}>{t('noRecentActivity')}</p>
           ) : (
             activities.map((item, idx) => {
               const info = actionLabels[item.action] ?? { text: item.action, color: 'bg-[#9CA3AF]' };

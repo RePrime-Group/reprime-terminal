@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useCountdown } from '@/lib/hooks/useCountdown';
 import type { DealCardData } from '@/components/portal/PortalDashboardClient';
 
@@ -10,6 +11,9 @@ interface ComingSoonCardProps {
 }
 
 export default function ComingSoonCard({ deal, index }: ComingSoonCardProps) {
+  const t = useTranslations('portal.dealCard');
+  const tc = useTranslations('portal.countdown');
+  const tp = useTranslations('portal');
   const [subscribed, setSubscribed] = useState(deal.is_subscribed ?? false);
   const [loading, setLoading] = useState(false);
 
@@ -64,7 +68,7 @@ export default function ComingSoonCard({ deal, index }: ComingSoonCardProps) {
                 ? 'bg-[#BC9C45]/90 backdrop-blur-sm'
                 : 'bg-[#0E3470]/90 backdrop-blur-sm'
             }`}>
-              {isLoiSigned ? 'LOI SIGNED' : 'COMING SOON'}
+              {isLoiSigned ? tp('loiSigned').toUpperCase() : tp('comingSoon').toUpperCase()}
             </span>
           </div>
 
@@ -104,11 +108,11 @@ export default function ComingSoonCard({ deal, index }: ComingSoonCardProps) {
 
           {/* Blurred metrics placeholder */}
           <div className="mt-4 grid grid-cols-3 gap-3">
-            {['Purchase', 'Cap Rate', 'IRR'].map((label) => (
-              <div key={label}>
-                <div className="text-[8px] font-bold text-[#9CA3AF] uppercase tracking-[2px]">{label}</div>
+            {(['purchase', 'capRate', 'irr'] as const).map((key) => (
+              <div key={key}>
+                <div className="text-[8px] font-bold text-[#9CA3AF] uppercase tracking-[2px]">{t(key)}</div>
                 <div className="text-[14px] font-semibold text-[#D1D5DB] blur-[4px] select-none tabular-nums">
-                  {label === 'Purchase' ? '$X.XM' : 'X.X%'}
+                  {key === 'purchase' ? '$X.XM' : 'X.X%'}
                 </div>
               </div>
             ))}
@@ -118,14 +122,14 @@ export default function ComingSoonCard({ deal, index }: ComingSoonCardProps) {
           {isLoiSigned && psaTarget && !countdown.isExpired && (
             <div className="mt-4 p-3 bg-[#FDF8ED] border border-[#ECD9A0] rounded-lg">
               <div className="text-[8px] font-bold text-[#BC9C45] uppercase tracking-[2px] mb-1.5">
-                PSA DRAFT COUNTDOWN
+                {tp('psaCountdown').toUpperCase()}
               </div>
               <div className="flex items-center gap-1">
                 {[
-                  { value: countdown.days, label: 'D' },
-                  { value: countdown.hours, label: 'H' },
-                  { value: countdown.minutes, label: 'M' },
-                  { value: countdown.seconds, label: 'S' },
+                  { value: countdown.days, label: tc('d') },
+                  { value: countdown.hours, label: tc('h') },
+                  { value: countdown.minutes, label: tc('m') },
+                  { value: countdown.seconds, label: tc('s') },
                 ].map((g, i) => (
                   <div key={g.label} className="flex items-center gap-0.5">
                     {i > 0 && (
@@ -144,7 +148,7 @@ export default function ComingSoonCard({ deal, index }: ComingSoonCardProps) {
           {(deal.commitment_count ?? 0) > 0 && (
             <div className="mt-4 p-2.5 bg-[#FEF2F2] border border-[#FECACA] rounded-lg text-center">
               <span className="text-[11px] font-bold text-[#DC2626]">
-                🔥 {deal.commitment_count} group{(deal.commitment_count ?? 0) > 1 ? 's' : ''} already committed
+                🔥 {deal.commitment_count} {(deal.commitment_count ?? 0) > 1 ? t('groups') : t('group')} {t('alreadyCommitted')}
               </span>
             </div>
           )}
@@ -160,7 +164,7 @@ export default function ComingSoonCard({ deal, index }: ComingSoonCardProps) {
                   : 'bg-transparent border border-[#BC9C45]/30 text-[#BC9C45] hover:bg-[#BC9C45]/5 hover:border-[#BC9C45]/50'
               }`}
             >
-              {subscribed ? '✓ Subscribed' : 'Notify Me'}
+              {subscribed ? `✓ ${tp('subscribed')}` : tp('notifyMe')}
             </button>
             {isLoiSigned && (
               <button
@@ -175,7 +179,7 @@ export default function ComingSoonCard({ deal, index }: ComingSoonCardProps) {
                 }}
                 className="flex-1 py-2.5 rounded-lg text-[12px] font-bold bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] hover:opacity-90 transition-opacity"
               >
-                Commit Early
+                {t('commitEarly')}
               </button>
             )}
           </div>
