@@ -308,6 +308,8 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
   const [committed, setCommitted] = useState(false);
   const [commitType, setCommitType] = useState<string | null>(null);
   const [committing, setCommitting] = useState(false);
+  const [withdrawing, setWithdrawing] = useState(false);
+  const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);
   const [totalCommitments, setTotalCommitments] = useState(0);
 
   // Check for existing commitment on mount
@@ -350,41 +352,91 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
     }
   };
 
+  const handleWithdraw = async () => {
+    setWithdrawing(true);
+    try {
+      const res = await fetch(`/api/deals/${deal.id}/commit`, { method: 'DELETE' });
+      if (res.ok) {
+        setCommitted(false);
+        setCommitType(null);
+        setShowWithdrawConfirm(false);
+        setTotalCommitments((p) => Math.max(0, p - 1));
+      }
+    } finally {
+      setWithdrawing(false);
+    }
+  };
+
   if (committed) {
     return (
       <div className="mb-6">
         {/* Prominent committed banner */}
-        <div className="relative overflow-hidden rounded-xl" style={{ background: 'linear-gradient(135deg, #07090F 0%, #0A1628 30%, #0E3470 100%)' }}>
-          <div className="absolute inset-0 opacity-[0.03]" style={{
-            backgroundImage: 'linear-gradient(rgba(188,156,69,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(188,156,69,0.5) 1px, transparent 1px)',
-            backgroundSize: '30px 30px',
-          }} />
-          <div className="relative px-8 py-8 flex items-center justify-between">
+        <div className="relative overflow-hidden rounded-xl bg-white border border-[#EEF0F4] rp-card-shadow">
+          <div className="px-8 py-8 flex items-center justify-between">
             <div className="flex items-center gap-5">
-              <div className="w-14 h-14 rounded-full bg-[#BC9C45]/20 border-2 border-[#BC9C45] flex items-center justify-center">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#BC9C45" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <div className="w-14 h-14 rounded-full bg-[#ECFDF5] border-2 border-[#0B8A4D] flex items-center justify-center">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0B8A4D" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               </div>
               <div>
-                <div className="text-[10px] font-semibold text-[#D4A843] uppercase tracking-[2px] mb-1">
+                <div className="text-[10px] font-semibold text-[#BC9C45] uppercase tracking-[2px] mb-1">
                   DEAL COMMITTED
                 </div>
-                <h3 className="text-[22px] font-semibold text-white font-[family-name:var(--font-playfair)]">
+                <h3 className="text-[22px] font-semibold text-[#0E3470] font-[family-name:var(--font-playfair)]">
                   {commitType === 'backup' ? 'Backup Position Registered' : 'You Are Committed to This Deal'}
                 </h3>
-                <p className="text-[13px] text-white/40 mt-1">
+                <p className="text-[13px] text-[#6B7280] mt-1">
                   Our team will contact you with next steps within 24 hours.
                 </p>
               </div>
             </div>
-            {totalCommitments > 1 && (
-              <div className="text-right">
-                <div className="text-[28px] font-bold text-[#BC9C45]">{totalCommitments}</div>
-                <div className="text-[10px] text-white/40 uppercase tracking-[1.5px]">Groups Committed</div>
-              </div>
-            )}
+            <div className="flex items-center gap-4">
+              {totalCommitments > 1 && (
+                <div className="text-right">
+                  <div className="text-[28px] font-bold text-[#BC9C45]">{totalCommitments}</div>
+                  <div className="text-[10px] text-[#9CA3AF] uppercase tracking-[1.5px]">Groups Committed</div>
+                </div>
+              )}
+              <button
+                onClick={() => setShowWithdrawConfirm(true)}
+                className="text-[11px] text-[#9CA3AF] hover:text-[#DC2626] transition-colors font-medium"
+              >
+                Withdraw
+              </button>
+            </div>
           </div>
+
+          {showWithdrawConfirm && (
+            <div className="px-8 py-5 border-t border-[#EEF0F4] bg-[#FEF2F2]">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[13px] font-semibold text-[#DC2626]">
+                    Are you sure you want to withdraw?
+                  </p>
+                  <p className="text-[11px] text-[#6B7280] mt-0.5">
+                    Your position will no longer be reserved and may be taken by another investor.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowWithdrawConfirm(false)}
+                    className="px-4 py-2 rounded-lg border border-[#EEF0F4] bg-white text-[#6B7280] text-[12px] font-medium hover:bg-[#F7F8FA] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleWithdraw}
+                    disabled={withdrawing}
+                    className="px-4 py-2 rounded-lg bg-[#DC2626] text-white text-[12px] font-semibold hover:bg-[#B91C1C] transition-colors disabled:opacity-50"
+                  >
+                    {withdrawing ? 'Withdrawing...' : 'Confirm Withdrawal'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="h-[2px] bg-gradient-to-r from-transparent via-[#BC9C45]/50 to-transparent" />
         </div>
       </div>
@@ -904,21 +956,21 @@ function IRRCalculatorPanel({
   ];
 
   return (
-    <div className="bg-[#0E3470] rounded-2xl p-6 text-white rp-card-shadow">
+    <div className="bg-white rounded-2xl p-6 border border-[#EEF0F4] rp-card-shadow">
       <div className="data-label !text-[#BC9C45] !tracking-[2px] mb-4">
         RETURNS CALCULATOR
       </div>
 
       {/* Mode tabs */}
-      <div className="inline-flex rounded-lg bg-white/10 p-1 mb-6">
+      <div className="inline-flex rounded-lg bg-[#F7F8FA] p-1 mb-6">
         {modes.map((m) => (
           <button
             key={m.key}
             onClick={() => setMode(m.key)}
             className={`px-4 py-2 text-xs font-semibold rounded-md transition-colors ${
               mode === m.key
-                ? 'bg-[#BC9C45] text-white'
-                : 'text-white/60 hover:text-white'
+                ? 'bg-[#0E3470] text-white'
+                : 'text-[#6B7280] hover:text-[#0E3470]'
             }`}
           >
             {m.label}
@@ -930,16 +982,16 @@ function IRRCalculatorPanel({
       {mode === 'assignment' && (
         <div>
           <div className="mb-4">
-            <div className="text-white/60 text-xs mb-1">Assignment Fee</div>
-            <div className="text-xl font-bold">{deal.assignment_fee}</div>
+            <div className="text-[#9CA3AF] text-xs mb-1">Assignment Fee</div>
+            <div className="text-xl font-bold text-[#0E3470]">{deal.assignment_fee}</div>
           </div>
           <div className="mb-4">
-            <div className="text-white/60 text-xs mb-1">Projected IRR</div>
-            <div className="text-[52px] font-[800] text-[#34D399] leading-none">
+            <div className="text-[#9CA3AF] text-xs mb-1">Projected IRR</div>
+            <div className="text-[52px] font-[800] text-[#0B8A4D] leading-none">
               {assignmentIRRProp !== null ? assignmentIRRProp.toFixed(1) + '%' : '--'}
             </div>
           </div>
-          <div className="text-xs text-white/60 mt-2">
+          <div className="text-xs text-[#9CA3AF] mt-2">
             Fee breakdown included in projected returns
           </div>
         </div>
@@ -959,14 +1011,14 @@ function IRRCalculatorPanel({
                 key={row.label}
                 className="flex justify-between text-sm"
               >
-                <span className="text-white/60">{row.label}</span>
-                <span className="font-semibold">{row.value ?? '--'}</span>
+                <span className="text-[#9CA3AF]">{row.label}</span>
+                <span className="font-semibold text-[#0E3470]">{row.value ?? '--'}</span>
               </div>
             ))}
           </div>
           <div className="mb-4">
-            <div className="text-white/60 text-xs mb-1">Projected IRR</div>
-            <div className="text-[52px] font-[800] text-[#34D399] leading-none">
+            <div className="text-[#9CA3AF] text-xs mb-1">Projected IRR</div>
+            <div className="text-[52px] font-[800] text-[#0B8A4D] leading-none">
               {baseIRRProp > 0 ? baseIRRProp.toFixed(1) + '%' : '--'}
             </div>
           </div>
@@ -980,8 +1032,8 @@ function IRRCalculatorPanel({
             {/* LP Split slider */}
             <div>
               <div className="flex justify-between text-xs mb-2">
-                <span className="text-white/60">LP Split</span>
-                <span className="font-semibold">{lpSplit}%</span>
+                <span className="text-[#6B7280]">LP Split</span>
+                <span className="font-semibold text-[#0E3470]">{lpSplit}%</span>
               </div>
               <input
                 type="range"
@@ -995,7 +1047,7 @@ function IRRCalculatorPanel({
                 className="w-full h-1.5"
                 style={{ accentColor: '#BC9C45' }}
               />
-              <div className="flex justify-between text-[10px] text-white/40 mt-1">
+              <div className="flex justify-between text-[10px] text-[#9CA3AF] mt-1">
                 <span>50%</span>
                 <span>95%</span>
               </div>
@@ -1004,8 +1056,8 @@ function IRRCalculatorPanel({
             {/* Preferred Return slider */}
             <div>
               <div className="flex justify-between text-xs mb-2">
-                <span className="text-white/60">Preferred Return</span>
-                <span className="font-semibold">{prefReturn}%</span>
+                <span className="text-[#6B7280]">Preferred Return</span>
+                <span className="font-semibold text-[#0E3470]">{prefReturn}%</span>
               </div>
               <input
                 type="range"
@@ -1019,7 +1071,7 @@ function IRRCalculatorPanel({
                 className="w-full h-1.5"
                 style={{ accentColor: '#BC9C45' }}
               />
-              <div className="flex justify-between text-[10px] text-white/40 mt-1">
+              <div className="flex justify-between text-[10px] text-[#9CA3AF] mt-1">
                 <span>5%</span>
                 <span>12%</span>
               </div>
@@ -1028,8 +1080,8 @@ function IRRCalculatorPanel({
             {/* Acquisition Fee slider */}
             <div>
               <div className="flex justify-between text-xs mb-2">
-                <span className="text-white/60">Acquisition Fee</span>
-                <span className="font-semibold">{acqFee}%</span>
+                <span className="text-[#6B7280]">Acquisition Fee</span>
+                <span className="font-semibold text-[#0E3470]">{acqFee}%</span>
               </div>
               <input
                 type="range"
@@ -1043,7 +1095,7 @@ function IRRCalculatorPanel({
                 className="w-full h-1.5"
                 style={{ accentColor: '#BC9C45' }}
               />
-              <div className="flex justify-between text-[10px] text-white/40 mt-1">
+              <div className="flex justify-between text-[10px] text-[#9CA3AF] mt-1">
                 <span>0%</span>
                 <span>3%</span>
               </div>
@@ -1051,15 +1103,15 @@ function IRRCalculatorPanel({
           </div>
 
           <div>
-            <div className="text-white/60 text-xs mb-1">Calculated IRR</div>
-            <div className="text-[52px] font-[800] text-[#34D399] leading-none">
+            <div className="text-[#9CA3AF] text-xs mb-1">Calculated IRR</div>
+            <div className="text-[52px] font-[800] text-[#0B8A4D] leading-none">
               {customIRR.toFixed(2)}%
             </div>
           </div>
         </div>
       )}
 
-      <div className="mt-4 pt-4 border-t border-white/10 text-xs text-white/40">
+      <div className="mt-4 pt-4 border-t border-[#EEF0F4] text-xs text-[#9CA3AF]">
         All fees included in projected IRR
       </div>
     </div>
@@ -1601,13 +1653,13 @@ export default function DealDetailClient({
         {/* ------------------------------------------------------------------ */}
         {/* DEAL HEADER BAR                                                    */}
         {/* ------------------------------------------------------------------ */}
-        <div className="rp-dark-gradient px-8 py-5">
+        <div className="bg-white border-b border-[#EEF0F4] px-8 py-5">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-[family-name:var(--font-playfair)] text-[28px] font-semibold text-white leading-tight tracking-[-0.01em]">
+              <h2 className="font-[family-name:var(--font-playfair)] text-[28px] font-semibold text-[#0E3470] leading-tight tracking-[-0.01em]">
                 {deal.name}
               </h2>
-              <p className="text-[12px] text-white/40 mt-1">
+              <p className="text-[12px] text-[#9CA3AF] mt-1">
                 {deal.city}, {deal.state} &middot; {deal.property_type}
                 {deal.square_footage ? ` \u00B7 ${deal.square_footage} SF` : ''}
                 {deal.units ? ` \u00B7 ${deal.units} Units` : ''}
@@ -1620,13 +1672,12 @@ export default function DealDetailClient({
                   Seller Financing
                 </span>
               )}
-              <span className="bg-white/5 border border-white/10 text-white/50 text-[10px] font-semibold px-3 py-1.5 rounded-full">
+              <span className="bg-[#F7F8FA] border border-[#EEF0F4] text-[#6B7280] text-[10px] font-semibold px-3 py-1.5 rounded-full">
                 {deal.property_type}
               </span>
             </div>
           </div>
         </div>
-        <div className="h-[2px] bg-gradient-to-r from-transparent via-[#BC9C45]/50 to-transparent" />
 
         {/* ------------------------------------------------------------------ */}
         {/* 2. HERO SECTION                                                    */}
@@ -1661,23 +1712,23 @@ export default function DealDetailClient({
             {/* 5C. TERMINAL INTELLIGENCE PANEL                                    */}
             {/* ------------------------------------------------------------------ */}
             {deal.acquisition_thesis && (
-              <div className="bg-[#0E3470] rounded-xl p-6">
+              <div className="bg-white rounded-xl p-6 border border-[#EEF0F4] rp-card-shadow">
                 {/* Header */}
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-9 h-9 rounded-lg bg-[#BC9C45]/15 flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-lg bg-[#BC9C45]/10 flex items-center justify-center">
                     <span className="text-[#BC9C45] text-lg">{'\u26A1'}</span>
                   </div>
                   <div>
                     <div className="text-[12px] font-[700] uppercase tracking-[2px] text-[#BC9C45]">
                       TERMINAL INTELLIGENCE
                     </div>
-                    <div className="text-[9px] text-white/50">
+                    <div className="text-[9px] text-[#9CA3AF]">
                       Institutional analysis by RePrime research team
                     </div>
                   </div>
                 </div>
                 {/* Body */}
-                <p className="text-[13px] text-white/80 leading-[1.7] font-[300]">
+                <p className="text-[13px] text-[#4B5563] leading-[1.7]">
                   {deal.acquisition_thesis}
                 </p>
                 {/* Footer buttons */}
@@ -1690,19 +1741,19 @@ export default function DealDetailClient({
                       Full Report
                     </button>
                   ) : (
-                    <span className="px-4 py-2 bg-white/10 text-white/30 text-[11px] font-semibold rounded-lg cursor-default">
+                    <span className="px-4 py-2 bg-[#F7F8FA] text-[#9CA3AF] text-[11px] font-semibold rounded-lg cursor-default">
                       Full Report — Pending
                     </span>
                   )}
                   <button
                     onClick={() => setActiveTab('overview')}
-                    className="px-4 py-2 border border-white/20 hover:border-white/40 text-white text-[11px] font-semibold rounded-lg transition-colors"
+                    className="px-4 py-2 border border-[#EEF0F4] hover:border-[#BC9C45] text-[#0E3470] text-[11px] font-semibold rounded-lg transition-colors"
                   >
                     Deal Analysis
                   </button>
                   <button
                     onClick={() => setActiveTab('deal-structure')}
-                    className="px-4 py-2 border border-white/20 hover:border-white/40 text-white text-[11px] font-semibold rounded-lg transition-colors"
+                    className="px-4 py-2 border border-[#EEF0F4] hover:border-[#BC9C45] text-[#0E3470] text-[11px] font-semibold rounded-lg transition-colors"
                   >
                     Returns Calculator
                   </button>
@@ -2485,10 +2536,10 @@ export default function DealDetailClient({
           </div>
 
           {/* Contact Bar */}
-          <div className="rp-dark-gradient rounded-xl p-7 flex items-center justify-between">
+          <div className="bg-white rounded-xl p-7 border border-[#EEF0F4] rp-card-shadow flex items-center justify-between">
             <div>
-              <div className="text-[14px] font-medium text-white">Questions before committing?</div>
-              <div className="text-[11px] text-white/40 mt-1">
+              <div className="text-[14px] font-medium text-[#0E3470]">Questions before committing?</div>
+              <div className="text-[11px] text-[#9CA3AF] mt-1">
                 {contactName || 'RePrime Team'}{contactTitle ? ` · ${contactTitle}` : ''}
               </div>
             </div>
@@ -2503,7 +2554,7 @@ export default function DealDetailClient({
               </a>
               <button
                 onClick={() => setActiveTab('schedule')}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-lg border border-white/15 text-white/70 text-[12px] font-medium hover:bg-white/5 transition-colors"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-lg border border-[#EEF0F4] text-[#6B7280] text-[12px] font-medium hover:border-[#BC9C45] hover:text-[#0E3470] transition-colors"
               >
                 📅 Schedule a Call
               </button>
@@ -2611,13 +2662,6 @@ export default function DealDetailClient({
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#DC2626]/15 border border-[#DC2626]/25">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FF6B6B" strokeWidth="2">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                    <path d="M7 11V7a5 5 0 0110 0v4" />
-                  </svg>
-                  <span className="text-[10px] font-bold text-[#FF6B6B] tracking-wide">DOWNLOADS DISABLED</span>
-                </div>
                 <button
                   onClick={() => setViewerUrl(null)}
                   className="w-9 h-9 rounded-lg flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-colors border border-white/10"

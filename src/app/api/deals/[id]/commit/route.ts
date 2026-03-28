@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { sendCommitmentConfirmation } from '@/lib/email/send';
+import { sendCommitmentConfirmation, sendCommitmentWithdrawal } from '@/lib/email/send';
 
 export async function POST(
   request: NextRequest,
@@ -78,17 +78,7 @@ export async function POST(
 
   try {
     if (investor?.email) {
-      await sendCommitmentConfirmation(investor.email, emailData);
-    }
-    // Get admin email
-    const { data: settings } = await supabase
-      .from('terminal_settings')
-      .select('value')
-      .eq('key', 'contact_email')
-      .single();
-    const adminEmail = settings?.value ? String(settings.value).replace(/"/g, '') : '';
-    if (adminEmail) {
-      await sendCommitmentConfirmation(adminEmail, { ...emailData, isAdmin: true });
+      await sendCommitmentConfirmation(investor.email, emailData, ['shirel@reprime.com', 'g@reprime.com', 'steve@reprime.com']);
     }
   } catch (emailErr) {
     console.error('Commitment email failed:', emailErr);
@@ -127,4 +117,77 @@ export async function GET(
     .maybeSingle();
 
   return NextResponse.json({ commitment: data });
+}
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() { return cookieStore.getAll(); },
+        setAll() {},
+      },
+    }
+  );
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  // Get deal + investor info before deleting
+  const { data: deal } = await supabase
+    .from('terminal_deals')
+    .select('name, city, state')
+    .eq('id', id)
+    .single();
+
+  const { data: investor } = await supabase
+    .from('terminal_users')
+    .select('full_name, email')
+    .eq('id', user.id)
+    .single();
+
+  // Delete the commitment
+  const { error } = await supabase
+    .from('terminal_deal_commitments')
+    .delete()
+    .eq('deal_id', id)
+    .eq('user_id', user.id);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // Log activity
+  await supabase.from('terminal_activity_log').insert({
+    user_id: user.id,
+    deal_id: id,
+    action: 'commitment_withdrawn',
+    metadata: {},
+  });
+
+  // Send withdrawal emails
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://reprimeterminal.com';
+  const emailData = {
+    investorName: investor?.full_name ?? 'Investor',
+    dealName: deal?.name ?? 'Deal',
+    city: deal?.city ?? '',
+    state: deal?.state ?? '',
+    portalUrl: `${baseUrl}/en/portal/deals/${id}`,
+  };
+
+  try {
+    if (investor?.email) {
+      await sendCommitmentWithdrawal(investor.email, emailData, ['shirel@reprime.com', 'g@reprime.com', 'steve@reprime.com']);
+    }
+  } catch (emailErr) {
+    console.error('Withdrawal email failed:', emailErr);
+  }
+
+  return NextResponse.json({ success: true });
 }

@@ -51,6 +51,18 @@ const navItems = [
     ),
   },
   {
+    labelKey: 'sidebar.commitments' as const,
+    href: '/admin/commitments',
+    ownerOnly: true,
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 2v6l4 2" stroke="#0E3470" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="10" cy="10" r="8" stroke="#0E3470" strokeWidth="1.5" />
+        <path d="M6.5 10.5l2 2 5-5" stroke="#0E3470" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
     labelKey: 'sidebar.activity' as const,
     href: '/admin/activity',
     ownerOnly: true,

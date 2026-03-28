@@ -7,6 +7,7 @@ import CommitmentConfirmation from './templates/commitment-confirmation';
 import ApplicationAckEmail from './templates/application-ack-email';
 import ApplicationNotifyEmail from './templates/application-notify-email';
 import ApplicationRejectionEmail from './templates/application-rejection-email';
+import CommitmentWithdrawal from './templates/commitment-withdrawal';
 
 const from = `${FROM_NAME} <${FROM_EMAIL}>`;
 
@@ -127,14 +128,35 @@ export async function sendCommitmentConfirmation(
     commitType: string;
     depositAmount?: string;
     portalUrl: string;
-    isAdmin?: boolean;
   },
+  cc?: string[],
 ) {
   const type = data.commitType === 'primary' ? 'Committed' : 'Backup Position';
   return getResend().emails.send({
     from,
     to: recipientEmail,
+    ...(cc && cc.length > 0 ? { cc } : {}),
     subject: `${type}: ${data.dealName} — ${data.city}, ${data.state}`,
     react: CommitmentConfirmation(data),
+  });
+}
+
+export async function sendCommitmentWithdrawal(
+  recipientEmail: string,
+  data: {
+    investorName: string;
+    dealName: string;
+    city: string;
+    state: string;
+    portalUrl: string;
+  },
+  cc?: string[],
+) {
+  return getResend().emails.send({
+    from,
+    to: recipientEmail,
+    ...(cc && cc.length > 0 ? { cc } : {}),
+    subject: `Commitment Withdrawn: ${data.dealName} — ${data.city}, ${data.state}`,
+    react: CommitmentWithdrawal(data),
   });
 }
