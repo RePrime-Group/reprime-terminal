@@ -9,15 +9,19 @@ import { Link, usePathname } from '@/i18n/navigation';
 interface PortalNavbarProps {
   firstName: string;
   locale: string;
-  activeTab?: 'dashboard' | 'portfolio' | 'compare';
 }
 
-export default function PortalNavbar({ firstName, locale, activeTab = 'dashboard' }: PortalNavbarProps) {
+export default function PortalNavbar({ firstName, locale }: PortalNavbarProps) {
   const t = useTranslations('portal');
   const tn = useTranslations('portal.navbar');
   const tc = useTranslations('common');
   const router = useRouter();
   const pathname = usePathname();
+  const activeTab = pathname.startsWith('/portal/portfolio')
+    ? 'portfolio'
+    : pathname.startsWith('/portal/compare')
+      ? 'compare'
+      : 'dashboard';
   const supabase = createClient();
   const [showNotifications, setShowNotifications] = useState(false);
   // Voice modal removed for v1 launch

@@ -163,17 +163,15 @@ export async function POST(
       }
       if (!targetFolderId) continue;
 
-      // Map task status to doc status
-      const docStatus = task.status === 'completed' ? 'verified'
-        : task.status === 'in_progress' ? 'uploaded'
-        : 'notuploaded';
+      // Tasks have no file attached — always mark as notuploaded
+      const docStatus = 'notuploaded';
 
       await supabase.from('terminal_dd_documents').insert({
         deal_id: id,
         folder_id: targetFolderId,
         name: task.name,
         doc_status: docStatus,
-        is_verified: task.status === 'completed',
+        is_verified: false,
         is_downloadable: false,
       });
 

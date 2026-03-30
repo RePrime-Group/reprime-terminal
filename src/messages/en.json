@@ -428,6 +428,7 @@
     "dealsReleasedSchedule": "New deals are released to qualified members on a controlled schedule.",
     "heroDescription": "Curated institutional-grade commercial real estate opportunities, vetted and structured for qualified investors.",
     "footerConfidential": "All information presented is confidential and intended solely for qualified investors.",
+    "showMore": "Show More",
     "navbar": {
       "portfolio": "Portfolio",
       "compare": "Compare",
@@ -704,6 +705,10 @@
       "selected": "selected",
       "cap": "cap",
       "selectAtLeast": "Select at least 2 deals to compare",
+      "addColumn": "Add Deal",
+      "chooseDeal": "Choose a deal...",
+      "deal": "Deal",
+      "loading": "Loading...",
       "metric": "Metric",
       "capRateSensitivity": "Cap Rate Sensitivity",
       "whatIfCapRates": "What happens if cap rates move?",

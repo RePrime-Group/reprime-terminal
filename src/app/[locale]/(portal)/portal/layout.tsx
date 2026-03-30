@@ -19,7 +19,7 @@ export default async function PortalLayout({
 
   const { data: terminalUser } = await supabase
     .from('terminal_users')
-    .select('*')
+    .select('role, full_name, onboarding_completed')
     .eq('id', user.id)
     .single();
 

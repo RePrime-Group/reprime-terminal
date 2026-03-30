@@ -107,7 +107,7 @@ export default async function PortfolioPage({
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-[1600px] mx-auto px-10 py-10 space-y-6">
       {/* Summary Bar */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {metrics.map((m) => (

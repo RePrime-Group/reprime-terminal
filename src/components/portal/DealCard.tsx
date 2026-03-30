@@ -223,7 +223,7 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
 
           {/* Special terms */}
           {hasSpecialTerms && (
-            <div className="mt-3 inline-flex flex-col bg-[#FDF8ED] border border-[#BC9C45] rounded-full px-3.5 py-1.5">
+            <div className="mt-3 inline-flex flex-col bg-[#FDF8ED] border border-[#BC9C45] rounded-xl px-3.5 py-1.5">
               <span className="text-[8px] font-bold text-[#BC9C45] uppercase tracking-[1.5px]">
                 {t('specialTerms')}
               </span>

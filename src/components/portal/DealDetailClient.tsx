@@ -782,7 +782,7 @@ function DDFolderCard({
   folder: TerminalDDFolder & { documents: TerminalDDDocument[] };
   dealId: string;
   onDocumentDownload: (docId: string) => void;
-  onViewDocument: (url: string, name: string) => void;
+  onViewDocument: (url: string, name: string, storagePath?: string) => void;
 }) {
   const t = useTranslations('portal.dealDetail');
   const [expanded, setExpanded] = useState(false);
@@ -871,12 +871,12 @@ function DDFolderCard({
                   {t('pending')}
                 </span>
               )}
-              {/* View button for PDFs and images */}
-              {(doc.file_type === 'application/pdf' || doc.name?.endsWith('.pdf') || doc.file_type?.startsWith('image/')) && (
+              {/* View button for PDFs, images, and Office files */}
+              {(doc.file_type === 'application/pdf' || doc.name?.endsWith('.pdf') || doc.file_type?.startsWith('image/') || /\.(xlsx?|docx?|pptx?)$/i.test(doc.name)) && (
                 <button
                   onClick={() => {
                     onDocumentDownload(doc.id);
-                    onViewDocument(`/api/documents/${doc.id}/download?view=true`, doc.name);
+                    onViewDocument(`/api/documents/${doc.id}/download?view=true`, doc.name, doc.storage_path ?? undefined);
                   }}
                   className="text-[#BC9C45] hover:text-[#A88A3D] transition-colors"
                   aria-label={`View ${doc.name}`}
@@ -1416,8 +1416,28 @@ export default function DealDetailClient({
   const [ndaSigned, setNdaSigned] = useState(initialNDA);
   const [showNDAModal, setShowNDAModal] = useState(false);
 
-  const handleViewDocument = (url: string, name: string) => {
-    setViewerUrl(url);
+  // Lazy-loaded tab data
+  const [lazyDDFolders, setLazyDDFolders] = useState<(TerminalDDFolder & { documents: TerminalDDDocument[] })[] | null>(null);
+  const [ddLoading, setDDLoading] = useState(false);
+  const [lazyContact, setLazyContact] = useState<{ name: string; title: string; email: string } | null>(null);
+  const [lazySlots, setLazySlots] = useState<TerminalAvailabilitySlot[] | null>(null);
+  const [lazyBookedTimes, setLazyBookedTimes] = useState<string[] | null>(null);
+  const [scheduleLoading, setScheduleLoading] = useState(false);
+
+  const OFFICE_EXTENSIONS = ['.xlsx', '.xls', '.docx', '.doc', '.pptx', '.ppt'];
+  const handleViewDocument = async (url: string, name: string, storagePath?: string) => {
+    const isOfficeFile = OFFICE_EXTENSIONS.some(ext => name.toLowerCase().endsWith(ext));
+    if (isOfficeFile && storagePath) {
+      const supabase = createClient();
+      const { data } = await supabase.storage
+        .from('terminal-dd-documents')
+        .createSignedUrl(storagePath, 300);
+      if (data?.signedUrl) {
+        setViewerUrl(`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(data.signedUrl)}`);
+      }
+    } else {
+      setViewerUrl(url);
+    }
     setViewerName(name);
   };
   const [selectedStructure, setSelectedStructure] = useState<'assignment' | 'gplp'>('assignment');
@@ -1461,6 +1481,90 @@ export default function DealDetailClient({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, deal.id]);
+
+  // Lazy-fetch DD folders + documents when due-diligence tab is first opened
+  useEffect(() => {
+    if (activeTab !== 'due-diligence' || lazyDDFolders !== null || ddLoading) return;
+    setDDLoading(true);
+    (async () => {
+      const supabase = createClient();
+      const { data: folders } = await supabase
+        .from('terminal_dd_folders')
+        .select('id, deal_id, name, icon, display_order, address_id')
+        .eq('deal_id', deal.id)
+        .order('display_order', { ascending: true });
+
+      if (!folders || folders.length === 0) {
+        setLazyDDFolders([]);
+        setDDLoading(false);
+        return;
+      }
+
+      // Batch-fetch all documents for all folders in one query
+      const folderIds = folders.map((f) => f.id);
+      const { data: allDocs } = await supabase
+        .from('terminal_dd_documents')
+        .select('id, folder_id, deal_id, name, file_size, file_type, storage_path, is_verified, is_downloadable, doc_status, uploaded_by, created_at')
+        .in('folder_id', folderIds)
+        .order('created_at', { ascending: true });
+
+      const docsByFolder = new Map<string, TerminalDDDocument[]>();
+      for (const doc of (allDocs ?? []) as TerminalDDDocument[]) {
+        if (!docsByFolder.has(doc.folder_id)) docsByFolder.set(doc.folder_id, []);
+        docsByFolder.get(doc.folder_id)!.push(doc);
+      }
+
+      setLazyDDFolders(
+        (folders as TerminalDDFolder[]).map((f) => ({
+          ...f,
+          documents: docsByFolder.get(f.id) ?? [],
+        }))
+      );
+      setDDLoading(false);
+    })();
+  }, [activeTab, deal.id, lazyDDFolders, ddLoading]);
+
+  // Lazy-fetch schedule & contact data when schedule tab is first opened
+  useEffect(() => {
+    if (activeTab !== 'schedule' || lazyContact !== null || scheduleLoading) return;
+    setScheduleLoading(true);
+    (async () => {
+      const supabase = createClient();
+      const [
+        { data: settingsData },
+        { data: slotsData },
+        { data: bookedData },
+      ] = await Promise.all([
+        supabase
+          .from('terminal_settings')
+          .select('key, value')
+          .in('key', ['contact_name', 'contact_title', 'contact_email']),
+        supabase
+          .from('terminal_availability_slots')
+          .select('id, day_of_week, start_time, end_time, timezone, is_active, created_at')
+          .eq('is_active', true)
+          .order('day_of_week', { ascending: true })
+          .order('start_time', { ascending: true }),
+        supabase
+          .from('terminal_meetings')
+          .select('scheduled_at')
+          .eq('deal_id', deal.id)
+          .in('status', ['scheduled']),
+      ]);
+
+      const sm: Record<string, string> = {};
+      for (const s of settingsData ?? []) sm[s.key] = String(s.value ?? '');
+
+      setLazyContact({
+        name: sm.contact_name ?? '',
+        title: sm.contact_title ?? '',
+        email: sm.contact_email ?? '',
+      });
+      setLazySlots((slotsData ?? []) as TerminalAvailabilitySlot[]);
+      setLazyBookedTimes((bookedData ?? []).map((m: { scheduled_at: string }) => m.scheduled_at));
+      setScheduleLoading(false);
+    })();
+  }, [activeTab, deal.id, lazyContact, scheduleLoading]);
 
   const handleDocumentDownload = (docId: string) => {
     trackActivity('document_downloaded', deal.id, { document_id: docId });
@@ -2211,19 +2315,25 @@ export default function DealDetailClient({
           style={{ display: activeTab === 'due-diligence' ? 'block' : 'none' }}
         >
           <div className="mt-8 px-8 pb-10">
-            <DataRoomTab
-              folders={deal.dd_folders}
-              tasks={pipelineTasks}
-              dealId={deal.id}
-              dealName={deal.name}
-              investorName={investorName}
-              investorEmail={investorEmail}
-              ddDeadline={deal.dd_deadline}
-              closeDeadline={deal.close_deadline}
-              extensionDeadline={deal.extension_deadline}
-              onViewDocument={handleViewDocument}
-              onDocumentDownload={handleDocumentDownload}
-            />
+            {ddLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="w-6 h-6 border-2 border-[#BC9C45] border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : (
+              <DataRoomTab
+                folders={lazyDDFolders ?? deal.dd_folders}
+                tasks={pipelineTasks}
+                dealId={deal.id}
+                dealName={deal.name}
+                investorName={investorName}
+                investorEmail={investorEmail}
+                ddDeadline={deal.dd_deadline}
+                closeDeadline={deal.close_deadline}
+                extensionDeadline={deal.extension_deadline}
+                onViewDocument={handleViewDocument}
+                onDocumentDownload={handleDocumentDownload}
+              />
+            )}
           </div>
         </div>
 
@@ -2361,6 +2471,11 @@ export default function DealDetailClient({
           className="transition-opacity duration-200"
           style={{ display: activeTab === 'schedule' ? 'block' : 'none' }}
         >
+          {scheduleLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <div className="w-6 h-6 border-2 border-[#BC9C45] border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
           <div className="mt-8 px-8 pb-10 grid grid-cols-[1fr_1fr] gap-6">
             {/* Left: Meeting Scheduler */}
             <div className="bg-white rounded-xl border border-[#EEF0F4] p-6 rp-card-shadow">
@@ -2369,8 +2484,8 @@ export default function DealDetailClient({
               </h3>
               <MeetingScheduler
                 dealId={deal.id}
-                slots={availabilitySlots}
-                bookedTimes={bookedTimes}
+                slots={lazySlots ?? availabilitySlots}
+                bookedTimes={lazyBookedTimes ?? bookedTimes}
                 onMeetingRequested={handleMeetingRequested}
               />
             </div>
@@ -2382,22 +2497,22 @@ export default function DealDetailClient({
                 <div className="flex items-center gap-4 mb-5">
                   <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#0E3470] to-[#1D5FB8] flex items-center justify-center shrink-0 shadow-lg">
                     <span className="text-white font-bold text-lg">
-                      {initials || 'RP'}
+                      {(lazyContact ? lazyContact.name : contactName).split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || 'RP'}
                     </span>
                   </div>
                   <div>
                     <div className="font-semibold text-[#0E3470]">
-                      {contactName || t('reprimeTeam')}
+                      {(lazyContact?.name || contactName) || t('reprimeTeam')}
                     </div>
                     <div className="text-xs text-[#9CA3AF]">
-                      {contactTitle || t('investmentAdvisor')}
+                      {(lazyContact?.title || contactTitle) || t('investmentAdvisor')}
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <a
-                    href={`mailto:${contactEmail}?subject=${encodeURIComponent(`RE: ${deal.name}`)}`}
+                    href={`mailto:${lazyContact?.email || contactEmail}?subject=${encodeURIComponent(`RE: ${deal.name}`)}`}
                     className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#BC9C45] hover:bg-[#A88A3D] text-white font-semibold text-sm rounded-xl transition-colors"
                   >
                     <svg
@@ -2413,10 +2528,10 @@ export default function DealDetailClient({
                       <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                       <polyline points="22,6 12,13 2,6" />
                     </svg>
-                    {t('emailAboutDeal', { name: contactName?.split(' ')[0] || 'Shirel' })}
+                    {t('emailAboutDeal', { name: (lazyContact?.name || contactName)?.split(' ')[0] || 'Shirel' })}
                   </a>
                   <a
-                    href={`mailto:${contactEmail}?subject=${encodeURIComponent(`Callback Request: ${deal.name}`)}`}
+                    href={`mailto:${lazyContact?.email || contactEmail}?subject=${encodeURIComponent(`Callback Request: ${deal.name}`)}`}
                     className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#0E3470] hover:bg-[#0E3470]/90 text-white font-semibold text-sm rounded-xl transition-colors"
                   >
                     <svg
@@ -2504,6 +2619,7 @@ export default function DealDetailClient({
               </div>
             </div>
           </div>
+          )}
         </div>
 
         {/* ========== COMMITMENT SECTION ========== */}

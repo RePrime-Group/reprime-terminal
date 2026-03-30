@@ -428,6 +428,7 @@
     "dealsReleasedSchedule": "עסקאות חדשות משוחררות לחברים מאושרים בלוח זמנים מבוקר.",
     "heroDescription": "הזדמנויות נדל\"ן מסחרי ברמה מוסדית, נבדקות ומובנות עבור משקיעים מוסמכים.",
     "footerConfidential": "כל המידע המוצג הוא סודי ומיועד אך ורק למשקיעים מוסמכים.",
+    "showMore": "הצג עוד",
     "navbar": {
       "portfolio": "תיק השקעות",
       "compare": "השוואה",
@@ -549,6 +550,10 @@
       "selected": "נבחרו",
       "cap": "cap",
       "selectAtLeast": "בחר לפחות 2 עסקאות להשוואה",
+      "addColumn": "הוסף עסקה",
+      "chooseDeal": "בחר עסקה...",
+      "deal": "עסקה",
+      "loading": "טוען...",
       "metric": "מדד",
       "capRateSensitivity": "רגישות Cap Rate",
       "whatIfCapRates": "מה קורה אם שיעורי ה-cap משתנים?",

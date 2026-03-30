@@ -405,13 +405,13 @@ export default function DataRoomPage() {
     setDeleting(false);
   }
 
-  function handleDownload(doc: DDDocument) {
+  async function handleDownload(doc: DDDocument) {
     if (!doc.storage_path) return;
-    const { data } = supabase.storage
+    const { data, error } = await supabase.storage
       .from('terminal-dd-documents')
-      .getPublicUrl(doc.storage_path);
-    if (data?.publicUrl) {
-      window.open(data.publicUrl, '_blank');
+      .createSignedUrl(doc.storage_path, 60);
+    if (data?.signedUrl && !error) {
+      window.open(data.signedUrl, '_blank');
     }
   }
 
@@ -764,7 +764,12 @@ export default function DataRoomPage() {
                       {/* Download */}
                       <button
                         onClick={() => handleDownload(doc)}
-                        className="shrink-0 text-rp-gray-400 hover:text-rp-navy transition-colors"
+                        disabled={!doc.storage_path}
+                        className={`shrink-0 transition-colors ${
+                          doc.storage_path
+                            ? 'text-rp-navy font-bold cursor-pointer hover:text-rp-gold'
+                            : 'text-rp-gray-300 cursor-not-allowed opacity-40'
+                        }`}
                         aria-label="Download document"
                       >
                         <svg
@@ -773,7 +778,7 @@ export default function DataRoomPage() {
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
-                          strokeWidth={2}
+                          strokeWidth={doc.storage_path ? 2.5 : 1.5}
                         >
                           <path
                             strokeLinecap="round"

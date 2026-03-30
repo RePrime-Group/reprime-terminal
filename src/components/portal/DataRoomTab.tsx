@@ -23,7 +23,7 @@ interface DataRoomTabProps {
   ddDeadline: string | null;
   closeDeadline: string | null;
   extensionDeadline: string | null;
-  onViewDocument: (url: string, name: string) => void;
+  onViewDocument: (url: string, name: string, storagePath?: string) => void;
   onDocumentDownload: (docId: string) => void;
 }
 
@@ -390,7 +390,7 @@ export default function DataRoomTab({
               filteredDocs.map((doc, i) => {
                 const status = getDocStatus(doc, STATUS_CONFIG);
                 const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending;
-                const canView = ['verified', 'uploaded', 'pending'].includes(status);
+                const canView = !!doc.storage_path;
 
                 return (
                   <div
@@ -431,7 +431,7 @@ export default function DataRoomTab({
                         <button
                           onClick={() => {
                             onDocumentDownload(doc.id);
-                            onViewDocument(`/api/documents/${doc.id}/download?view=true`, doc.name);
+                            onViewDocument(`/api/documents/${doc.id}/download?view=true`, doc.name, doc.storage_path ?? undefined);
                           }}
                           className="px-4 py-1.5 rounded-md text-[11px] font-semibold border border-[#0E3470]/12 text-[#0E3470] group-hover:bg-[#0E3470] group-hover:text-white transition-all"
                         >

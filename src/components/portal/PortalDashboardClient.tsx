@@ -1,10 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import DealCard from '@/components/portal/DealCard';
 import ComingSoonCard from '@/components/portal/ComingSoonCard';
 import MarketIntelSidebar from '@/components/portal/MarketIntelSidebar';
 import { formatPriceCompact } from '@/lib/utils/format';
 import { useTranslations } from 'next-intl';
+
+const PAGE_SIZE = 6;
 
 export interface DealCardData {
   id: string;
@@ -46,19 +49,26 @@ interface PortalDashboardClientProps {
 
 export default function PortalDashboardClient({ deals, locale }: PortalDashboardClientProps) {
   const t = useTranslations('portal');
-  const upcomingDeals = deals.filter((d) => d.status === 'coming_soon' || d.status === 'loi_signed');
-  const activeDeals = deals.filter((d) => d.status === 'published');
-  const closedDeals = deals.filter((d) => d.status === 'assigned' || d.status === 'closed');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
+  const visibleDeals = deals.slice(0, visibleCount);
+  const hasMore = visibleCount < deals.length;
+
+  const upcomingDeals = visibleDeals.filter((d) => d.status === 'coming_soon' || d.status === 'loi_signed');
+  const activeDeals = visibleDeals.filter((d) => d.status === 'published');
+  const closedDeals = visibleDeals.filter((d) => d.status === 'assigned' || d.status === 'closed');
   const activeCount = activeDeals.length;
   const closedCount = closedDeals.length;
 
-  const totalDealVolume = activeDeals.reduce((sum, d) => sum + (d.purchase_price || 0), 0);
-  const totalEquity = activeDeals.reduce((sum, d) => sum + (d.equity_required || 0), 0);
-  const avgIrr = activeDeals.length > 0
-    ? activeDeals.reduce((sum, d) => sum + (d.irr || 0), 0) / activeDeals.length
+  // Hero metrics use ALL deals (not just visible) for accurate totals
+  const allActiveDeals = deals.filter((d) => d.status === 'published');
+  const totalDealVolume = allActiveDeals.reduce((sum, d) => sum + (d.purchase_price || 0), 0);
+  const totalEquity = allActiveDeals.reduce((sum, d) => sum + (d.equity_required || 0), 0);
+  const avgIrr = allActiveDeals.length > 0
+    ? allActiveDeals.reduce((sum, d) => sum + (d.irr || 0), 0) / allActiveDeals.length
     : 0;
-  const avgCapRate = activeDeals.length > 0
-    ? activeDeals.reduce((sum, d) => sum + (d.cap_rate || 0), 0) / activeDeals.length
+  const avgCapRate = allActiveDeals.length > 0
+    ? allActiveDeals.reduce((sum, d) => sum + (d.cap_rate || 0), 0) / allActiveDeals.length
     : 0;
 
   const quarterLabel =
@@ -69,7 +79,7 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
     { label: 'AGGREGATE EQUITY', value: formatPriceCompact(totalEquity) },
     { label: 'AVG. PROJECTED IRR', value: avgIrr > 0 ? `${avgIrr.toFixed(1)}%` : '--' },
     { label: 'AVG. CAP RATE', value: avgCapRate > 0 ? `${avgCapRate.toFixed(1)}%` : '--' },
-    { label: 'ACTIVE RELEASES', value: String(activeCount) },
+    { label: 'ACTIVE RELEASES', value: String(allActiveDeals.length) },
   ];
 
   const hasAnyDeals = deals.length > 0;
@@ -112,7 +122,7 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
             </div>
           </div>
 
-          {activeCount > 0 && (
+          {allActiveDeals.length > 0 && (
             <div className="grid grid-cols-5 gap-[1px] rounded-xl overflow-hidden border border-white/[0.06]" data-tour="hero-metrics" style={{ background: 'rgba(255,255,255,0.04)' }}>
               {summaryMetrics.map((m) => (
                 <div key={m.label} className="px-5 py-5" style={{ background: 'rgba(14, 52, 112, 0.25)', backdropFilter: 'blur(8px)' }}>
@@ -206,6 +216,18 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
                       <DealCard key={deal.id} deal={deal} locale={locale} index={index} />
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* ── Show More ── */}
+              {hasMore && (
+                <div className="flex justify-center pt-4">
+                  <button
+                    onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+                    className="px-8 py-3 rounded-xl border border-[#BC9C45]/30 text-[#BC9C45] text-[13px] font-semibold hover:bg-[#BC9C45]/5 hover:border-[#BC9C45]/50 transition-all"
+                  >
+                    {t('showMore')} ({deals.length - visibleCount})
+                  </button>
                 </div>
               )}
             </div>
