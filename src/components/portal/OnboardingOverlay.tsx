@@ -34,14 +34,6 @@ export default function OnboardingOverlay({ firstName, userId }: OnboardingOverl
   const [spotlight, setSpotlight] = useState<DOMRect | null>(null);
 
   useEffect(() => {
-    const localKey = `rp_onboarding_${userId}`;
-    const localVisit = parseInt(localStorage.getItem(localKey) ?? '0');
-
-    if (localVisit >= 1) {
-      setDismissed(true);
-      return;
-    }
-
     setStage('welcome');
 
     const supabase = createClient();
@@ -89,10 +81,13 @@ export default function OnboardingOverlay({ firstName, userId }: OnboardingOverl
     }
   };
 
-  const handleFinish = () => {
-    const localKey = `rp_onboarding_${userId}`;
-    localStorage.setItem(localKey, '1');
+  const handleFinish = async () => {
     setDismissed(true);
+    const supabase = createClient();
+    await supabase
+      .from('terminal_users')
+      .update({ onboarding_completed: true })
+      .eq('id', userId);
   };
 
   if (dismissed || !stage) return null;

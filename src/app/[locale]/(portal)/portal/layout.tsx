@@ -33,10 +33,12 @@ export default async function PortalLayout({
         firstName={terminalUser.full_name?.split(' ')[0] ?? ''}
         locale={locale}
       />
-      <OnboardingOverlay
-        firstName={terminalUser.full_name?.split(' ')[0] ?? ''}
-        userId={user.id}
-      />
+      {!terminalUser.onboarding_completed && (
+        <OnboardingOverlay
+          firstName={terminalUser.full_name?.split(' ')[0] ?? ''}
+          userId={user.id}
+        />
+      )}
       <main>
         {children}
       </main>

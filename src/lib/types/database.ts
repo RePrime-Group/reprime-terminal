@@ -23,6 +23,7 @@ export interface TerminalUser {
   company_name: string | null;
   phone: string | null;
   is_active: boolean;
+  onboarding_completed: boolean;
   last_active_at: string | null;
   created_at: string;
   updated_at: string;
