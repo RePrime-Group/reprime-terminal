@@ -1443,6 +1443,7 @@ export default function DealDetailClient({
   const [selectedStructure, setSelectedStructure] = useState<'assignment' | 'gplp'>('assignment');
   const [expressedInterest, setExpressedInterest] = useState(false);
   const [showExpressModal, setShowExpressModal] = useState(false);
+  const [expressingInterest, setExpressingInterest] = useState(false);
   const [checkingInterest, setCheckingInterest] = useState(true);
 
   // Track deal_viewed on mount
@@ -1579,19 +1580,24 @@ export default function DealDetailClient({
   };
 
   const handleExpressInterest = async () => {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    setExpressingInterest(true);
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    await supabase.from('terminal_activity_log').insert({
-      user_id: user.id,
-      deal_id: deal.id,
-      action: 'expressed_interest',
-      metadata: {},
-    });
+      await supabase.from('terminal_activity_log').insert({
+        user_id: user.id,
+        deal_id: deal.id,
+        action: 'expressed_interest',
+        metadata: {},
+      });
 
-    setExpressedInterest(true);
-    setShowExpressModal(false);
+      setExpressedInterest(true);
+      setShowExpressModal(false);
+    } finally {
+      setExpressingInterest(false);
+    }
   };
 
   // Computed financial metrics from calculation engine — SINGLE SOURCE OF TRUTH
@@ -2720,9 +2726,11 @@ export default function DealDetailClient({
                 </button>
                 <button
                   onClick={handleExpressInterest}
-                  className="flex-1 py-2.5 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[13px] font-semibold rounded-lg transition-colors"
+                  disabled={expressingInterest}
+                  className="flex-1 py-2.5 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[13px] font-semibold rounded-lg transition-colors disabled:opacity-60 flex items-center justify-center gap-1.5"
                 >
-                  {tcom('confirm')}
+                  {expressingInterest && <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                  {expressingInterest ? t('processing') : tcom('confirm')}
                 </button>
               </div>
             </div>

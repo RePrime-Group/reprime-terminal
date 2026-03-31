@@ -30,6 +30,7 @@ export default function OnboardingOverlay({ firstName, userId }: OnboardingOverl
   const t = useTranslations('portal.onboarding');
   const [stage, setStage] = useState<Stage>(null);
   const [dismissed, setDismissed] = useState(false);
+  const [finishing, setFinishing] = useState(false);
   const [tourStep, setTourStep] = useState(0);
   const [spotlight, setSpotlight] = useState<DOMRect | null>(null);
 
@@ -82,12 +83,14 @@ export default function OnboardingOverlay({ firstName, userId }: OnboardingOverl
   };
 
   const handleFinish = async () => {
-    setDismissed(true);
+    if (finishing) return;
+    setFinishing(true);
     const supabase = createClient();
     await supabase
       .from('terminal_users')
       .update({ onboarding_completed: true })
       .eq('id', userId);
+    setDismissed(true);
   };
 
   if (dismissed || !stage) return null;
@@ -120,9 +123,10 @@ export default function OnboardingOverlay({ firstName, userId }: OnboardingOverl
 
           <button
             onClick={handleFinish}
-            className="block mx-auto mt-4 text-[11px] text-white/20 hover:text-white/40 transition-colors"
+            disabled={finishing}
+            className="block mx-auto mt-4 text-[11px] text-white/20 hover:text-white/40 transition-colors disabled:opacity-50"
           >
-            {t('skip')}
+            {finishing ? t('skipTour') + '...' : t('skip')}
           </button>
         </div>
       </div>
@@ -227,14 +231,17 @@ export default function OnboardingOverlay({ firstName, userId }: OnboardingOverl
           <div className="flex items-center justify-between">
             <button
               onClick={handleFinish}
-              className="text-[11px] text-white/25 hover:text-white/50 transition-colors"
+              disabled={finishing}
+              className="text-[11px] text-white/25 hover:text-white/50 transition-colors disabled:opacity-50"
             >
               {t('skipTour')}
             </button>
             <button
               onClick={handleNext}
-              className="px-5 py-2 rounded-lg bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] text-[12px] font-bold hover:opacity-90 transition-opacity"
+              disabled={finishing}
+              className="px-5 py-2 rounded-lg bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] text-[12px] font-bold hover:opacity-90 transition-opacity disabled:opacity-60 flex items-center gap-1.5"
             >
+              {isLast && finishing && <div className="w-3 h-3 border-2 border-[#0E3470] border-t-transparent rounded-full animate-spin" />}
               {isLast ? t('done') : `${t('nextStep')} →`}
             </button>
           </div>

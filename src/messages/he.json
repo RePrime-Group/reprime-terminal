@@ -2,6 +2,7 @@
   "common": {
     "appName": "RePrime Terminal",
     "signOut": "יציאה",
+    "signingOut": "מתנתק...",
     "loading": "טוען...",
     "save": "שמור",
     "saveChanges": "שמור שינויים",
@@ -489,7 +490,9 @@
       "alreadyCommitted": "כבר התחייבו",
       "group": "קבוצה",
       "groups": "קבוצות",
-      "commitEarly": "התחייב מוקדם"
+      "commitEarly": "התחייב מוקדם",
+      "committed": "מחויב",
+      "committing": "מתחייב..."
     },
     "dealDetail": {
       "overview": "סקירה כללית",

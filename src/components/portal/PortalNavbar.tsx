@@ -27,6 +27,8 @@ export default function PortalNavbar({ firstName, locale }: PortalNavbarProps) {
   // Voice modal removed for v1 launch
   const [notifications, setNotifications] = useState<{ title: string; description: string; created_at: string; type: string }[]>([]);
   const [hasUnread, setHasUnread] = useState(false);
+  const [markingRead, setMarkingRead] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -46,6 +48,7 @@ export default function PortalNavbar({ firstName, locale }: PortalNavbarProps) {
   }, [supabase]);
 
   const handleSignOut = async () => {
+    setSigningOut(true);
     await supabase.auth.signOut();
     router.push(`/${locale}/login`);
   };
@@ -134,11 +137,19 @@ export default function PortalNavbar({ firstName, locale }: PortalNavbarProps) {
                   {hasUnread && (
                     <button
                       onClick={async () => {
-                        await supabase.from('terminal_notifications').update({ read_at: new Date().toISOString() }).is('read_at', null);
-                        setHasUnread(false);
+                        if (markingRead) return;
+                        setMarkingRead(true);
+                        try {
+                          await supabase.from('terminal_notifications').update({ read_at: new Date().toISOString() }).is('read_at', null);
+                          setHasUnread(false);
+                        } finally {
+                          setMarkingRead(false);
+                        }
                       }}
-                      className="text-[11px] font-medium text-[#D4A843] hover:underline"
+                      disabled={markingRead}
+                      className="text-[11px] font-medium text-[#D4A843] hover:underline disabled:opacity-50 flex items-center gap-1"
                     >
+                      {markingRead && <div className="w-2.5 h-2.5 border-[1.5px] border-[#D4A843] border-t-transparent rounded-full animate-spin" />}
                       {tn('markAllRead')}
                     </button>
                   )}
@@ -228,9 +239,11 @@ export default function PortalNavbar({ firstName, locale }: PortalNavbarProps) {
 
           <button
             onClick={handleSignOut}
-            className="text-[11px] text-white/30 hover:text-[#DC2626] transition-colors cursor-pointer font-medium ml-1"
+            disabled={signingOut}
+            className="text-[11px] text-white/30 hover:text-[#DC2626] transition-colors cursor-pointer font-medium ml-1 disabled:opacity-50 inline-flex items-center gap-1"
           >
-            {tc('signOut')}
+            {signingOut && <div className="w-2.5 h-2.5 border-[1.5px] border-white/30 border-t-transparent rounded-full animate-spin" />}
+            {signingOut ? tc('signingOut') : tc('signOut')}
           </button>
         </div>
       </nav>

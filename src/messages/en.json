@@ -2,6 +2,7 @@
   "common": {
     "appName": "RePrime Terminal",
     "signOut": "Sign Out",
+    "signingOut": "Signing Out...",
     "loading": "Loading...",
     "save": "Save",
     "saveChanges": "Save Changes",
@@ -489,7 +490,9 @@
       "alreadyCommitted": "already committed",
       "group": "group",
       "groups": "groups",
-      "commitEarly": "Commit Early"
+      "commitEarly": "Commit Early",
+      "committed": "Committed",
+      "committing": "Committing..."
     },
     "dealDetail": {
       "overview": "Overview",

@@ -17,6 +17,7 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
   const t = useTranslations('portal.dealCard');
   const tc = useTranslations('portal.countdown');
   const [watched, setWatched] = useState(false);
+  const [watchLoading, setWatchLoading] = useState(false);
   const countdown = useCountdown(deal.dd_deadline);
   const isAssigned = deal.status === 'assigned' || deal.status === 'closed';
   const urgency = isAssigned ? 'assigned' : getUrgencyLevel(deal.dd_deadline);
@@ -125,20 +126,31 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
           {/* Top-right watch icon */}
           <div
             className="absolute top-3 right-3 z-[3]"
-            onClick={(e) => {
+            onClick={async (e) => {
               e.preventDefault();
               e.stopPropagation();
-              const method = watched ? 'DELETE' : 'POST';
-              fetch(`/api/deals/${deal.id}/watch`, { method }).then(() => setWatched(!watched));
+              if (watchLoading) return;
+              setWatchLoading(true);
+              try {
+                const method = watched ? 'DELETE' : 'POST';
+                const res = await fetch(`/api/deals/${deal.id}/watch`, { method });
+                if (res.ok) setWatched(!watched);
+              } finally {
+                setWatchLoading(false);
+              }
             }}
           >
             <div className={`w-7 h-7 rounded-full flex items-center justify-center cursor-pointer shadow-md transition-all ${
-              watched ? 'bg-[#BC9C45]' : 'bg-white/80 backdrop-blur-sm hover:bg-white'
-            }`}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill={watched ? 'white' : 'none'} stroke={watched ? 'white' : '#6B7280'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
+              watchLoading ? 'opacity-60 pointer-events-none' : ''
+            } ${watched ? 'bg-[#BC9C45]' : 'bg-white/80 backdrop-blur-sm hover:bg-white'}`}>
+              {watchLoading ? (
+                <div className="w-3.5 h-3.5 border-2 border-[#BC9C45] border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill={watched ? 'white' : 'none'} stroke={watched ? 'white' : '#6B7280'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              )}
             </div>
           </div>
 

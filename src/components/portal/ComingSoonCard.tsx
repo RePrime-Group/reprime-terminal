@@ -16,6 +16,8 @@ export default function ComingSoonCard({ deal, index }: ComingSoonCardProps) {
   const tp = useTranslations('portal');
   const [subscribed, setSubscribed] = useState(deal.is_subscribed ?? false);
   const [loading, setLoading] = useState(false);
+  const [committing, setCommitting] = useState(false);
+  const [committed, setCommitted] = useState(false);
 
   const isLoiSigned = deal.status === 'loi_signed';
   const psaTarget = deal.psa_draft_start
@@ -167,20 +169,36 @@ export default function ComingSoonCard({ deal, index }: ComingSoonCardProps) {
               {subscribed ? `✓ ${tp('subscribed')}` : tp('notifyMe')}
             </button>
             {isLoiSigned && (
-              <button
-                onClick={async (e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  await fetch(`/api/deals/${deal.id}/commit`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ type: 'primary' }),
-                  });
-                }}
-                className="flex-1 py-2.5 rounded-lg text-[12px] font-bold bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] hover:opacity-90 transition-opacity"
-              >
-                {t('commitEarly')}
-              </button>
+              committed ? (
+                <span className="flex-1 py-2.5 rounded-lg text-[12px] font-bold bg-[#ECFDF5] text-[#0B8A4D] text-center flex items-center justify-center gap-1.5">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#0B8A4D" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8l4 4 6-7"/></svg>
+                  {t('committed')}
+                </span>
+              ) : (
+                <button
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (committing) return;
+                    setCommitting(true);
+                    try {
+                      const res = await fetch(`/api/deals/${deal.id}/commit`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ type: 'primary' }),
+                      });
+                      if (res.ok) setCommitted(true);
+                    } finally {
+                      setCommitting(false);
+                    }
+                  }}
+                  disabled={committing}
+                  className="flex-1 py-2.5 rounded-lg text-[12px] font-bold bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] hover:opacity-90 transition-opacity disabled:opacity-60 flex items-center justify-center gap-1.5"
+                >
+                  {committing && <div className="w-3 h-3 border-2 border-[#0E3470] border-t-transparent rounded-full animate-spin" />}
+                  {committing ? t('committing') : t('commitEarly')}
+                </button>
+              )
             )}
           </div>
         </div>
