@@ -87,6 +87,7 @@ export default function DataRoomPage() {
 
   // ── Core state ─────────────────────────────────────────────────────────────
 
+  const [userId, setUserId] = useState<string | null>(null);
   const [dealName, setDealName] = useState('');
   const [folders, setFolders] = useState<DDFolder[]>([]);
   const [documents, setDocuments] = useState<DDDocument[]>([]);
@@ -106,6 +107,14 @@ export default function DataRoomPage() {
   const [deleteDocTarget, setDeleteDocTarget] = useState<DDDocument | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // ── Bulk n8n upload state ──────────────────────────────────────────────────
+
+  const bulkInputRef = useRef<HTMLInputElement>(null);
+  const [bulkUploading, setBulkUploading] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState(0);
+  const [bulkToast, setBulkToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [lastBulkFile, setLastBulkFile] = useState<File | null>(null);
+
   // ── Upload state ───────────────────────────────────────────────────────────
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -120,6 +129,10 @@ export default function DataRoomPage() {
   // ── Fetch data ─────────────────────────────────────────────────────────────
 
   const fetchData = useCallback(async () => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) setUserId(data.user.id);
+    });
+
     const [dealRes, foldersRes, docsRes] = await Promise.all([
       supabase.from('terminal_deals').select('name').eq('id', dealId).single(),
       supabase
@@ -428,6 +441,67 @@ export default function DataRoomPage() {
     handleFileSelect(e.dataTransfer.files);
   }
 
+  // ── Bulk n8n upload ───────────────────────────────────────────────────────
+
+  async function handleBulkUpload(fileList: FileList | null) {
+    if (!fileList || fileList.length === 0) return;
+    const file = fileList[0];
+
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+    if (ext !== 'zip') {
+      setBulkToast({ type: 'error', message: 'Only ZIP files are accepted for bulk upload.' });
+      return;
+    }
+
+    setLastBulkFile(file);
+    setBulkUploading(true);
+    setBulkProgress(0);
+    setBulkToast(null);
+
+    // Simulate incremental progress while waiting for n8n
+    const progressInterval = setInterval(() => {
+      setBulkProgress((prev) => (prev < 85 ? prev + Math.random() * 8 : prev));
+    }, 500);
+
+    try {
+      const formData = new FormData();
+      formData.append('dealId', dealId);
+      if (userId) formData.append('userId', userId);
+      formData.append('files', file, file.name);
+
+      const res = await fetch(
+        'https://primary-production-9ee0c.up.railway.app/webhook/203bdaee-75d3-4d3b-bee5-e820281be377',
+        { method: 'POST', body: formData },
+      );
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || `Webhook responded with ${res.status}`);
+      }
+
+      clearInterval(progressInterval);
+      setBulkProgress(90);
+
+      // Fetch updated folders & documents from the database
+      await fetchData();
+
+      setBulkProgress(100);
+      setBulkToast({ type: 'success', message: 'Files uploaded and organized successfully.' });
+
+      setTimeout(() => {
+        setBulkProgress(0);
+        setBulkUploading(false);
+      }, 800);
+    } catch (err) {
+      clearInterval(progressInterval);
+      setBulkProgress(0);
+      setBulkUploading(false);
+      setBulkToast({ type: 'error', message: 'Organization failed. Please try again.' });
+    } finally {
+      if (bulkInputRef.current) bulkInputRef.current.value = '';
+    }
+  }
+
   // ── Derived ────────────────────────────────────────────────────────────────
 
   const folderDocCounts: Record<string, number> = {};
@@ -476,6 +550,78 @@ export default function DataRoomPage() {
         >
           ⚡ Populate DD Checklist
         </button>
+      </div>
+
+      {/* ─── Bulk Upload to n8n ────────────────────────────────────── */}
+      <div className="mb-6 rounded-xl border border-rp-gray-200 bg-white p-4 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-semibold text-rp-navy">Bulk Upload (Organized ZIP)</h3>
+            <p className="text-xs text-rp-gray-400 mt-0.5">
+              Send a master file directly to the n8n processing pipeline
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <input
+              ref={bulkInputRef}
+              type="file"
+              className="hidden"
+              accept=".zip"
+              onChange={(e) => handleBulkUpload(e.target.files)}
+            />
+            <button
+              onClick={() => bulkInputRef.current?.click()}
+              disabled={bulkUploading}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-rp-navy text-white text-[12px] font-semibold hover:bg-rp-navy/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {bulkUploading && (
+                <div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              )}
+              {bulkUploading ? 'Processing...' : 'Upload Master ZIP'}
+            </button>
+          </div>
+        </div>
+
+        {/* Progress bar while uploading */}
+        {bulkUploading && (
+          <div className="mt-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-medium text-rp-navy">Uploading and organizing your files...</span>
+              <span className="text-xs font-semibold text-rp-gold">{Math.round(bulkProgress)}%</span>
+            </div>
+            <div className="h-2 rounded-full bg-rp-gray-200 overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-rp-gold to-rp-gold-soft rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${bulkProgress}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Toast: success or error with retry */}
+        {bulkToast && !bulkUploading && (
+          <div className={`mt-3 rounded-lg px-4 py-2.5 text-sm flex items-center justify-between ${
+            bulkToast.type === 'success'
+              ? 'bg-green-50 border border-green-200 text-green-700'
+              : 'bg-red-50 border border-red-200 text-red-600'
+          }`}>
+            <span>{bulkToast.message}</span>
+            {bulkToast.type === 'error' && (
+              <button
+                onClick={() => {
+                  if (lastBulkFile) {
+                    const dt = new DataTransfer();
+                    dt.items.add(lastBulkFile);
+                    handleBulkUpload(dt.files);
+                  }
+                }}
+                className="ml-3 shrink-0 text-xs font-semibold text-red-700 underline hover:text-red-900"
+              >
+                Retry
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Two-panel layout */}
