@@ -523,28 +523,12 @@ export default function EditDealPage() {
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      // Delete photos from storage first
-      for (const photo of photos) {
-        await supabase.storage
-          .from('terminal-deal-photos')
-          .remove([photo.storage_path]);
-      }
+      const res = await fetch(`/api/deals/${dealId}/delete`, { method: 'DELETE' });
+      const data = await res.json();
 
-      // Delete photo records
-      await supabase
-        .from('terminal_deal_photos')
-        .delete()
-        .eq('deal_id', dealId);
-
-      // Delete the deal
-      const { error } = await supabase
-        .from('terminal_deals')
-        .delete()
-        .eq('id', dealId);
-
-      if (error) {
-        console.error('Failed to delete deal:', error);
-        alert('Failed to delete deal.');
+      if (!res.ok) {
+        console.error('Failed to delete deal:', data.error);
+        alert(data.error || 'Failed to delete deal.');
         return;
       }
 
@@ -1513,7 +1497,6 @@ export default function EditDealPage() {
       {/* Bottom buttons */}
       <div className="flex items-center justify-between pb-8">
         <div>
-          {deal.status === 'draft' && (
             <Button
               variant="danger"
               size="sm"
@@ -1521,7 +1504,6 @@ export default function EditDealPage() {
             >
               Delete Deal
             </Button>
-          )}
         </div>
         <Button variant="gold" onClick={handleSave} loading={saving}>
           Save Changes
@@ -1536,7 +1518,8 @@ export default function EditDealPage() {
       >
         <p className="text-sm text-rp-gray-600 mb-6">
           Are you sure you want to delete &ldquo;{deal.name}&rdquo;? This action
-          cannot be undone and will remove all associated photos and documents.
+          cannot be undone and will permanently remove all associated data including
+          photos, documents, folders, pipeline tasks, commitments, meetings, and activity logs.
         </p>
         <div className="flex items-center justify-end gap-3">
           <Button

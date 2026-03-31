@@ -2244,14 +2244,14 @@ export default function DealDetailClient({
                   ].map((row, idx) => (
                     <div
                       key={row.label}
-                      className={`flex justify-between py-2.5 ${
+                      className={`flex justify-between gap-3 py-2.5 ${
                         idx % 2 === 0 ? 'bg-[#F7F8FA]' : ''
                       } px-2 rounded`}
                     >
-                      <span className="data-label">
+                      <span className="data-label shrink-0">
                         {row.label}
                       </span>
-                      <span className="text-sm font-semibold text-[#0E3470]">
+                      <span className="text-sm font-semibold text-[#0E3470] text-right break-words min-w-0">
                         {row.value ?? '--'}
                       </span>
                     </div>

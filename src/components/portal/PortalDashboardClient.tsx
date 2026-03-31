@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import DealCard from '@/components/portal/DealCard';
 import ComingSoonCard from '@/components/portal/ComingSoonCard';
 import MarketIntelSidebar from '@/components/portal/MarketIntelSidebar';
@@ -47,12 +47,129 @@ interface PortalDashboardClientProps {
   locale: string;
 }
 
+type SortKey = 'name' | 'purchase_price' | 'cap_rate' | 'irr' | 'coc' | 'equity_required' | 'noi';
+type SortDir = 'asc' | 'desc';
+
 export default function PortalDashboardClient({ deals, locale }: PortalDashboardClientProps) {
   const t = useTranslations('portal');
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
-  const visibleDeals = deals.slice(0, visibleCount);
-  const hasMore = visibleCount < deals.length;
+  // ── Search, Filter & Sort state ──
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
+  const [sellerFinancingOnly, setSellerFinancingOnly] = useState(false);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 0]);
+  const [irrMin, setIrrMin] = useState<number>(0);
+  const [cocMin, setCocMin] = useState<number>(0);
+  const [sortKey, setSortKey] = useState<SortKey | ''>('');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  // Derive unique property types and price bounds from data
+  const propertyTypes = useMemo(() => [...new Set(deals.map((d) => d.property_type).filter(Boolean))].sort(), [deals]);
+  const priceBounds = useMemo(() => {
+    const prices = deals.map((d) => d.purchase_price).filter(Boolean);
+    return [Math.min(...prices, 0), Math.max(...prices, 1)] as [number, number];
+  }, [deals]);
+
+  // Initialize price range once
+  useEffect(() => {
+    setPriceRange(priceBounds);
+  }, [priceBounds]);
+
+  const hasActiveFilters = searchQuery !== '' || selectedTypes.size > 0 || sellerFinancingOnly || priceRange[0] > priceBounds[0] || priceRange[1] < priceBounds[1] || irrMin > 0 || cocMin > 0;
+
+  function clearAllFilters() {
+    setSearchQuery('');
+    setSelectedTypes(new Set());
+    setSellerFinancingOnly(false);
+    setPriceRange(priceBounds);
+    setIrrMin(0);
+    setCocMin(0);
+    setSortKey('');
+    setSortDir('desc');
+  }
+
+  // ── Filter + Sort pipeline ──
+  const filteredDeals = useMemo(() => {
+    let result = deals;
+
+    // Search
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter((d) =>
+        d.name.toLowerCase().includes(q) ||
+        d.city.toLowerCase().includes(q) ||
+        d.state.toLowerCase().includes(q) ||
+        `${d.city} ${d.state}`.toLowerCase().includes(q)
+      );
+    }
+
+    // Property type
+    if (selectedTypes.size > 0) {
+      result = result.filter((d) => selectedTypes.has(d.property_type));
+    }
+
+    // Seller financing
+    if (sellerFinancingOnly) {
+      result = result.filter((d) => d.seller_financing);
+    }
+
+    // Price range
+    if (priceRange[0] > priceBounds[0] || priceRange[1] < priceBounds[1]) {
+      result = result.filter((d) => d.purchase_price >= priceRange[0] && d.purchase_price <= priceRange[1]);
+    }
+
+    // IRR minimum
+    if (irrMin > 0) {
+      result = result.filter((d) => d.irr >= irrMin);
+    }
+
+    // CoC minimum
+    if (cocMin > 0) {
+      result = result.filter((d) => d.coc >= cocMin);
+    }
+
+    // Sort
+    if (sortKey) {
+      result = [...result].sort((a, b) => {
+        const aVal = a[sortKey] ?? 0;
+        const bVal = b[sortKey] ?? 0;
+        if (typeof aVal === 'string' && typeof bVal === 'string') {
+          return sortDir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+        }
+        return sortDir === 'asc' ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number);
+      });
+    }
+
+    return result;
+  }, [deals, searchQuery, selectedTypes, sellerFinancingOnly, priceRange, priceBounds, irrMin, cocMin, sortKey, sortDir]);
+
+  // ── Infinite scroll ──
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // Reset visible count when filters change
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [searchQuery, selectedTypes, sellerFinancingOnly, priceRange, irrMin, cocMin, sortKey, sortDir]);
+
+  const loadMore = useCallback(() => {
+    setVisibleCount((c) => Math.min(c + PAGE_SIZE, filteredDeals.length));
+  }, [filteredDeals.length]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) loadMore(); },
+      { rootMargin: '200px' }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loadMore]);
+
+  const visibleDeals = filteredDeals.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredDeals.length;
 
   const upcomingDeals = visibleDeals.filter((d) => d.status === 'coming_soon' || d.status === 'loi_signed');
   const activeDeals = visibleDeals.filter((d) => d.status === 'published');
@@ -142,6 +259,253 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
         <div className="h-24" style={{ background: 'linear-gradient(180deg, transparent 0%, #F8F6F1 100%)' }} />
       </div>
 
+      {/* ── Search, Filter & Sort Bar ── */}
+      {hasAnyDeals && (
+        <div className="px-10 -mt-4 mb-0 relative z-10">
+          <div className="max-w-[1600px] mx-auto">
+            {/* Main bar */}
+            <div className="bg-white rounded-xl border border-[#EEF0F4] shadow-[0_2px_12px_rgba(0,0,0,0.04)] px-5 py-3.5 flex items-center gap-3">
+              {/* Search */}
+              <div className="relative flex-1 max-w-[340px]">
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+                </svg>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={t('searchDealsPlaceholder')}
+                  className="w-full pl-9 pr-3 py-2 text-[13px] text-[#0E3470] bg-[#F7F8FA] border border-[#EEF0F4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BC9C45]/20 focus:border-[#BC9C45]/40 placeholder:text-[#9CA3AF] transition-all"
+                />
+                {searchQuery && (
+                  <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#0E3470] transition-colors">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                )}
+              </div>
+
+              {/* Divider */}
+              <div className="w-px h-7 bg-[#EEF0F4]" />
+
+              {/* Property type pills */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {propertyTypes.map((pt) => {
+                  const active = selectedTypes.has(pt);
+                  return (
+                    <button
+                      key={pt}
+                      onClick={() => {
+                        const next = new Set(selectedTypes);
+                        active ? next.delete(pt) : next.add(pt);
+                        setSelectedTypes(next);
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all border ${
+                        active
+                          ? 'bg-[#0E3470] text-white border-[#0E3470]'
+                          : 'bg-[#F7F8FA] text-[#6B7280] border-[#EEF0F4] hover:border-[#BC9C45]/40 hover:text-[#0E3470]'
+                      }`}
+                    >
+                      {pt}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Divider */}
+              <div className="w-px h-7 bg-[#EEF0F4]" />
+
+              {/* Filters toggle */}
+              <button
+                onClick={() => setFiltersOpen(!filtersOpen)}
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-semibold transition-all border ${
+                  filtersOpen || hasActiveFilters
+                    ? 'bg-[#FDF8ED] text-[#BC9C45] border-[#BC9C45]/30'
+                    : 'bg-[#F7F8FA] text-[#6B7280] border-[#EEF0F4] hover:border-[#BC9C45]/30'
+                }`}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                </svg>
+                {t('filters')}
+                {hasActiveFilters && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#BC9C45]" />
+                )}
+              </button>
+
+              {/* Sort dropdown */}
+              <div className="relative">
+                <select
+                  value={sortKey ? `${sortKey}_${sortDir}` : ''}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (!val) { setSortKey(''); return; }
+                    const lastUnderscore = val.lastIndexOf('_');
+                    const key = val.slice(0, lastUnderscore) as SortKey;
+                    const dir = val.slice(lastUnderscore + 1) as SortDir;
+                    setSortKey(key);
+                    setSortDir(dir);
+                  }}
+                  className="appearance-none pl-3 pr-7 py-2 rounded-lg text-[11px] font-semibold bg-[#F7F8FA] text-[#6B7280] border border-[#EEF0F4] hover:border-[#BC9C45]/30 focus:outline-none focus:ring-2 focus:ring-[#BC9C45]/20 cursor-pointer transition-all"
+                >
+                  <option value="">{t('sortBy')}</option>
+                  <option value="name_asc">{t('sortNameAZ')}</option>
+                  <option value="name_desc">{t('sortNameZA')}</option>
+                  <option value="purchase_price_desc">{t('sortPriceHigh')}</option>
+                  <option value="purchase_price_asc">{t('sortPriceLow')}</option>
+                  <option value="cap_rate_desc">{t('sortCapRateHigh')}</option>
+                  <option value="cap_rate_asc">{t('sortCapRateLow')}</option>
+                  <option value="irr_desc">{t('sortIRRHigh')}</option>
+                  <option value="irr_asc">{t('sortIRRLow')}</option>
+                  <option value="coc_desc">{t('sortCoCHigh')}</option>
+                  <option value="coc_asc">{t('sortCoCLow')}</option>
+                  <option value="equity_required_desc">{t('sortEquityHigh')}</option>
+                  <option value="equity_required_asc">{t('sortEquityLow')}</option>
+                </select>
+                <svg className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-[#9CA3AF]" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m6 9 6 6 6-6"/></svg>
+              </div>
+
+              {/* Clear all */}
+              {hasActiveFilters && (
+                <button
+                  onClick={clearAllFilters}
+                  className="text-[11px] font-semibold text-[#DC2626]/70 hover:text-[#DC2626] transition-colors whitespace-nowrap"
+                >
+                  {t('clearAll')}
+                </button>
+              )}
+            </div>
+
+            {/* Expandable filter panel */}
+            {filtersOpen && (
+              <div className="mt-2 bg-white rounded-xl border border-[#EEF0F4] shadow-[0_2px_12px_rgba(0,0,0,0.04)] px-6 py-5 grid grid-cols-3 gap-8">
+                {/* Price range */}
+                <div>
+                  <label className="text-[10px] font-bold text-[#0E3470] uppercase tracking-[1.5px] mb-3 block">{t('priceRange')}</label>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1">
+                      <span className="text-[9px] text-[#9CA3AF] mb-1 block">{t('min')}</span>
+                      <input
+                        type="number"
+                        value={priceRange[0] || ''}
+                        onChange={(e) => setPriceRange([Number(e.target.value) || 0, priceRange[1]])}
+                        placeholder="0"
+                        className="w-full px-3 py-2 text-[12px] border border-[#EEF0F4] rounded-lg bg-[#F7F8FA] focus:outline-none focus:ring-2 focus:ring-[#BC9C45]/20 focus:border-[#BC9C45]/40 text-[#0E3470]"
+                      />
+                    </div>
+                    <span className="text-[#9CA3AF] text-[12px] mt-4">—</span>
+                    <div className="flex-1">
+                      <span className="text-[9px] text-[#9CA3AF] mb-1 block">{t('max')}</span>
+                      <input
+                        type="number"
+                        value={priceRange[1] || ''}
+                        onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value) || 0])}
+                        placeholder={formatPriceCompact(priceBounds[1])}
+                        className="w-full px-3 py-2 text-[12px] border border-[#EEF0F4] rounded-lg bg-[#F7F8FA] focus:outline-none focus:ring-2 focus:ring-[#BC9C45]/20 focus:border-[#BC9C45]/40 text-[#0E3470]"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Metric minimums */}
+                <div>
+                  <label className="text-[10px] font-bold text-[#0E3470] uppercase tracking-[1.5px] mb-3 block">{t('minimumMetrics')}</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <span className="text-[9px] text-[#9CA3AF] mb-1 block">{t('minIRR')}</span>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step="0.5"
+                          value={irrMin || ''}
+                          onChange={(e) => setIrrMin(Number(e.target.value) || 0)}
+                          placeholder="0"
+                          className="w-full px-3 py-2 pr-7 text-[12px] border border-[#EEF0F4] rounded-lg bg-[#F7F8FA] focus:outline-none focus:ring-2 focus:ring-[#BC9C45]/20 focus:border-[#BC9C45]/40 text-[#0E3470]"
+                        />
+                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[11px] text-[#9CA3AF]">%</span>
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-[9px] text-[#9CA3AF] mb-1 block">{t('minCoC')}</span>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step="0.5"
+                          value={cocMin || ''}
+                          onChange={(e) => setCocMin(Number(e.target.value) || 0)}
+                          placeholder="0"
+                          className="w-full px-3 py-2 pr-7 text-[12px] border border-[#EEF0F4] rounded-lg bg-[#F7F8FA] focus:outline-none focus:ring-2 focus:ring-[#BC9C45]/20 focus:border-[#BC9C45]/40 text-[#0E3470]"
+                        />
+                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[11px] text-[#9CA3AF]">%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Seller financing toggle */}
+                <div>
+                  <label className="text-[10px] font-bold text-[#0E3470] uppercase tracking-[1.5px] mb-3 block">{t('dealFeatures')}</label>
+                  <span className="text-[9px] text-transparent mb-1 block select-none">&nbsp;</span>
+                  <button
+                    onClick={() => setSellerFinancingOnly(!sellerFinancingOnly)}
+                    className={`flex items-center gap-2.5 px-4 py-2.5 rounded-lg text-[12px] font-semibold transition-all border ${
+                      sellerFinancingOnly
+                        ? 'bg-[#0B8A4D]/8 text-[#0B8A4D] border-[#0B8A4D]/25'
+                        : 'bg-[#F7F8FA] text-[#6B7280] border-[#EEF0F4] hover:border-[#0B8A4D]/25'
+                    }`}
+                  >
+                    <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${
+                      sellerFinancingOnly ? 'bg-[#0B8A4D] border-[#0B8A4D]' : 'border-[#D1D5DB]'
+                    }`}>
+                      {sellerFinancingOnly && (
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      )}
+                    </div>
+                    {t('sellerFinancingAvailable')}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Active filter summary */}
+            {hasActiveFilters && (
+              <div className="mt-2 flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] text-[#9CA3AF] font-medium">{filteredDeals.length} {t('resultsFound')}</span>
+                {searchQuery && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#EFF6FF] text-[#1D5FB8] rounded-md text-[10px] font-semibold">
+                    &quot;{searchQuery}&quot;
+                    <button onClick={() => setSearchQuery('')} className="hover:text-[#DC2626] transition-colors"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                  </span>
+                )}
+                {[...selectedTypes].map((pt) => (
+                  <span key={pt} className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#0E3470]/8 text-[#0E3470] rounded-md text-[10px] font-semibold">
+                    {pt}
+                    <button onClick={() => { const n = new Set(selectedTypes); n.delete(pt); setSelectedTypes(n); }} className="hover:text-[#DC2626] transition-colors"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                  </span>
+                ))}
+                {sellerFinancingOnly && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#ECFDF5] text-[#0B8A4D] rounded-md text-[10px] font-semibold">
+                    {t('sellerFinancing')}
+                    <button onClick={() => setSellerFinancingOnly(false)} className="hover:text-[#DC2626] transition-colors"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                  </span>
+                )}
+                {irrMin > 0 && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#FDF8ED] text-[#BC9C45] rounded-md text-[10px] font-semibold">
+                    IRR ≥ {irrMin}%
+                    <button onClick={() => setIrrMin(0)} className="hover:text-[#DC2626] transition-colors"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                  </span>
+                )}
+                {cocMin > 0 && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#FDF8ED] text-[#BC9C45] rounded-md text-[10px] font-semibold">
+                    CoC ≥ {cocMin}%
+                    <button onClick={() => setCocMin(0)} className="hover:text-[#DC2626] transition-colors"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ── Main Content ── */}
       <div className="px-10 py-10">
         {!hasAnyDeals ? (
@@ -219,17 +583,24 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
                 </div>
               )}
 
-              {/* ── Show More ── */}
-              {hasMore && (
-                <div className="flex justify-center pt-4">
-                  <button
-                    onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
-                    className="px-8 py-3 rounded-xl border border-[#BC9C45]/30 text-[#BC9C45] text-[13px] font-semibold hover:bg-[#BC9C45]/5 hover:border-[#BC9C45]/50 transition-all"
-                  >
-                    {t('showMore')} ({deals.length - visibleCount})
+              {/* No results after filtering */}
+              {hasActiveFilters && filteredDeals.length === 0 && (
+                <div className="flex flex-col items-center py-16">
+                  <div className="w-14 h-14 rounded-full bg-[#F7F8FA] flex items-center justify-center mb-4">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><line x1="8" y1="11" x2="14" y2="11"/>
+                    </svg>
+                  </div>
+                  <p className="text-[14px] font-semibold text-[#0E3470] mb-1">{t('noMatchingDeals')}</p>
+                  <p className="text-[12px] text-[#9CA3AF] mb-4">{t('tryAdjustingFilters')}</p>
+                  <button onClick={clearAllFilters} className="px-4 py-2 rounded-lg text-[12px] font-semibold text-[#BC9C45] border border-[#BC9C45]/30 hover:bg-[#FDF8ED] transition-all">
+                    {t('clearAll')}
                   </button>
                 </div>
               )}
+
+              {/* ── Infinite scroll sentinel ── */}
+              {hasMore && <div ref={sentinelRef} className="h-1" />}
             </div>
 
             {/* Market Intelligence Sidebar */}
