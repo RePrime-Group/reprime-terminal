@@ -1253,6 +1253,7 @@ function MeetingScheduler({
 
   // Fetch Google Calendar busy times to overlay on availability
   const [gcalBusy, setGcalBusy] = useState<{ start: string; end: string }[]>([]);
+  const [gcalLoading, setGcalLoading] = useState(true);
 
   useEffect(() => {
     const start = new Date().toISOString();
@@ -1262,7 +1263,8 @@ function MeetingScheduler({
       .then((data) => {
         if (data.busyTimes) setGcalBusy(data.busyTimes);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setGcalLoading(false));
   }, []);
 
   const isGcalBusy = useCallback(
@@ -1294,8 +1296,7 @@ function MeetingScheduler({
         for (let m = startMinutes; m < endMinutes; m += 30) {
           const h = Math.floor(m / 60);
           const min = m % 60;
-          const dateObj = new Date(day);
-          dateObj.setHours(h, min, 0, 0);
+          const dateObj = new Date(day.getFullYear(), day.getMonth(), day.getDate(), h, min, 0, 0);
           const iso = dateObj.toISOString();
 
           // Skip if already booked or busy on Google Calendar
@@ -1316,7 +1317,13 @@ function MeetingScheduler({
         }
       }
 
-      return result;
+      // Deduplicate by isoString in case admin slots overlap
+      const seen = new Set<string>();
+      return result.filter((s) => {
+        if (seen.has(s.isoString)) return false;
+        seen.add(s.isoString);
+        return true;
+      });
     },
     [slotsByDay, bookedTimes, isGcalBusy]
   );
@@ -1400,7 +1407,13 @@ function MeetingScheduler({
       </div>
 
       {/* Time slots for selected day */}
-      {(() => {
+      {gcalLoading ? (
+        <div className="grid grid-cols-3 gap-2 max-h-[200px] overflow-y-auto">
+          {Array.from({ length: 9 }).map((_, i) => (
+            <div key={i} className="h-10 rounded-lg bg-[#F3F4F6] animate-pulse" />
+          ))}
+        </div>
+      ) : (() => {
         const daySlots = generateTimeSlots(weekDays[selectedDay]);
         if (daySlots.length === 0) {
           return (
@@ -1410,7 +1423,7 @@ function MeetingScheduler({
           );
         }
         return (
-          <div className="grid grid-cols-3 gap-2 max-h-[200px] overflow-y-auto">
+          <div key={selectedDay} className="grid grid-cols-3 gap-2 max-h-[200px] overflow-y-auto">
             {daySlots.map((ts) => (
               <button
                 key={ts.isoString}
