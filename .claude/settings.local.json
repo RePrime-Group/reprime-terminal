@@ -34,7 +34,13 @@
       "Bash(xargs cat:*)",
       "Bash(grep:*)",
       "Bash(git diff:*)",
-      "Bash(npm ls:*)"
+      "Bash(npm ls:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:developers.google.com)",
+      "WebFetch(domain:googleapis.dev)",
+      "WebFetch(domain:blog.salrashid.dev)",
+      "WebFetch(domain:dev.to)"
     ]
   }
 }
