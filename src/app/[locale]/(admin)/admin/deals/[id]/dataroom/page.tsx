@@ -144,6 +144,7 @@ export default function DataRoomPage() {
         .from('terminal_dd_documents')
         .select('*')
         .eq('deal_id', dealId)
+        .filter('storage_path', 'not.is', 'null')
         .order('created_at', { ascending: false }),
     ]);
 

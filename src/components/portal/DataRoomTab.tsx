@@ -190,9 +190,8 @@ export default function DataRoomTab({
     <div>
       {/* Watermark notice */}
       <div className="bg-gradient-to-r from-[#FDF8ED] to-[#FBF3DC] border-b border-[#ECD9A0]/25 px-5 py-2.5 rounded-t-xl flex items-center gap-2.5 text-[11px]">
-        <span className="text-[12px]">🔒</span>
-        <span className="font-semibold text-[#0E3470]">{t('viewOnly')}.</span>
-        <span className="text-[#4B5563]">{t('watermarked')}: <strong className="text-[#0E3470]">{investorName}</strong> · {investorEmail} · {t('downloadsDisabled')}.</span>
+        
+        <span className="text-[#4B5563]">{t('watermarked')} <strong className="text-[#0E3470]">{investorName}</strong> · {investorEmail} </span>
       </div>
 
       {/* Deal Timeline */}

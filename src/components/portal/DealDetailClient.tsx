@@ -151,6 +151,8 @@ function CountdownRing({
 
 function ImageCarousel({ urls }: { urls: string[] }) {
   const [current, setCurrent] = useState(0);
+  const [displayIndex, setDisplayIndex] = useState(0);
+  const [imageLoading, setImageLoading] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
   if (urls.length === 0) {
@@ -169,8 +171,9 @@ function ImageCarousel({ urls }: { urls: string[] }) {
     );
   }
 
-  const goNext = () => setCurrent((p) => (p + 1) % urls.length);
-  const goPrev = () => setCurrent((p) => (p - 1 + urls.length) % urls.length);
+  const goNext = () => { setImageLoading(true); setCurrent((p) => (p + 1) % urls.length); };
+  const goPrev = () => { setImageLoading(true); setCurrent((p) => (p - 1 + urls.length) % urls.length); };
+  const goTo = (idx: number) => { if (idx !== current) { setImageLoading(true); setCurrent(idx); } };
 
   return (
     <>
@@ -178,9 +181,25 @@ function ImageCarousel({ urls }: { urls: string[] }) {
         <img
           src={urls[current]}
           alt={`Property photo ${current + 1}`}
-          className="w-full h-full object-cover cursor-pointer"
+          className={`w-full h-full object-cover cursor-pointer transition-opacity duration-300 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
           onClick={() => setLightboxOpen(true)}
+          onLoad={() => { setImageLoading(false); setDisplayIndex(current); }}
         />
+        {/* Skeleton overlay while loading */}
+        {imageLoading && (
+          <div className="absolute inset-0 rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #0A1628 0%, #0E3470 40%, #1D5FB8 100%)' }}>
+            <div
+              className="absolute inset-0 animate-[shimmer_1.5s_ease-in-out_infinite]"
+              style={{
+                background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)',
+                backgroundSize: '200% 100%',
+              }}
+            />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-8 h-8 border-2 border-white/20 border-t-[#BC9C45] rounded-full animate-spin" />
+            </div>
+          </div>
+        )}
         {urls.length > 1 && (
           <>
             <button
@@ -224,9 +243,9 @@ function ImageCarousel({ urls }: { urls: string[] }) {
               {urls.map((_, idx) => (
                 <button
                   key={idx}
-                  onClick={() => setCurrent(idx)}
-                  className={`w-2.5 h-2.5 rounded-full transition-colors ${
-                    idx === current ? 'bg-[#BC9C45]' : 'bg-white/50'
+                  onClick={() => goTo(idx)}
+                  className={`w-2.5 h-2.5 rounded-full transition-colors duration-300 ${
+                    idx === displayIndex ? 'bg-[#BC9C45]' : 'bg-white/50'
                   }`}
                   aria-label={`Go to photo ${idx + 1}`}
                 />
@@ -234,7 +253,7 @@ function ImageCarousel({ urls }: { urls: string[] }) {
             </div>
             {/* Slide counter badge */}
             <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1 rounded-full">
-              {current + 1}/{urls.length}
+              {displayIndex + 1}/{urls.length}
             </div>
           </>
         )}
@@ -1572,6 +1591,7 @@ export default function DealDetailClient({
         .from('terminal_dd_documents')
         .select('id, folder_id, deal_id, name, file_size, file_type, storage_path, is_verified, is_downloadable, doc_status, uploaded_by, created_at')
         .in('folder_id', folderIds)
+        .filter('storage_path', 'not.is', 'null')
         .order('created_at', { ascending: true });
 
       const docsByFolder = new Map<string, TerminalDDDocument[]>();
