@@ -141,5 +141,6 @@ export async function POST(request: NextRequest) {
     success: true,
     meetingId: meeting?.id,
     calendarLink: calendarEvent?.htmlLink ?? null,
+    meetLink: calendarEvent?.meetLink ?? null,
   });
 }

@@ -33,7 +33,8 @@
       "Bash(xargs grep:*)",
       "Bash(xargs cat:*)",
       "Bash(grep:*)",
-      "Bash(git diff:*)"
+      "Bash(git diff:*)",
+      "Bash(npm ls:*)"
     ]
   }
 }

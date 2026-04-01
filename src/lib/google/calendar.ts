@@ -6,11 +6,14 @@ function getAuth() {
     throw new Error('GOOGLE_SERVICE_ACCOUNT_KEY environment variable is not set');
   }
 
-  const parsed = JSON.parse(credentials);
+  const parsed = JSON.parse(credentials.replace(/\n/g, '\\n'));
 
-  return new google.auth.GoogleAuth({
-    credentials: parsed,
+  // Use JWT with subject for proper DWD impersonation (required for Meet links + correct calendar)
+  return new google.auth.JWT({
+    email: parsed.client_email,
+    key: parsed.private_key,
     scopes: ['https://www.googleapis.com/auth/calendar'],
+    subject: process.env.GOOGLE_CALENDAR_ID, // impersonate the calendar owner via DWD
   });
 }
 
@@ -63,12 +66,12 @@ export async function createCalendarEvent({
   endTime: string;
   attendeeEmails: string[];
   location?: string;
-}): Promise<{ eventId: string; htmlLink: string }> {
+}): Promise<{ eventId: string; htmlLink: string; meetLink?: string }> {
   const calendar = getCalendar();
 
   const event = await calendar.events.insert({
     calendarId: CALENDAR_ID,
-    sendUpdates: 'none', // service accounts can't send invites; we send via Resend
+    sendUpdates: 'all',
     requestBody: {
       summary,
       description,
@@ -81,8 +84,7 @@ export async function createCalendarEvent({
         dateTime: endTime,
         timeZone: 'America/New_York',
       },
-      // Note: attendees omitted — service accounts can't invite without DWD
-      // Attendee emails stored in description instead
+      attendees: attendeeEmails.map((email) => ({ email })),
       reminders: {
         useDefault: false,
         overrides: [
@@ -100,8 +102,13 @@ export async function createCalendarEvent({
     conferenceDataVersion: 1,
   });
 
+  const meetLink = event.data.conferenceData?.entryPoints?.find(
+    (e) => e.entryPointType === 'video'
+  )?.uri;
+
   return {
     eventId: event.data.id ?? '',
     htmlLink: event.data.htmlLink ?? '',
+    meetLink: meetLink ?? undefined,
   };
 }
