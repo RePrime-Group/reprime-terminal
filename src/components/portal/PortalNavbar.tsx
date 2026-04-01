@@ -121,10 +121,10 @@ export default function PortalNavbar({ firstName, locale }: PortalNavbarProps) {
           <div className="relative" ref={notifRef} data-tour="notif-bell">
             <button
               onClick={() => setShowNotifications(!showNotifications)}
-              className="w-[34px] h-[34px] rounded-full border border-[#EEF0F4] bg-white flex items-center justify-center hover:border-[#BC9C45] transition-colors relative"
+              className="w-[34px] h-[34px] rounded-full border border-white/[0.08] bg-white/[0.06] flex items-center justify-center hover:border-[#BC9C45] transition-colors relative"
               aria-label="Notifications"
             >
-              <Image src="/images/notification_logo.png" alt="Notifications" width={32} height={32} className="rounded-full" />
+              <Image src="/images/notification_logo.png" alt="Notifications" width={28} height={28} className="rounded-full" />
               {hasUnread && <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-[#DC2626] countdown-pulse" />}
             </button>
 

@@ -264,7 +264,7 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
         <div className="px-10 -mt-4 mb-0 relative z-10">
           <div className="max-w-[1600px] mx-auto">
             {/* Main bar */}
-            <div className="bg-white rounded-xl border border-[#EEF0F4] shadow-[0_2px_12px_rgba(0,0,0,0.04)] px-5 py-3.5 flex items-center gap-3">
+            <div className="bg-white rounded-xl border border-[#EEF0F4] rp-card-shadow px-5 py-3.5 flex items-center gap-3">
               {/* Search */}
               <div className="relative flex-1 max-w-[340px]">
                 <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -275,7 +275,7 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={t('searchDealsPlaceholder')}
-                  className="w-full pl-9 pr-3 py-2 text-[13px] text-[#0E3470] bg-[#F7F8FA] border border-[#EEF0F4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BC9C45]/20 focus:border-[#BC9C45]/40 placeholder:text-[#9CA3AF] transition-all"
+                  className="w-full pl-9 pr-3 py-2 text-[13px] text-[#0E3470] bg-[#F7F8FA] border border-[#D1D5DB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BC9C45]/20 focus:border-[#BC9C45]/40 placeholder:text-[#6B7280] transition-all"
                 />
                 {searchQuery && (
                   <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#0E3470] transition-colors">
@@ -302,7 +302,7 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
                       className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all border ${
                         active
                           ? 'bg-[#0E3470] text-white border-[#0E3470]'
-                          : 'bg-[#F7F8FA] text-[#6B7280] border-[#EEF0F4] hover:border-[#BC9C45]/40 hover:text-[#0E3470]'
+                          : 'bg-[#F7F8FA] text-[#6B7280] border-[#D1D5DB] hover:border-[#BC9C45]/40 hover:text-[#0E3470]'
                       }`}
                     >
                       {pt}
@@ -320,7 +320,7 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
                 className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-semibold transition-all border ${
                   filtersOpen || hasActiveFilters
                     ? 'bg-[#FDF8ED] text-[#BC9C45] border-[#BC9C45]/30'
-                    : 'bg-[#F7F8FA] text-[#6B7280] border-[#EEF0F4] hover:border-[#BC9C45]/30'
+                    : 'bg-[#F7F8FA] text-[#6B7280] border-[#D1D5DB] hover:border-[#BC9C45]/30'
                 }`}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -345,7 +345,7 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
                     setSortKey(key);
                     setSortDir(dir);
                   }}
-                  className="appearance-none pl-3 pr-7 py-2 rounded-lg text-[11px] font-semibold bg-[#F7F8FA] text-[#6B7280] border border-[#EEF0F4] hover:border-[#BC9C45]/30 focus:outline-none focus:ring-2 focus:ring-[#BC9C45]/20 cursor-pointer transition-all"
+                  className="appearance-none pl-3 pr-7 py-2 rounded-lg text-[11px] font-semibold bg-[#F7F8FA] text-[#6B7280] border border-[#D1D5DB] hover:border-[#BC9C45]/30 focus:outline-none focus:ring-2 focus:ring-[#BC9C45]/20 cursor-pointer transition-all"
                 >
                   <option value="">{t('sortBy')}</option>
                   <option value="name_asc">{t('sortNameAZ')}</option>

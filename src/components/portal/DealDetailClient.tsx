@@ -154,6 +154,7 @@ function ImageCarousel({ urls }: { urls: string[] }) {
   const [displayIndex, setDisplayIndex] = useState(0);
   const [imageLoading, setImageLoading] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxLoading, setLightboxLoading] = useState(true);
 
   if (urls.length === 0) {
     return (
@@ -171,9 +172,9 @@ function ImageCarousel({ urls }: { urls: string[] }) {
     );
   }
 
-  const goNext = () => { setImageLoading(true); setCurrent((p) => (p + 1) % urls.length); };
-  const goPrev = () => { setImageLoading(true); setCurrent((p) => (p - 1 + urls.length) % urls.length); };
-  const goTo = (idx: number) => { if (idx !== current) { setImageLoading(true); setCurrent(idx); } };
+  const goNext = () => { setImageLoading(true); setLightboxLoading(true); setCurrent((p) => (p + 1) % urls.length); };
+  const goPrev = () => { setImageLoading(true); setLightboxLoading(true); setCurrent((p) => (p - 1 + urls.length) % urls.length); };
+  const goTo = (idx: number) => { if (idx !== current) { setImageLoading(true); setLightboxLoading(true); setCurrent(idx); } };
 
   return (
     <>
@@ -182,22 +183,13 @@ function ImageCarousel({ urls }: { urls: string[] }) {
           src={urls[current]}
           alt={`Property photo ${current + 1}`}
           className={`w-full h-full object-cover cursor-pointer transition-opacity duration-300 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
-          onClick={() => setLightboxOpen(true)}
+          onClick={() => { setLightboxLoading(true); setLightboxOpen(true); }}
           onLoad={() => { setImageLoading(false); setDisplayIndex(current); }}
         />
         {/* Skeleton overlay while loading */}
         {imageLoading && (
-          <div className="absolute inset-0 rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #0A1628 0%, #0E3470 40%, #1D5FB8 100%)' }}>
-            <div
-              className="absolute inset-0 animate-[shimmer_1.5s_ease-in-out_infinite]"
-              style={{
-                background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)',
-                backgroundSize: '200% 100%',
-              }}
-            />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-8 h-8 border-2 border-white/20 border-t-[#BC9C45] rounded-full animate-spin" />
-            </div>
+          <div className="absolute inset-0 rounded-2xl overflow-hidden flex items-center justify-center">
+            <div className="w-8 h-8 border-2 border-white/20 border-t-[#BC9C45] rounded-full animate-spin" />
           </div>
         )}
         {urls.length > 1 && (
@@ -297,13 +289,20 @@ function ImageCarousel({ urls }: { urls: string[] }) {
             </button>
           )}
 
-          {/* Image */}
-          <img
-            src={urls[current]}
-            alt={`Property photo ${current + 1}`}
-            className="max-h-[85vh] max-w-[90vw] object-contain rounded-lg"
-            onClick={(e) => e.stopPropagation()}
-          />
+          {/* Image with loading state */}
+          <div className="relative max-h-[85vh] max-w-[90vw] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            {lightboxLoading && (
+              <div className="absolute inset-0 rounded-lg overflow-hidden flex items-center justify-center" style={{ minWidth: '300px', minHeight: '200px' }}>
+                <div className="w-8 h-8 border-2 border-white/20 border-t-[#BC9C45] rounded-full animate-spin" />
+              </div>
+            )}
+            <img
+              src={urls[current]}
+              alt={`Property photo ${current + 1}`}
+              className={`max-h-[85vh] max-w-[90vw] object-contain rounded-lg transition-opacity duration-300 ${lightboxLoading ? 'opacity-0' : 'opacity-100'}`}
+              onLoad={() => setLightboxLoading(false)}
+            />
+          </div>
 
           {/* Next arrow */}
           {urls.length > 1 && (
