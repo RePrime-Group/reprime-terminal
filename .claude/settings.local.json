@@ -33,7 +33,12 @@
       "Bash(xargs grep:*)",
       "Bash(xargs cat:*)",
       "Bash(grep:*)",
-      "Bash(git diff:*)"
+      "Bash(git diff:*)",
+      "Bash(ls -la \"d:\\\\reprime-terminal\\\\src\\\\app\\\\[locale]\\\\\\(portal\\)\\\\portal\")",
+      "Bash(ls -la \"d:\\\\reprime-terminal\\\\src\\\\app\\\\[locale]\\\\\\(admin\\)\\\\admin\")",
+      "Bash(ls -la \"d:\\\\reprime-terminal\\\\src\\\\app\\\\[locale]\\\\\\(admin\\)\\\\admin\\\\investors\")",
+      "Bash(npm ls:*)",
+      "WebSearch"
     ]
   }
 }
