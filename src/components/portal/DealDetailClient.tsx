@@ -301,15 +301,8 @@ function ImageCarousel({ urls }: { urls: string[] }) {
           {/* Image with loading state */}
           <div className="relative max-h-[85vh] max-w-[90vw] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
             {lightboxLoading && (
-              <div className="absolute inset-0 rounded-lg overflow-hidden flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0A1628 0%, #0E3470 40%, #1D5FB8 100%)', minWidth: '300px', minHeight: '200px' }}>
-                <div
-                  className="absolute inset-0 animate-[shimmer_1.5s_ease-in-out_infinite]"
-                  style={{
-                    background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)',
-                    backgroundSize: '200% 100%',
-                  }}
-                />
-                <div className="w-8 h-8 border-2 border-white/20 border-t-[#BC9C45] rounded-full animate-spin z-10" />
+              <div className="absolute inset-0 rounded-lg overflow-hidden flex items-center justify-center" style={{ minWidth: '300px', minHeight: '200px' }}>
+                <div className="w-8 h-8 border-2 border-white/20 border-t-[#BC9C45] rounded-full animate-spin" />
               </div>
             )}
             <img
