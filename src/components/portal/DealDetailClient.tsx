@@ -151,10 +151,11 @@ function CountdownRing({
 
 function ImageCarousel({ urls }: { urls: string[] }) {
   const [current, setCurrent] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   if (urls.length === 0) {
     return (
-      <div className="w-full h-full min-h-[340px] rounded-2xl overflow-hidden relative">
+      <div className="w-full h-[65vh] rounded-2xl overflow-hidden relative">
         <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #0A1628 0%, #0E3470 40%, #1D5FB8 100%)' }}>
           <div className="absolute inset-0 opacity-[0.06]" style={{
             backgroundImage: 'linear-gradient(rgba(188,156,69,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(188,156,69,0.3) 1px, transparent 1px)',
@@ -172,70 +173,134 @@ function ImageCarousel({ urls }: { urls: string[] }) {
   const goPrev = () => setCurrent((p) => (p - 1 + urls.length) % urls.length);
 
   return (
-    <div className="relative w-full h-full min-h-[340px] rounded-2xl overflow-hidden group">
-      <img
-        src={urls[current]}
-        alt={`Property photo ${current + 1}`}
-        className="w-full h-full object-cover"
-      />
-      {urls.length > 1 && (
-        <>
-          <button
-            onClick={goPrev}
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-[42px] h-[42px] bg-white/90 hover:bg-white shadow-lg text-[#0E3470] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-            aria-label="Previous photo"
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+    <>
+      <div className="relative w-full h-[65vh] rounded-2xl overflow-hidden group">
+        <img
+          src={urls[current]}
+          alt={`Property photo ${current + 1}`}
+          className="w-full h-full object-cover cursor-pointer"
+          onClick={() => setLightboxOpen(true)}
+        />
+        {urls.length > 1 && (
+          <>
+            <button
+              onClick={goPrev}
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-[42px] h-[42px] bg-white/90 hover:bg-white shadow-lg text-[#0E3470] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+              aria-label="Previous photo"
             >
-              <path d="M10 12L6 8l4-4" />
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M10 12L6 8l4-4" />
+              </svg>
+            </button>
+            <button
+              onClick={goNext}
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-[42px] h-[42px] bg-white/90 hover:bg-white shadow-lg text-[#0E3470] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+              aria-label="Next photo"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M6 4l4 4-4 4" />
+              </svg>
+            </button>
+            {/* Dots */}
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+              {urls.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrent(idx)}
+                  className={`w-2.5 h-2.5 rounded-full transition-colors ${
+                    idx === current ? 'bg-[#BC9C45]' : 'bg-white/50'
+                  }`}
+                  aria-label={`Go to photo ${idx + 1}`}
+                />
+              ))}
+            </div>
+            {/* Slide counter badge */}
+            <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1 rounded-full">
+              {current + 1}/{urls.length}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Fullscreen Lightbox */}
+      {lightboxOpen && (
+        <div
+          className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center"
+          onClick={() => setLightboxOpen(false)}
+        >
+          {/* Close button */}
+          <button
+            onClick={() => setLightboxOpen(false)}
+            className="absolute top-5 right-5 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors"
+            aria-label="Close lightbox"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 6L6 18" />
+              <path d="M6 6l12 12" />
             </svg>
           </button>
-          <button
-            onClick={goNext}
-            className="absolute right-3 top-1/2 -translate-y-1/2 w-[42px] h-[42px] bg-white/90 hover:bg-white shadow-lg text-[#0E3470] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-            aria-label="Next photo"
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+
+          {/* Counter */}
+          {urls.length > 1 && (
+            <div className="absolute top-5 left-1/2 -translate-x-1/2 bg-white/10 backdrop-blur-sm text-white text-sm font-semibold px-4 py-1.5 rounded-full">
+              {current + 1} / {urls.length}
+            </div>
+          )}
+
+          {/* Previous arrow */}
+          {urls.length > 1 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); goPrev(); }}
+              className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors"
+              aria-label="Previous photo"
             >
-              <path d="M6 4l4 4-4 4" />
-            </svg>
-          </button>
-          {/* Dots */}
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
-            {urls.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setCurrent(idx)}
-                className={`w-2.5 h-2.5 rounded-full transition-colors ${
-                  idx === current ? 'bg-[#BC9C45]' : 'bg-white/50'
-                }`}
-                aria-label={`Go to photo ${idx + 1}`}
-              />
-            ))}
-          </div>
-          {/* Slide counter badge */}
-          <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1 rounded-full">
-            {current + 1}/{urls.length}
-          </div>
-        </>
+              <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10 12L6 8l4-4" />
+              </svg>
+            </button>
+          )}
+
+          {/* Image */}
+          <img
+            src={urls[current]}
+            alt={`Property photo ${current + 1}`}
+            className="max-h-[85vh] max-w-[90vw] object-contain rounded-lg"
+            onClick={(e) => e.stopPropagation()}
+          />
+
+          {/* Next arrow */}
+          {urls.length > 1 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); goNext(); }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors"
+              aria-label="Next photo"
+            >
+              <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 4l4 4-4 4" />
+              </svg>
+            </button>
+          )}
+        </div>
       )}
-    </div>
+    </>
   );
 }
 

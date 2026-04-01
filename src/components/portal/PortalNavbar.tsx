@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 import { Link, usePathname } from '@/i18n/navigation';
+import Image from 'next/image';
 
 interface PortalNavbarProps {
   firstName: string;
@@ -123,10 +124,7 @@ export default function PortalNavbar({ firstName, locale }: PortalNavbarProps) {
               className="w-[34px] h-[34px] rounded-full border border-[#EEF0F4] bg-white flex items-center justify-center hover:border-[#BC9C45] transition-colors relative"
               aria-label="Notifications"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                <path d="M13.73 21a2 2 0 01-3.46 0" />
-              </svg>
+              <Image src="/images/notification_logo.png" alt="Notifications" width={32} height={32} className="rounded-full" />
               {hasUnread && <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-[#DC2626] countdown-pulse" />}
             </button>
 

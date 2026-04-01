@@ -279,28 +279,36 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
                 {t('expired')}
               </span>
             ) : (
-              <div className="flex items-center gap-0.5">
+              <div className="flex items-center gap-1.5">
                 {[
-                  { value: countdown.days, label: tc('d') },
-                  { value: countdown.hours, label: tc('h') },
-                  { value: countdown.minutes, label: tc('m') },
-                  { value: countdown.seconds, label: tc('s') },
+                  { value: countdown.days, label: 'Days' },
+                  { value: countdown.hours, label: 'Hrs' },
+                  { value: countdown.minutes, label: 'Min' },
+                  { value: countdown.seconds, label: 'Sec' },
                 ].map((g, i) => (
-                  <div key={g.label} className="flex items-center gap-0.5">
+                  <div key={g.label} className="flex items-center gap-1.5">
                     {i > 0 && (
                       <span
-                        className="text-[13px] font-bold opacity-40"
+                        className="text-[14px] font-bold opacity-50 -mt-2.5"
                         style={{ color: urgencyTextColor }}
                       >
                         :
                       </span>
                     )}
-                    <span
-                      className="inline-flex items-center justify-center w-[28px] h-[28px] rounded-md text-[13px] font-extrabold tabular-nums text-white"
-                      style={{ backgroundColor: urgencyTextColor }}
-                    >
-                      {String(g.value).padStart(2, '0')}
-                    </span>
+                    <div className="flex flex-col items-center">
+                      <span
+                        className="inline-flex items-center justify-center w-[32px] h-[30px] rounded-md text-[15px] font-extrabold tabular-nums text-white"
+                        style={{ backgroundColor: urgencyTextColor }}
+                      >
+                        {String(g.value).padStart(2, '0')}
+                      </span>
+                      <span
+                        className="text-[7px] font-semibold uppercase tracking-wide mt-0.5"
+                        style={{ color: urgencyTextColor }}
+                      >
+                        {g.label}
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>
