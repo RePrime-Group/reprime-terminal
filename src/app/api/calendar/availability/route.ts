@@ -30,7 +30,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ busyTimes });
   } catch (err) {
     console.error('Calendar availability error:', err);
-    // If Google Calendar isn't configured, return empty (fall back to DB slots)
     return NextResponse.json({ busyTimes: [] });
   }
 }
