@@ -188,17 +188,8 @@ function ImageCarousel({ urls }: { urls: string[] }) {
         />
         {/* Skeleton overlay while loading */}
         {imageLoading && (
-          <div className="absolute inset-0 rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #0A1628 0%, #0E3470 40%, #1D5FB8 100%)' }}>
-            <div
-              className="absolute inset-0 animate-[shimmer_1.5s_ease-in-out_infinite]"
-              style={{
-                background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)',
-                backgroundSize: '200% 100%',
-              }}
-            />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-8 h-8 border-2 border-white/20 border-t-[#BC9C45] rounded-full animate-spin" />
-            </div>
+          <div className="absolute inset-0 rounded-2xl overflow-hidden flex items-center justify-center">
+            <div className="w-8 h-8 border-2 border-white/20 border-t-[#BC9C45] rounded-full animate-spin" />
           </div>
         )}
         {urls.length > 1 && (
