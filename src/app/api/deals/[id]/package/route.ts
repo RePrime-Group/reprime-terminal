@@ -43,7 +43,7 @@ export async function GET(
   // Fetch ALL documents with files for this deal
   const { data: docs } = await supabase
     .from('terminal_dd_documents')
-    .select('id, name, storage_path, file_type, is_verified, folder_id')
+    .select('id, name, storage_path, file_type, folder_id')
     .eq('deal_id', id)
     .not('storage_path', 'is', null);
 

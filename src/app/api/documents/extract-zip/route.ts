@@ -142,7 +142,6 @@ export async function POST(request: NextRequest) {
             file_size: String(content.byteLength),
             file_type: guessMimeType(fileName),
             storage_path: uploadPath,
-            is_verified: false,
             uploaded_by: user.id,
           });
 

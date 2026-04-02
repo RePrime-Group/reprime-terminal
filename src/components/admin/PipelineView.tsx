@@ -431,7 +431,6 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
         uploaded_by: currentUser?.id ?? null,
         show_to_investors: false,
         investor_folder_id: null,
-        is_verified: false,
       })
       .select()
       .single();
@@ -460,7 +459,6 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
         file_size: attachment.file_size,
         file_type: attachment.file_type,
         storage_path: attachment.storage_path,
-        is_verified: false,
         uploaded_by: attachment.uploaded_by,
       });
     } else if (!value) {
@@ -501,7 +499,6 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
         file_size: attachment.file_size,
         file_type: attachment.file_type,
         storage_path: attachment.storage_path,
-        is_verified: false,
         uploaded_by: attachment.uploaded_by,
       });
     } else if (!folderId) {

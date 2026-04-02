@@ -40,7 +40,7 @@ export function formatPriceCompact(value: string | number | null | undefined): s
   if (isNaN(n)) return value?.toString() || '—';
   if (n >= 1_000_000) {
     const m = n / 1_000_000;
-    return `$${m % 1 === 0 ? m.toFixed(0) : m.toFixed(1)}M`;
+    return `$${parseFloat(m.toFixed(3))}M`;
   }
   if (n >= 1_000) {
     const k = n / 1_000;

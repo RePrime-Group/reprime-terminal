@@ -27,7 +27,6 @@ interface DDDocument {
   file_size: string | null;
   file_type: string | null;
   storage_path: string | null;
-  is_verified: boolean;
   doc_status: string;
   created_at: string;
 }
@@ -306,7 +305,6 @@ export default function DataRoomPage() {
         file_size: String(file.size),
         file_type: file.type,
         storage_path: storagePath,
-        is_verified: false,
       })
       .select()
       .single();
@@ -392,17 +390,6 @@ export default function DataRoomPage() {
   }
 
   // ── Document actions ───────────────────────────────────────────────────────
-
-  async function handleToggleVerified(doc: DDDocument) {
-    const newValue = !doc.is_verified;
-    setDocuments((prev) =>
-      prev.map((d) => (d.id === doc.id ? { ...d, is_verified: newValue } : d)),
-    );
-    await supabase
-      .from('terminal_dd_documents')
-      .update({ is_verified: newValue })
-      .eq('id', doc.id);
-  }
 
   async function handleDeleteDocument() {
     if (!deleteDocTarget) return;
@@ -863,50 +850,6 @@ export default function DataRoomPage() {
                           {formatDate(doc.created_at)}
                         </p>
                       </div>
-
-                      {/* Verified toggle */}
-                      <button
-                        onClick={() => handleToggleVerified(doc)}
-                        className={`shrink-0 flex items-center gap-1 text-xs font-medium rounded-full px-2.5 py-1 transition-colors ${
-                          doc.is_verified
-                            ? 'bg-rp-green/10 text-rp-green'
-                            : 'bg-rp-gray-100 text-rp-gray-400'
-                        }`}
-                        title={doc.is_verified ? 'Verified' : 'Pending verification'}
-                      >
-                        {doc.is_verified ? (
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-3.5 w-3.5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth={2.5}
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                        ) : (
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-3.5 w-3.5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth={2}
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
-                        )}
-                        {doc.is_verified ? 'Verified' : 'Pending'}
-                      </button>
 
                       {/* Download */}
                       <button

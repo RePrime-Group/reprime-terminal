@@ -103,7 +103,6 @@ export async function POST(
       folder_id: folderId,
       name: doc.name,
       doc_status: 'notuploaded',
-      is_verified: false,
       is_downloadable: false,
     });
 
@@ -171,7 +170,6 @@ export async function POST(
         folder_id: targetFolderId,
         name: task.name,
         doc_status: docStatus,
-        is_verified: false,
         is_downloadable: false,
       });
 

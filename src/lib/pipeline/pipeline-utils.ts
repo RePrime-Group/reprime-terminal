@@ -42,7 +42,6 @@ export interface TaskAttachment {
   uploaded_by: string | null;
   show_to_investors: boolean;
   investor_folder_id: string | null;
-  is_verified: boolean;
   created_at: string;
 }
 

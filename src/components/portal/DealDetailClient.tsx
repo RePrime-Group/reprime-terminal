@@ -870,14 +870,6 @@ function DDFolderCard({
   const t = useTranslations('portal.dealDetail');
   const [expanded, setExpanded] = useState(false);
   const docCount = folder.documents.length;
-  const verifiedCount = folder.documents.filter((d) => d.is_verified).length;
-
-  const iconBg =
-    verifiedCount === docCount && docCount > 0
-      ? 'bg-[#ECFDF5]'
-      : verifiedCount > 0
-        ? 'bg-[#FDF8ED]'
-        : 'bg-[#F7F8FA]';
 
   return (
     <div className="bg-white rounded-xl border border-[#EEF0F4] overflow-hidden cursor-pointer hover:border-[#BC9C45] transition-colors rp-card-shadow">
@@ -885,7 +877,7 @@ function DDFolderCard({
         onClick={() => setExpanded(!expanded)}
         className="w-full p-4 flex items-center gap-3 text-left"
       >
-        <div className={`w-10 h-10 rounded-lg ${iconBg} flex items-center justify-center text-lg`}>
+        <div className="w-10 h-10 rounded-lg bg-[#F7F8FA] flex items-center justify-center text-lg">
           {folder.icon ?? '\uD83D\uDCC1'}
         </div>
         <div className="flex-1 min-w-0">
@@ -893,27 +885,10 @@ function DDFolderCard({
             {folder.name}
           </div>
           <div className="text-[11px] text-[#9CA3AF]">
-            {t('documentsCount', { count: docCount })} &middot;{' '}
-            {verifiedCount} {t('verified').toLowerCase()}
+            {t('documentsCount', { count: docCount })}
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {verifiedCount === docCount && docCount > 0 && (
-            <div className="w-5 h-5 rounded-full bg-[#ECFDF5] flex items-center justify-center">
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 16 16"
-                fill="none"
-                stroke="#0B8A4D"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M3 8l4 4 6-7" />
-              </svg>
-            </div>
-          )}
           <svg
             width="16"
             height="16"
@@ -945,15 +920,6 @@ function DDFolderCard({
                   {doc.file_size ?? t('unknownSize')}
                 </div>
               </div>
-              {doc.is_verified ? (
-                <span className="bg-[#ECFDF5] text-[#0B8A4D] text-[10px] font-semibold px-2 py-0.5 rounded-full">
-                  {t('verified')}
-                </span>
-              ) : (
-                <span className="bg-[#FFFBEB] text-[#D97706] text-[10px] font-semibold px-2 py-0.5 rounded-full">
-                  {t('pending')}
-                </span>
-              )}
               {/* View button for PDFs, images, and Office files */}
               {(doc.file_type === 'application/pdf' || doc.name?.endsWith('.pdf') || doc.file_type?.startsWith('image/') || /\.(xlsx?|docx?|pptx?)$/i.test(doc.name)) && (
                 <button
@@ -1601,7 +1567,7 @@ export default function DealDetailClient({
       const folderIds = folders.map((f) => f.id);
       const { data: allDocs } = await supabase
         .from('terminal_dd_documents')
-        .select('id, folder_id, deal_id, name, file_size, file_type, storage_path, is_verified, is_downloadable, doc_status, uploaded_by, created_at')
+        .select('id, folder_id, deal_id, name, file_size, file_type, storage_path, is_downloadable, doc_status, uploaded_by, created_at')
         .in('folder_id', folderIds)
         .filter('storage_path', 'not.is', 'null')
         .order('created_at', { ascending: true });
@@ -1709,17 +1675,7 @@ export default function DealDetailClient({
   }), [dealInputs, computed, traditionalMetrics, deal]);
 
   // DD progress calculation
-  const totalDocs = deal.dd_folders.reduce(
-    (sum, f) => sum + f.documents.length,
-    0
-  );
-  const verifiedDocs = deal.dd_folders.reduce(
-    (sum, f) => sum + f.documents.filter((d) => d.is_verified).length,
-    0
-  );
-  // DD progress: use pipeline progress if available, else fall back to document verification
-  const docBasedProgress = totalDocs > 0 ? Math.round((verifiedDocs / totalDocs) * 100) : 0;
-  const ddProgress = (typeof pipelineProgress === 'number' && pipelineProgress >= 0) ? pipelineProgress : docBasedProgress;
+  const ddProgress = (typeof pipelineProgress === 'number' && pipelineProgress >= 0) ? pipelineProgress : 0;
 
   // Contact initials
   const initials = contactName
@@ -2043,7 +1999,11 @@ export default function DealDetailClient({
         {/* 5E. TAB BAR                                                        */}
         {/* ------------------------------------------------------------------ */}
         <div className="px-8 mt-8">
-          <div className="bg-[#F7F8FA] rounded-lg p-1 inline-flex gap-1">
+          <div className="flex items-center gap-2.5 px-4 py-2.5 bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg mb-4">
+            <span className="text-[15px]">🔒</span>
+            <span className="text-[13px] text-[#6B7280]">Held by: <span className="font-bold text-[#0F1B2D]">Bruce Smoler</span> (Gideon&apos;s attorney)</span>
+          </div>
+          <div className="flex border-b border-[#E5E7EB]">
             {tabs.map((tab) => (
               <button
                 key={tab.key}
@@ -2054,10 +2014,10 @@ export default function DealDetailClient({
                   }
                   setActiveTab(tab.key);
                 }}
-                className={`rounded-md px-7 py-3 text-[12px] font-[600] tracking-[0.5px] transition-all inline-flex items-center gap-1.5 ${
+                className={`relative px-5 py-3 text-[13px] font-medium transition-colors inline-flex items-center gap-1.5 ${
                   activeTab === tab.key
-                    ? 'bg-[#0E3470] text-white'
-                    : 'bg-transparent text-[#9CA3AF] hover:bg-white hover:text-[#0E3470]'
+                    ? 'text-[#0F1B2D] font-semibold'
+                    : 'text-[#9CA3AF] hover:text-[#6B7280]'
                 }`}
               >
                 {tab.label}
@@ -2066,6 +2026,9 @@ export default function DealDetailClient({
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                     <path d="M7 11V7a5 5 0 0110 0v4" />
                   </svg>
+                )}
+                {activeTab === tab.key && (
+                  <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#C8A951] rounded-t-full" />
                 )}
               </button>
             ))}
@@ -2417,7 +2380,7 @@ export default function DealDetailClient({
           className="transition-opacity duration-200"
           style={{ display: activeTab === 'due-diligence' ? 'block' : 'none' }}
         >
-          <div className="mt-8 px-8 pb-10">
+          <div className="mt-3 px-8 pb-10">
             {ddLoading ? (
               <div className="flex items-center justify-center py-16">
                 <div className="w-6 h-6 border-2 border-[#BC9C45] border-t-transparent rounded-full animate-spin" />
@@ -2726,7 +2689,7 @@ export default function DealDetailClient({
         </div>
 
         {/* ========== COMMITMENT SECTION ========== */}
-        <div className="px-8 mt-12 pb-4">
+        <div className="px-8 mt-2 pb-4">
           <div className="rp-gold-line mb-10" />
 
           {/* Deal Timeline Countdowns */}
@@ -2880,7 +2843,6 @@ export default function DealDetailClient({
                 </div>
                 <div>
                   <div className="text-white text-[14px] font-semibold truncate max-w-[500px]">{viewerName}</div>
-                  <div className="text-white/40 text-[11px] mt-0.5">{t('viewOnlyWatermarked')}</div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -2936,13 +2898,6 @@ export default function DealDetailClient({
             <div className="flex items-center justify-between px-6 py-3 bg-white border-t border-[#EEF0F4] shrink-0">
               <div className="text-[11px] text-[#9CA3AF]">
                 {t('viewedBy')} <span className="font-semibold text-[#0E3470]">{investorName}</span> · {new Date().toLocaleString()}
-              </div>
-              <div className="flex items-center gap-2 px-3.5 py-1.5 bg-[#FEF2F2] rounded-lg border border-[#DC2626]/10">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0110 0v4" />
-                </svg>
-                <span className="text-[10px] font-semibold text-[#DC2626]">{t('viewOnlyLogged')}</span>
               </div>
             </div>
           </div>

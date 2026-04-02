@@ -134,7 +134,6 @@ export interface TerminalDDDocument {
   file_size: string | null;
   file_type: string | null;
   storage_path: string | null;
-  is_verified: boolean;
   is_downloadable: boolean;
   doc_status: 'verified' | 'uploaded' | 'pending' | 'requested' | 'notuploaded' | 'doesnotexist' | 'na' | 'notrequired';
   uploaded_by: string | null;
@@ -221,7 +220,6 @@ export interface TerminalTaskAttachment {
   uploaded_by: string | null;
   show_to_investors: boolean;
   investor_folder_id: string | null;
-  is_verified: boolean;
   created_at: string;
 }
 
