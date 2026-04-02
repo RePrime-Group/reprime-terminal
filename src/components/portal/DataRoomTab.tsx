@@ -251,7 +251,7 @@ export default function DataRoomTab({
 
           {/* Column headers */}
           <div className="flex items-center px-4 pb-2 text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-[0.06em]">
-            <div className="w-5 mr-3 flex items-center">
+            <div className="w-5 me-3 flex items-center">
               <input
                 type="checkbox"
                 checked={filteredDocs.length > 0 && selectedDocs.size === filteredDocs.length}
@@ -259,10 +259,10 @@ export default function DataRoomTab({
                 className="cursor-pointer accent-[#C8A951]"
               />
             </div>
-            <div className="w-10 mr-3">{t('type')}</div>
+            <div className="w-10 me-3">{t('type')}</div>
             <div className="flex-1">{t('document')}</div>
-            <div className="w-20 text-right">{t('size')}</div>
-            <div className="w-[110px] text-right">{t('uploaded')}</div>
+            <div className="w-20 text-end">{t('size')}</div>
+            <div className="w-[110px] text-end">{t('uploaded')}</div>
             <div className="w-[72px]" />
           </div>
 
@@ -285,7 +285,7 @@ export default function DataRoomTab({
                       i < filteredDocs.length - 1 ? 'border-b border-[#F3F4F6]' : ''
                     } ${isSelected ? 'bg-[rgba(200,169,81,0.04)]' : 'hover:bg-[#FAFBFC]'}`}
                   >
-                    <div className="w-5 mr-3 flex items-center">
+                    <div className="w-5 me-3 flex items-center">
                       <input
                         type="checkbox"
                         checked={isSelected}
@@ -294,7 +294,7 @@ export default function DataRoomTab({
                         className="cursor-pointer accent-[#C8A951]"
                       />
                     </div>
-                    <div className="w-10 mr-3">
+                    <div className="w-10 me-3">
                       <FileTypeBadge doc={doc} />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -302,10 +302,10 @@ export default function DataRoomTab({
                         {doc.name}
                       </div>
                     </div>
-                    <div className="w-20 text-right text-[12px] text-[#9CA3AF]">
+                    <div className="w-20 text-end text-[12px] text-[#9CA3AF]">
                       {formatFileSize(doc.file_size)}
                     </div>
-                    <div className="w-[110px] text-right text-[12px] text-[#9CA3AF]">
+                    <div className="w-[110px] text-end text-[12px] text-[#9CA3AF]">
                       {formatDate(doc.created_at)}
                     </div>
                     <div className="w-[72px] flex justify-end gap-1.5">
