@@ -109,14 +109,14 @@ function ApplicationDetailModal({
     (async () => {
       try {
         const res = await fetch(`/api/applications/${applicationId}`);
-        if (!res.ok) throw new Error('Failed to load');
+        if (!res.ok) throw new Error(t('failedToLoad'));
         const data = await res.json();
         if (cancelled) return;
         setDetail(data);
         setStatus(data.status);
         setNotes(data.admin_notes || '');
       } catch {
-        if (!cancelled) setError('Failed to load application details');
+        if (!cancelled) setError(t('failedToLoadDetails'));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -137,12 +137,12 @@ function ApplicationDetailModal({
       });
       if (!res.ok) {
         const body = await res.json();
-        setError(body.error || 'Failed to save');
+        setError(body.error || t('failedToSave'));
       } else {
         onSaved();
       }
     } catch {
-      setError('Failed to save changes');
+      setError(t('failedToSave'));
     } finally {
       setSaving(false);
     }
@@ -177,7 +177,7 @@ function ApplicationDetailModal({
               <div className="w-6 h-6 border-2 border-rp-gold/30 border-t-rp-gold rounded-full animate-spin" />
             </div>
           ) : !detail ? (
-            <p className="text-sm text-red-600 text-center py-8">{error || 'Application not found'}</p>
+            <p className="text-sm text-red-600 text-center py-8">{error || t('applicationNotFound')}</p>
           ) : (
             <>
               {/* Applicant info */}

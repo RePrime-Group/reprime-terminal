@@ -1470,6 +1470,7 @@ export default function DealDetailClient({
   const tcd = useTranslations('portal.countdown');
   const tcom = useTranslations('common');
   const ts = useTranslations('portal.structure');
+  const tPt = useTranslations('portal.propertyTypes');
   const router = useRouter();
   const { trackActivity } = useActivityTracker();
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
@@ -1758,7 +1759,7 @@ export default function DealDetailClient({
               {deal.name}
             </h1>
             <p className="text-[10px] text-[#9CA3AF] truncate">
-              {deal.city}, {deal.state} &middot; {deal.property_type}
+              {deal.city}, {deal.state} &middot; {tPt.has(deal.property_type) ? tPt(deal.property_type) : deal.property_type}
             </p>
           </div>
           <div className="flex items-center gap-3 ml-4 shrink-0">
@@ -1837,7 +1838,7 @@ export default function DealDetailClient({
                 {deal.name}
               </h2>
               <p className="text-[12px] text-[#9CA3AF] mt-1">
-                {deal.city}, {deal.state} &middot; {deal.property_type}
+                {deal.city}, {deal.state} &middot; {tPt.has(deal.property_type) ? tPt(deal.property_type) : deal.property_type}
                 {deal.square_footage ? ` \u00B7 ${deal.square_footage} SF` : ''}
                 {deal.units ? ` \u00B7 ${tc('units', { count: deal.units })}` : ''}
                 {deal.class_type ? ` \u00B7 ${tc('classType', { type: deal.class_type })}` : ''}
@@ -1850,7 +1851,7 @@ export default function DealDetailClient({
                 </span>
               )}
               <span className="bg-[#F7F8FA] border border-[#EEF0F4] text-[#6B7280] text-[10px] font-semibold px-3 py-1.5 rounded-full">
-                {deal.property_type}
+                {tPt.has(deal.property_type) ? tPt(deal.property_type) : deal.property_type}
               </span>
             </div>
           </div>
@@ -2301,15 +2302,15 @@ export default function DealDetailClient({
                 </h3>
                 <div className="space-y-0">
                   {[
-                    { label: t('type'), value: deal.property_type },
-                    { label: t('class'), value: deal.class_type },
-                    { label: t('yearBuilt'), value: deal.year_built?.toString() },
-                    { label: t('sqFt'), value: formatSqFt(deal.square_footage) },
-                    { label: t('units'), value: deal.units },
-                    { label: t('neighborhood'), value: deal.neighborhood },
+                    { key: 'type', label: t('type'), value: tPt.has(deal.property_type) ? tPt(deal.property_type) : deal.property_type },
+                    { key: 'class', label: t('class'), value: deal.class_type },
+                    { key: 'yearBuilt', label: t('yearBuilt'), value: deal.year_built?.toString() },
+                    { key: 'sqFt', label: t('sqFt'), value: formatSqFt(deal.square_footage) },
+                    { key: 'units', label: t('units'), value: deal.units },
+                    { key: 'neighborhood', label: t('neighborhood'), value: deal.neighborhood },
                   ].map((row, idx) => (
                     <div
-                      key={row.label}
+                      key={row.key}
                       className={`flex justify-between gap-3 py-2.5 ${
                         idx % 2 === 0 ? 'bg-[#F7F8FA]' : ''
                       } px-2 rounded`}

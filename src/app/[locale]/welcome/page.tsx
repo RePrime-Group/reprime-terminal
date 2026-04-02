@@ -2,6 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 
 export default function WelcomePage() {
@@ -9,6 +10,7 @@ export default function WelcomePage() {
   const locale = (params?.locale as string) || 'en';
   const [userName, setUserName] = useState('');
   const [loading, setLoading] = useState(true);
+  const t = useTranslations('portal.welcome');
 
   useEffect(() => {
     const supabase = createClient();
@@ -57,10 +59,10 @@ export default function WelcomePage() {
             </div>
 
             <h1 className="font-[family-name:var(--font-playfair)] text-[32px] font-semibold text-white leading-tight mb-2">
-              Welcome, {userName}
+              {t('greeting', { name: userName })}
             </h1>
             <p className="text-[15px] text-white/40">
-              You&apos;ve been granted full institutional access.
+              {t('institutionalAccess')}
             </p>
           </div>
 
@@ -69,8 +71,8 @@ export default function WelcomePage() {
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <div className="text-[9px] font-bold text-[#D4A843] uppercase tracking-[2px]">Membership Tier</div>
-                  <div className="text-[22px] font-bold text-white mt-1">Founding Member</div>
+                  <div className="text-[9px] font-bold text-[#D4A843] uppercase tracking-[2px]">{t('membershipTier')}</div>
+                  <div className="text-[22px] font-bold text-white mt-1">{t('foundingMember')}</div>
                 </div>
                 <div className="w-12 h-12 rounded-full border-2 border-[#BC9C45] flex items-center justify-center">
                   <span className="text-[#BC9C45] text-[20px]">★</span>
@@ -79,13 +81,13 @@ export default function WelcomePage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-white/[0.04] rounded-lg p-3">
-                  <div className="text-[9px] font-semibold text-white/30 uppercase tracking-[1.5px]">Annual Value</div>
+                  <div className="text-[9px] font-semibold text-white/30 uppercase tracking-[1.5px]">{t('annualValue')}</div>
                   <div className="text-[18px] font-bold text-white mt-0.5">$100,000</div>
                 </div>
                 <div className="bg-white/[0.04] rounded-lg p-3">
-                  <div className="text-[9px] font-semibold text-white/30 uppercase tracking-[1.5px]">Status</div>
-                  <div className="text-[14px] font-bold text-[#0B8A4D] mt-0.5">Complimentary</div>
-                  <div className="text-[10px] text-white/30">Active through {expiresDate}</div>
+                  <div className="text-[9px] font-semibold text-white/30 uppercase tracking-[1.5px]">{t('status')}</div>
+                  <div className="text-[14px] font-bold text-[#0B8A4D] mt-0.5">{t('complimentary')}</div>
+                  <div className="text-[10px] text-white/30">{t('activeThrough', { date: expiresDate })}</div>
                 </div>
               </div>
             </div>
@@ -94,12 +96,12 @@ export default function WelcomePage() {
 
             {/* Lane access */}
             <div className="p-6">
-              <div className="text-[9px] font-bold text-white/30 uppercase tracking-[2px] mb-3">Your Access</div>
+              <div className="text-[9px] font-bold text-white/30 uppercase tracking-[2px] mb-3">{t('yourAccess')}</div>
               <div className="space-y-2">
                 {[
-                  { lane: 'Standard Lane', desc: 'All published deals', color: '#0E3470', active: true },
-                  { lane: 'Accelerated Lane', desc: 'Priority + non-refundable deposit deals', color: '#BC9C45', active: true },
-                  { lane: 'Rapid Lane', desc: '14-21 day rapid close', color: '#0B8A4D', active: true },
+                  { lane: t('standardLane'), desc: t('allPublishedDeals'), color: '#0E3470', active: true },
+                  { lane: t('acceleratedLane'), desc: t('priorityNonRefundable'), color: '#BC9C45', active: true },
+                  { lane: t('rapidLane'), desc: t('rapidCloseDesc'), color: '#0B8A4D', active: true },
                 ].map((l) => (
                   <div key={l.lane} className="flex items-center gap-3 p-2.5 rounded-lg bg-white/[0.03]">
                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: l.color }} />
@@ -118,9 +120,9 @@ export default function WelcomePage() {
 
           {/* Member since */}
           <div className="mx-8 mb-6 flex items-center justify-center gap-2 text-[11px] text-white/20">
-            <span>Member since {memberSince}</span>
+            <span>{t('memberSince', { date: memberSince })}</span>
             <span>·</span>
-            <span>No membership fees apply during the founding period</span>
+            <span>{t('noFeesFounding')}</span>
           </div>
 
           {/* Enter Terminal button */}
@@ -129,7 +131,7 @@ export default function WelcomePage() {
               href={`/${locale}/portal`}
               className="block w-full py-4 rounded-xl bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] text-[16px] font-bold text-center shadow-[0_8px_32px_rgba(188,156,69,0.3)] hover:shadow-[0_12px_40px_rgba(188,156,69,0.4)] transition-all hover:-translate-y-0.5"
             >
-              Enter Terminal →
+              {t('enterTerminal')}
             </a>
           </div>
         </div>

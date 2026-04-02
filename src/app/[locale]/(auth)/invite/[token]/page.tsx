@@ -66,17 +66,17 @@ export default function InviteRegistrationPage() {
     setError('');
 
     if (!fullName.trim()) {
-      setError('Full name is required.');
+      setError(t('fullNameRequired'));
       return;
     }
 
     if (password.length < 8) {
-      setError('Password must be at least 8 characters.');
+      setError(t('passwordMinLength'));
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match.');
+      setError(t('passwordMismatch'));
       return;
     }
 
@@ -101,7 +101,7 @@ export default function InviteRegistrationPage() {
       const userId = authData.user?.id;
 
       if (!userId) {
-        setError('Account creation failed. Please try again.');
+        setError(t('accountCreationFailed'));
         setSubmitting(false);
         return;
       }
@@ -122,7 +122,7 @@ export default function InviteRegistrationPage() {
 
       if (!profileRes.ok) {
         const errData = await profileRes.json();
-        setError(errData.error || 'Failed to create profile');
+        setError(errData.error || t('failedToCreateProfile'));
         setSubmitting(false);
         return;
       }
@@ -146,7 +146,7 @@ export default function InviteRegistrationPage() {
         window.location.href = `/${locale}/welcome`;
       }
     } catch {
-      setError('An unexpected error occurred. Please try again.');
+      setError(t('unexpectedError'));
       setSubmitting(false);
     }
   }
@@ -181,7 +181,7 @@ export default function InviteRegistrationPage() {
             </div>
             <h1 className="text-xl font-semibold text-white mb-2">{msg.title}</h1>
             <p className="text-white/50 text-sm mb-6">{msg.description}</p>
-            <p className="text-white/30 text-xs">Contact RePrime for a new invitation.</p>
+            <p className="text-white/30 text-xs">{t('contactForNewInvite')}</p>
           </div>
         </div>
       </div>

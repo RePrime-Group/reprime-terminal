@@ -16,6 +16,7 @@ interface DealCardProps {
 export default function DealCard({ deal, locale, index }: DealCardProps) {
   const t = useTranslations('portal.dealCard');
   const tc = useTranslations('portal.countdown');
+  const tPt = useTranslations('portal.propertyTypes');
   const [watched, setWatched] = useState(false);
   const [watchLoading, setWatchLoading] = useState(false);
   const countdown = useCountdown(deal.dd_deadline);
@@ -104,11 +105,11 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
           {/* Top-left badges */}
           <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-[2]">
             <span className="bg-[#0E3470]/90 backdrop-blur-sm text-white text-[10px] font-semibold px-2.5 py-[5px] rounded-full">
-              {deal.property_type}
+              {tPt.has(deal.property_type) ? tPt(deal.property_type) : deal.property_type}
             </span>
             {(deal.commitment_count ?? 0) > 0 && (
               <span className="bg-[#DC2626]/90 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-[5px] rounded-full animate-pulse">
-                🔥 {deal.commitment_count} Group{(deal.commitment_count ?? 0) > 1 ? 's' : ''} Committed
+                🔥 {(deal.commitment_count ?? 0) > 1 ? t('groupsCommitted', { count: deal.commitment_count ?? 0 }) : t('groupCommitted', { count: deal.commitment_count ?? 0 })}
               </span>
             )}
             {deal.seller_financing && (
@@ -281,10 +282,10 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
             ) : (
               <div className="flex items-center gap-1.5">
                 {[
-                  { value: countdown.days, label: 'Days' },
-                  { value: countdown.hours, label: 'Hrs' },
-                  { value: countdown.minutes, label: 'Min' },
-                  { value: countdown.seconds, label: 'Sec' },
+                  { value: countdown.days, label: t('countdownDays') },
+                  { value: countdown.hours, label: t('countdownHrs') },
+                  { value: countdown.minutes, label: t('countdownMin') },
+                  { value: countdown.seconds, label: t('countdownSec') },
                 ].map((g, i) => (
                   <div key={g.label} className="flex items-center gap-1.5">
                     {i > 0 && (
@@ -338,7 +339,7 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
             </div>
             <div className="animate-stamp-in rotate-[-6deg] border-2 border-[#BC9C45] px-8 py-3 rounded">
               <span className="font-[family-name:var(--font-playfair)] text-4xl font-extrabold text-[#BC9C45] tracking-wider">
-                CLOSED
+                {t('closed')}
               </span>
             </div>
           </div>

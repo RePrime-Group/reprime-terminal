@@ -227,8 +227,8 @@ export default function PortalNavbar({ firstName, locale }: PortalNavbarProps) {
           {/* Member Badge */}
           <div className="flex items-center gap-2.5">
             <div className="text-right">
-              <div className="text-[12px] font-medium text-white">{firstName || 'Member'}</div>
-              <div className="text-[9px] font-semibold text-[#D4A843] uppercase tracking-[2px]">MEMBER</div>
+              <div className="text-[12px] font-medium text-white">{firstName || tn('member')}</div>
+              <div className="text-[9px] font-semibold text-[#D4A843] uppercase tracking-[2px]">{tn('member')}</div>
             </div>
             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#BC9C45] to-[#A88A3D] flex items-center justify-center border border-[#D4A843]/30">
               <span className="text-white text-[13px] font-semibold">{initials}</span>

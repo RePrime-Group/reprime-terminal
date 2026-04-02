@@ -52,6 +52,7 @@ type SortDir = 'asc' | 'desc';
 
 export default function PortalDashboardClient({ deals, locale }: PortalDashboardClientProps) {
   const t = useTranslations('portal');
+  const tPt = useTranslations('portal.propertyTypes');
 
   // ── Search, Filter & Sort state ──
   const [searchQuery, setSearchQuery] = useState('');
@@ -192,11 +193,11 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
     deals.find((d) => d.quarter_release)?.quarter_release ?? '';
 
   const summaryMetrics = [
-    { label: 'TOTAL DEAL VOLUME', value: formatPriceCompact(totalDealVolume) },
-    { label: 'AGGREGATE EQUITY', value: formatPriceCompact(totalEquity) },
-    { label: 'AVG. PROJECTED IRR', value: avgIrr > 0 ? `${avgIrr.toFixed(1)}%` : '--' },
-    { label: 'AVG. CAP RATE', value: avgCapRate > 0 ? `${avgCapRate.toFixed(1)}%` : '--' },
-    { label: 'ACTIVE RELEASES', value: String(allActiveDeals.length) },
+    { label: t('totalDealVolume'), value: formatPriceCompact(totalDealVolume) },
+    { label: t('aggregateEquity'), value: formatPriceCompact(totalEquity) },
+    { label: t('avgProjectedIrr'), value: avgIrr > 0 ? `${avgIrr.toFixed(1)}%` : '--' },
+    { label: t('avgCapRate'), value: avgCapRate > 0 ? `${avgCapRate.toFixed(1)}%` : '--' },
+    { label: t('activeReleases'), value: String(allActiveDeals.length) },
   ];
 
   const hasAnyDeals = deals.length > 0;
@@ -221,7 +222,7 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
                 <div className="flex items-center gap-2.5 mb-3">
                   <div className="w-1.5 h-1.5 rounded-full bg-[#0B8A4D] live-dot" />
                   <span className="text-[10px] font-medium tracking-[3px] uppercase text-[#D4A843]">
-                    {quarterLabel} Release
+                    {quarterLabel} {t('release')}
                   </span>
                 </div>
               )}
@@ -305,7 +306,7 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
                           : 'bg-[#F7F8FA] text-[#6B7280] border-[#D1D5DB] hover:border-[#BC9C45]/40 hover:text-[#0E3470]'
                       }`}
                     >
-                      {pt}
+                      {tPt.has(pt) ? tPt(pt) : pt}
                     </button>
                   );
                 })}

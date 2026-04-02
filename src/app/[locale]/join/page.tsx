@@ -3,59 +3,64 @@
 import { useState } from 'react';
 import { Link } from '@/i18n/navigation';
 import { useParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 const tiers = [
   {
-    name: 'Standard',
+    nameKey: 'standard' as const,
     price: '$30,000',
     annual: '$30,000/yr',
-    lane: 'Standard Lane',
+    laneKey: 'standardLane' as const,
+    laneDescKey: 'standardLaneDesc' as const,
     color: '#0E3470',
-    features: [
-      'Access to all published deals',
-      'Full due diligence data room',
-      'Financial modeling tools',
-      'Meeting scheduling with team',
-      'Market intelligence dashboard',
-    ],
+    featureKeys: [
+      'featureAccessDeals',
+      'featureDataRoom',
+      'featureFinancialTools',
+      'featureMeetings',
+      'featureMarketIntel',
+    ] as const,
   },
   {
-    name: 'Accelerated',
+    nameKey: 'accelerated' as const,
     price: '$75,000',
     annual: '$75,000/yr',
-    lane: 'Accelerated Lane',
+    laneKey: 'acceleratedLane' as const,
+    laneDescKey: 'acceleratedLaneDesc' as const,
     color: '#BC9C45',
     featured: true,
-    features: [
-      'Everything in Standard',
-      'Priority deal access (48hr head start)',
-      'Non-refundable deposit deals',
-      'Direct line to acquisition team',
-      'Custom financial modeling',
-      'Quarterly portfolio reviews',
-    ],
+    featureKeys: [
+      'featureEverythingStandard',
+      'featurePriorityAccess',
+      'featureNonRefundable',
+      'featureDirectLine',
+      'featureCustomModeling',
+      'featureQuarterlyReviews',
+    ] as const,
   },
   {
-    name: 'Institutional',
+    nameKey: 'institutional' as const,
     price: '$100,000',
     annual: '$100,000/yr',
-    lane: 'Rapid Lane',
+    laneKey: 'rapidLane' as const,
+    laneDescKey: 'rapidLaneDesc' as const,
     color: '#0B8A4D',
-    features: [
-      'Everything in Accelerated',
-      '14-21 day rapid close deals',
-      'Co-investment opportunities',
-      'Board-level market briefings',
-      'White-glove concierge service',
-      'First look at all acquisitions',
-      'Custom deal sourcing',
-    ],
+    featureKeys: [
+      'featureEverythingAccelerated',
+      'featureRapidClose',
+      'featureCoInvestment',
+      'featureBoardBriefings',
+      'featureWhiteGlove',
+      'featureFirstLook',
+      'featureCustomSourcing',
+    ] as const,
   },
 ];
 
 export default function JoinPage() {
   const params = useParams();
   const locale = (params?.locale as string) || 'en';
+  const t = useTranslations('join');
   const [formData, setFormData] = useState({ name: '', email: '', company: '', phone: '' });
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -78,12 +83,12 @@ export default function JoinPage() {
       });
       if (!res.ok) {
         const body = await res.json();
-        setError(body.error || 'Something went wrong. Please try again.');
+        setError(body.error || t('somethingWentWrong'));
       } else {
         setSubmitted(true);
       }
     } catch {
-      setError('Failed to submit application. Please try again.');
+      setError(t('failedToSubmit'));
     } finally {
       setLoading(false);
     }
@@ -105,7 +110,7 @@ export default function JoinPage() {
           locale={locale}
           className="px-5 py-2 border border-white/15 text-white/70 text-[12px] font-medium rounded-lg hover:bg-white/5 transition-colors"
         >
-          Investor Login
+          {t('investorLogin')}
         </Link>
       </nav>
 
@@ -113,17 +118,16 @@ export default function JoinPage() {
       <div className="max-w-[1200px] mx-auto px-10 pt-12 pb-8 text-center">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] mb-6">
           <div className="w-1.5 h-1.5 rounded-full bg-[#0B8A4D] live-dot" />
-          <span className="text-[10px] font-medium tracking-[2px] text-[#D4A843] uppercase">Founding Members — Limited Positions</span>
+          <span className="text-[10px] font-medium tracking-[2px] text-[#D4A843] uppercase">{t('foundingBadge')}</span>
         </div>
         <h1 className="font-[family-name:var(--font-playfair)] text-[48px] font-semibold text-white leading-[1.1] tracking-[-0.02em] mb-5">
-          Institutional CRE Access
+          {t('heroTitle')}
         </h1>
         <p className="text-[16px] text-white/40 max-w-[600px] mx-auto leading-relaxed font-light mb-3">
-          The RePrime Terminal connects qualified investors with off-market commercial real
-          estate opportunities backed by 30+ years of institutional diligence.
+          {t('heroDescription')}
         </p>
         <p className="text-[14px] text-[#D4A843] font-semibold">
-          Founding members receive complimentary access through December 2027
+          {t('foundingAccess')}
         </p>
       </div>
 
@@ -132,7 +136,7 @@ export default function JoinPage() {
         <div className="grid grid-cols-3 gap-5">
           {tiers.map((tier) => (
             <div
-              key={tier.name}
+              key={tier.nameKey}
               className={`rounded-2xl p-[1px] ${
                 tier.featured
                   ? 'bg-gradient-to-b from-[#BC9C45] to-[#BC9C45]/20'
@@ -145,34 +149,30 @@ export default function JoinPage() {
                 {tier.featured && (
                   <div className="text-center mb-4">
                     <span className="text-[9px] font-bold tracking-[2px] text-[#D4A843] uppercase bg-[#BC9C45]/10 px-3 py-1 rounded-full">
-                      Most Popular
+                      {t('mostPopular')}
                     </span>
                   </div>
                 )}
-                <h3 className="text-[18px] font-semibold text-white mb-1">{tier.name}</h3>
+                <h3 className="text-[18px] font-semibold text-white mb-1">{t(tier.nameKey)}</h3>
                 <div className="flex items-baseline gap-1 mb-1">
                   <span className="text-[32px] font-bold text-white">{tier.price}</span>
-                  <span className="text-[13px] text-white/30">/year</span>
+                  <span className="text-[13px] text-white/30">{t('perYear')}</span>
                 </div>
                 <div className="mb-5">
                   <span className="text-[12px] font-semibold text-[#0B8A4D] bg-[#0B8A4D]/10 px-2.5 py-1 rounded-full">
-                    Complimentary for Founding Members
+                    {t('complimentaryFounding')}
                   </span>
                 </div>
                 <div className="text-[11px] text-white/30 mb-4 pb-4 border-b border-white/[0.06]">
-                  <span className="font-semibold text-white/50">{tier.lane}</span> — {
-                    tier.name === 'Standard' ? 'Access to all published deals' :
-                    tier.name === 'Accelerated' ? 'Priority access + non-refundable deposit deals' :
-                    '14-21 day rapid close + co-investment'
-                  }
+                  <span className="font-semibold text-white/50">{t(tier.laneKey)}</span> — {t(tier.laneDescKey)}
                 </div>
                 <ul className="space-y-3 flex-1">
-                  {tier.features.map((f, i) => (
+                  {tier.featureKeys.map((fKey, i) => (
                     <li key={i} className="flex items-start gap-2.5 text-[13px] text-white/60">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={tier.color} strokeWidth="2.5" className="shrink-0 mt-0.5">
                         <polyline points="20 6 9 17 4 12" />
                       </svg>
-                      {f}
+                      {t(fKey)}
                     </li>
                   ))}
                 </ul>
@@ -191,14 +191,13 @@ export default function JoinPage() {
             </div>
           </div>
           <h2 className="font-[family-name:var(--font-playfair)] text-[24px] font-semibold text-white mb-2">
-            Founding Member Access
+            {t('foundingMemberAccess')}
           </h2>
           <p className="text-[14px] text-white/40 max-w-[500px] mx-auto mb-2">
-            All founding members receive our highest membership level, valued at $100,000 annually.
-            No membership fees apply during the founding period.
+            {t('foundingMemberDesc')}
           </p>
           <p className="text-[12px] text-[#D4A843] font-semibold">
-            Limited founding positions remaining
+            {t('limitedPositions')}
           </p>
         </div>
       </div>
@@ -207,12 +206,12 @@ export default function JoinPage() {
       <div className="max-w-[1200px] mx-auto px-10 pb-16">
         <div className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-10">
           <h2 className="font-[family-name:var(--font-playfair)] text-[24px] font-semibold text-white mb-2 text-center">
-            {submitted ? 'Application Received' : 'Membership Application'}
+            {submitted ? t('applicationReceived') : t('membershipApplication')}
           </h2>
           <p className="text-[13px] text-white/40 mb-8 text-center">
             {submitted
-              ? 'Our team will review your application within 48 hours.'
-              : 'Founding membership is by invitation only. Applications reviewed within 48 hours.'
+              ? t('reviewWithin48')
+              : t('foundingByInvitation')
             }
           </p>
 
@@ -223,21 +222,21 @@ export default function JoinPage() {
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               </div>
-              <p className="text-[15px] text-white font-semibold mb-2">Thank you, {formData.name.split(' ')[0]}.</p>
-              <p className="text-[13px] text-white/40">We&apos;ll be in touch shortly.</p>
+              <p className="text-[15px] text-white font-semibold mb-2">{t('thankYou', { name: formData.name.split(' ')[0] })}</p>
+              <p className="text-[13px] text-white/40">{t('inTouchShortly')}</p>
             </div>
           ) : (
             <div className="max-w-[500px] mx-auto flex flex-col gap-4">
-              <input type="text" placeholder="Full Name" value={formData.name}
+              <input type="text" placeholder={t('fullName')} value={formData.name}
                 onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))}
                 className="w-full px-4 py-3.5 bg-white/[0.04] border border-white/[0.08] rounded-lg text-white text-[14px] placeholder:text-white/25 focus:outline-none focus:border-[#D4A843]/40 transition-colors" />
-              <input type="email" placeholder="Email Address" value={formData.email}
+              <input type="email" placeholder={t('emailAddress')} value={formData.email}
                 onChange={(e) => setFormData(p => ({ ...p, email: e.target.value }))}
                 className="w-full px-4 py-3.5 bg-white/[0.04] border border-white/[0.08] rounded-lg text-white text-[14px] placeholder:text-white/25 focus:outline-none focus:border-[#D4A843]/40 transition-colors" />
-              <input type="text" placeholder="Company / Fund Name" value={formData.company}
+              <input type="text" placeholder={t('companyFundName')} value={formData.company}
                 onChange={(e) => setFormData(p => ({ ...p, company: e.target.value }))}
                 className="w-full px-4 py-3.5 bg-white/[0.04] border border-white/[0.08] rounded-lg text-white text-[14px] placeholder:text-white/25 focus:outline-none focus:border-[#D4A843]/40 transition-colors" />
-              <input type="tel" placeholder="Phone Number" value={formData.phone}
+              <input type="tel" placeholder={t('phoneNumber')} value={formData.phone}
                 onChange={(e) => setFormData(p => ({ ...p, phone: e.target.value }))}
                 className="w-full px-4 py-3.5 bg-white/[0.04] border border-white/[0.08] rounded-lg text-white text-[14px] placeholder:text-white/25 focus:outline-none focus:border-[#D4A843]/40 transition-colors" />
               {error && (
@@ -248,10 +247,10 @@ export default function JoinPage() {
                 disabled={loading || !formData.name.trim() || !formData.email.trim()}
                 className="w-full py-4 rounded-lg bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] text-[15px] font-bold hover:opacity-90 transition-opacity shadow-[0_6px_24px_rgba(188,156,69,0.3)] mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Submitting...' : 'Apply for Membership'}
+                {loading ? t('submitting') : t('applyForMembership')}
               </button>
               <p className="text-[11px] text-white/20 text-center">
-                Membership is restricted to accredited investors and qualified purchasers.
+                {t('membershipRestricted')}
               </p>
             </div>
           )}
@@ -261,12 +260,12 @@ export default function JoinPage() {
       {/* Have a code? */}
       <div className="max-w-[1200px] mx-auto px-10 pb-12">
         <div className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-8 text-center">
-          <h3 className="text-[18px] font-semibold text-white mb-2">Already have an invitation code?</h3>
-          <p className="text-[13px] text-white/40 mb-5">Enter your code below to activate your membership.</p>
+          <h3 className="text-[18px] font-semibold text-white mb-2">{t('haveInvitationCode')}</h3>
+          <p className="text-[13px] text-white/40 mb-5">{t('enterCodeBelow')}</p>
           <div className="max-w-[400px] mx-auto flex gap-2">
             <input
               type="text"
-              placeholder="Enter invitation code"
+              placeholder={t('enterInvitationCode')}
               id="invite-code-input"
               className="flex-1 px-4 py-3.5 bg-white/[0.04] border border-white/[0.08] rounded-lg text-white text-[14px] placeholder:text-white/25 focus:outline-none focus:border-[#D4A843]/40 transition-colors"
             />
@@ -279,7 +278,7 @@ export default function JoinPage() {
               }}
               className="px-6 py-3.5 rounded-lg bg-[#BC9C45] text-[#0E3470] text-[14px] font-bold hover:opacity-90 transition-opacity shrink-0"
             >
-              Activate
+              {t('activate')}
             </button>
           </div>
           <div className="mt-4">
@@ -288,7 +287,7 @@ export default function JoinPage() {
               locale={locale}
               className="text-[12px] text-[#BC9C45] hover:text-[#D4B96A] font-medium transition-colors"
             >
-              ← Back to Login
+              {t('backToLogin')}
             </Link>
           </div>
         </div>
@@ -303,7 +302,7 @@ export default function JoinPage() {
           <span className="text-[10px] text-white/20 tracking-wide">REPRIME TERMINAL</span>
         </div>
         <p className="text-[10px] text-white/20">
-          &copy; {new Date().getFullYear()} RePrime Group. All rights reserved. All investments involve risk.
+          {t('copyright', { year: new Date().getFullYear().toString() })}
         </p>
       </div>
     </div>

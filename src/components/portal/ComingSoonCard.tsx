@@ -14,6 +14,7 @@ export default function ComingSoonCard({ deal, index }: ComingSoonCardProps) {
   const t = useTranslations('portal.dealCard');
   const tc = useTranslations('portal.countdown');
   const tp = useTranslations('portal');
+  const tPt = useTranslations('portal.propertyTypes');
   const [subscribed, setSubscribed] = useState(deal.is_subscribed ?? false);
   const [loading, setLoading] = useState(false);
   const [committing, setCommitting] = useState(false);
@@ -92,7 +93,7 @@ export default function ComingSoonCard({ deal, index }: ComingSoonCardProps) {
         <div className="px-5 py-4">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[10px] font-semibold text-[#BC9C45] uppercase tracking-[2px]">
-              {deal.property_type}
+              {tPt.has(deal.property_type) ? tPt(deal.property_type) : deal.property_type}
             </span>
           </div>
           <h3 className="text-[20px] font-semibold text-[#0E3470] font-[family-name:var(--font-playfair)] leading-tight tracking-[-0.01em]">

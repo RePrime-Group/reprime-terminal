@@ -65,6 +65,7 @@ function bestValue(deals: DealFull[], key: keyof DealFull, higher = true): strin
 
 export default function CompareClient({ dealOptions, locale }: CompareClientProps) {
   const t = useTranslations('portal.compare');
+  const tPt = useTranslations('portal.propertyTypes');
 
   // Each column holds a selected deal ID (or null if empty)
   const [columns, setColumns] = useState<(string | null)[]>(
@@ -255,7 +256,7 @@ export default function CompareClient({ dealOptions, locale }: CompareClientProp
                   <Link href={`/portal/deals/${deal.id}`} locale={locale} className="text-[14px] font-semibold text-[#0E3470] hover:text-[#1D5FB8] transition-colors">
                     {deal.name}
                   </Link>
-                  <p className="text-[11px] text-[#6B7280]">{deal.city}, {deal.state} · {deal.property_type}</p>
+                  <p className="text-[11px] text-[#6B7280]">{deal.city}, {deal.state} · {tPt.has(deal.property_type) ? tPt(deal.property_type) : deal.property_type}</p>
                   <div className="flex items-center gap-3 pt-1">
                     <div>
                       <div className="text-[8px] font-bold uppercase tracking-[1.5px] text-[#9CA3AF]">{t('capRate')}</div>

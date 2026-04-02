@@ -24,8 +24,8 @@ export default function NDAModal({ dealName, onSign, onClose }: NDAModalProps) {
 
   const handleSign = async () => {
     setError('');
-    if (!fullName.trim()) { setError('Full name is required.'); return; }
-    if (!agreed) { setError('You must agree to the NDA terms.'); return; }
+    if (!fullName.trim()) { setError(t('fullNameRequired')); return; }
+    if (!agreed) { setError(t('mustAgreeTerms')); return; }
     setSigning(true);
     try {
       await onSign(ndaType, { fullName: fullName.trim(), company: company.trim(), title: title.trim() });
@@ -70,25 +70,10 @@ export default function NDAModal({ dealName, onSign, onClose }: NDAModalProps) {
           <div className="bg-[#F7F8FA] border border-[#EEF0F4] rounded-xl p-5 mb-6 max-h-[200px] overflow-y-auto">
             <div className="text-[12px] text-[#4B5563] leading-relaxed space-y-3">
               <p className="font-semibold text-[#0E3470]">{t('mutualNda')}</p>
-              <p>
-                This Non-Disclosure Agreement (&ldquo;Agreement&rdquo;) is entered into as of {today} by and between
-                RePrime Group, LLC (&ldquo;Disclosing Party&rdquo;) and the undersigned recipient (&ldquo;Receiving Party&rdquo;).
-              </p>
-              <p>
-                The Receiving Party agrees to hold in confidence all Confidential Information provided through
-                the RePrime Terminal platform, including but not limited to: financial statements, rent rolls,
-                operating data, purchase agreements, loan documents, environmental reports, property condition
-                assessments, tenant information, and any related deal materials.
-              </p>
-              <p>
-                The Receiving Party shall not disclose, publish, or otherwise reveal any Confidential Information
-                to any third party without prior written consent. The Receiving Party acknowledges that all
-                documents accessed through the platform are watermarked and tracked.
-              </p>
-              <p>
-                This Agreement shall remain in effect for a period of two (2) years from the date of execution.
-                Breach of this Agreement may result in immediate termination of platform access and legal action.
-              </p>
+              <p>{t('ndaIntro', { date: today })}</p>
+              <p>{t('ndaConfidential')}</p>
+              <p>{t('ndaNoDisclose')}</p>
+              <p>{t('ndaDuration')}</p>
             </div>
           </div>
 
@@ -98,13 +83,13 @@ export default function NDAModal({ dealName, onSign, onClose }: NDAModalProps) {
             {[
               {
                 value: 'blanket' as const,
-                title: 'Blanket NDA — All Deals',
-                desc: 'Covers all current and future deals on the platform. Sign once.',
+                title: t('blanketNdaTitle'),
+                desc: t('blanketNdaDesc'),
               },
               {
                 value: 'deal' as const,
-                title: `Deal-Specific — ${dealName} only`,
-                desc: "Covers this deal only. You'll be prompted for each new deal.",
+                title: t('dealSpecificTitle', { dealName }),
+                desc: t('dealSpecificDesc'),
               },
             ].map((opt) => (
               <label

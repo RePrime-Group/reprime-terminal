@@ -52,8 +52,8 @@ function formatDate(dateStr: string): string {
   });
 }
 
-function formatRelativeTime(dateStr: string | null): string {
-  if (!dateStr) return 'Never';
+function formatRelativeTime(dateStr: string | null, t: (key: string, values?: Record<string, string | number>) => string): string {
+  if (!dateStr) return t('never');
 
   const now = Date.now();
   const then = new Date(dateStr).getTime();
@@ -63,11 +63,11 @@ function formatRelativeTime(dateStr: string | null): string {
   const diffDay = Math.floor(diffHr / 24);
   const diffWeek = Math.floor(diffDay / 7);
 
-  if (diffMin < 1) return 'Just now';
-  if (diffMin < 60) return `${diffMin} minute${diffMin === 1 ? '' : 's'} ago`;
-  if (diffHr < 24) return `${diffHr} hour${diffHr === 1 ? '' : 's'} ago`;
-  if (diffDay < 7) return `${diffDay} day${diffDay === 1 ? '' : 's'} ago`;
-  if (diffWeek < 4) return `${diffWeek} week${diffWeek === 1 ? '' : 's'} ago`;
+  if (diffMin < 1) return t('justNow');
+  if (diffMin < 60) return diffMin === 1 ? t('minuteAgo', { count: diffMin }) : t('minutesAgo', { count: diffMin });
+  if (diffHr < 24) return diffHr === 1 ? t('hourAgo', { count: diffHr }) : t('hoursAgo', { count: diffHr });
+  if (diffDay < 7) return diffDay === 1 ? t('dayAgo', { count: diffDay }) : t('daysAgo', { count: diffDay });
+  if (diffWeek < 4) return diffWeek === 1 ? t('weekAgo', { count: diffWeek }) : t('weeksAgo', { count: diffWeek });
   return formatDate(dateStr);
 }
 
@@ -257,7 +257,7 @@ export default function InvestorListClient({
                     <td className="px-5 py-3.5 text-sm text-rp-gray-600">{investor.email}</td>
                     <td className="px-5 py-3.5 text-sm text-rp-gray-600">{investor.company_name ?? '\u2014'}</td>
                     <td className="px-5 py-3.5 text-sm text-rp-gray-600">{formatDate(investor.created_at)}</td>
-                    <td className="px-5 py-3.5 text-sm text-rp-gray-600">{formatRelativeTime(investor.last_active_at)}</td>
+                    <td className="px-5 py-3.5 text-sm text-rp-gray-600">{formatRelativeTime(investor.last_active_at, t)}</td>
                     <td className="px-5 py-3.5 text-sm text-rp-gray-600">{investor.deals_viewed}</td>
                   </tr>
                 ))}
