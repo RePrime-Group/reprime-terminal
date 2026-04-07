@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import PortalDashboardClient from '@/components/portal/PortalDashboardClient';
 
 export const metadata = { title: 'Active Opportunities — RePrime Terminal' };
@@ -39,6 +40,7 @@ export default async function PortalDashboardPage({
   // Batch-fetch all enrichment data in parallel (4 queries total instead of 4×N)
   const dealIds = deals.map((d) => d.id);
   const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const admin = createAdminClient();
 
   const [
     { data: allPhotos },
@@ -46,7 +48,7 @@ export default async function PortalDashboardPage({
     { data: allMeetings },
     { data: allCommitments },
   ] = await Promise.all([
-    supabase
+    admin
       .from('terminal_deal_photos')
       .select('deal_id, storage_path, display_order')
       .in('deal_id', dealIds)
@@ -98,7 +100,7 @@ export default async function PortalDashboardPage({
     const storagePath = photoByDeal.get(deal.id);
     let photo_url: string | null = null;
     if (storagePath) {
-      const { data: urlData } = supabase.storage
+      const { data: urlData } = admin.storage
         .from('terminal-deal-photos')
         .getPublicUrl(storagePath);
       photo_url = urlData?.publicUrl ?? null;

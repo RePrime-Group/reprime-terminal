@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import DealCard from '@/components/portal/DealCard';
-import ComingSoonCard from '@/components/portal/ComingSoonCard';
 import MarketIntelSidebar from '@/components/portal/MarketIntelSidebar';
 import { formatPriceCompact } from '@/lib/utils/format';
 import { useTranslations } from 'next-intl';
@@ -172,7 +171,6 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
   const visibleDeals = filteredDeals.slice(0, visibleCount);
   const hasMore = visibleCount < filteredDeals.length;
 
-  const upcomingDeals = visibleDeals.filter((d) => d.status === 'coming_soon' || d.status === 'loi_signed');
   const activeDeals = visibleDeals.filter((d) => d.status === 'published');
   const closedDeals = visibleDeals.filter((d) => d.status === 'assigned' || d.status === 'closed');
   const activeCount = activeDeals.length;
@@ -200,12 +198,53 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
     { label: t('activeReleases'), value: String(allActiveDeals.length) },
   ];
 
+  // ── Pipeline Preview carousel ──
+  const allUpcomingDeals = useMemo(() => deals.filter((d) => d.status === 'coming_soon' || d.status === 'loi_signed'), [deals]);
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateCarouselArrows = useCallback(() => {
+    const el = carouselRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 2);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2);
+  }, []);
+
+  useEffect(() => {
+    const el = carouselRef.current;
+    if (!el) return;
+    updateCarouselArrows();
+    el.addEventListener('scroll', updateCarouselArrows, { passive: true });
+    const ro = new ResizeObserver(updateCarouselArrows);
+    ro.observe(el);
+    return () => { el.removeEventListener('scroll', updateCarouselArrows); ro.disconnect(); };
+  }, [updateCarouselArrows, allUpcomingDeals.length]);
+
+  const scrollCarousel = (dir: 'left' | 'right') => {
+    const el = carouselRef.current;
+    if (!el) return;
+    const cardWidth = 380;
+    el.scrollBy({ left: dir === 'left' ? -cardWidth : cardWidth, behavior: 'smooth' });
+  };
+
+  /** Pick the secondary metric for a coming-soon card */
+  const getSecondaryMetric = (deal: DealCardData): { label: string; value: string } => {
+    if (deal.irr > 0) return { label: t('estIrr'), value: `${deal.irr.toFixed(1)}%` };
+    if (deal.cap_rate > 0) return { label: t('estDividend'), value: `${deal.cap_rate.toFixed(1)}%` };
+    if (deal.equity_required > 0) return { label: t('equityTarget'), value: formatPriceCompact(deal.equity_required) };
+    return { label: t('estIrr'), value: '--' };
+  };
+
   const hasAnyDeals = deals.length > 0;
 
   return (
     <div>
       {/* ── Full-width dark hero that bleeds edge to edge ── */}
-      <div className="relative overflow-hidden" style={{ background: 'linear-gradient(180deg, #07090F 0%, #0A1628 35%, #0E3470 70%, #1A4A8A 100%)' }}>
+      <div className="relative overflow-hidden" style={{ background: allUpcomingDeals.length > 0
+        ? 'linear-gradient(180deg, #07090F 0%, #0A1628 25%, #0E3470 50%, #122D5E 75%, #0F2444 100%)'
+        : 'linear-gradient(180deg, #07090F 0%, #0A1628 35%, #0E3470 70%, #1A4A8A 100%)'
+      }}>
         {/* Subtle grid */}
         <div
           className="absolute inset-0 opacity-[0.015]"
@@ -215,7 +254,7 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
             backgroundSize: '40px 40px',
           }}
         />
-        <div className="max-w-[1600px] mx-auto relative px-10 py-12">
+        <div className="max-w-[1600px] mx-auto relative px-10 pt-12 pb-6">
           <div className="flex items-end justify-between mb-8">
             <div>
               {quarterLabel && (
@@ -256,13 +295,122 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
           )}
         </div>
 
-        {/* Gradient fade from hero into page background */}
-        <div className="h-24" style={{ background: 'linear-gradient(180deg, transparent 0%, #F8F6F1 100%)' }} />
+        {/* ── Pipeline Preview Carousel (inside hero) ── */}
+        {allUpcomingDeals.length > 0 && (
+          <div className="max-w-[1600px] mx-auto relative px-10 pb-4">
+            {/* Divider */}
+            <div className="h-px bg-white/[0.06] mb-5" />
+
+            {/* Header */}
+            <div className="flex items-end justify-between mb-5">
+              <div>
+                <span className="text-[10px] font-semibold tracking-[3px] uppercase text-[#D4A843]">
+                  {t('theHorizon')}
+                </span>
+              </div>
+              {/* Carousel arrows */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => scrollCarousel('left')}
+                  disabled={!canScrollLeft}
+                  className="w-9 h-9 rounded-lg border border-white/10 bg-white/[0.04] flex items-center justify-center text-white/50 hover:text-white hover:border-white/25 hover:bg-white/[0.08] transition-all disabled:opacity-25 disabled:cursor-not-allowed"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <button
+                  onClick={() => scrollCarousel('right')}
+                  disabled={!canScrollRight}
+                  className="w-9 h-9 rounded-lg border border-white/10 bg-white/[0.04] flex items-center justify-center text-white/50 hover:text-white hover:border-white/25 hover:bg-white/[0.08] transition-all disabled:opacity-25 disabled:cursor-not-allowed"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Scrollable card row */}
+            <div
+              ref={carouselRef}
+              className="flex gap-6 overflow-x-auto scrollbar-hide scroll-smooth"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {allUpcomingDeals.map((deal) => {
+                const isLoiSigned = deal.status === 'loi_signed';
+                const secondary = getSecondaryMetric(deal);
+                return (
+                  <div
+                    key={deal.id}
+                    className="flex-none w-[360px] group cursor-pointer"
+                  >
+                    {/* Photo */}
+                    <div className="relative h-[220px] rounded-xl overflow-hidden border border-white/[0.06]">
+                      {deal.photo_url ? (
+                        <img
+                          src={deal.photo_url}
+                          alt={deal.name}
+                          className="absolute inset-0 w-full h-full object-cover grayscale opacity-70 transition-all duration-500 group-hover:grayscale-[50%] group-hover:opacity-85"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#1a3a5c] via-[#1e4976] to-[#26608f] flex items-center justify-center">
+                          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>
+                          </svg>
+                        </div>
+                      )}
+                      {/* Bottom vignette */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+
+                      {/* Status badge */}
+                      <div className="absolute bottom-3 left-3">
+                        <span className={`text-[9px] font-bold tracking-[1.5px] uppercase px-2.5 py-[5px] rounded ${
+                          isLoiSigned
+                            ? 'bg-[#BC9C45] text-[#0A1628]'
+                            : 'bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0A1628]'
+                        }`}>
+                          {isLoiSigned ? t('analysisPhase') : t('comingSoon')}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Info below photo */}
+                    <div className="mt-4 px-1">
+                      <h3 className="text-[17px] font-semibold text-white font-[family-name:var(--font-playfair)] leading-snug tracking-[-0.01em]">
+                        {deal.name}{deal.city ? ` | ${deal.city}` : ''}
+                      </h3>
+
+                      {/* Two metrics row */}
+                      <div className="flex items-baseline gap-8 mt-3">
+                        <div>
+                          <div className="text-[8px] font-bold text-white/30 uppercase tracking-[1.5px]">
+                            {t('targetValuation')}
+                          </div>
+                          <div className="text-[17px] font-semibold text-[#D4A843] tabular-nums mt-0.5">
+                            {deal.purchase_price > 0 ? formatPriceCompact(deal.purchase_price) : '--'}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-[8px] font-bold text-white/30 uppercase tracking-[1.5px]">
+                            {secondary.label}
+                          </div>
+                          <div className="text-[17px] font-semibold text-white/80 tabular-nums mt-0.5">
+                            {secondary.value}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Gradient fade into page background */}
+        <div className="h-20" style={{ background: 'linear-gradient(180deg, transparent 0%, #F8F6F1 100%)' }} />
       </div>
 
       {/* ── Search, Filter & Sort Bar ── */}
       {hasAnyDeals && (
-        <div className="px-10 -mt-4 mb-0 relative z-10">
+        <div className="px-10 -mt-6 mb-0 relative z-10">
           <div className="max-w-[1600px] mx-auto">
             {/* Main bar */}
             <div className="bg-white rounded-xl border border-[#EEF0F4] rp-card-shadow px-5 py-3.5 flex items-center gap-3">
@@ -529,34 +677,15 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
         ) : (
           <div className="flex gap-8">
             <div className="flex-1 min-w-0 space-y-10">
-              {/* ── Upcoming Opportunities Section ── */}
-              {upcomingDeals.length > 0 && (
-                <div>
-                  <div className="flex items-center gap-3 mb-5">
-                    <h2 className="font-[family-name:var(--font-playfair)] text-[20px] font-semibold text-[#0E3470] tracking-[-0.01em]">
-                      {t('upcomingOpportunities')}
-                    </h2>
-                    <div className="flex-1 h-px bg-gradient-to-r from-[#BC9C45]/30 to-transparent" />
-                  </div>
-                  <div className="grid grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-6">
-                    {upcomingDeals.map((deal, index) => (
-                      <ComingSoonCard key={deal.id} deal={deal} index={index} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {/* ── Active Deals Section ── */}
               {activeDeals.length > 0 && (
                 <div>
-                  {upcomingDeals.length > 0 && (
-                    <div className="flex items-center gap-3 mb-5">
-                      <h2 className="font-[family-name:var(--font-playfair)] text-[20px] font-semibold text-[#0E3470] tracking-[-0.01em]">
-                        {t('activeDeals')}
-                      </h2>
-                      <div className="flex-1 h-px bg-gradient-to-r from-[#BC9C45]/30 to-transparent" />
-                    </div>
-                  )}
+                  <div className="flex items-center gap-3 mb-5">
+                    <h2 className="font-[family-name:var(--font-playfair)] text-[20px] font-semibold text-[#0E3470] tracking-[-0.01em]">
+                      {t('activeDeals')}
+                    </h2>
+                    <div className="flex-1 h-px bg-gradient-to-r from-[#BC9C45]/30 to-transparent" />
+                  </div>
                   <div className="grid grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-7">
                     {activeDeals.map((deal, index) => (
                       <div key={deal.id} {...(index === 0 ? { 'data-tour': 'first-deal' } : {})}>
