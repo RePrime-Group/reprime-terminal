@@ -60,14 +60,14 @@ export function formatPercent(value: string | number | null | undefined): string
   if (raw.endsWith('%')) {
     const n = parseFloat(raw.replace('%', ''));
     if (isNaN(n)) return raw;
-    return `${n.toFixed(1)}%`;
+    return `${n.toFixed(2)}%`;
   }
   const n = parseFloat(raw);
   if (isNaN(n)) return value?.toString() || '—';
   // Only multiply if it's a true decimal (between 0 and 1 exclusive)
   // Values like "10", "18.5", "125" are already percentages
-  if (n > 0 && n < 1) return `${(n * 100).toFixed(1)}%`;
-  return `${n.toFixed(1)}%`;
+  if (n > 0 && n < 1) return `${(n * 100).toFixed(2)}%`;
+  return `${n.toFixed(2)}%`;
 }
 
 /** "1.25x" — DSCR format */

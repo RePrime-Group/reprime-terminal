@@ -952,7 +952,7 @@ export default function EditDealPage() {
         });
         const m = calculateDeal(inputs);
         const fmt = (n: number) => '$' + Math.round(n).toLocaleString();
-        const pct = (n: number, d = 1) => n.toFixed(d) + '%';
+        const pct = (n: number, d = 2) => n.toFixed(d) + '%';
 
         return (<>
           {/* Core Inputs */}

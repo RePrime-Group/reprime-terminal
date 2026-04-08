@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useCountdown } from '@/lib/hooks/useCountdown';
+import { formatPriceCompact, formatPercent, formatDSCR, formatPrice } from '@/lib/utils/format';
 import type { DealCardData } from '@/components/portal/PortalDashboardClient';
 
 interface ComingSoonCardProps {
@@ -109,17 +110,29 @@ export default function ComingSoonCard({ deal, index }: ComingSoonCardProps) {
             </p>
           )}
 
-          {/* Blurred metrics placeholder */}
-          <div className="mt-4 grid grid-cols-3 gap-3">
-            {(['purchase', 'capRate', 'irr'] as const).map((key) => (
-              <div key={key}>
-                <div className="text-[8px] font-bold text-[#9CA3AF] uppercase tracking-[2px]">{t(key)}</div>
-                <div className="text-[14px] font-semibold text-[#D1D5DB] blur-[4px] select-none tabular-nums">
-                  {key === 'purchase' ? '$X.XM' : 'X.X%'}
+          {/* Financial metrics */}
+          <div className="mt-4 grid grid-cols-3 gap-x-3 gap-y-2.5">
+            {[
+              { label: t('purchase'), value: formatPriceCompact(deal.purchase_price) },
+              { label: t('noi'), value: formatPrice(deal.noi) },
+              { label: t('capRate'), value: formatPercent(deal.cap_rate) },
+              { label: t('irr'), value: formatPercent(deal.irr), highlight: true },
+              { label: t('coc'), value: formatPercent(deal.coc), highlight: true },
+              { label: t('dscr'), value: formatDSCR(deal.dscr) },
+            ].map((m) => (
+              <div key={m.label}>
+                <div className="text-[8px] font-bold text-[#9CA3AF] uppercase tracking-[2px]">{m.label}</div>
+                <div className={`text-[14px] font-semibold tabular-nums ${m.highlight ? 'text-[#0B8A4D]' : 'text-[#0E3470]'}`}>
+                  {m.value}
                 </div>
               </div>
             ))}
           </div>
+
+          {/* Disclaimer */}
+          <p className="mt-3 text-[10px] text-[#9CA3AF] italic leading-relaxed">
+            {t('metricsDisclaimer')}
+          </p>
 
           {/* PSA Countdown (LOI Signed only) */}
           {isLoiSigned && psaTarget && !countdown.isExpired && (

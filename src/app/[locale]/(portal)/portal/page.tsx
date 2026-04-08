@@ -1,9 +1,17 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { parseDealInputs, calculateDeal } from '@/lib/utils/deal-calculator';
 import PortalDashboardClient from '@/components/portal/PortalDashboardClient';
 
 export const metadata = { title: 'Active Opportunities — RePrime Terminal' };
+
+/** Parse text column to number, stripping $, commas, whitespace */
+function num(val: string | number | null | undefined): number {
+  if (val == null) return 0;
+  if (typeof val === 'number') return val;
+  return parseFloat(val.replace(/[$,%\s]/g, '')) || 0;
+}
 
 export default async function PortalDashboardPage({
   params,
@@ -19,7 +27,7 @@ export default async function PortalDashboardPage({
   // Fetch deals — include new pre-pipeline statuses
   const { data: deals } = await supabase
     .from('terminal_deals')
-    .select('id, name, city, state, property_type, purchase_price, noi, cap_rate, irr, coc, dscr, equity_required, seller_financing, special_terms, dd_deadline, status, assigned_to, quarter_release, square_footage, units, class_type, psa_draft_start, loi_signed_at, teaser_description')
+    .select('id, name, city, state, property_type, purchase_price, noi, cap_rate, irr, coc, dscr, equity_required, seller_financing, special_terms, dd_deadline, status, assigned_to, quarter_release, square_footage, units, class_type, psa_draft_start, loi_signed_at, teaser_description, ltv, interest_rate, amortization_years, loan_fee_points, io_period_months, mezz_percent, mezz_rate, mezz_term_months, seller_credit, assignment_fee, acq_fee, asset_mgmt_fee, gp_carry, pref_return, hold_period_years, exit_cap_rate')
     .in('status', ['coming_soon', 'loi_signed', 'published', 'assigned', 'closed'])
     .order('created_at', { ascending: false });
 
@@ -106,19 +114,29 @@ export default async function PortalDashboardPage({
       photo_url = urlData?.publicUrl ?? null;
     }
 
+    // Compute metrics from deal inputs, fall back to stored DB values
+    const inputs = parseDealInputs(deal as unknown as Record<string, unknown>);
+    const computed = calculateDeal(inputs);
+
+    const dbCapRate = num(deal.cap_rate);
+    const dbIrr = num(deal.irr);
+    const dbCoc = num(deal.coc);
+    const dbDscr = num(deal.dscr);
+    const dbEquity = num(deal.equity_required);
+
     return {
       id: deal.id,
       name: deal.name,
       city: deal.city,
       state: deal.state,
       property_type: deal.property_type,
-      purchase_price: parseFloat(deal.purchase_price) || 0,
-      noi: parseFloat(deal.noi) || 0,
-      cap_rate: parseFloat(deal.cap_rate) || 0,
-      irr: parseFloat(deal.irr) || 0,
-      coc: parseFloat(deal.coc) || 0,
-      dscr: parseFloat(deal.dscr) || 0,
-      equity_required: parseFloat(deal.equity_required) || 0,
+      purchase_price: num(deal.purchase_price),
+      noi: num(deal.noi),
+      cap_rate: computed.capRate > 0 ? computed.capRate : dbCapRate,
+      irr: computed.irr !== null && computed.irr !== 0 ? computed.irr : dbIrr,
+      coc: computed.cocReturn !== 0 ? computed.cocReturn : dbCoc,
+      dscr: computed.combinedDSCR > 0 ? computed.combinedDSCR : dbDscr,
+      equity_required: computed.netEquity > 0 ? computed.netEquity : dbEquity,
       seller_financing: deal.seller_financing,
       special_terms: deal.special_terms,
       dd_deadline: deal.dd_deadline,

@@ -45,7 +45,7 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
 
   const metrics = [
     { label: t('purchase'), value: formatPriceCompact(deal.purchase_price), highlight: false },
-    { label: t('noi'), value: formatPriceCompact(deal.noi), highlight: false },
+    { label: t('noi'), value: formatPrice(deal.noi), highlight: false },
     { label: t('capRate'), value: formatPercent(deal.cap_rate), highlight: false },
     { label: t('irr'), value: formatPercent(deal.irr), highlight: true },
     { label: t('coc'), value: formatPercent(deal.coc), highlight: true },

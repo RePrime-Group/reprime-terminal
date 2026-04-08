@@ -48,7 +48,7 @@ export const DEAL_STATUS_TRANSITIONS: Record<string, { roles: string[]; to: stri
   draft: { roles: ['owner', 'employee'], to: ['coming_soon', 'published'] },
   coming_soon: { roles: ['owner', 'employee'], to: ['loi_signed', 'draft'] },
   loi_signed: { roles: ['owner', 'employee'], to: ['published', 'coming_soon'] },
-  published: { roles: ['owner'], to: ['coming_soon', 'draft', 'under_review'] },
+  published: { roles: ['owner'], to: ['draft', 'under_review'] },
   under_review: { roles: ['owner'], to: ['published', 'assigned'] },
   assigned: { roles: ['owner'], to: ['closed'] },
   closed: { roles: [], to: [] },

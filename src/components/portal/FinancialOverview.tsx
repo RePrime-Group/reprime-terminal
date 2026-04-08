@@ -278,8 +278,8 @@ function ReturnComparison({ inputs, metrics, traditional }: { inputs: DealInputs
     { label: t('sellerMezz'), t: '—', m: `${fmtFull(metrics.mezzAmount)} ${t('at')} ${pct(inputs.mezzRate)} ${t('io')}` },
     { label: t('investorEquity'), t: fmtFull(traditional.netEquity), m: fmtFull(metrics.netEquity) },
     { label: t('annualCashFlow'), t: fmtFull(traditional.distributableCashFlow), m: fmtFull(metrics.distributableCashFlow) },
-    { label: t('cocReturn'), t: pct(traditional.cocReturn), m: pct(metrics.cocReturn), bold: true, greenIfBetter: metrics.cocReturn - traditional.cocReturn > 2 },
-    { label: `${t('irr')} (${inputs.holdPeriodYears}yr)`, t: traditional.irr !== null ? pct(traditional.irr) : 'N/A', m: metrics.irr !== null ? pct(metrics.irr) : 'N/A', bold: true, greenIfBetter: (metrics.irr ?? 0) - (traditional.irr ?? 0) > 2 },
+    { label: t('cocReturn'), t: pct(traditional.cocReturn, 2), m: pct(metrics.cocReturn, 2), bold: true, greenIfBetter: metrics.cocReturn - traditional.cocReturn > 2 },
+    { label: `${t('irr')} (${inputs.holdPeriodYears}yr)`, t: traditional.irr !== null ? pct(traditional.irr, 2) : 'N/A', m: metrics.irr !== null ? pct(metrics.irr, 2) : 'N/A', bold: true, greenIfBetter: (metrics.irr ?? 0) - (traditional.irr ?? 0) > 2 },
   ];
 
   return (

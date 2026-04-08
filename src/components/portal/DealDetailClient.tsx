@@ -655,7 +655,7 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
     { l: t('exitValue'), v: fmt(exitValue), c: '#0E3470' },
     { l: t('totalProfit'), v: fmt(totalReturn), c: totalReturn > 0 ? '#0B8A4D' : '#DC2626' },
     { l: t('equityMultiple'), v: equityMultiple + 'x', c: '#BC9C45' },
-    { l: t('estLeveredIrr'), v: irrEst.toFixed(1) + '%', c: '#0B8A4D' },
+    { l: t('estLeveredIrr'), v: irrEst.toFixed(2) + '%', c: '#0B8A4D' },
     { l: t('annualDebtService'), v: fmt(annualDebt), c: '#0E3470' },
     { l: t('equityRequired'), v: fmt(equityIn), c: '#BC9C45' },
   ];
@@ -719,36 +719,93 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
         {/* Cash flow chart */}
         <div className="bg-white rounded-xl p-6 border border-[#EEF0F4] rp-card-shadow">
           <h4 className="text-[13px] font-semibold text-[#0E3470] mb-4">{t('projectedAnnualCashFlow')}</h4>
-          <div className="flex items-end gap-2" style={{ height: 180 }}>
-            {(() => {
-              const cashFlows = Array.from({ length: holdNum }, (_, i) =>
-                noiNum * Math.pow(1 + growthNum / 100, i) - annualDebt
-              );
-              const maxCF = Math.max(...cashFlows.map(Math.abs), 1);
-              return cashFlows.map((cf, i) => {
-                // Scale from 20% to 100% height based on absolute value
-                const pct = 20 + (Math.abs(cf) / maxCF) * 80;
-                return (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
-                    <span className="text-[9px] font-bold tabular-nums" style={{ color: cf > 0 ? '#0B8A4D' : '#DC2626' }}>
-                      {fmt(cf)}
-                    </span>
-                    <div
-                      className="w-full rounded-t-lg transition-all duration-500"
-                      style={{
-                        height: `${pct}%`,
-                        background: cf > 0
-                          ? `linear-gradient(180deg, #0B8A4D, rgba(11,138,77,0.3))`
-                          : `linear-gradient(180deg, #DC2626, rgba(220,38,38,0.3))`,
-                        minHeight: 24,
-                      }}
-                    />
-                    <span className="text-[9px] text-[#9CA3AF] font-semibold">{t('yr')} {i + 1}</span>
+          {(() => {
+            const chartH = 180;
+            const cashFlows = Array.from({ length: holdNum }, (_, i) =>
+              noiNum * Math.pow(1 + growthNum / 100, i) - annualDebt
+            );
+            const maxCF = Math.max(...cashFlows, 0);
+            const minCF = Math.min(...cashFlows);
+            // Pick a nice step that gives ~4-5 grid lines between floor and ceiling
+            const range = maxCF - minCF || maxCF * 0.2 || 100_000;
+            const steps = [5_000, 10_000, 25_000, 50_000, 100_000, 250_000, 500_000, 1_000_000, 2_500_000];
+            const step = steps.find(s => Math.ceil(range / s) <= 5) ?? steps[steps.length - 1];
+            const yFloor = Math.max(0, Math.floor(minCF / step) * step);
+            const yCeil = Math.ceil(maxCF * 1.05 / step) * step;
+            const ticks: number[] = [];
+            for (let v = yFloor; v <= yCeil; v += step) ticks.push(v);
+            const yRange = yCeil - yFloor || 1;
+            const yLabel = (v: number) => v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(1)}M` : `$${Math.round(v / 1_000).toLocaleString()}K`;
+
+            return (
+              <div>
+                {/* Chart area: y-axis + plot */}
+                <div className="flex">
+                  {/* Y-axis labels — positioned to align with grid lines */}
+                  <div className="relative shrink-0 w-[44px]" style={{ height: chartH }}>
+                    {ticks.map((tick) => {
+                      const bottom = ((tick - yFloor) / yRange) * 100;
+                      return (
+                        <span
+                          key={tick}
+                          className="absolute right-1 text-[8px] text-[#9CA3AF] tabular-nums leading-none whitespace-nowrap"
+                          style={{ bottom: `${bottom}%`, transform: 'translateY(50%)' }}
+                        >
+                          {yLabel(tick)}
+                        </span>
+                      );
+                    })}
                   </div>
-                );
-              });
-            })()}
-          </div>
+                  {/* Plot area — bars + grid */}
+                  <div className="flex-1 relative" style={{ height: chartH }}>
+                    {/* Grid lines */}
+                    {ticks.map((tick) => {
+                      const bottom = ((tick - yFloor) / yRange) * 100;
+                      return (
+                        <div
+                          key={tick}
+                          className="absolute left-0 right-0 border-t border-[#EEF0F4]"
+                          style={{ bottom: `${bottom}%` }}
+                        />
+                      );
+                    })}
+                    {/* Bars */}
+                    <div className="flex items-end gap-3 relative z-10 h-full px-2">
+                      {cashFlows.map((cf, i) => {
+                        const barH = yRange > 0 ? Math.max(((cf - yFloor) / yRange) * chartH, 4) : 4;
+                        return (
+                          <div key={i} className="flex-1 flex flex-col items-center justify-end h-full">
+                            <span className="text-[9px] font-bold tabular-nums mb-1" style={{ color: cf > 0 ? '#0B8A4D' : '#DC2626' }}>
+                              {fmt(cf)}
+                            </span>
+                            <div
+                              className="w-full rounded-t-lg transition-all duration-500"
+                              style={{
+                                height: barH,
+                                background: cf > 0
+                                  ? 'linear-gradient(180deg, #0B8A4D, rgba(11,138,77,0.3))'
+                                  : 'linear-gradient(180deg, #DC2626, rgba(220,38,38,0.3))',
+                              }}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+                {/* X-axis labels — below chart, aligned with bars */}
+                <div className="flex" style={{ marginLeft: 44 }}>
+                  <div className="flex-1 flex gap-3 px-2">
+                    {cashFlows.map((_, i) => (
+                      <div key={i} className="flex-1 text-center">
+                        <span className="text-[9px] text-[#9CA3AF] font-semibold">{t('yr')} {i + 1}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Cap rate sensitivity */}
@@ -759,14 +816,15 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
               const ev = futureNOI / (cr / 100);
               const isSel = cr === exitCapNum;
               return (
-                <div
+                <button
                   key={cr}
-                  className="text-center py-2.5 px-1 rounded-lg transition-all"
+                  onClick={() => setExitCap(String(cr))}
+                  className="text-center py-2.5 px-1 rounded-lg transition-all cursor-pointer hover:ring-2 hover:ring-[#BC9C45]/30"
                   style={{ background: isSel ? '#0E3470' : '#F7F8FA' }}
                 >
                   <div className="text-[10px] font-bold" style={{ color: isSel ? '#D4A843' : '#9CA3AF' }}>{cr}%</div>
                   <div className="text-[12px] font-bold mt-1 tabular-nums" style={{ color: isSel ? '#FFFFFF' : '#0E3470' }}>{fmt(ev)}</div>
-                </div>
+                </button>
               );
             })}
           </div>
@@ -1046,7 +1104,7 @@ function IRRCalculatorPanel({
           <div className="mb-4">
             <div className="text-[#9CA3AF] text-xs mb-1">{t('projectedIrr')}</div>
             <div className="text-[52px] font-[800] text-[#0B8A4D] leading-none">
-              {assignmentIRRProp !== null ? assignmentIRRProp.toFixed(1) + '%' : '--'}
+              {assignmentIRRProp !== null ? assignmentIRRProp.toFixed(2) + '%' : '--'}
             </div>
           </div>
           <div className="text-xs text-[#9CA3AF] mt-2">
@@ -1077,7 +1135,7 @@ function IRRCalculatorPanel({
           <div className="mb-4">
             <div className="text-[#9CA3AF] text-xs mb-1">{t('projectedIrr')}</div>
             <div className="text-[52px] font-[800] text-[#0B8A4D] leading-none">
-              {baseIRRProp > 0 ? baseIRRProp.toFixed(1) + '%' : '--'}
+              {baseIRRProp > 0 ? baseIRRProp.toFixed(2) + '%' : '--'}
             </div>
           </div>
         </div>
@@ -1948,9 +2006,9 @@ export default function DealDetailClient({
           {[
             { label: tc('purchasePrice'), value: formatPrice(deal.purchase_price), borderColor: '#0E3470' },
             { label: tc('noi'), value: formatPrice(deal.noi), borderColor: '#0E3470' },
-            { label: tc('capRate'), value: computed.capRate > 0 ? computed.capRate.toFixed(1) + '%' : formatPercent(deal.cap_rate), borderColor: '#BC9C45' },
-            { label: tc('irr'), value: computed.irr !== null ? computed.irr.toFixed(1) + '%' : (deal.irr ? formatPercent(deal.irr) : '—'), borderColor: '#0B8A4D', valueColor: '#0B8A4D' },
-            { label: tc('coc'), value: computed.cocReturn !== 0 ? computed.cocReturn.toFixed(1) + '%' : (deal.coc ? formatPercent(deal.coc) : '—'), borderColor: '#0B8A4D', valueColor: '#0B8A4D' },
+            { label: tc('capRate'), value: computed.capRate > 0 ? computed.capRate.toFixed(2) + '%' : formatPercent(deal.cap_rate), borderColor: '#BC9C45' },
+            { label: tc('irr'), value: computed.irr !== null ? computed.irr.toFixed(2) + '%' : (deal.irr ? formatPercent(deal.irr) : '—'), borderColor: '#0B8A4D', valueColor: '#0B8A4D' },
+            { label: tc('coc'), value: computed.cocReturn !== 0 ? computed.cocReturn.toFixed(2) + '%' : (deal.coc ? formatPercent(deal.coc) : '—'), borderColor: '#0B8A4D', valueColor: '#0B8A4D' },
             { label: tc('dscr'), value: computed.combinedDSCR > 0 ? computed.combinedDSCR.toFixed(2) + 'x' : formatDSCR(deal.dscr), borderColor: '#0E3470' },
             { label: tc('equityRequired'), value: computed.netEquity > 0 ? '$' + Math.round(computed.netEquity).toLocaleString() : formatPrice(deal.equity_required), borderColor: '#BC9C45' },
           ].map((m, idx) => (
@@ -2457,7 +2515,7 @@ export default function DealDetailClient({
                       {t('projectedIrr')}
                     </div>
                     <div className="text-2xl font-bold text-[#0B8A4D]">
-                      {computed.assignmentIRR !== null ? computed.assignmentIRR.toFixed(1) + '%' : '--'}
+                      {computed.assignmentIRR !== null ? computed.assignmentIRR.toFixed(2) + '%' : '--'}
                     </div>
                     <div className="text-[11px] text-[#6B7280] mt-1">
                       {t('feeIncluded')}
@@ -2507,7 +2565,7 @@ export default function DealDetailClient({
                       {t('projectedIrr')}
                     </div>
                     <div className="text-2xl font-bold text-[#0B8A4D]">
-                      {computed.irr !== null ? computed.irr.toFixed(1) + '%' : '--'}
+                      {computed.irr !== null ? computed.irr.toFixed(2) + '%' : '--'}
                     </div>
                     <div className="text-[11px] text-[#6B7280] mt-1">
                       {t('allFeesIncludedShort')}
