@@ -93,6 +93,7 @@ export interface TerminalDeal {
   // Hold/Exit
   hold_period_years: string | null;
   exit_cap_rate: string | null;
+  rent_growth: string | null;
   debt_terms_quoted: boolean;
   status: DealStatus;
   neighborhood: string | null;

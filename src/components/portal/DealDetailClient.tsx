@@ -12,7 +12,7 @@ import FadeInOnScroll from '@/components/ui/FadeInOnScroll';
 import NDAModal from '@/components/portal/NDAModal';
 import DataRoomTab from '@/components/portal/DataRoomTab';
 import { OverviewFinancials, DealStructureFinancials } from '@/components/portal/FinancialOverview';
-import { parseDealInputs, calculateDeal, calculateTraditionalClose } from '@/lib/utils/deal-calculator';
+import { parseDealInputs, calculateDeal, calculateTraditionalClose, type DealInputs } from '@/lib/utils/deal-calculator';
 import type {
   DealWithDetails,
   TerminalDDFolder,
@@ -616,30 +616,41 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
 
 function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
   const t = useTranslations('portal.dealDetail');
-  const [exitCap, setExitCap] = useState('7.5');
-  const [holdYears, setHoldYears] = useState('5');
+
+  // Base inputs & metrics from the deal's stored data — computed once
+  const baseInputs = useMemo(
+    () => parseDealInputs(deal as unknown as Record<string, unknown>),
+    [deal]
+  );
+  const baseMetrics = useMemo(() => calculateDeal(baseInputs), [baseInputs]);
+
+  // Slider state — initialized from deal's actual data
+  const [exitCap, setExitCap] = useState(
+    baseInputs.exitCapRate > 0
+      ? String(baseInputs.exitCapRate)
+      : String(+baseMetrics.capRate.toFixed(2))
+  );
+  const [holdYears, setHoldYears] = useState(String(baseInputs.holdPeriodYears || 5));
   const [rentGrowth, setRentGrowth] = useState('3');
-  const [ltv, setLtv] = useState('65');
-  const [rate, setRate] = useState('5.5');
+  const [ltv, setLtv] = useState(String(baseInputs.ltv));
+  const [rate, setRate] = useState(String(baseInputs.interestRate));
 
-  const noiNum = parseFloat(deal.noi ?? '0') || 0;
-  const priceNum = parseFloat(deal.purchase_price ?? '0') || 0;
-  const exitCapNum = parseFloat(exitCap) || 7.5;
+  // Live modeling metrics — recomputes on every slider change via the REAL engine
+  const mm = useMemo(() => {
+    const overriddenInputs: DealInputs = {
+      ...baseInputs,
+      ltv: parseFloat(ltv) || baseInputs.ltv,
+      interestRate: parseFloat(rate) || baseInputs.interestRate,
+      holdPeriodYears: parseInt(holdYears) || baseInputs.holdPeriodYears || 5,
+      exitCapRate: parseFloat(exitCap) || 0,
+      rentGrowth: parseFloat(rentGrowth) || 0,
+    };
+    return calculateDeal(overriddenInputs);
+  }, [baseInputs, ltv, rate, holdYears, exitCap, rentGrowth]);
+
   const holdNum = parseInt(holdYears) || 5;
-  const growthNum = parseFloat(rentGrowth) || 3;
-  const ltvNum = parseFloat(ltv) || 65;
-  const rateNum = parseFloat(rate) || 5.5;
-
-  const futureNOI = noiNum * Math.pow(1 + growthNum / 100, holdNum);
-  const exitValue = futureNOI / (exitCapNum / 100);
-  const totalReturn = exitValue - priceNum;
-  const equityIn = priceNum * (1 - ltvNum / 100);
-  const annualDebt = priceNum * (ltvNum / 100) * (rateNum / 100);
-  const totalCashFlow = Array.from({ length: holdNum }, (_, i) =>
-    noiNum * Math.pow(1 + growthNum / 100, i) - annualDebt
-  ).reduce((a, b) => a + b, 0);
-  const equityMultiple = equityIn > 0 ? ((totalCashFlow + exitValue - priceNum * (ltvNum / 100)) / equityIn).toFixed(2) : '0';
-  const irrEst = equityIn > 0 ? (Math.pow((totalCashFlow + exitValue - priceNum * (ltvNum / 100)) / equityIn, 1 / holdNum) - 1) * 100 : 0;
+  const exitCapNum = parseFloat(exitCap) || 0;
+  const totalProfit = mm.annualCashFlows.reduce((a, b) => a + b, 0) + mm.netSaleProceeds - mm.netEquity;
 
   const fmt = (n: number) => '$' + Math.round(n).toLocaleString();
 
@@ -652,13 +663,16 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
   ];
 
   const results = [
-    { l: t('exitValue'), v: fmt(exitValue), c: '#0E3470' },
-    { l: t('totalProfit'), v: fmt(totalReturn), c: totalReturn > 0 ? '#0B8A4D' : '#DC2626' },
-    { l: t('equityMultiple'), v: equityMultiple + 'x', c: '#BC9C45' },
-    { l: t('estLeveredIrr'), v: irrEst.toFixed(2) + '%', c: '#0B8A4D' },
-    { l: t('annualDebtService'), v: fmt(annualDebt), c: '#0E3470' },
-    { l: t('equityRequired'), v: fmt(equityIn), c: '#BC9C45' },
+    { l: t('exitValue'), v: fmt(mm.exitPrice), c: '#0E3470' },
+    { l: t('totalProfit'), v: fmt(totalProfit), c: totalProfit > 0 ? '#0B8A4D' : '#DC2626' },
+    { l: t('equityMultiple'), v: mm.equityMultiple.toFixed(2) + 'x', c: '#BC9C45' },
+    { l: t('estLeveredIrr'), v: mm.irr !== null ? mm.irr.toFixed(2) + '%' : 'N/A', c: '#0B8A4D' },
+    { l: t('annualDebtService'), v: fmt(mm.annualSeniorDS + mm.annualMezzPayment), c: '#0E3470' },
+    { l: t('equityRequired'), v: fmt(mm.netEquity), c: '#BC9C45' },
   ];
+
+  // Exit NOI for cap rate sensitivity (grown NOI at hold period end)
+  const exitNOI = baseInputs.noi * Math.pow(1 + (parseFloat(rentGrowth) || 0) / 100, holdNum);
 
   return (
     <div className="grid grid-cols-[1fr_1.4fr] gap-6">
@@ -695,7 +709,7 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
         <div className="mt-4 p-3.5 bg-[#FDF8ED] rounded-lg border border-[#ECD9A0]/30">
           <div className="text-[9px] font-semibold text-[#BC9C45] uppercase tracking-[2px] mb-1">{t('basis')}</div>
           <div className="text-[11px] text-[#4B5563]">
-            {t('purchase')} {formatPrice(deal.purchase_price)} · {t('cap')} {formatPercent(deal.cap_rate)} · {t('noi')} {formatPrice(deal.noi)}
+            {t('purchase')} {fmt(mm.netBasis)} · {t('cap')} {mm.capRate.toFixed(2)}% · {t('noi')} {formatPrice(deal.noi)}
           </div>
         </div>
       </div>
@@ -721,12 +735,9 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
           <h4 className="text-[13px] font-semibold text-[#0E3470] mb-4">{t('projectedAnnualCashFlow')}</h4>
           {(() => {
             const chartH = 180;
-            const cashFlows = Array.from({ length: holdNum }, (_, i) =>
-              noiNum * Math.pow(1 + growthNum / 100, i) - annualDebt
-            );
+            const cashFlows = mm.annualCashFlows;
             const maxCF = Math.max(...cashFlows, 0);
             const minCF = Math.min(...cashFlows);
-            // Pick a nice step that gives ~4-5 grid lines between floor and ceiling
             const range = maxCF - minCF || maxCF * 0.2 || 100_000;
             const steps = [5_000, 10_000, 25_000, 50_000, 100_000, 250_000, 500_000, 1_000_000, 2_500_000];
             const step = steps.find(s => Math.ceil(range / s) <= 5) ?? steps[steps.length - 1];
@@ -739,9 +750,7 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
 
             return (
               <div>
-                {/* Chart area: y-axis + plot */}
                 <div className="flex">
-                  {/* Y-axis labels — positioned to align with grid lines */}
                   <div className="relative shrink-0 w-[44px]" style={{ height: chartH }}>
                     {ticks.map((tick) => {
                       const bottom = ((tick - yFloor) / yRange) * 100;
@@ -756,9 +765,7 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
                       );
                     })}
                   </div>
-                  {/* Plot area — bars + grid */}
                   <div className="flex-1 relative" style={{ height: chartH }}>
-                    {/* Grid lines */}
                     {ticks.map((tick) => {
                       const bottom = ((tick - yFloor) / yRange) * 100;
                       return (
@@ -769,7 +776,6 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
                         />
                       );
                     })}
-                    {/* Bars */}
                     <div className="flex items-end gap-3 relative z-10 h-full px-2">
                       {cashFlows.map((cf, i) => {
                         const barH = yRange > 0 ? Math.max(((cf - yFloor) / yRange) * chartH, 4) : 4;
@@ -793,7 +799,6 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
                     </div>
                   </div>
                 </div>
-                {/* X-axis labels — below chart, aligned with bars */}
                 <div className="flex" style={{ marginLeft: 44 }}>
                   <div className="flex-1 flex gap-3 px-2">
                     {cashFlows.map((_, i) => (
@@ -813,7 +818,7 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
           <h4 className="text-[13px] font-semibold text-[#0E3470] mb-3">{t('capRateSensitivity')}</h4>
           <div className="grid grid-cols-5 gap-2">
             {[6.0, 6.5, 7.0, 7.5, 8.0].map((cr) => {
-              const ev = futureNOI / (cr / 100);
+              const ev = exitNOI / (cr / 100);
               const isSel = cr === exitCapNum;
               return (
                 <button

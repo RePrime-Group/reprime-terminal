@@ -81,6 +81,7 @@ interface DealFormData {
   // Exit
   hold_period_years: string;
   exit_cap_rate: string;
+  rent_growth: string;
   debt_terms_quoted: boolean;
   // Asset mgmt fee already exists as asset_mgmt_fee
   dd_deadline: string;
@@ -201,6 +202,7 @@ function dealToForm(deal: TerminalDeal): DealFormData {
     pref_return: deal.pref_return ?? '8',
     hold_period_years: deal.hold_period_years ?? '5',
     exit_cap_rate: deal.exit_cap_rate ?? '',
+    rent_growth: deal.rent_growth ?? '',
     debt_terms_quoted: deal.debt_terms_quoted ?? false,
     dd_deadline: toDatetimeLocal(deal.dd_deadline),
     close_deadline: toDatetimeLocal(deal.close_deadline),
@@ -471,6 +473,7 @@ export default function EditDealPage() {
         pref_return: form.pref_return || '8',
         hold_period_years: form.hold_period_years || '5',
         exit_cap_rate: form.exit_cap_rate || null,
+        rent_growth: form.rent_growth || null,
         debt_terms_quoted: form.debt_terms_quoted,
         dd_deadline: form.dd_deadline || null,
         close_deadline: form.close_deadline || null,
@@ -499,7 +502,7 @@ export default function EditDealPage() {
       updateData.cap_rate = computedMetrics.capRate > 0 ? computedMetrics.capRate.toFixed(2) : null;
       updateData.irr = computedMetrics.irr !== null ? computedMetrics.irr.toFixed(2) : null;
       updateData.coc = computedMetrics.cocReturn !== 0 ? computedMetrics.cocReturn.toFixed(2) : null;
-      updateData.dscr = computedMetrics.lenderDSCR > 0 ? computedMetrics.lenderDSCR.toFixed(2) : null;
+      updateData.dscr = computedMetrics.combinedDSCR > 0 ? computedMetrics.combinedDSCR.toFixed(2) : null;
       updateData.equity_required = computedMetrics.netEquity > 0 ? String(Math.round(computedMetrics.netEquity)) : null;
       updateData.loan_estimate = computedMetrics.loanAmount > 0 ? String(Math.round(computedMetrics.loanAmount)) : null;
 
@@ -949,6 +952,7 @@ export default function EditDealPage() {
           acq_fee: form.acq_fee, asset_mgmt_fee: form.asset_mgmt_fee,
           gp_carry: form.gp_carry, pref_return: form.pref_return,
           hold_period_years: form.hold_period_years, exit_cap_rate: form.exit_cap_rate,
+          rent_growth: form.rent_growth,
         });
         const m = calculateDeal(inputs);
         const fmt = (n: number) => '$' + Math.round(n).toLocaleString();
@@ -1009,11 +1013,12 @@ export default function EditDealPage() {
           {/* Credits & Exit */}
           <div className="bg-white rounded-2xl border border-rp-gray-200 p-6 mb-6">
             <h2 className="text-[16px] font-semibold text-rp-navy mb-5">Credits & Exit Assumptions</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <Input label="Seller Credit ($)" value={form.seller_credit} onChange={(e) => updateField('seller_credit', e.target.value)} placeholder="0" />
               <Input label="Hold Period (yrs)" value={form.hold_period_years} onChange={(e) => updateField('hold_period_years', e.target.value)} placeholder="5" />
               <Input label="Exit Cap Rate %" value={form.exit_cap_rate} onChange={(e) => updateField('exit_cap_rate', e.target.value)} placeholder="Same as entry" />
               <Input label="Pref Return %" value={form.pref_return} onChange={(e) => updateField('pref_return', e.target.value)} placeholder="8" />
+              <Input label="Annual Rent Growth %" value={form.rent_growth} onChange={(e) => updateField('rent_growth', e.target.value)} placeholder="e.g. 3.0 (blank = 0%)" />
             </div>
           </div>
 

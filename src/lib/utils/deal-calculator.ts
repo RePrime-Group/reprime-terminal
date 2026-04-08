@@ -33,9 +33,15 @@ export interface DealInputs {
   // Hold/Exit
   holdPeriodYears: number; // years (e.g. 5)
   exitCapRate: number;     // % (uses entry cap if 0)
+
+  // Growth
+  rentGrowth?: number;     // annual % rent growth, defaults to 0
 }
 
 export interface DealMetrics {
+  // Basis
+  netBasis: number;         // purchasePrice - sellerCredit
+
   // Senior Debt
   loanAmount: number;
   monthlyPayment: number;
@@ -52,7 +58,7 @@ export interface DealMetrics {
   closingCosts: number;
   grossEquity: number;
   netEquity: number;        // investor check size
-  totalLeverage: number;    // % of purchase price
+  totalLeverage: number;    // % of net basis
 
   // Return Metrics
   capRate: number;
@@ -111,6 +117,7 @@ export function parseDealInputs(deal: Record<string, unknown>): DealInputs {
     prefReturn: p(deal.pref_return as string) || 8,
     holdPeriodYears: p(deal.hold_period_years as string) || 5,
     exitCapRate: p(deal.exit_cap_rate as string) || 0,
+    rentGrowth: p(deal.rent_growth as string) || 0,
   };
 }
 
@@ -120,12 +127,16 @@ export function calculateDeal(inputs: DealInputs): DealMetrics {
     sellerFinancing, mezzPercent, mezzRate, mezzTermMonths,
     sellerCredit, assignmentFee, acqFee, assetMgmtFee, gpCarry, prefReturn,
     holdPeriodYears, exitCapRate: exitCapInput,
+    rentGrowth = 0,
   } = inputs;
 
   const warnings: string[] = [];
 
+  // ═══════ NET BASIS ═══════
+  const netBasis = purchasePrice - sellerCredit;
+
   // ═══════ SENIOR DEBT ═══════
-  const loanAmount = purchasePrice * (ltv / 100);
+  const loanAmount = netBasis * (ltv / 100);
   const monthlyRate = interestRate / 100 / 12;
   const numPayments = amortYears * 12;
 
@@ -143,19 +154,19 @@ export function calculateDeal(inputs: DealInputs): DealMetrics {
   const annualIODS = ioPeriodMonths > 0 ? loanAmount * (interestRate / 100) : 0;
 
   // ═══════ MEZZANINE ═══════
-  const mezzAmount = sellerFinancing ? purchasePrice * (mezzPercent / 100) : 0;
+  const mezzAmount = sellerFinancing ? netBasis * (mezzPercent / 100) : 0;
   const annualMezzPayment = sellerFinancing ? mezzAmount * (mezzRate / 100) : 0; // IO ONLY. Always.
   const mezzBalloon = mezzAmount; // full principal at maturity
 
   // ═══════ EQUITY & CAPITAL STACK ═══════
   const legalTitleEstimate = 25000; // placeholder
   const closingCosts = loanFeeDollar + (purchasePrice * (acqFee / 100)) + legalTitleEstimate;
-  const grossEquity = purchasePrice - loanAmount - mezzAmount;
-  const netEquity = grossEquity + closingCosts - sellerCredit;
-  const totalLeverage = purchasePrice > 0 ? ((loanAmount + mezzAmount) / purchasePrice) * 100 : 0;
+  const grossEquity = netBasis - loanAmount - mezzAmount;
+  const netEquity = grossEquity + closingCosts;
+  const totalLeverage = netBasis > 0 ? ((loanAmount + mezzAmount) / netBasis) * 100 : 0;
 
   // ═══════ RETURN METRICS ═══════
-  const capRate = purchasePrice > 0 ? (noi / purchasePrice) * 100 : 0;
+  const capRate = netBasis > 0 ? (noi / netBasis) * 100 : 0;
   const cashFlowAfterSenior = noi - annualSeniorDS;
   const cashFlowAfterAllDS = noi - annualSeniorDS - annualMezzPayment;
   const assetMgmtFeeDollar = noi * (assetMgmtFee / 100);
@@ -178,7 +189,12 @@ export function calculateDeal(inputs: DealInputs): DealMetrics {
 
   // ═══════ IRR CALCULATION ═══════
   const exitCap = exitCapInput > 0 ? exitCapInput / 100 : capRate / 100;
-  const exitPrice = exitCap > 0 ? noi / exitCap : 0;
+  // Exit NOI is one period ahead of final operating year — a buyer in
+  // year 5 is purchasing the forward income stream (year 6), which is
+  // standard CRE underwriting practice.
+  const exitGrowthFactor = Math.pow(1 + (rentGrowth / 100), holdPeriodYears);
+  const exitNOI = noi * exitGrowthFactor;
+  const exitPrice = exitCap > 0 ? exitNOI / exitCap : 0;
   const dispositionCosts = exitPrice * 0.02;
 
   // Remaining senior loan balance after hold period
@@ -201,9 +217,11 @@ export function calculateDeal(inputs: DealInputs): DealMetrics {
   let cumulativeDistributions = 0;
 
   for (let yr = 0; yr < holdPeriodYears; yr++) {
-    const cf = distributableCashFlow;
-    annualCashFlows.push(cf);
-    cumulativeDistributions += cf;
+    const growthFactor = Math.pow(1 + (rentGrowth / 100), yr);
+    const yearNOI = noi * growthFactor;
+    const yearCashFlow = yearNOI - annualSeniorDS - annualMezzPayment - (yearNOI * (assetMgmtFee / 100));
+    annualCashFlows.push(yearCashFlow);
+    cumulativeDistributions += yearCashFlow;
   }
 
   const totalProfit = grossSaleProceeds + cumulativeDistributions - netEquity;
@@ -236,6 +254,7 @@ export function calculateDeal(inputs: DealInputs): DealMetrics {
     : 0;
 
   return {
+    netBasis,
     loanAmount, monthlyPayment, annualSeniorDS, loanFeeDollar, annualIODS,
     mezzAmount, annualMezzPayment, mezzBalloon,
     closingCosts, grossEquity, netEquity, totalLeverage,
