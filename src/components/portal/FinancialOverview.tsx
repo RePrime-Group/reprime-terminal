@@ -198,17 +198,18 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
 function CapitalStackVisual({ inputs, metrics, isEstimated }: { inputs: DealInputs; metrics: DealMetrics; isEstimated: boolean }) {
   const t = useTranslations('portal.financial');
   const tp = useTranslations('portal.dealCard');
-  // Bar percentages based on Purchase Price (LTV, Mezz%, Equity gap)
+  // Bar percentages based on Net Basis (purchasePrice - sellerCredit)
   const pp = inputs.purchasePrice;
-  const seniorPct = pp > 0 ? (metrics.loanAmount / pp) * 100 : 0;
-  const mezzPct = pp > 0 && metrics.mezzAmount > 0 ? (metrics.mezzAmount / pp) * 100 : 0;
-  const equityGapPct = pp > 0 ? ((pp - metrics.loanAmount - metrics.mezzAmount) / pp) * 100 : 0;
+  const nb = metrics.netBasis;
+  const seniorPct = nb > 0 ? (metrics.loanAmount / nb) * 100 : 0;
+  const mezzPct = nb > 0 && metrics.mezzAmount > 0 ? (metrics.mezzAmount / nb) * 100 : 0;
+  const equityGapPct = nb > 0 ? ((nb - metrics.loanAmount - metrics.mezzAmount) / nb) * 100 : 0;
   const totalCapital = metrics.loanAmount + metrics.mezzAmount + metrics.netEquity;
 
   return (
     <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 rp-card-shadow">
       <h4 className="text-[14px] font-semibold text-[#0E3470] mb-4">{t('capitalStack')}</h4>
-      {/* Bar segments based on Purchase Price (LTV structure) */}
+      {/* Bar segments based on Net Basis (LTV structure) */}
       <div className="h-9 rounded-lg overflow-hidden flex mb-3">
         {seniorPct > 0 && (
           <div className="flex items-center justify-center text-white text-[10px] font-bold" style={{ width: `${seniorPct}%`, backgroundColor: '#0E3470' }}>
@@ -259,8 +260,24 @@ function CapitalStackVisual({ inputs, metrics, isEstimated }: { inputs: DealInpu
           <span className="text-[#6B7280]">{tp('purchasePrice')}</span>
           <span className="font-semibold text-[#0E3470] tabular-nums">{fmtFull(pp)}</span>
         </div>
+        {inputs.sellerCredit > 0 && (
+          <>
+            <div className="flex justify-between items-center text-[12px]">
+              <span className="text-[#6B7280]">{'\u2212'} {t('sellerCreditAtClosing')}</span>
+              <span className="font-semibold text-[#DC2626]/80 tabular-nums">({fmtFull(inputs.sellerCredit)})</span>
+            </div>
+            <div className="flex justify-between items-center text-[12px]">
+              <span className="text-[#6B7280]">{t('netBasis')}</span>
+              <span className="font-semibold text-[#0E3470] tabular-nums">{fmtFull(nb)}</span>
+            </div>
+          </>
+        )}
         <div className="flex justify-between items-center text-[12px]">
-          <span className="text-[#6B7280]">{t('totalCapitalRequired')} <span className="text-[10px]">{t('inclClosingCosts')}</span></span>
+          <span className="text-[#6B7280]">+ {t('closingCosts')}</span>
+          <span className="font-semibold text-[#0E3470] tabular-nums">{fmtFull(metrics.closingCosts)}</span>
+        </div>
+        <div className="flex justify-between items-center text-[12px]">
+          <span className="text-[#6B7280]">{t('totalCapitalRequired')}</span>
           <span className="font-bold text-[#0E3470] tabular-nums">{fmtFull(totalCapital)}</span>
         </div>
       </div>
