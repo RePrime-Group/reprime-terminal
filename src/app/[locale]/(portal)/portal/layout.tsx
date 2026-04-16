@@ -27,7 +27,7 @@ export default async function PortalLayout({
   if (terminalUser.role !== 'investor') redirect(`/${locale}/admin`);
 
   return (
-    <div className="min-h-screen rp-page-texture">
+    <div className="min-h-dvh rp-page-texture overflow-x-hidden">
       <MarketTicker />
       <PortalNavbar
         firstName={terminalUser.full_name?.split(' ')[0] ?? ''}

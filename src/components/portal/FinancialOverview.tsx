@@ -102,7 +102,7 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
             <h4 className="text-[14px] font-semibold text-[#0E3470]">{t('seniorDebt')}</h4>
             {isEstimated && <span className="text-[10px] italic text-[#D97706] bg-[#FFFBEB] px-2 py-0.5 rounded-full">{t('estimated')}</span>}
           </div>
-          <div className="grid grid-cols-2 gap-x-8 gap-y-1">
+          <div className="grid grid-cols-2 gap-x-4 md:gap-x-8 gap-y-1">
             {[
               [t('loanAmount'), fmtFull(metrics.loanAmount)],
               [t('ltv'), pct(inputs.ltv)],
@@ -127,7 +127,7 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
               <div className="w-3 h-3 rounded-sm bg-[#BC9C45]" />
               <h4 className="text-[14px] font-semibold text-[#BC9C45]">{t('sellerMezzanine')}</h4>
             </div>
-            <div className="grid grid-cols-2 gap-x-8 gap-y-1">
+            <div className="grid grid-cols-2 gap-x-4 md:gap-x-8 gap-y-1">
               {[
                 [t('mezzanineAmount'), fmtFull(metrics.mezzAmount)],
                 [t('ofPurchasePrice'), pct(inputs.mezzPercent)],
@@ -150,7 +150,7 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
           <div className="flex items-center gap-2 mb-4">
             <h4 className="text-[14px] font-semibold text-[#374151]">{t('combinedMetrics')}</h4>
           </div>
-          <div className="grid grid-cols-2 gap-x-8 gap-y-1">
+          <div className="grid grid-cols-2 gap-x-4 md:gap-x-8 gap-y-1">
             {[
               [metrics.mezzAmount > 0 ? t('combinedDscr') : t('lenderDscr'), metrics.combinedDSCR.toFixed(2) + 'x'],
               [t('totalLeverage'), pct(metrics.totalLeverage)],
@@ -173,7 +173,7 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
       {/* Fee Disclosure — Compact Grid */}
       <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 rp-card-shadow">
         <h4 className="text-[14px] font-semibold text-[#0E3470] mb-3">{t('feeDisclosure')}</h4>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-1">
+        <div className="grid grid-cols-2 gap-x-4 md:gap-x-6 gap-y-1">
           {[
             [`${t('assignmentFee')} (${pct(inputs.assignmentFee)})`, fmtFull(metrics.assignmentFeeDollar)],
             [`${t('acquisitionFee')} (${pct(inputs.acqFee)})`, fmtFull(metrics.acqFeeDollar)],
@@ -212,17 +212,17 @@ function CapitalStackVisual({ inputs, metrics, isEstimated }: { inputs: DealInpu
       {/* Bar segments based on Net Basis (LTV structure) */}
       <div className="h-9 rounded-lg overflow-hidden flex mb-3">
         {seniorPct > 0 && (
-          <div className="flex items-center justify-center text-white text-[10px] font-bold" style={{ width: `${seniorPct}%`, backgroundColor: '#0E3470' }}>
+          <div className="flex items-center justify-center text-white text-[10px] font-bold whitespace-nowrap px-1" style={{ width: `${seniorPct}%`, backgroundColor: '#0E3470' }}>
             {t('senior')} {Math.round(seniorPct)}%
           </div>
         )}
         {mezzPct > 0 && (
-          <div className="flex items-center justify-center text-white text-[10px] font-bold" style={{ width: `${mezzPct}%`, backgroundColor: '#BC9C45' }}>
+          <div className="flex items-center justify-center text-white text-[10px] font-bold whitespace-nowrap px-1" style={{ width: `${mezzPct}%`, backgroundColor: '#BC9C45', minWidth: '70px' }}>
             {t('mezz')} {Math.round(mezzPct)}%
           </div>
         )}
         {equityGapPct > 0 && (
-          <div className="flex items-center justify-center text-white text-[10px] font-bold" style={{ width: `${equityGapPct}%`, backgroundColor: '#0B8A4D', minWidth: '40px' }}>
+          <div className="flex items-center justify-center text-white text-[10px] font-bold whitespace-nowrap px-1" style={{ width: `${equityGapPct}%`, backgroundColor: '#0B8A4D', minWidth: '70px' }}>
             {t('equity')} {Math.round(equityGapPct)}%
           </div>
         )}

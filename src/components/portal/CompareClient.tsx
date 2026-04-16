@@ -175,7 +175,7 @@ export default function CompareClient({ dealOptions, locale }: CompareClientProp
   const hasAnySelection = columns.some((id) => id !== null);
 
   return (
-    <div className="max-w-[1600px] mx-auto px-10 py-10 space-y-6">
+    <div className="max-w-[1600px] mx-auto px-4 py-6 md:px-10 md:py-10 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -195,8 +195,9 @@ export default function CompareClient({ dealOptions, locale }: CompareClientProp
         )}
       </div>
 
-      {/* Column Selectors */}
-      <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${columns.length}, 1fr)` }}>
+      {/* Column Selectors — scrollable on mobile to preserve side-by-side comparison */}
+      <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+      <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(220px, 1fr))` }}>
         {columns.map((selectedId, colIndex) => {
           const deal = selectedId ? dealCache[selectedId] : null;
           const isLoading = selectedId ? loadingIds.has(selectedId) : false;
@@ -273,6 +274,7 @@ export default function CompareClient({ dealOptions, locale }: CompareClientProp
           );
         })}
       </div>
+      </div>
 
       {!hasAnySelection ? (
         <div className="bg-white rounded-xl border border-[#EEF0F4] p-12 text-center">
@@ -283,10 +285,11 @@ export default function CompareClient({ dealOptions, locale }: CompareClientProp
           {/* Metrics Comparison Table — always mirrors all columns */}
           <div className="bg-white rounded-xl border border-[#EEF0F4] overflow-hidden rp-card-shadow">
             <div className="overflow-x-auto">
-              <table className="w-full">
+              {/* Desktop/tablet: metrics as rows, deals as columns */}
+              <table className="w-full hidden md:table">
                 <thead>
                   <tr className="border-b border-[#EEF0F4]">
-                    <th className="text-left px-5 py-4 text-[9px] font-bold uppercase tracking-[2px] text-[#9CA3AF] w-[160px]">{t('metric')}</th>
+                    <th className="text-left px-5 py-4 text-[9px] font-bold uppercase tracking-[2px] text-[#9CA3AF] w-[140px] md:w-[160px] sticky left-0 bg-white z-10">{t('metric')}</th>
                     {columns.map((id, colIndex) => {
                       const deal = columnDeals[colIndex];
                       const isLoading = id ? loadingIds.has(id) : false;
@@ -327,7 +330,7 @@ export default function CompareClient({ dealOptions, locale }: CompareClientProp
                         onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderLeftColor = '#BC9C45'; }}
                         onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderLeftColor = 'transparent'; }}
                       >
-                        <td className="px-5 py-3 text-[10px] font-bold uppercase tracking-[1.5px] text-[#9CA3AF]">
+                        <td className="px-5 py-3 text-[10px] font-bold uppercase tracking-[1.5px] text-[#9CA3AF] sticky left-0 bg-white group-hover:bg-[#FDF8ED]/40 z-10">
                           {row.label}
                         </td>
                         {columns.map((_, colIndex) => {
@@ -352,13 +355,75 @@ export default function CompareClient({ dealOptions, locale }: CompareClientProp
                   })}
                 </tbody>
               </table>
+
+              {/* Mobile: transposed — deals as rows, metrics as columns */}
+              <table className="w-full md:hidden">
+                <thead>
+                  <tr className="border-b border-[#EEF0F4]">
+                    <th className="text-left px-4 py-3 text-[9px] font-bold uppercase tracking-[2px] text-[#9CA3AF] w-[140px] sticky left-0 bg-white z-10">{t('deal')}</th>
+                    {metrics.map((m) => (
+                      <th key={m.key} className="text-left px-4 py-3 text-[9px] font-bold uppercase tracking-[1.5px] text-[#9CA3AF] min-w-[110px] whitespace-nowrap">
+                        {m.label}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {columns.map((id, colIndex) => {
+                    const deal = columnDeals[colIndex];
+                    const isLoading = id ? loadingIds.has(id) : false;
+                    const color = DEAL_COLORS[colIndex % DEAL_COLORS.length];
+                    return (
+                      <tr key={colIndex} className="border-b border-[#EEF0F4] last:border-b-0">
+                        <td className="px-4 py-3 sticky left-0 bg-white z-10 min-w-0">
+                          {deal ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: color }} />
+                              <div className="min-w-0">
+                                <Link href={`/portal/deals/${deal.id}`} locale={locale} className="block text-[12px] font-semibold text-[#0E3470] truncate">
+                                  {deal.name}
+                                </Link>
+                                <p className="text-[10px] text-[#6B7280] truncate">{deal.city}, {deal.state}</p>
+                              </div>
+                            </div>
+                          ) : isLoading ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 border-2 border-[#BC9C45] border-t-transparent rounded-full animate-spin" />
+                              <span className="text-[11px] text-[#9CA3AF]">{t('loading')}</span>
+                            </div>
+                          ) : (
+                            <span className="text-[11px] text-[#D1D5DB]">{t('deal')} {colIndex + 1}</span>
+                          )}
+                        </td>
+                        {metrics.map((m) => {
+                          const best = bestValue(loadedDeals, m.key, m.higher);
+                          return (
+                            <td key={m.key} className="px-4 py-3">
+                              {deal ? (
+                                <span className={`text-[13px] font-semibold tabular-nums whitespace-nowrap ${
+                                  deal.id === best ? 'text-[#0B8A4D]' : 'text-[#0E3470]'
+                                }`}>
+                                  {deal.id === best && <span className="text-[9px] mr-0.5">★</span>}
+                                  {m.format(deal)}
+                                </span>
+                              ) : (
+                                <span className="text-[13px] text-[#D1D5DB]">—</span>
+                              )}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
 
           {/* Cap Rate Sensitivity — only for loaded deals */}
           {loadedDeals.length > 0 && (
-            <div className="bg-white rounded-xl border border-[#EEF0F4] p-6 rp-card-shadow">
-              <div className="flex items-center justify-between mb-5">
+            <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 md:p-6 rp-card-shadow">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-0 mb-5">
                 <div>
                   <h3 className="text-[14px] font-semibold text-[#0E3470]">{t('capRateSensitivity')}</h3>
                   <p className="text-[11px] text-[#9CA3AF] mt-0.5">{t('whatIfCapRates')}</p>
@@ -376,7 +441,7 @@ export default function CompareClient({ dealOptions, locale }: CompareClientProp
                     step="25"
                     value={capShift}
                     onChange={(e) => setCapShift(parseInt(e.target.value))}
-                    className="w-[200px] h-1.5 rounded-full appearance-none cursor-pointer"
+                    className="w-full md:w-[200px] h-1.5 rounded-full appearance-none cursor-pointer"
                     style={{
                       background: `linear-gradient(90deg, #0B8A4D ${((capShift + 100) / 200) * 100}%, #EEF0F4 ${((capShift + 100) / 200) * 100}%)`,
                     }}
@@ -384,7 +449,7 @@ export default function CompareClient({ dealOptions, locale }: CompareClientProp
                 </div>
               </div>
 
-              <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${columns.length}, 1fr)` }}>
+              <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0"><div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(220px, 1fr))` }}>
                 {columns.map((_, colIndex) => {
                   const deal = columnDeals[colIndex];
                   const s = sensitivity.find((x) => deal && x.deal.id === deal.id);
@@ -419,15 +484,15 @@ export default function CompareClient({ dealOptions, locale }: CompareClientProp
                     </div>
                   );
                 })}
-              </div>
+              </div></div>
             </div>
           )}
 
           {/* Quick Verdict — light theme */}
           {verdicts.length > 0 && (
-            <div className="bg-white rounded-xl border border-[#EEF0F4] p-6 rp-card-shadow">
+            <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 md:p-6 rp-card-shadow">
               <h3 className="text-[12px] font-bold text-[#BC9C45] uppercase tracking-[2px] mb-4">{t('quickVerdict')}</h3>
-              <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${verdicts.length}, 1fr)` }}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {verdicts.map((v) => (
                   <div key={v.label} className="bg-[#F7F8FA] rounded-xl p-4 border border-[#EEF0F4]">
                     <div className="text-[9px] font-bold text-[#9CA3AF] uppercase tracking-[1.5px] mb-2">{v.label}</div>

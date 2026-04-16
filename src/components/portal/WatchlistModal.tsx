@@ -37,22 +37,22 @@ export default function WatchlistModal({ dealName, dealId, onClose, onConfirm }:
 
   return (
     <div
-      className="fixed inset-0 bg-black/55 backdrop-blur-sm flex items-center justify-center z-[100]"
+      className="fixed inset-0 bg-black/55 backdrop-blur-sm flex items-center justify-center z-[100] p-4"
       onClick={onClose}
     >
       <div
-        className="w-[480px] bg-white rounded-2xl overflow-hidden shadow-2xl animate-fade-up"
+        className="w-full max-w-[480px] max-h-[95dvh] overflow-y-auto bg-white rounded-2xl shadow-2xl animate-fade-up"
         style={{ animationDuration: '0.25s' }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="rp-dark-gradient px-7 py-5">
+        <div className="rp-dark-gradient px-5 md:px-7 py-5">
           <div className="text-[16px] font-semibold text-white font-[family-name:var(--font-playfair)]">
             {t('setAlerts', { dealName })}
           </div>
           <div className="text-[11px] text-white/40 mt-1">{t('getNotified')}</div>
         </div>
 
-        <div className="p-7">
+        <div className="p-5 md:p-7">
           {/* Frequency */}
           <div className="text-[11px] font-semibold text-[#0E3470] uppercase tracking-[1.5px] mb-3">{t('frequency')}</div>
           <div className="flex gap-2 mb-6">

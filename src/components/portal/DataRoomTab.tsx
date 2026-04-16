@@ -160,9 +160,9 @@ export default function DataRoomTab({
       </div>
 
       {/* Main layout: sidebar + document list */}
-      <div className="flex gap-5 px-6 pb-6">
+      <div className="flex flex-col md:flex-row gap-5 px-4 md:px-6 pb-6">
         {/* Sidebar */}
-        <div className="w-[220px] shrink-0">
+        <div className="w-full md:w-[220px] md:shrink-0">
           <div className="bg-white rounded-xl border border-[#E5E7EB] overflow-hidden">
             {categoryList.map((cat, i) => {
               const isActive = activeCategory === cat.id;

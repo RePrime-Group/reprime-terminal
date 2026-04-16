@@ -98,13 +98,13 @@ export default function OnboardingOverlay({ firstName, userId }: OnboardingOverl
   // Welcome screen
   if (stage === 'welcome') {
     return (
-      <div className="fixed inset-0 z-[200] flex items-center justify-center" style={{ background: 'rgba(7,9,15,0.85)', backdropFilter: 'blur(12px)' }}>
-        <div className="max-w-[520px] text-center animate-fade-up" style={{ animationDuration: '0.5s' }}>
+      <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" style={{ background: 'rgba(7,9,15,0.85)', backdropFilter: 'blur(12px)' }}>
+        <div className="w-full max-w-[520px] text-center animate-fade-up" style={{ animationDuration: '0.5s' }}>
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#BC9C45] to-[#D4B96A] mx-auto mb-6 flex items-center justify-center shadow-[0_8px_32px_rgba(188,156,69,0.3)]">
             <span className="text-white text-[28px] font-bold font-[family-name:var(--font-playfair)] italic">R</span>
           </div>
 
-          <h1 className="font-[family-name:var(--font-playfair)] text-[32px] font-semibold text-white mb-3">
+          <h1 className="font-[family-name:var(--font-playfair)] text-[24px] md:text-[32px] font-semibold text-white mb-3">
             {t('welcome', { firstName })}
           </h1>
           <p className="text-[15px] text-white/50 leading-relaxed mb-2">
@@ -208,7 +208,7 @@ export default function OnboardingOverlay({ firstName, userId }: OnboardingOverl
 
       {/* Tooltip */}
       <div
-        className="fixed z-[202] w-[320px] animate-fade-up"
+        className="fixed z-[202] w-[min(320px,calc(100vw-32px))] animate-fade-up"
         style={{ ...getTooltipStyle(), animationDuration: '0.3s' }}
       >
         <div className="bg-[#0F1419] rounded-xl p-5 shadow-2xl border border-white/[0.08]">

@@ -47,6 +47,17 @@
   html[dir="rtl"] {
     direction: rtl;
   }
+
+}
+
+/* Prevent iOS Safari auto-zoom on focus for form controls (<16px triggers zoom).
+   Outside @layer so it beats Tailwind utilities like text-[13px] on mobile. */
+@media (max-width: 767px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
 }
 
 @layer utilities {

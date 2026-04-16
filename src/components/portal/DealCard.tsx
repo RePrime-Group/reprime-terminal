@@ -126,7 +126,9 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
 
           {/* Top-right watch icon */}
           <div
-            className="absolute top-3 right-3 z-[3]"
+            role="button"
+            aria-label="Watch"
+            className="absolute top-1 right-1 z-[3] p-2 min-w-[44px] min-h-[44px] flex items-center justify-center"
             onClick={async (e) => {
               e.preventDefault();
               e.stopPropagation();

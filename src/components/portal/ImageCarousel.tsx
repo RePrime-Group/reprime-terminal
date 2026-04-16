@@ -86,7 +86,7 @@ export default function ImageCarousel({ images }: ImageCarouselProps) {
             type="button"
             onClick={goToPrevious}
             aria-label="Previous slide"
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-[42px] h-[42px] rounded-full bg-white/90 shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-white"
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-[44px] h-[44px] rounded-full bg-white/90 shadow-lg flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 hover:bg-white"
           >
             <svg
               className="w-5 h-5 text-rp-navy"
@@ -104,7 +104,7 @@ export default function ImageCarousel({ images }: ImageCarouselProps) {
             type="button"
             onClick={goToNext}
             aria-label="Next slide"
-            className="absolute right-3 top-1/2 -translate-y-1/2 w-[42px] h-[42px] rounded-full bg-white/90 shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-white"
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-[44px] h-[44px] rounded-full bg-white/90 shadow-lg flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 hover:bg-white"
           >
             <svg
               className="w-5 h-5 text-rp-navy"

@@ -158,7 +158,7 @@ function ImageCarousel({ urls }: { urls: string[] }) {
 
   if (urls.length === 0) {
     return (
-      <div className="w-full h-[65vh] rounded-2xl overflow-hidden relative">
+      <div className="w-full h-[45vh] md:h-[65vh] rounded-2xl overflow-hidden relative">
         <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #0A1628 0%, #0E3470 40%, #1D5FB8 100%)' }}>
           <div className="absolute inset-0 opacity-[0.06]" style={{
             backgroundImage: 'linear-gradient(rgba(188,156,69,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(188,156,69,0.3) 1px, transparent 1px)',
@@ -178,7 +178,7 @@ function ImageCarousel({ urls }: { urls: string[] }) {
 
   return (
     <>
-      <div className="relative w-full h-[65vh] rounded-2xl overflow-hidden group">
+      <div className="relative w-full h-[45vh] md:h-[65vh] rounded-2xl overflow-hidden group">
         <img
           src={urls[current]}
           alt={`Property photo ${current + 1}`}
@@ -196,7 +196,7 @@ function ImageCarousel({ urls }: { urls: string[] }) {
           <>
             <button
               onClick={goPrev}
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-[42px] h-[42px] bg-white/90 hover:bg-white shadow-lg text-[#0E3470] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-[44px] h-[44px] bg-white/90 hover:bg-white shadow-lg text-[#0E3470] rounded-full flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
               aria-label="Previous photo"
             >
               <svg
@@ -214,7 +214,7 @@ function ImageCarousel({ urls }: { urls: string[] }) {
             </button>
             <button
               onClick={goNext}
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-[42px] h-[42px] bg-white/90 hover:bg-white shadow-lg text-[#0E3470] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-[44px] h-[44px] bg-white/90 hover:bg-white shadow-lg text-[#0E3470] rounded-full flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
               aria-label="Next photo"
             >
               <svg
@@ -544,7 +544,7 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
         </div>
       )}
 
-      <div className="flex justify-between items-start mb-5">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 md:gap-0 mb-5">
         <div>
           <h3 className="font-[family-name:var(--font-playfair)] text-[22px] font-semibold text-[#0E3470]">
             {t('commitToThisDeal')}
@@ -558,7 +558,7 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
         <button
           onClick={() => setShowWire(true)}
           disabled={committing}
-          className="px-8 py-4 rounded-xl bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] text-[15px] font-bold shadow-[0_6px_24px_rgba(188,156,69,0.3)] hover:opacity-90 transition-opacity disabled:opacity-50"
+          className="w-full md:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] text-[15px] font-bold shadow-[0_6px_24px_rgba(188,156,69,0.3)] hover:opacity-90 transition-opacity disabled:opacity-50"
         >
           {t('lockThisDeal')}
         </button>
@@ -593,7 +593,7 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
       )}
 
       {/* Backup position */}
-      <div className="p-4 bg-[#F7F8FA] rounded-xl flex justify-between items-center">
+      <div className="p-4 bg-[#F7F8FA] rounded-xl flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div>
           <div className="text-[12px] font-semibold text-[#0E3470]">{t('backupPositionAvailable')}</div>
           <div className="text-[11px] text-[#6B7280] mt-1">
@@ -603,7 +603,7 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
         <button
           onClick={() => handleCommit('backup')}
           disabled={committing}
-          className="px-5 py-2.5 rounded-lg border border-[#EEF0F4] bg-white text-[#0E3470] text-[11px] font-semibold hover:border-[#BC9C45] transition-colors whitespace-nowrap disabled:opacity-50"
+          className="w-full sm:w-auto px-5 py-2.5 min-h-[44px] rounded-lg border border-[#EEF0F4] bg-white text-[#0E3470] text-[11px] font-semibold hover:border-[#BC9C45] transition-colors whitespace-nowrap disabled:opacity-50"
         >
           {t('registerAsBackup')}
         </button>
@@ -675,7 +675,7 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
   const exitNOI = baseInputs.noi * Math.pow(1 + (parseFloat(rentGrowth) || 0) / 100, holdNum);
 
   return (
-    <div className="grid grid-cols-[1fr_1.4fr] gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-6">
       {/* Assumptions Panel */}
       <div className="bg-white rounded-xl border border-[#EEF0F4] p-6 rp-card-shadow">
         <h3 className="font-[family-name:var(--font-playfair)] text-[16px] font-semibold text-[#0E3470] mb-5">
@@ -717,7 +717,7 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
       {/* Results Panel */}
       <div className="flex flex-col gap-4">
         {/* Metric cards */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {results.map((m, i) => (
             <div
               key={i}
@@ -731,7 +731,7 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
         </div>
 
         {/* Cash flow chart */}
-        <div className="bg-white rounded-xl p-6 border border-[#EEF0F4] rp-card-shadow">
+        <div className="bg-white rounded-xl p-4 md:p-6 border border-[#EEF0F4] rp-card-shadow overflow-hidden">
           <h4 className="text-[13px] font-semibold text-[#0E3470] mb-4">{t('projectedAnnualCashFlow')}</h4>
           {(() => {
             const chartH = 180;
@@ -776,12 +776,12 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
                         />
                       );
                     })}
-                    <div className="flex items-end gap-3 relative z-10 h-full px-2">
+                    <div className="flex items-end gap-1.5 md:gap-3 relative z-10 h-full px-1 md:px-2">
                       {cashFlows.map((cf, i) => {
                         const barH = yRange > 0 ? Math.max(((cf - yFloor) / yRange) * chartH, 4) : 4;
                         return (
-                          <div key={i} className="flex-1 flex flex-col items-center justify-end h-full">
-                            <span className="text-[9px] font-bold tabular-nums mb-1" style={{ color: cf > 0 ? '#0B8A4D' : '#DC2626' }}>
+                          <div key={i} className="flex-1 min-w-0 flex flex-col items-center justify-end h-full">
+                            <span className="text-[8px] md:text-[9px] font-bold tabular-nums mb-1 whitespace-nowrap" style={{ color: cf > 0 ? '#0B8A4D' : '#DC2626' }}>
                               {fmt(cf)}
                             </span>
                             <div
@@ -800,7 +800,7 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
                   </div>
                 </div>
                 <div className="flex" style={{ marginLeft: 44 }}>
-                  <div className="flex-1 flex gap-3 px-2">
+                  <div className="flex-1 flex gap-1.5 md:gap-3 px-1 md:px-2">
                     {cashFlows.map((_, i) => (
                       <div key={i} className="flex-1 text-center">
                         <span className="text-[9px] text-[#9CA3AF] font-semibold">{t('yr')} {i + 1}</span>
@@ -816,7 +816,7 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
         {/* Cap rate sensitivity */}
         <div className="bg-white rounded-xl p-6 border border-[#EEF0F4] rp-card-shadow">
           <h4 className="text-[13px] font-semibold text-[#0E3470] mb-3">{t('capRateSensitivity')}</h4>
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
             {[6.0, 6.5, 7.0, 7.5, 8.0].map((cr) => {
               const ev = exitNOI / (cr / 100);
               const isSel = cr === exitCapNum;
@@ -1785,7 +1785,7 @@ export default function DealDetailClient({
   const showSocialProof = (deal.viewing_count ?? 0) > 0 || (deal.meetings_count ?? 0) > 0;
 
   return (
-    <div className="min-h-screen rp-page-texture font-[family-name:var(--font-poppins)]">
+    <div className="min-h-dvh rp-page-texture font-[family-name:var(--font-poppins)]">
       {/* ------------------------------------------------------------------ */}
       {/* HERO GRADIENT BANNER                                               */}
       {/* ------------------------------------------------------------------ */}
@@ -1795,7 +1795,7 @@ export default function DealDetailClient({
       {/* 5A. STICKY TOP NAV BAR                                             */}
       {/* ------------------------------------------------------------------ */}
       <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-[#EEF0F4] shadow-[0_1px_3px_rgba(14,52,112,0.04),0_4px_12px_rgba(14,52,112,0.02)]">
-        <div className="h-[64px] flex items-center px-8">
+        <div className="h-[64px] flex items-center px-4 md:px-8">
           <button
             onClick={() => router.push(`/${locale}/portal`)}
             className="hover:bg-[#F7F8FA] rounded-full p-2 transition mr-3 group"
@@ -1816,7 +1816,7 @@ export default function DealDetailClient({
             </svg>
           </button>
           {/* Vertical separator */}
-          <div className="h-5 w-px bg-[#EEF0F4] mr-4" />
+          <div className="hidden md:block h-5 w-px bg-[#EEF0F4] mr-4" />
           <div className="flex-1 min-w-0">
             <h1 className="font-[family-name:var(--font-playfair)] text-[18px] font-semibold text-[#0E3470] truncate">
               {deal.name}
@@ -1825,38 +1825,43 @@ export default function DealDetailClient({
               {deal.city}, {deal.state} &middot; {tPt.has(deal.property_type) ? tPt(deal.property_type) : deal.property_type}
             </p>
           </div>
-          <div className="flex items-center gap-3 ml-4 shrink-0">
+          <div className="flex items-center gap-2 md:gap-3 ml-2 md:ml-4 shrink-0">
             {/* Express Interest button */}
             {expressedInterest ? (
-              <span className="px-5 py-2 bg-[#ECFDF5] text-[#0B8A4D] text-[12px] font-semibold rounded-lg flex items-center gap-1.5">
+              <span className="px-3 md:px-5 py-2 bg-[#ECFDF5] text-[#0B8A4D] text-[11px] md:text-[12px] font-semibold rounded-lg flex items-center gap-1.5">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#0B8A4D" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8l4 4 6-7"/></svg>
-                {t('interestExpressed')}
+                <span className="hidden sm:inline">{t('interestExpressed')}</span>
+                <span className="sm:hidden">✓</span>
               </span>
             ) : (
               <button
                 onClick={() => setShowExpressModal(true)}
                 disabled={checkingInterest}
-                className="px-5 py-2 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[12px] font-semibold rounded-lg transition-colors shadow-[0_2px_6px_rgba(188,156,69,0.25)] disabled:opacity-50"
+                className="px-3 md:px-5 py-2 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[11px] md:text-[12px] font-semibold rounded-lg transition-colors shadow-[0_2px_6px_rgba(188,156,69,0.25)] disabled:opacity-50 whitespace-nowrap"
               >
                 {t('expressInterest')}
               </button>
             )}
-            {/* OM buttons */}
+            {/* OM buttons — hidden on mobile; accessible from tab content */}
             {deal.om_storage_path ? (
               <>
                 <button
                   onClick={() => handleViewDocument(`/api/deals/${deal.id}/om?view=true`, `${deal.name} — ${t('offeringMemorandum')}`)}
-                  className="px-4 py-2 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[12px] font-semibold rounded-lg transition-colors inline-flex items-center gap-1.5 shadow-[0_2px_6px_rgba(188,156,69,0.25)]"
+                  aria-label={t('viewOm')}
+                  className="inline-flex px-3 md:px-4 py-2 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[11px] md:text-[12px] font-semibold rounded-lg transition-colors items-center gap-1.5 shadow-[0_2px_6px_rgba(188,156,69,0.25)] whitespace-nowrap"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                    <circle cx="12" cy="12" r="3" />
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="9" y1="13" x2="15" y2="13"/>
+                    <line x1="9" y1="17" x2="13" y2="17"/>
                   </svg>
-                  {t('viewOm')}
+                  <span className="md:hidden">OM</span>
+                  <span className="hidden md:inline">{t('viewOm')}</span>
                 </button>
                 <a
                   href={`/api/deals/${deal.id}/om`}
-                  className="px-4 py-2 border border-[#EEF0F4] hover:border-[#BC9C45] text-[#6B7280] hover:text-[#0E3470] text-[12px] font-semibold rounded-lg transition-colors inline-flex items-center gap-1.5"
+                  className="hidden md:inline-flex px-4 py-2 border border-[#EEF0F4] hover:border-[#BC9C45] text-[#6B7280] hover:text-[#0E3470] text-[12px] font-semibold rounded-lg transition-colors items-center gap-1.5"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
@@ -1867,20 +1872,25 @@ export default function DealDetailClient({
                 </a>
               </>
             ) : (
-              <span className="px-4 py-2 border border-[#EEF0F4] text-[#9CA3AF] text-[12px] font-medium rounded-lg inline-flex items-center gap-1.5 cursor-default">
+              <span
+                aria-label={t('omPending')}
+                title={t('omPending')}
+                className="inline-flex px-3 md:px-4 py-2 border border-[#EEF0F4] text-[#9CA3AF] text-[11px] md:text-[12px] font-medium rounded-lg items-center gap-1.5 cursor-default whitespace-nowrap"
+              >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
                   <polyline points="14 2 14 8 20 8"/>
                 </svg>
-                {t('omPending')}
+                <span className="md:hidden">OM</span>
+                <span className="hidden md:inline">{t('omPending')}</span>
               </span>
             )}
-            <div className="h-4 w-px bg-[#EEF0F4]" />
-            <span className="text-[9px] font-semibold tracking-[2px] uppercase text-[#9CA3AF]">
+            <div className="hidden md:block h-4 w-px bg-[#EEF0F4]" />
+            <span className="hidden md:inline text-[9px] font-semibold tracking-[2px] uppercase text-[#9CA3AF]">
               {t('confidential')}
             </span>
-            <div className="h-4 w-px bg-[#EEF0F4]" />
-            <div className="w-8 h-8 bg-gradient-to-br from-[#BC9C45] to-[#A88A3D] rounded-lg flex items-center justify-center shadow-[0_2px_6px_rgba(188,156,69,0.2)]">
+            <div className="hidden md:block h-4 w-px bg-[#EEF0F4]" />
+            <div className="hidden md:flex w-8 h-8 bg-gradient-to-br from-[#BC9C45] to-[#A88A3D] rounded-lg items-center justify-center shadow-[0_2px_6px_rgba(188,156,69,0.2)]">
               <span className="text-white text-[11px] font-bold font-[family-name:var(--font-playfair)] italic">R</span>
             </div>
           </div>
@@ -1894,7 +1904,7 @@ export default function DealDetailClient({
         {/* ------------------------------------------------------------------ */}
         {/* DEAL HEADER BAR                                                    */}
         {/* ------------------------------------------------------------------ */}
-        <div className="bg-white border-b border-[#EEF0F4] px-8 py-5">
+        <div className="bg-white border-b border-[#EEF0F4] px-4 md:px-8 py-4 md:py-5">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-[family-name:var(--font-playfair)] text-[28px] font-semibold text-[#0E3470] leading-tight tracking-[-0.01em]">
@@ -1923,14 +1933,14 @@ export default function DealDetailClient({
         {/* ------------------------------------------------------------------ */}
         {/* 2. HERO SECTION                                                    */}
         {/* ------------------------------------------------------------------ */}
-        <div className="grid grid-cols-[1.4fr_1fr] gap-6 p-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6 p-4 md:p-8">
           {/* Left: Image Carousel */}
           <ImageCarousel urls={photoUrls} />
 
           {/* Right: 5B Circular Countdown Rings */}
           <div className="flex flex-col gap-4">
-            <div className="bg-white rounded-2xl border border-[#EEF0F4] p-6 rp-card-shadow">
-              <div className="flex items-center justify-around">
+            <div className="bg-white rounded-2xl border border-[#EEF0F4] p-4 md:p-6 rp-card-shadow">
+              <div className="flex items-center justify-around gap-2 flex-wrap sm:flex-nowrap">
                 <CountdownRing
                   label={t('dueDiligence')}
                   targetDate={deal.dd_deadline}
@@ -2007,7 +2017,7 @@ export default function DealDetailClient({
         {/* ------------------------------------------------------------------ */}
         {/* 5D. SEVEN-METRIC BAR (left border metric cards - keep as is)       */}
         {/* ------------------------------------------------------------------ */}
-        <div className="grid grid-cols-7 gap-3 px-8 mt-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 md:gap-3 px-4 md:px-8 mt-6 md:mt-8">
           {[
             { label: tc('purchasePrice'), value: formatPrice(deal.purchase_price), borderColor: '#0E3470' },
             { label: tc('noi'), value: formatPrice(deal.noi), borderColor: '#0E3470' },
@@ -2032,8 +2042,8 @@ export default function DealDetailClient({
         {/* 5D2. DEPOSIT INFO                                                  */}
         {/* ------------------------------------------------------------------ */}
         {(deal.deposit_amount || deal.deposit_held_by) && (
-          <div className="px-8 mt-6">
-            <div className="bg-[#FDF8ED] border border-[#ECD9A0] rounded-xl p-5 flex items-center gap-6">
+          <div className="px-4 md:px-8 mt-6">
+            <div className="bg-[#FDF8ED] border border-[#ECD9A0] rounded-xl p-4 md:p-5 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
               <div className="w-10 h-10 rounded-lg bg-[#BC9C45]/10 flex items-center justify-center shrink-0">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#BC9C45" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="6" width="20" height="14" rx="2" />
@@ -2062,12 +2072,12 @@ export default function DealDetailClient({
         {/* ------------------------------------------------------------------ */}
         {/* 5E. TAB BAR                                                        */}
         {/* ------------------------------------------------------------------ */}
-        <div className="px-8 mt-8">
+        <div className="px-4 md:px-8 mt-6 md:mt-8">
           <div className="flex items-center gap-2.5 px-4 py-2.5 bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg mb-4">
             <span className="text-[15px]">🔒</span>
             <span className="text-[13px] text-[#6B7280]">Held by: <span className="font-bold text-[#0F1B2D]">Bruce Smoler</span> (Gideon&apos;s attorney)</span>
           </div>
-          <div className="flex border-b border-[#E5E7EB]">
+          <div className="flex border-b border-[#E5E7EB] overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
             {tabs.map((tab) => (
               <button
                 key={tab.key}
@@ -2078,7 +2088,7 @@ export default function DealDetailClient({
                   }
                   setActiveTab(tab.key);
                 }}
-                className={`relative px-5 py-3 text-[13px] font-medium transition-colors inline-flex items-center gap-1.5 ${
+                className={`relative px-5 py-3 text-[13px] font-medium transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
                   activeTab === tab.key
                     ? 'text-[#0F1B2D] font-semibold'
                     : 'text-[#9CA3AF] hover:text-[#6B7280]'
@@ -2108,7 +2118,7 @@ export default function DealDetailClient({
           className="transition-opacity duration-200"
           style={{ display: activeTab === 'overview' ? 'block' : 'none' }}
         >
-          <div className="grid grid-cols-[1fr_360px] gap-8 mt-8 px-8 pb-10">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 lg:gap-8 mt-6 md:mt-8 px-4 md:px-8 pb-8 md:pb-10">
             {/* Left Column */}
             <div className="space-y-6">
               {/* Portfolio Address Cards */}
@@ -2118,7 +2128,7 @@ export default function DealDetailClient({
                     <h3 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#0E3470] mb-4">
                       {t('portfolioProperties')}
                     </h3>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {addresses.map((addr, i) => (
                         <div
                           key={addr.id}
@@ -2168,7 +2178,7 @@ export default function DealDetailClient({
                       <h3 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#0E3470] mb-4">
                         {t('investmentHighlights')}
                       </h3>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {deal.investment_highlights.map((highlight, idx) => (
                           <div
                             key={idx}
@@ -2235,8 +2245,8 @@ export default function DealDetailClient({
                   <h3 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#0E3470] mb-4">
                     {t('marketContext')}
                   </h3>
-                  <div className="flex gap-4">
-                    <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 flex-1 rp-card-shadow">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 md:gap-4">
+                    <div className="bg-white rounded-xl border border-[#EEF0F4] p-3 md:p-4 rp-card-shadow min-w-0">
                       <div className="flex items-center gap-1.5 mb-1">
                         <span className="text-base">{'\uD83D\uDC65'}</span>
                         <span className="data-label">{t('metroPopulation')}</span>
@@ -2245,7 +2255,7 @@ export default function DealDetailClient({
                         {formatNumber(deal.metro_population)}
                       </div>
                     </div>
-                    <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 flex-1 rp-card-shadow">
+                    <div className="bg-white rounded-xl border border-[#EEF0F4] p-3 md:p-4 rp-card-shadow min-w-0">
                       <div className="flex items-center gap-1.5 mb-1">
                         <span className="text-base">{'\uD83D\uDCC8'}</span>
                         <span className="data-label">{t('jobGrowth')}</span>
@@ -2254,7 +2264,7 @@ export default function DealDetailClient({
                         {deal.job_growth ? `+${deal.job_growth}` : '--'}
                       </div>
                     </div>
-                    <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 flex-1 rp-card-shadow">
+                    <div className="bg-white rounded-xl border border-[#EEF0F4] p-3 md:p-4 rp-card-shadow min-w-0">
                       <div className="flex items-center gap-1.5 mb-1">
                         <span className="text-base">{'\uD83C\uDFE2'}</span>
                         <span className="data-label">{t('occupancy')}</span>
@@ -2444,7 +2454,7 @@ export default function DealDetailClient({
           className="transition-opacity duration-200"
           style={{ display: activeTab === 'due-diligence' ? 'block' : 'none' }}
         >
-          <div className="mt-3 px-8 pb-10">
+          <div className="mt-3 px-4 md:px-8 pb-8 md:pb-10">
             {ddLoading ? (
               <div className="flex items-center justify-center py-16">
                 <div className="w-6 h-6 border-2 border-[#BC9C45] border-t-transparent rounded-full animate-spin" />
@@ -2472,7 +2482,7 @@ export default function DealDetailClient({
           className="transition-opacity duration-200"
           style={{ display: activeTab === 'financial-modeling' ? 'block' : 'none' }}
         >
-          <div className="mt-8 px-8 pb-10">
+          <div className="mt-6 md:mt-8 px-4 md:px-8 pb-8 md:pb-10">
             <FinancialModelingTab deal={deal} />
           </div>
         </div>
@@ -2482,14 +2492,14 @@ export default function DealDetailClient({
           className="transition-opacity duration-200"
           style={{ display: activeTab === 'deal-structure' ? 'block' : 'none' }}
         >
-          <div className="mt-8 px-8 pb-10">
+          <div className="mt-6 md:mt-8 px-4 md:px-8 pb-8 md:pb-10">
             {/* Full Financial Detail — Capital Stack, Waterfall, Financing, Comparison, Fees */}
             <DealStructureFinancials {...financialProps} />
 
             <div className="mt-8" />
 
             {/* Two option cards side by side */}
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Option A: Assignment */}
               <FadeInOnScroll delay={0}>
                 <button
@@ -2606,7 +2616,7 @@ export default function DealDetailClient({
               <div className="w-6 h-6 border-2 border-[#BC9C45] border-t-transparent rounded-full animate-spin" />
             </div>
           ) : (
-          <div className="mt-8 px-8 pb-10 grid grid-cols-[1fr_1fr] gap-6">
+          <div className="mt-6 md:mt-8 px-4 md:px-8 pb-8 md:pb-10 grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Left: Meeting Scheduler */}
             <div className="bg-white rounded-xl border border-[#EEF0F4] p-6 rp-card-shadow">
               <h3 className="text-sm font-semibold text-[#0E3470] mb-4">
@@ -2753,7 +2763,7 @@ export default function DealDetailClient({
         </div>
 
         {/* ========== COMMITMENT SECTION ========== */}
-        <div className="px-8 mt-2 pb-4">
+        <div className="px-4 md:px-8 mt-2 pb-4">
           <div className="rp-gold-line mb-10" />
 
           {/* Deal Timeline Countdowns */}
@@ -2784,7 +2794,7 @@ export default function DealDetailClient({
           </div>
 
           {/* Contact Bar */}
-          <div className="bg-white rounded-xl p-7 border border-[#EEF0F4] rp-card-shadow flex items-center justify-between">
+          <div className="bg-white rounded-xl p-5 md:p-7 border border-[#EEF0F4] rp-card-shadow flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <div className="text-[14px] font-medium text-[#0E3470]">{t('questionsBeforeCommitting')}</div>
               <div className="text-[11px] text-[#9CA3AF] mt-1">
@@ -2796,13 +2806,13 @@ export default function DealDetailClient({
                 href={`https://wa.me/19177030365?text=Hi, I'm interested in ${deal.name}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#25D366] text-white text-[12px] font-semibold transition-opacity hover:opacity-90"
+                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 min-h-[44px] rounded-lg bg-[#25D366] text-white text-[12px] font-semibold transition-opacity hover:opacity-90"
               >
                 💬 {t('whatsApp')}
               </a>
               <button
                 onClick={() => setActiveTab('schedule')}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-lg border border-[#EEF0F4] text-[#6B7280] text-[12px] font-medium hover:border-[#BC9C45] hover:text-[#0E3470] transition-colors"
+                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 min-h-[44px] rounded-lg border border-[#EEF0F4] text-[#6B7280] text-[12px] font-medium hover:border-[#BC9C45] hover:text-[#0E3470] transition-colors"
               >
                 📅 {t('scheduleACall')}
               </button>
@@ -2811,8 +2821,8 @@ export default function DealDetailClient({
         </div>
 
         {/* -- Confidentiality Footer -- */}
-        <div className="px-8 pb-10 pt-4">
-          <div className="border-t border-[#EEF0F4] pt-6 flex items-center justify-between">
+        <div className="px-4 md:px-8 pb-8 md:pb-10 pt-4">
+          <div className="border-t border-[#EEF0F4] pt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-0">
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 bg-gradient-to-br from-[#BC9C45] to-[#A88A3D] rounded flex items-center justify-center">
                 <span className="text-white text-[8px] font-bold font-[family-name:var(--font-playfair)] italic">R</span>
@@ -2888,25 +2898,25 @@ export default function DealDetailClient({
       {/* ── Enhanced Document Viewer Modal ── */}
       {viewerUrl && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md"
+          className="fixed inset-0 z-[100] flex items-stretch md:items-center justify-center bg-black/80 backdrop-blur-md md:p-4"
           onClick={() => setViewerUrl(null)}
         >
           <div
-            className="relative bg-white rounded-2xl overflow-hidden flex flex-col"
-            style={{ width: '85vw', height: '90vh', maxWidth: '1100px', boxShadow: '0 40px 100px rgba(0,0,0,0.4)' }}
+            className="relative bg-white md:rounded-2xl overflow-hidden flex flex-col w-full h-full md:w-[85vw] md:h-[90vh] md:max-w-[1100px]"
+            style={{ boxShadow: '0 40px 100px rgba(0,0,0,0.4)' }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header with gold border */}
-            <div className="flex items-center justify-between px-6 py-4 shrink-0" style={{ background: 'linear-gradient(135deg, #0E3470, #0a2450)', borderBottom: '2px solid #BC9C45' }}>
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-[#BC9C45]/15 flex items-center justify-center">
+            <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 shrink-0 gap-3" style={{ background: 'linear-gradient(135deg, #0E3470, #0a2450)', borderBottom: '2px solid #BC9C45' }}>
+              <div className="flex items-center gap-3 md:gap-4 min-w-0 flex-1">
+                <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-[#BC9C45]/15 flex items-center justify-center shrink-0">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#BC9C45" strokeWidth="1.5">
                     <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
                     <polyline points="14 2 14 8 20 8"/>
                   </svg>
                 </div>
-                <div>
-                  <div className="text-white text-[14px] font-semibold truncate max-w-[500px]">{viewerName}</div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-white text-[13px] md:text-[14px] font-semibold truncate">{viewerName}</div>
                 </div>
               </div>
               <div className="flex items-center gap-3">

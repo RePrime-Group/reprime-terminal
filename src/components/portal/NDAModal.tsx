@@ -36,16 +36,16 @@ export default function NDAModal({ dealName, onSign, onClose }: NDAModalProps) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100]"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4"
       onClick={onClose}
     >
       <div
-        className="w-[560px] max-h-[90vh] bg-white rounded-2xl overflow-hidden shadow-2xl animate-fade-up flex flex-col"
+        className="w-full max-w-[560px] max-h-[95dvh] md:max-h-[90vh] bg-white rounded-2xl overflow-hidden shadow-2xl animate-fade-up flex flex-col"
         style={{ animationDuration: '0.25s' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="rp-dark-gradient px-7 py-6 shrink-0">
+        <div className="rp-dark-gradient px-5 md:px-7 py-5 md:py-6 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D4A843" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -65,7 +65,7 @@ export default function NDAModal({ dealName, onSign, onClose }: NDAModalProps) {
         </div>
 
         {/* Scrollable Body */}
-        <div className="overflow-y-auto flex-1 p-7">
+        <div className="overflow-y-auto flex-1 p-5 md:p-7">
           {/* NDA Text */}
           <div className="bg-[#F7F8FA] border border-[#EEF0F4] rounded-xl p-5 mb-6 max-h-[200px] overflow-y-auto">
             <div className="text-[12px] text-[#4B5563] leading-relaxed space-y-3">
@@ -131,7 +131,7 @@ export default function NDAModal({ dealName, onSign, onClose }: NDAModalProps) {
                 className="w-full px-3.5 py-2.5 border border-[#D1D5DB] rounded-lg text-[14px] text-[#0E3470] focus:outline-none focus:ring-[3px] focus:ring-[#BC9C45]/15 focus:border-[#BC9C45] placeholder:text-[#9CA3AF] transition-all"
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-[12px] font-medium text-[#4B5563] mb-1">{t('companyEntity')}</label>
                 <input

@@ -107,7 +107,7 @@ export default async function PortfolioPage({
   ];
 
   return (
-    <div className="max-w-[1600px] mx-auto px-10 py-10 space-y-6">
+    <div className="max-w-[1600px] mx-auto px-4 py-6 md:px-10 md:py-10 space-y-6">
       {/* Summary Bar */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {metrics.map((m) => (
@@ -139,7 +139,7 @@ export default async function PortfolioPage({
             return (
               <div
                 key={deal.id}
-                className="bg-white rounded-lg shadow-sm border border-gray-100 px-5 py-4 flex items-center justify-between gap-4"
+                className="bg-white rounded-lg shadow-sm border border-gray-100 px-4 md:px-5 py-4 flex items-center justify-between gap-3 md:gap-4"
               >
                 {/* Left: Icon + Info */}
                 <div className="flex items-center gap-4 min-w-0">
@@ -172,7 +172,7 @@ export default async function PortfolioPage({
                 </div>
 
                 {/* Right: Metrics + Badge */}
-                <div className="flex items-center gap-6 flex-shrink-0">
+                <div className="flex items-center gap-4 md:gap-6 flex-shrink-0">
                   {/* Invested */}
                   <div className="text-right hidden sm:block">
                     <p className="text-[9px] uppercase tracking-[0.08em] text-gray-400 font-medium">

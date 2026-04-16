@@ -52,7 +52,7 @@ export default function MarketIntelSidebar() {
   }, []);
 
   return (
-    <aside className="w-[320px] flex flex-col gap-4">
+    <aside className="w-full lg:w-[320px] flex flex-col gap-4">
       {/* Card 1: Market Cycle */}
       <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 rp-card-shadow" data-tour="market-sidebar">
         <h3

@@ -174,7 +174,7 @@ export default function ComingSoonCard({ deal, index }: ComingSoonCardProps) {
             <button
               onClick={handleSubscribe}
               disabled={loading}
-              className={`flex-1 py-2.5 rounded-lg text-[12px] font-semibold transition-all duration-200 ${
+              className={`flex-1 py-2.5 min-h-[44px] rounded-lg text-[12px] font-semibold transition-all duration-200 ${
                 subscribed
                   ? 'bg-[#BC9C45]/[0.08] border border-[#BC9C45]/20 text-[#BC9C45]'
                   : 'bg-transparent border border-[#BC9C45]/30 text-[#BC9C45] hover:bg-[#BC9C45]/5 hover:border-[#BC9C45]/50'
@@ -207,7 +207,7 @@ export default function ComingSoonCard({ deal, index }: ComingSoonCardProps) {
                     }
                   }}
                   disabled={committing}
-                  className="flex-1 py-2.5 rounded-lg text-[12px] font-bold bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] hover:opacity-90 transition-opacity disabled:opacity-60 flex items-center justify-center gap-1.5"
+                  className="flex-1 py-2.5 min-h-[44px] rounded-lg text-[12px] font-bold bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] hover:opacity-90 transition-opacity disabled:opacity-60 flex items-center justify-center gap-1.5"
                 >
                   {committing && <div className="w-3 h-3 border-2 border-[#0E3470] border-t-transparent rounded-full animate-spin" />}
                   {committing ? t('committing') : t('commitEarly')}

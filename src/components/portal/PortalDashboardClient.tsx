@@ -215,8 +215,8 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
             backgroundSize: '40px 40px',
           }}
         />
-        <div className="max-w-[1600px] mx-auto relative px-10 py-12">
-          <div className="flex items-end justify-between mb-8">
+        <div className="max-w-[1600px] mx-auto relative px-4 py-8 md:px-10 md:py-12">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between md:gap-0 mb-6 md:mb-8">
             <div>
               {quarterLabel && (
                 <div className="flex items-center gap-2.5 mb-3">
@@ -226,28 +226,28 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
                   </span>
                 </div>
               )}
-              <h1 className="font-[family-name:var(--font-playfair)] text-[42px] font-semibold text-white leading-[1.1] tracking-[-0.02em]">
+              <h1 className="font-[family-name:var(--font-playfair)] text-[28px] md:text-[42px] font-semibold text-white leading-[1.1] tracking-[-0.02em]">
                 {t('activeOpportunities')}
               </h1>
-              <p className="text-[13px] text-white/35 mt-3 font-light tracking-wide leading-relaxed">
+              <p className="text-[12px] md:text-[13px] text-white/35 mt-3 font-light tracking-wide leading-relaxed">
                 {t('heroDescription')}
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <span className="bg-white/[0.03] border border-white/[0.06] text-white/40 px-5 py-2.5 rounded-lg text-[9px] font-medium tracking-[2px] uppercase">
+              <span className="bg-white/[0.03] border border-white/[0.06] text-white/40 px-4 md:px-5 py-2 md:py-2.5 rounded-lg text-[9px] font-medium tracking-[2px] uppercase">
                 {t('confidential')}
               </span>
             </div>
           </div>
 
           {allActiveDeals.length > 0 && (
-            <div className="grid grid-cols-5 gap-[1px] rounded-xl overflow-hidden border border-white/[0.06]" data-tour="hero-metrics" style={{ background: 'rgba(255,255,255,0.04)' }}>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-[1px] rounded-xl overflow-hidden border border-white/[0.06]" data-tour="hero-metrics" style={{ background: 'rgba(255,255,255,0.04)' }}>
               {summaryMetrics.map((m) => (
-                <div key={m.label} className="px-5 py-5" style={{ background: 'rgba(14, 52, 112, 0.25)', backdropFilter: 'blur(8px)' }}>
+                <div key={m.label} className="px-4 md:px-5 py-4 md:py-5" style={{ background: 'rgba(14, 52, 112, 0.25)', backdropFilter: 'blur(8px)' }}>
                   <div className="text-[9px] font-semibold tracking-[2px] uppercase text-white/30 mb-2">
                     {m.label}
                   </div>
-                  <div className="text-[22px] font-semibold text-white tabular-nums tracking-tight">
+                  <div className="text-[18px] md:text-[22px] font-semibold text-white tabular-nums tracking-tight">
                     {m.value}
                   </div>
                 </div>
@@ -262,12 +262,12 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
 
       {/* ── Search, Filter & Sort Bar ── */}
       {hasAnyDeals && (
-        <div className="px-10 -mt-4 mb-0 relative z-10">
+        <div className="px-4 md:px-10 -mt-4 mb-0 relative z-10">
           <div className="max-w-[1600px] mx-auto">
             {/* Main bar */}
-            <div className="bg-white rounded-xl border border-[#EEF0F4] rp-card-shadow px-5 py-3.5 flex items-center gap-3">
+            <div className="bg-white rounded-xl border border-[#EEF0F4] rp-card-shadow px-4 md:px-5 py-3.5 flex flex-wrap items-center gap-3">
               {/* Search */}
-              <div className="relative flex-1 max-w-[340px]">
+              <div className="relative w-full md:flex-1 md:w-auto md:max-w-[340px]">
                 <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
                 </svg>
@@ -286,7 +286,7 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
               </div>
 
               {/* Divider */}
-              <div className="w-px h-7 bg-[#EEF0F4]" />
+              <div className="hidden md:block w-px h-7 bg-[#EEF0F4]" />
 
               {/* Property type pills */}
               <div className="flex items-center gap-1.5 flex-wrap">
@@ -313,7 +313,7 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
               </div>
 
               {/* Divider */}
-              <div className="w-px h-7 bg-[#EEF0F4]" />
+              <div className="hidden md:block w-px h-7 bg-[#EEF0F4]" />
 
               {/* Filters toggle */}
               <button
@@ -378,7 +378,7 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
 
             {/* Expandable filter panel */}
             {filtersOpen && (
-              <div className="mt-2 bg-white rounded-xl border border-[#EEF0F4] shadow-[0_2px_12px_rgba(0,0,0,0.04)] px-6 py-5 grid grid-cols-3 gap-8">
+              <div className="mt-2 bg-white rounded-xl border border-[#EEF0F4] shadow-[0_2px_12px_rgba(0,0,0,0.04)] px-4 md:px-6 py-5 grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
                 {/* Price range */}
                 <div>
                   <label className="text-[10px] font-bold text-[#0E3470] uppercase tracking-[1.5px] mb-3 block">{t('priceRange')}</label>
@@ -508,7 +508,7 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
       )}
 
       {/* ── Main Content ── */}
-      <div className="px-10 py-10">
+      <div className="px-4 py-6 md:px-10 md:py-10">
         {!hasAnyDeals ? (
           <div className="flex flex-col items-center justify-center py-24">
             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#0E3470] to-[#1D5FB8] flex items-center justify-center mb-5 shadow-[0_4px_20px_rgba(14,52,112,0.2)]">
@@ -527,8 +527,8 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
             </p>
           </div>
         ) : (
-          <div className="flex gap-8">
-            <div className="flex-1 min-w-0 space-y-10">
+          <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+            <div className="flex-1 min-w-0 space-y-8 md:space-y-10">
               {/* ── Upcoming Opportunities Section ── */}
               {upcomingDeals.length > 0 && (
                 <div>
@@ -538,7 +538,7 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
                     </h2>
                     <div className="flex-1 h-px bg-gradient-to-r from-[#BC9C45]/30 to-transparent" />
                   </div>
-                  <div className="grid grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-5 md:gap-6">
                     {upcomingDeals.map((deal, index) => (
                       <ComingSoonCard key={deal.id} deal={deal} index={index} />
                     ))}
@@ -557,7 +557,7 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
                       <div className="flex-1 h-px bg-gradient-to-r from-[#BC9C45]/30 to-transparent" />
                     </div>
                   )}
-                  <div className="grid grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-7">
+                  <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-5 md:gap-7">
                     {activeDeals.map((deal, index) => (
                       <div key={deal.id} {...(index === 0 ? { 'data-tour': 'first-deal' } : {})}>
                         <DealCard deal={deal} locale={locale} index={index} />
@@ -576,7 +576,7 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
                     </h2>
                     <div className="flex-1 h-px bg-gradient-to-r from-[#9CA3AF]/30 to-transparent" />
                   </div>
-                  <div className="grid grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-7">
+                  <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-5 md:gap-7">
                     {closedDeals.map((deal, index) => (
                       <DealCard key={deal.id} deal={deal} locale={locale} index={index} />
                     ))}
@@ -605,7 +605,7 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
             </div>
 
             {/* Market Intelligence Sidebar */}
-            <div className="w-[320px] shrink-0">
+            <div className="w-full lg:w-[320px] lg:shrink-0">
               <MarketIntelSidebar />
             </div>
           </div>
@@ -613,8 +613,8 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
       </div>
 
       {/* ── Confidentiality Footer ── */}
-      <div className="px-10 pb-10">
-        <div className="border-t border-[#EEF0F4] pt-6 flex items-center justify-between">
+      <div className="px-4 pb-6 md:px-10 md:pb-10">
+        <div className="border-t border-[#EEF0F4] pt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-0">
           <div className="flex items-center gap-3">
             <div className="w-5 h-5 bg-gradient-to-br from-[#BC9C45] to-[#A88A3D] rounded flex items-center justify-center">
               <span className="text-white text-[8px] font-bold font-[family-name:var(--font-playfair)] italic">R</span>
@@ -623,7 +623,7 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
               REPRIME TERMINAL
             </span>
           </div>
-          <p className="text-[10px] text-[#9CA3AF] max-w-[600px] text-right leading-relaxed">
+          <p className="text-[10px] text-[#9CA3AF] max-w-[600px] text-left md:text-right leading-relaxed">
             {t('footerConfidential')}
           </p>
         </div>
