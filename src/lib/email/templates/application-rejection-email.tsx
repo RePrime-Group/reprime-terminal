@@ -12,9 +12,13 @@ export default function ApplicationRejectionEmail({ applicantName }: Application
   return (
     <BaseLayout preview="Update on your RePrime Terminal membership application">
       <Section style={{ textAlign: 'center' as const, marginBottom: '32px' }}>
-        <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'linear-gradient(135deg, #BC9C45, #D4B96A)', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span style={{ fontSize: '24px', color: '#FFFFFF', fontWeight: 700, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>R</span>
-        </div>
+        <table cellPadding="0" cellSpacing="0" align="center" style={{ margin: '0 auto 20px', borderCollapse: 'collapse' }}>
+          <tr>
+            <td style={badgeCellStyle}>
+              <span style={{ fontSize: '24px', color: '#FFFFFF', fontWeight: 700, fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>R</span>
+            </td>
+          </tr>
+        </table>
       </Section>
 
       <Text style={headingStyle}>Application Update</Text>
@@ -77,6 +81,16 @@ const dividerStyle: React.CSSProperties = {
   height: '1px',
   background: 'linear-gradient(90deg, transparent, #BC9C45, transparent)',
   margin: '24px 0',
+};
+
+const badgeCellStyle: React.CSSProperties = {
+  width: '56px',
+  height: '56px',
+  borderRadius: '28px',
+  background: 'linear-gradient(135deg, #BC9C45, #D4B96A)',
+  textAlign: 'center' as const,
+  verticalAlign: 'middle' as const,
+  lineHeight: '56px',
 };
 
 const infoBoxStyle: React.CSSProperties = {

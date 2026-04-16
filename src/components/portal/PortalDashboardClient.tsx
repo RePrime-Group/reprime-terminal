@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import DealCard from '@/components/portal/DealCard';
 import ComingSoonCard from '@/components/portal/ComingSoonCard';
 import MarketIntelSidebar from '@/components/portal/MarketIntelSidebar';
-import { formatPriceCompact } from '@/lib/utils/format';
+import { formatPrice, formatPriceCompact } from '@/lib/utils/format';
 import { useTranslations } from 'next-intl';
 
 const PAGE_SIZE = 6;
@@ -193,8 +193,8 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
     deals.find((d) => d.quarter_release)?.quarter_release ?? '';
 
   const summaryMetrics = [
-    { label: t('totalDealVolume'), value: formatPriceCompact(totalDealVolume) },
-    { label: t('aggregateEquity'), value: formatPriceCompact(totalEquity) },
+    { label: t('totalDealVolume'), value: formatPrice(totalDealVolume) },
+    { label: t('aggregateEquity'), value: formatPrice(totalEquity) },
     { label: t('avgProjectedIrr'), value: avgIrr > 0 ? `${avgIrr.toFixed(2)}%` : '--' },
     { label: t('avgCapRate'), value: avgCapRate > 0 ? `${avgCapRate.toFixed(2)}%` : '--' },
     { label: t('activeReleases'), value: String(allActiveDeals.length) },

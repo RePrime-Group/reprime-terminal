@@ -5,23 +5,27 @@ import type { MarketDataPoint } from '@/lib/market-data';
 import { FALLBACK_MARKET_DATA } from '@/lib/market-data';
 
 function TickerItem({ label, value, change, direction }: MarketDataPoint) {
-  const arrowColor =
+  const hasChange = !!change && change !== '—';
+  const changeStyles =
     direction === 'up'
-      ? 'text-[#DC2626]'
+      ? 'bg-[#DC2626]/20 text-[#FCA5A5]'
       : direction === 'down'
-        ? 'text-[#0B8A4D]'
-        : 'text-[#9CA3AF]';
+        ? 'bg-[#0B8A4D]/25 text-[#86EFAC]'
+        : 'bg-white/10 text-white/60';
   const arrow = direction === 'up' ? '▲' : direction === 'down' ? '▼' : '';
 
   return (
-    <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
-      <span className="text-[11px] font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
-        {label}:
+    <span className="inline-flex items-center gap-2 whitespace-nowrap">
+      <span className="text-[9px] font-semibold uppercase tracking-[1.2px] text-white/60">
+        {label}
       </span>
-      <span className="text-[11px] font-bold text-white tabular-nums">{value}</span>
-      <span className={`text-[10px] font-medium ${arrowColor}`}>
-        {arrow} {change}
-      </span>
+      <span className="text-[13px] font-bold text-white tabular-nums leading-none">{value}</span>
+      {hasChange && (
+        <span className={`inline-flex items-center gap-1 text-[10px] font-semibold tabular-nums px-1.5 py-0.5 rounded ${changeStyles}`}>
+          {arrow && <span className="text-[8px]">{arrow}</span>}
+          {change}
+        </span>
+      )}
     </span>
   );
 }
@@ -53,18 +57,22 @@ export default function MarketTicker() {
     return () => clearInterval(interval);
   }, []);
 
+  const doubled = [...items, ...items];
+
   return (
-    <div className="w-full h-8 bg-[#0E3470] overflow-hidden relative">
+    <div className="w-full h-9 bg-gradient-to-r from-[#0A1628] via-[#0E3470] to-[#0A1628] overflow-hidden relative border-b border-white/[0.06]">
       <div className="absolute inset-0 flex items-center">
         <div className="animate-marquee flex items-center" style={{ width: 'max-content' }}>
-          {/* Duplicate the items for seamless loop */}
-          {[...items, ...items].map((item, idx) => (
-            <span key={idx} className="mx-5">
-              <TickerItem {...item} />
+          {doubled.map((item, idx) => (
+            <span key={idx} className="inline-flex items-center">
+              <span className="px-6">
+                <TickerItem {...item} />
+              </span>
+              <span className="h-3 w-px bg-white/15" aria-hidden />
             </span>
           ))}
           {asOf && (
-            <span className="mx-5 text-[10px] text-white/20">
+            <span className="px-6 text-[10px] font-medium uppercase tracking-[1.2px] text-white/40">
               as of {new Date(asOf).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
           )}

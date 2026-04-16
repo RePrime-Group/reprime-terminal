@@ -451,7 +451,9 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
       .eq('id', attachment.id);
 
     if (value && attachment.investor_folder_id) {
-      // Create a DD document record so investors can see it
+      // Create a DD document record so investors can see it.
+      // Note: investor notification is NOT fired here. Admins send notifications
+      // explicitly from the data room upload flow via the "Notify investors" toggle.
       await supabase.from('terminal_dd_documents').insert({
         folder_id: attachment.investor_folder_id,
         deal_id: dealId,

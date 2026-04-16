@@ -1,0 +1,349 @@
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE public.terminal_activity_log (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid,
+  deal_id uuid,
+  action text NOT NULL,
+  metadata jsonb DEFAULT '{}'::jsonb,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT terminal_activity_log_pkey PRIMARY KEY (id),
+  CONSTRAINT terminal_activity_log_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.terminal_users(id),
+  CONSTRAINT terminal_activity_log_deal_id_fkey FOREIGN KEY (deal_id) REFERENCES public.terminal_deals(id)
+);
+CREATE TABLE public.terminal_availability_slots (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  day_of_week integer NOT NULL CHECK (day_of_week >= 0 AND day_of_week <= 6),
+  start_time time without time zone NOT NULL,
+  end_time time without time zone NOT NULL,
+  timezone text DEFAULT 'America/New_York'::text,
+  is_active boolean DEFAULT true,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT terminal_availability_slots_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.terminal_dd_documents (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  folder_id uuid NOT NULL,
+  deal_id uuid NOT NULL,
+  name text NOT NULL,
+  file_size text,
+  file_type text,
+  storage_path text,
+  is_verified boolean DEFAULT false,
+  uploaded_by uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  is_downloadable boolean NOT NULL DEFAULT false,
+  doc_status text NOT NULL DEFAULT 'pending'::text CHECK (doc_status = ANY (ARRAY['verified'::text, 'uploaded'::text, 'pending'::text, 'requested'::text, 'notuploaded'::text, 'doesnotexist'::text, 'na'::text, 'notrequired'::text])),
+  CONSTRAINT terminal_dd_documents_pkey PRIMARY KEY (id),
+  CONSTRAINT terminal_dd_documents_folder_id_fkey FOREIGN KEY (folder_id) REFERENCES public.terminal_dd_folders(id),
+  CONSTRAINT terminal_dd_documents_deal_id_fkey FOREIGN KEY (deal_id) REFERENCES public.terminal_deals(id),
+  CONSTRAINT terminal_dd_documents_uploaded_by_fkey FOREIGN KEY (uploaded_by) REFERENCES public.terminal_users(id)
+);
+CREATE TABLE public.terminal_dd_folders (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  deal_id uuid NOT NULL,
+  name text NOT NULL,
+  icon text,
+  display_order integer DEFAULT 0,
+  address_id uuid,
+  CONSTRAINT terminal_dd_folders_pkey PRIMARY KEY (id),
+  CONSTRAINT terminal_dd_folders_deal_id_fkey FOREIGN KEY (deal_id) REFERENCES public.terminal_deals(id),
+  CONSTRAINT terminal_dd_folders_address_id_fkey FOREIGN KEY (address_id) REFERENCES public.terminal_deal_addresses(id)
+);
+CREATE TABLE public.terminal_deal_addresses (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  deal_id uuid NOT NULL,
+  label text NOT NULL,
+  address text,
+  city text,
+  state text,
+  square_footage text,
+  units text,
+  year_built integer,
+  om_storage_path text,
+  display_order integer DEFAULT 0,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT terminal_deal_addresses_pkey PRIMARY KEY (id),
+  CONSTRAINT terminal_deal_addresses_deal_id_fkey FOREIGN KEY (deal_id) REFERENCES public.terminal_deals(id)
+);
+CREATE TABLE public.terminal_deal_commitments (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  deal_id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  type text NOT NULL DEFAULT 'primary'::text CHECK (type = ANY (ARRAY['primary'::text, 'backup'::text])),
+  deposit_amount text,
+  status text NOT NULL DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['pending'::text, 'wire_sent'::text, 'confirmed'::text, 'cancelled'::text])),
+  notes text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT terminal_deal_commitments_pkey PRIMARY KEY (id),
+  CONSTRAINT terminal_deal_commitments_deal_id_fkey FOREIGN KEY (deal_id) REFERENCES public.terminal_deals(id),
+  CONSTRAINT terminal_deal_commitments_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.terminal_users(id)
+);
+CREATE TABLE public.terminal_deal_messages (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  deal_id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  message text NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT terminal_deal_messages_pkey PRIMARY KEY (id),
+  CONSTRAINT terminal_deal_messages_deal_id_fkey FOREIGN KEY (deal_id) REFERENCES public.terminal_deals(id),
+  CONSTRAINT terminal_deal_messages_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.terminal_users(id)
+);
+CREATE TABLE public.terminal_deal_photos (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  deal_id uuid NOT NULL,
+  storage_path text NOT NULL,
+  display_order integer DEFAULT 0,
+  caption text,
+  created_at timestamp with time zone DEFAULT now(),
+  address_id uuid,
+  CONSTRAINT terminal_deal_photos_pkey PRIMARY KEY (id),
+  CONSTRAINT terminal_deal_photos_deal_id_fkey FOREIGN KEY (deal_id) REFERENCES public.terminal_deals(id),
+  CONSTRAINT terminal_deal_photos_address_id_fkey FOREIGN KEY (address_id) REFERENCES public.terminal_deal_addresses(id)
+);
+CREATE TABLE public.terminal_deal_stages (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  deal_id uuid NOT NULL,
+  stage text NOT NULL CHECK (stage = ANY (ARRAY['post_loi'::text, 'due_diligence'::text, 'pre_closing'::text, 'post_closing'::text])),
+  started_at timestamp with time zone,
+  completed_at timestamp with time zone,
+  is_current boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT terminal_deal_stages_pkey PRIMARY KEY (id),
+  CONSTRAINT terminal_deal_stages_deal_id_fkey FOREIGN KEY (deal_id) REFERENCES public.terminal_deals(id)
+);
+CREATE TABLE public.terminal_deal_subscriptions (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  deal_id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  notified_at timestamp with time zone,
+  CONSTRAINT terminal_deal_subscriptions_pkey PRIMARY KEY (id),
+  CONSTRAINT terminal_deal_subscriptions_deal_id_fkey FOREIGN KEY (deal_id) REFERENCES public.terminal_deals(id),
+  CONSTRAINT terminal_deal_subscriptions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.terminal_users(id)
+);
+CREATE TABLE public.terminal_deal_tasks (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  deal_id uuid NOT NULL,
+  stage text NOT NULL CHECK (stage = ANY (ARRAY['post_loi'::text, 'due_diligence'::text, 'pre_closing'::text, 'post_closing'::text])),
+  name text NOT NULL,
+  assignee_id uuid,
+  due_days integer,
+  due_date timestamp with time zone,
+  due_type text DEFAULT 'after_stage'::text CHECK (due_type = ANY (ARRAY['after_stage'::text, 'on_stage'::text, 'after_listing_executed'::text])),
+  is_gate boolean DEFAULT false,
+  is_milestone boolean DEFAULT false,
+  status text DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['pending'::text, 'in_progress'::text, 'completed'::text, 'overdue'::text, 'blocked'::text])),
+  completed_at timestamp with time zone,
+  completed_by uuid,
+  sort_order integer DEFAULT 0,
+  notes text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT terminal_deal_tasks_pkey PRIMARY KEY (id),
+  CONSTRAINT terminal_deal_tasks_deal_id_fkey FOREIGN KEY (deal_id) REFERENCES public.terminal_deals(id),
+  CONSTRAINT terminal_deal_tasks_assignee_id_fkey FOREIGN KEY (assignee_id) REFERENCES public.terminal_users(id),
+  CONSTRAINT terminal_deal_tasks_completed_by_fkey FOREIGN KEY (completed_by) REFERENCES public.terminal_users(id)
+);
+CREATE TABLE public.terminal_deals (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  city text NOT NULL,
+  state text NOT NULL,
+  property_type text NOT NULL,
+  square_footage text,
+  units text,
+  class_type text,
+  year_built integer,
+  occupancy text,
+  purchase_price text NOT NULL,
+  noi text,
+  cap_rate text,
+  irr text,
+  coc text,
+  dscr text,
+  equity_required text,
+  loan_estimate text,
+  seller_financing boolean DEFAULT false,
+  special_terms text DEFAULT 'None'::text,
+  assignment_fee text DEFAULT '3%'::text,
+  assignment_irr text,
+  gplp_irr text,
+  acq_fee text DEFAULT '1%'::text,
+  asset_mgmt_fee text DEFAULT '2%'::text,
+  gp_carry text DEFAULT '20% above 8% pref'::text,
+  loan_fee text DEFAULT '1 point'::text,
+  dd_deadline timestamp with time zone,
+  close_deadline timestamp with time zone,
+  extension_deadline timestamp with time zone,
+  status text DEFAULT 'draft'::text CHECK (status = ANY (ARRAY['draft'::text, 'coming_soon'::text, 'loi_signed'::text, 'published'::text, 'under_review'::text, 'assigned'::text, 'closed'::text])),
+  neighborhood text,
+  metro_population text,
+  job_growth text,
+  investment_highlights ARRAY,
+  acquisition_thesis text,
+  quarter_release text,
+  created_by uuid,
+  assigned_to uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  psa_draft_start timestamp with time zone,
+  loi_signed_at timestamp with time zone,
+  teaser_description text,
+  deposit_amount text,
+  deposit_held_by text,
+  om_storage_path text,
+  ltv text DEFAULT '75'::text,
+  interest_rate text DEFAULT '6.00'::text,
+  amortization_years text DEFAULT '30'::text,
+  loan_fee_points text DEFAULT '1'::text,
+  io_period_months text DEFAULT '0'::text,
+  mezz_percent text DEFAULT '15'::text,
+  mezz_rate text DEFAULT '5.00'::text,
+  mezz_term_months text DEFAULT '60'::text,
+  seller_credit text DEFAULT '0'::text,
+  pref_return text DEFAULT '8'::text,
+  hold_period_years text DEFAULT '5'::text,
+  exit_cap_rate text,
+  debt_terms_quoted boolean DEFAULT false,
+  acquisition_fee numeric DEFAULT 1,
+  combined_dscr numeric,
+  rent_growth numeric,
+  CONSTRAINT terminal_deals_pkey PRIMARY KEY (id),
+  CONSTRAINT terminal_deals_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.terminal_users(id),
+  CONSTRAINT terminal_deals_assigned_to_fkey FOREIGN KEY (assigned_to) REFERENCES public.terminal_users(id)
+);
+CREATE TABLE public.terminal_invite_tokens (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  email text NOT NULL,
+  role text DEFAULT 'investor'::text CHECK (role = ANY (ARRAY['investor'::text, 'employee'::text])),
+  token text NOT NULL DEFAULT (gen_random_uuid())::text UNIQUE,
+  invited_by uuid,
+  accepted_at timestamp with time zone,
+  expires_at timestamp with time zone DEFAULT (now() + '7 days'::interval),
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT terminal_invite_tokens_pkey PRIMARY KEY (id),
+  CONSTRAINT terminal_invite_tokens_invited_by_fkey FOREIGN KEY (invited_by) REFERENCES public.terminal_users(id)
+);
+CREATE TABLE public.terminal_market_data (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  key text NOT NULL UNIQUE,
+  label text NOT NULL,
+  value text NOT NULL,
+  change text DEFAULT '—'::text,
+  direction text DEFAULT 'flat'::text CHECK (direction = ANY (ARRAY['up'::text, 'down'::text, 'flat'::text])),
+  source text,
+  as_of_date date,
+  display_order integer DEFAULT 0,
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT terminal_market_data_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.terminal_meetings (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  deal_id uuid,
+  investor_id uuid NOT NULL,
+  scheduled_at timestamp with time zone NOT NULL,
+  status text DEFAULT 'scheduled'::text CHECK (status = ANY (ARRAY['scheduled'::text, 'completed'::text, 'cancelled'::text, 'no_show'::text])),
+  notes text,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT terminal_meetings_pkey PRIMARY KEY (id),
+  CONSTRAINT terminal_meetings_deal_id_fkey FOREIGN KEY (deal_id) REFERENCES public.terminal_deals(id),
+  CONSTRAINT terminal_meetings_investor_id_fkey FOREIGN KEY (investor_id) REFERENCES public.terminal_users(id)
+);
+CREATE TABLE public.terminal_membership_applications (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  full_name text NOT NULL,
+  email text NOT NULL,
+  company_name text,
+  phone text,
+  status text NOT NULL DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text])),
+  reviewed_by uuid,
+  reviewed_at timestamp with time zone,
+  admin_notes text,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT terminal_membership_applications_pkey PRIMARY KEY (id),
+  CONSTRAINT terminal_membership_applications_reviewed_by_fkey FOREIGN KEY (reviewed_by) REFERENCES public.terminal_users(id)
+);
+CREATE TABLE public.terminal_nda_signatures (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  deal_id uuid,
+  nda_type text NOT NULL CHECK (nda_type = ANY (ARRAY['blanket'::text, 'deal'::text])),
+  signed_at timestamp with time zone NOT NULL DEFAULT now(),
+  ip_address text,
+  signer_name text,
+  signer_company text,
+  signer_title text,
+  CONSTRAINT terminal_nda_signatures_pkey PRIMARY KEY (id),
+  CONSTRAINT terminal_nda_signatures_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.terminal_users(id),
+  CONSTRAINT terminal_nda_signatures_deal_id_fkey FOREIGN KEY (deal_id) REFERENCES public.terminal_deals(id)
+);
+CREATE TABLE public.terminal_notifications (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  deal_id uuid,
+  type text NOT NULL,
+  title text NOT NULL,
+  description text NOT NULL DEFAULT ''::text,
+  read_at timestamp with time zone,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT terminal_notifications_pkey PRIMARY KEY (id),
+  CONSTRAINT terminal_notifications_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.terminal_users(id),
+  CONSTRAINT terminal_notifications_deal_id_fkey FOREIGN KEY (deal_id) REFERENCES public.terminal_deals(id)
+);
+CREATE TABLE public.terminal_settings (
+  key text NOT NULL,
+  value jsonb NOT NULL,
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT terminal_settings_pkey PRIMARY KEY (key)
+);
+CREATE TABLE public.terminal_task_attachments (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  task_id uuid NOT NULL,
+  deal_id uuid NOT NULL,
+  name text NOT NULL,
+  file_size text,
+  file_type text,
+  storage_path text NOT NULL,
+  uploaded_by uuid,
+  show_to_investors boolean DEFAULT false,
+  investor_folder_id uuid,
+  is_verified boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT terminal_task_attachments_pkey PRIMARY KEY (id),
+  CONSTRAINT terminal_task_attachments_task_id_fkey FOREIGN KEY (task_id) REFERENCES public.terminal_deal_tasks(id),
+  CONSTRAINT terminal_task_attachments_deal_id_fkey FOREIGN KEY (deal_id) REFERENCES public.terminal_deals(id),
+  CONSTRAINT terminal_task_attachments_uploaded_by_fkey FOREIGN KEY (uploaded_by) REFERENCES public.terminal_users(id),
+  CONSTRAINT terminal_task_attachments_investor_folder_id_fkey FOREIGN KEY (investor_folder_id) REFERENCES public.terminal_dd_folders(id)
+);
+CREATE TABLE public.terminal_users (
+  id uuid NOT NULL,
+  email text NOT NULL,
+  full_name text NOT NULL,
+  role text NOT NULL CHECK (role = ANY (ARRAY['owner'::text, 'employee'::text, 'investor'::text])),
+  language_preference text DEFAULT 'en'::text CHECK (language_preference = ANY (ARRAY['en'::text, 'he'::text])),
+  company_name text,
+  phone text,
+  is_active boolean DEFAULT true,
+  last_active_at timestamp with time zone,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  onboarding_completed boolean NOT NULL DEFAULT false,
+  notification_preferences jsonb NOT NULL DEFAULT '{"new_deals": {"email": true, "in_app": true}, "deal_activity": {"email": true, "in_app": true}, "document_uploads": {"email": true, "in_app": true}}'::jsonb,
+  CONSTRAINT terminal_users_pkey PRIMARY KEY (id),
+  CONSTRAINT terminal_users_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.terminal_watchlist (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  deal_id uuid NOT NULL,
+  frequency text NOT NULL DEFAULT 'every'::text CHECK (frequency = ANY (ARRAY['every'::text, 'daily'::text, 'weekly'::text])),
+  channels jsonb NOT NULL DEFAULT '{"sms": false, "email": true, "whatsapp": false}'::jsonb,
+  alert_types jsonb NOT NULL DEFAULT '{"docs": true, "price": true, "competing": true, "deadlines": true}'::jsonb,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT terminal_watchlist_pkey PRIMARY KEY (id),
+  CONSTRAINT terminal_watchlist_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.terminal_users(id),
+  CONSTRAINT terminal_watchlist_deal_id_fkey FOREIGN KEY (deal_id) REFERENCES public.terminal_deals(id)
+);

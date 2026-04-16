@@ -22,15 +22,13 @@ export default function CommitmentWithdrawal({
   return (
     <BaseLayout preview={`Commitment Withdrawn: ${dealName}`}>
       <div style={{ textAlign: 'center' as const, marginBottom: '24px' }}>
-        <div style={{
-          width: '52px', height: '52px', borderRadius: '50%',
-          background: '#F7F8FA',
-          border: '2px solid #EEF0F4',
-          margin: '0 auto 16px',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <span style={{ fontSize: '22px', color: '#9CA3AF' }}>✕</span>
-        </div>
+        <table cellPadding="0" cellSpacing="0" align="center" style={{ margin: '0 auto 16px', borderCollapse: 'collapse' }}>
+          <tr>
+            <td style={badgeCellStyle}>
+              <span style={{ fontSize: '22px', color: '#9CA3AF' }}>✕</span>
+            </td>
+          </tr>
+        </table>
       </div>
 
       <Text style={headingStyle}>
@@ -92,6 +90,17 @@ const headingStyle: React.CSSProperties = {
 
 const bodyStyle: React.CSSProperties = {
   fontSize: '15px', color: '#4B5563', lineHeight: '26px', margin: '0 0 24px 0',
+};
+
+const badgeCellStyle: React.CSSProperties = {
+  width: '52px',
+  height: '52px',
+  borderRadius: '26px',
+  backgroundColor: '#F7F8FA',
+  border: '2px solid #EEF0F4',
+  textAlign: 'center' as const,
+  verticalAlign: 'middle' as const,
+  lineHeight: '48px',
 };
 
 const dealCardStyle: React.CSSProperties = {

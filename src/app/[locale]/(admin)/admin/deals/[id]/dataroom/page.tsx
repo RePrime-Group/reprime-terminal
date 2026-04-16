@@ -120,6 +120,8 @@ export default function DataRoomPage() {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState('');
+  const [notifyOnUpload, setNotifyOnUpload] = useState(false);
+  const [notifyToast, setNotifyToast] = useState<string | null>(null);
   const [showZipModal, setShowZipModal] = useState(false);
   const [pendingZipPath, setPendingZipPath] = useState<string | null>(null);
   const [extracting, setExtracting] = useState(false);
@@ -313,6 +315,30 @@ export default function DataRoomPage() {
       setUploadError(`Failed to save document record: ${insertError.message}`);
     } else if (insertedDoc) {
       setDocuments((prev) => [insertedDoc as DDDocument, ...prev]);
+
+      if (notifyOnUpload) {
+        try {
+          const res = await fetch(`/api/admin/deals/${dealId}/notify-event`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'document_upload', docNames: [file.name] }),
+          });
+          if (res.ok) {
+            const body = await res.json().catch(() => ({}));
+            const sent = typeof body.sent === 'number' ? body.sent : 0;
+            setNotifyToast(
+              sent > 0
+                ? `Notified ${sent} investor${sent === 1 ? '' : 's'}.`
+                : 'No NDA-signed investors to notify.',
+            );
+          } else {
+            setNotifyToast('Upload succeeded, but notification failed.');
+          }
+        } catch {
+          setNotifyToast('Upload succeeded, but notification failed.');
+        }
+        setTimeout(() => setNotifyToast(null), 4000);
+      }
     }
 
     setUploadProgress(100);
@@ -770,6 +796,39 @@ export default function DataRoomPage() {
         <div className="flex-1 min-w-0">
           {selectedFolderId ? (
             <>
+              {/* Notify-investors toggle */}
+              <div className="flex items-start justify-between gap-4 mb-3 px-4 py-3 rounded-lg bg-white border border-rp-gray-200">
+                <div className="min-w-0 flex-1">
+                  <div className="text-[13px] font-semibold text-rp-navy">
+                    Notify investors after upload
+                  </div>
+                  <div className="text-[11px] text-rp-gray-500 mt-0.5">
+                    Sends an in-app and/or email notification to investors who have signed this deal&apos;s NDA or the blanket NDA. Applies to each file you upload while this is on.
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={notifyOnUpload}
+                  onClick={() => setNotifyOnUpload((v) => !v)}
+                  className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 mt-0.5 ${
+                    notifyOnUpload ? 'bg-rp-gold' : 'bg-rp-gray-300'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                      notifyOnUpload ? 'translate-x-[22px]' : 'translate-x-[2px]'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {notifyToast && (
+                <div className="mb-3 px-4 py-2 rounded-lg bg-emerald-50 border border-emerald-200 text-[12px] text-emerald-800">
+                  {notifyToast}
+                </div>
+              )}
+
               {/* Upload drop zone */}
               <div
                 onDragOver={handleDragOver}

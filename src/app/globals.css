@@ -203,7 +203,11 @@
 
   /* Marquee for market ticker */
   .animate-marquee {
-    animation: marquee 30s linear infinite;
+    animation: marquee 60s linear infinite;
+  }
+
+  .animate-marquee:hover {
+    animation-play-state: paused;
   }
 
   @keyframes marquee {

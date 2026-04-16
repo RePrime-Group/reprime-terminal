@@ -31,6 +31,8 @@ export default async function PortalLayout({
       <MarketTicker />
       <PortalNavbar
         firstName={terminalUser.full_name?.split(' ')[0] ?? ''}
+        fullName={terminalUser.full_name ?? ''}
+        email={user.email ?? ''}
         locale={locale}
       />
       {!terminalUser.onboarding_completed && (

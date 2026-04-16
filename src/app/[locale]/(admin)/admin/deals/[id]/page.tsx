@@ -517,6 +517,61 @@ export default function EditDealPage() {
         return;
       }
 
+      // Fire notification dispatch (best-effort; never blocks the save).
+      try {
+        const becamePublished =
+          statusToSave === 'published' && deal.status !== 'published';
+        if (becamePublished) {
+          await fetch(`/api/admin/deals/${dealId}/notify-event`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'new_deal' }),
+          });
+        } else {
+          const WATCH: (keyof typeof updateData)[] = [
+            'purchase_price',
+            'om_storage_path',
+            'dd_deadline',
+            'close_deadline',
+            'extension_deadline',
+            'psa_draft_start',
+            'loi_signed_at',
+            'quarter_release',
+          ];
+          const DATE_FIELDS = new Set<string>([
+            'dd_deadline',
+            'close_deadline',
+            'extension_deadline',
+            'psa_draft_start',
+            'loi_signed_at',
+          ]);
+          const normalize = (field: string, v: unknown): string => {
+            if (v === undefined || v === null || v === '') return '';
+            if (DATE_FIELDS.has(field)) {
+              const t = new Date(String(v)).getTime();
+              return isNaN(t) ? '' : String(t);
+            }
+            return String(v).trim();
+          };
+          const changedFields = WATCH.filter((f) => {
+            const next = updateData[f];
+            // Field not being updated by this save (e.g. om_storage_path is managed separately).
+            if (next === undefined) return false;
+            const before = (deal as unknown as Record<string, unknown>)[f];
+            return normalize(f, before) !== normalize(f, next);
+          });
+          if (changedFields.length > 0) {
+            await fetch(`/api/admin/deals/${dealId}/notify-event`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ type: 'deal_activity', changedFields }),
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Failed to dispatch deal notifications:', err);
+      }
+
       router.push(`/${locale}/admin/deals`);
     } finally {
       setSaving(false);

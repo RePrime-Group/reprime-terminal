@@ -8,6 +8,8 @@ import ApplicationAckEmail from './templates/application-ack-email';
 import ApplicationNotifyEmail from './templates/application-notify-email';
 import ApplicationRejectionEmail from './templates/application-rejection-email';
 import CommitmentWithdrawal from './templates/commitment-withdrawal';
+import DocumentUploadEmail from './templates/document-upload-notification';
+import DealActivityEmail from './templates/deal-activity-notification';
 
 const from = `${FROM_NAME} <${FROM_EMAIL}>`;
 
@@ -138,6 +140,43 @@ export async function sendCommitmentConfirmation(
     ...(cc && cc.length > 0 ? { cc } : {}),
     subject: `${type}: ${data.dealName} — ${data.city}, ${data.state}`,
     react: CommitmentConfirmation(data),
+  });
+}
+
+export async function sendDocumentUploadEmail(
+  recipientEmail: string,
+  data: {
+    dealName: string;
+    city: string;
+    state: string;
+    docCount: number;
+    firstDocName: string;
+    portalUrl: string;
+  },
+) {
+  return getResend().emails.send({
+    from,
+    to: recipientEmail,
+    subject: `New Documents: ${data.dealName} — ${data.city}, ${data.state}`,
+    react: DocumentUploadEmail(data),
+  });
+}
+
+export async function sendDealActivityEmail(
+  recipientEmail: string,
+  data: {
+    dealName: string;
+    city: string;
+    state: string;
+    changes: string[];
+    portalUrl: string;
+  },
+) {
+  return getResend().emails.send({
+    from,
+    to: recipientEmail,
+    subject: `Deal Update: ${data.dealName} — ${data.city}, ${data.state}`,
+    react: DealActivityEmail(data),
   });
 }
 

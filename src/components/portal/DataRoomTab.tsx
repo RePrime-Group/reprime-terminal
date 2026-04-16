@@ -78,7 +78,7 @@ function FileTypeBadge({ doc }: { doc: TerminalDDDocument }) {
   const config = FILE_TYPE_CONFIG[doc.file_type ?? ''] ?? getFileTypeFromName(doc.name);
   return (
     <span
-      className="inline-flex items-center justify-center w-10 h-10 rounded-lg text-[11px] font-bold shrink-0"
+      className="inline-flex items-center justify-center w-9 h-9 md:w-10 md:h-10 rounded-lg text-[10px] md:text-[11px] font-bold shrink-0"
       style={{ backgroundColor: config.bg, color: config.color, letterSpacing: '0.02em' }}
     >
       {config.label}
@@ -140,14 +140,14 @@ export default function DataRoomTab({
   return (
     <div>
       {/* Header area */}
-      <div className="px-6 pt-3 pb-3">
-        <div className="flex items-center justify-between">
-          <p className="text-[12px] text-[#9CA3AF]">
+      <div className="px-4 md:px-6 pt-3 pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <p className="text-[12px] text-[#9CA3AF] truncate">
             {t('watermarked')} <span className="font-semibold text-[#0E3470]">{investorName}</span> · {investorEmail}
           </p>
           <a
             href={`/api/deals/${dealId}/package`}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#0F1B2D] text-white text-[13px] font-semibold hover:bg-[#1a2a42] transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#0F1B2D] text-white text-[13px] font-semibold hover:bg-[#1a2a42] transition-colors self-start sm:self-auto shrink-0"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
@@ -159,10 +159,46 @@ export default function DataRoomTab({
         </div>
       </div>
 
+      {/* Mobile category pill bar */}
+      <div className="md:hidden px-4 pb-3">
+        <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1">
+          {categoryList.map((cat) => {
+            const isActive = activeCategory === cat.id;
+            const isEmpty = cat.count === 0 && cat.id !== 'all';
+            return (
+              <button
+                key={cat.id}
+                onClick={() => { if (!isEmpty) { setActiveCategory(cat.id); setSelectedDocs(new Set()); } }}
+                disabled={isEmpty}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[12px] whitespace-nowrap shrink-0 transition-all ${
+                  isActive
+                    ? 'bg-[#0F1B2D] text-white border-[#0F1B2D] font-semibold'
+                    : isEmpty
+                      ? 'text-[#9CA3AF] border-[#F3F4F6] opacity-50'
+                      : 'text-[#374151] border-[#E5E7EB] bg-white hover:bg-[#F9FAFB]'
+                }`}
+              >
+                <span className="text-[13px]">{cat.icon}</span>
+                <span>{cat.label}</span>
+                {cat.count > 0 && (
+                  <span
+                    className={`text-[10px] font-bold px-[6px] py-[1px] rounded ${
+                      isActive ? 'text-[#C8A951] bg-[rgba(200,169,81,0.18)]' : 'text-[#9CA3AF] bg-[#F3F4F6]'
+                    }`}
+                  >
+                    {cat.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Main layout: sidebar + document list */}
       <div className="flex flex-col md:flex-row gap-5 px-4 md:px-6 pb-6">
-        {/* Sidebar */}
-        <div className="w-full md:w-[220px] md:shrink-0">
+        {/* Sidebar (desktop only) */}
+        <div className="hidden md:block md:w-[220px] md:shrink-0">
           <div className="bg-white rounded-xl border border-[#E5E7EB] overflow-hidden">
             {categoryList.map((cat, i) => {
               const isActive = activeCategory === cat.id;
@@ -199,7 +235,7 @@ export default function DataRoomTab({
             })}
           </div>
 
-          {/* Request from team */}
+          {/* Request from team (desktop) */}
           <div className="mt-4 p-4 bg-white rounded-xl border border-[#E5E7EB] text-center">
             <p className="text-[12px] text-[#6B7280] mb-2.5 leading-[1.4]">
               {t('missingDocument')}
@@ -251,7 +287,7 @@ export default function DataRoomTab({
 
           {/* Column headers */}
           <div className="flex items-center px-4 pb-2 text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-[0.06em]">
-            <div className="w-5 me-3 flex items-center">
+            <div className="w-5 me-2 md:me-3 flex items-center shrink-0">
               <input
                 type="checkbox"
                 checked={filteredDocs.length > 0 && selectedDocs.size === filteredDocs.length}
@@ -259,11 +295,11 @@ export default function DataRoomTab({
                 className="cursor-pointer accent-[#C8A951]"
               />
             </div>
-            <div className="w-10 me-3">{t('type')}</div>
-            <div className="flex-1">{t('document')}</div>
-            <div className="w-20 text-end">{t('size')}</div>
-            <div className="w-[110px] text-end">{t('uploaded')}</div>
-            <div className="w-[72px]" />
+            <div className="w-9 md:w-10 me-3 shrink-0">{t('type')}</div>
+            <div className="flex-1 min-w-0">{t('document')}</div>
+            <div className="hidden md:block w-20 text-end">{t('size')}</div>
+            <div className="hidden md:block w-[110px] text-end">{t('uploaded')}</div>
+            <div className="w-9 md:w-[72px] shrink-0" />
           </div>
 
           {/* Document rows */}
@@ -285,7 +321,7 @@ export default function DataRoomTab({
                       i < filteredDocs.length - 1 ? 'border-b border-[#F3F4F6]' : ''
                     } ${isSelected ? 'bg-[rgba(200,169,81,0.04)]' : 'hover:bg-[#FAFBFC]'}`}
                   >
-                    <div className="w-5 me-3 flex items-center">
+                    <div className="w-5 me-2 md:me-3 flex items-center shrink-0">
                       <input
                         type="checkbox"
                         checked={isSelected}
@@ -294,36 +330,33 @@ export default function DataRoomTab({
                         className="cursor-pointer accent-[#C8A951]"
                       />
                     </div>
-                    <div className="w-10 me-3">
+                    <div className="w-9 md:w-10 me-3 shrink-0">
                       <FileTypeBadge doc={doc} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-[13px] font-medium text-[#0F1B2D] truncate">
-                        {doc.name}
-                      </div>
-                    </div>
-                    <div className="w-20 text-end text-[12px] text-[#9CA3AF]">
-                      {formatFileSize(doc.file_size)}
-                    </div>
-                    <div className="w-[110px] text-end text-[12px] text-[#9CA3AF]">
-                      {formatDate(doc.created_at)}
-                    </div>
-                    <div className="w-[72px] flex justify-end gap-1.5">
-                      {/* View */}
                       <button
+                        type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           onDocumentDownload(doc.id);
                           onViewDocument(`/api/documents/${doc.id}/download?view=true`, doc.name, doc.storage_path ?? undefined);
                         }}
-                        className="w-7 h-7 rounded-md border border-[#E5E7EB] bg-transparent text-[#6B7280] flex items-center justify-center hover:bg-[#0F1B2D] hover:text-white hover:border-[#0F1B2D] transition-all"
                         title={t('viewOnly')}
+                        className="block w-full text-start text-[13px] font-medium text-[#0F1B2D] truncate hover:text-[#BC9C45] hover:underline cursor-pointer"
                       >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                          <circle cx="12" cy="12" r="3" />
-                        </svg>
+                        {doc.name}
                       </button>
+                      <div className="md:hidden mt-0.5 text-[11px] text-[#9CA3AF] truncate">
+                        {formatFileSize(doc.file_size)} · {formatDate(doc.created_at)}
+                      </div>
+                    </div>
+                    <div className="hidden md:block w-20 text-end text-[12px] text-[#9CA3AF]">
+                      {formatFileSize(doc.file_size)}
+                    </div>
+                    <div className="hidden md:block w-[110px] text-end text-[12px] text-[#9CA3AF]">
+                      {formatDate(doc.created_at)}
+                    </div>
+                    <div className="w-9 ms-2 md:ms-0 flex justify-end shrink-0">
                       {/* Download */}
                       <a
                         href={`/api/documents/${doc.id}/download`}
@@ -353,6 +386,21 @@ export default function DataRoomTab({
               {filteredDocs.length} {t('document')}{filteredDocs.length !== 1 ? 's' : ''}
               {activeCategory !== 'all' && ` ${t('inCategory')} ${activeCat?.label}`}
             </span>
+          </div>
+
+          {/* Request from team (mobile — shown under list) */}
+          <div className="md:hidden mt-4 p-4 bg-white rounded-xl border border-[#E5E7EB] text-center">
+            <p className="text-[12px] text-[#6B7280] mb-2.5 leading-[1.4]">
+              {t('missingDocument')}
+            </p>
+            <a
+              href="https://wa.me/19177030365?text=Hi, I need a document for the data room"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full py-2 px-3 rounded-lg border-[1.5px] border-[#C8A951] text-[#0F1B2D] text-[12px] font-semibold hover:bg-[#FDF8ED] transition-colors"
+            >
+              {t('requestFromTeam')}
+            </a>
           </div>
         </div>
       </div>

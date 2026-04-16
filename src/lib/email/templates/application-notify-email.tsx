@@ -93,10 +93,10 @@ const dividerStyle: React.CSSProperties = {
 };
 
 const detailBoxStyle: React.CSSProperties = {
-  backgroundColor: '#F0F4FF',
+  backgroundColor: '#F7F8FA',
   borderRadius: '12px',
   padding: '20px 24px',
-  border: '1px solid #E0E7F1',
+  border: '1px solid #EEF0F4',
   margin: '24px 0',
 };
 

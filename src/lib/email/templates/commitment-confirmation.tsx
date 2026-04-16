@@ -28,14 +28,13 @@ export default function CommitmentConfirmation({
   return (
     <BaseLayout preview={`${isPrimary ? 'Deal Committed' : 'Backup Position'}: ${dealName}`}>
       <div style={{ textAlign: 'center' as const, marginBottom: '24px' }}>
-        <div style={{
-          width: '52px', height: '52px', borderRadius: '50%',
-          background: 'linear-gradient(135deg, #BC9C45, #D4B96A)',
-          margin: '0 auto 16px',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <span style={{ fontSize: '24px', color: '#FFFFFF' }}>✓</span>
-        </div>
+        <table cellPadding="0" cellSpacing="0" align="center" style={{ margin: '0 auto 16px', borderCollapse: 'collapse' }}>
+          <tr>
+            <td style={badgeCellStyle}>
+              <span style={{ fontSize: '24px', color: '#FFFFFF' }}>✓</span>
+            </td>
+          </tr>
+        </table>
       </div>
 
       <Text style={headingStyle}>
@@ -113,6 +112,16 @@ const headingStyle: React.CSSProperties = {
 
 const bodyStyle: React.CSSProperties = {
   fontSize: '15px', color: '#4B5563', lineHeight: '26px', margin: '0 0 24px 0',
+};
+
+const badgeCellStyle: React.CSSProperties = {
+  width: '52px',
+  height: '52px',
+  borderRadius: '26px',
+  background: 'linear-gradient(135deg, #BC9C45, #D4B96A)',
+  textAlign: 'center' as const,
+  verticalAlign: 'middle' as const,
+  lineHeight: '52px',
 };
 
 const dealCardStyle: React.CSSProperties = {

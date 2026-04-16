@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { formatPrice, formatPriceCompact, formatPercent, formatDSCR, formatSqFt, formatNumber } from '@/lib/utils/format';
 import { useCountdown } from '@/lib/hooks/useCountdown';
 import { useActivityTracker } from '@/lib/hooks/useActivityTracker';
@@ -1535,12 +1535,55 @@ export default function DealDetailClient({
   const ts = useTranslations('portal.structure');
   const tPt = useTranslations('portal.propertyTypes');
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { trackActivity } = useActivityTracker();
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
+  const [highlightedTarget, setHighlightedTarget] = useState<'dealAnalysis' | 'returnsCalculator' | null>(null);
+  const dealAnalysisRef = useRef<HTMLDivElement | null>(null);
+  const returnsCalculatorRef = useRef<HTMLDivElement | null>(null);
+  const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const scrollToTarget = useCallback((target: 'dealAnalysis' | 'returnsCalculator') => {
+    const nextTab: TabKey = target === 'dealAnalysis' ? 'overview' : 'deal-structure';
+    setActiveTab(nextTab);
+    if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+    setHighlightedTarget(target);
+    // Wait for tab content to become visible, then scroll smoothly.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const el = target === 'dealAnalysis' ? dealAnalysisRef.current : returnsCalculatorRef.current;
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          const offset = window.scrollY + rect.top - 80;
+          window.scrollTo({ top: offset, behavior: 'smooth' });
+        }
+      });
+    });
+    highlightTimerRef.current = setTimeout(() => setHighlightedTarget(null), 2200);
+  }, []);
+
+  useEffect(() => () => {
+    if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+  }, []);
+
   const [viewerUrl, setViewerUrl] = useState<string | null>(null);
   const [viewerName, setViewerName] = useState<string>('');
   const [ndaSigned, setNdaSigned] = useState(initialNDA);
   const [showNDAModal, setShowNDAModal] = useState(false);
+
+  // Honor ?tab=... query param on mount (e.g. from in-app notifications).
+  useEffect(() => {
+    const qTab = searchParams?.get('tab');
+    if (!qTab) return;
+    const valid: TabKey[] = ['overview', 'due-diligence', 'financial-modeling', 'deal-structure', 'schedule'];
+    if (!valid.includes(qTab as TabKey)) return;
+    if (qTab === 'due-diligence' && !ndaSigned) {
+      setShowNDAModal(true);
+      return;
+    }
+    setActiveTab(qTab as TabKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Lazy-loaded tab data
   const [lazyDDFolders, setLazyDDFolders] = useState<(TerminalDDFolder & { documents: TerminalDDDocument[] })[] | null>(null);
@@ -1750,28 +1793,6 @@ export default function DealDetailClient({
     .slice(0, 2);
 
   // Notification preferences (localStorage)
-  const [notifPrefs, setNotifPrefs] = useState({
-    deadline: true,
-    documents: true,
-    meetings: true,
-  });
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('rp_notif_prefs');
-      if (saved) setNotifPrefs(JSON.parse(saved));
-    } catch {
-      // ignore
-    }
-  }, []);
-
-  const toggleNotifPref = (key: keyof typeof notifPrefs) => {
-    setNotifPrefs((prev) => {
-      const updated = { ...prev, [key]: !prev[key] };
-      localStorage.setItem('rp_notif_prefs', JSON.stringify(updated));
-      return updated;
-    });
-  };
 
   const tabs: { key: TabKey; label: string }[] = [
     { key: 'overview', label: t('overview') },
@@ -1997,13 +2018,13 @@ export default function DealDetailClient({
                     </span>
                   )}
                   <button
-                    onClick={() => setActiveTab('overview')}
+                    onClick={() => scrollToTarget('dealAnalysis')}
                     className="px-4 py-2 border border-[#EEF0F4] hover:border-[#BC9C45] text-[#0E3470] text-[11px] font-semibold rounded-lg transition-colors"
                   >
                     {t('dealAnalysis')}
                   </button>
                   <button
-                    onClick={() => setActiveTab('deal-structure')}
+                    onClick={() => scrollToTarget('returnsCalculator')}
                     className="px-4 py-2 border border-[#EEF0F4] hover:border-[#BC9C45] text-[#0E3470] text-[11px] font-semibold rounded-lg transition-colors"
                   >
                     {t('returnsCalculator')}
@@ -2041,9 +2062,8 @@ export default function DealDetailClient({
         {/* ------------------------------------------------------------------ */}
         {/* 5D2. DEPOSIT INFO                                                  */}
         {/* ------------------------------------------------------------------ */}
-        {(deal.deposit_amount || deal.deposit_held_by) && (
-          <div className="px-4 md:px-8 mt-6">
-            <div className="bg-[#FDF8ED] border border-[#ECD9A0] rounded-xl p-4 md:p-5 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+        <div className="px-4 md:px-8 mt-6">
+          <div className="bg-[#FDF8ED] border border-[#ECD9A0] rounded-xl p-4 md:p-5 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
               <div className="w-10 h-10 rounded-lg bg-[#BC9C45]/10 flex items-center justify-center shrink-0">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#BC9C45" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="6" width="20" height="14" rx="2" />
@@ -2058,16 +2078,13 @@ export default function DealDetailClient({
                     <div className="text-[18px] font-semibold text-[#0E3470] tabular-nums">{deal.deposit_amount}</div>
                   </div>
                 )}
-                {deal.deposit_held_by && (
-                  <div>
-                    <div className="text-[9px] font-semibold tracking-[2px] uppercase text-[#BC9C45]">{t('heldBy')}</div>
-                    <div className="text-[15px] font-medium text-[#0E3470]">{deal.deposit_held_by}</div>
-                  </div>
-                )}
+                <div>
+                  <div className="text-[9px] font-semibold tracking-[2px] uppercase text-[#BC9C45]">{t('heldBy')}</div>
+                  <div className="text-[15px] font-medium text-[#0E3470]">Bruce Smoler (Escrow Agent)</div>
+                </div>
               </div>
             </div>
           </div>
-        )}
 
         {/* ------------------------------------------------------------------ */}
         {/* 5E. TAB BAR                                                        */}
@@ -2075,7 +2092,7 @@ export default function DealDetailClient({
         <div className="px-4 md:px-8 mt-6 md:mt-8">
           <div className="flex items-center gap-2.5 px-4 py-2.5 bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg mb-4">
             <span className="text-[15px]">🔒</span>
-            <span className="text-[13px] text-[#6B7280]">Held by: <span className="font-bold text-[#0F1B2D]">Bruce Smoler</span> (Gideon&apos;s attorney)</span>
+            <span className="text-[13px] text-[#6B7280]">Held by: <span className="font-bold text-[#0F1B2D]">Bruce Smoler</span> (Escrow Agent)</span>
           </div>
           <div className="flex border-b border-[#E5E7EB] overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
             {tabs.map((tab) => (
@@ -2118,7 +2135,14 @@ export default function DealDetailClient({
           className="transition-opacity duration-200"
           style={{ display: activeTab === 'overview' ? 'block' : 'none' }}
         >
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 lg:gap-8 mt-6 md:mt-8 px-4 md:px-8 pb-8 md:pb-10">
+          <div
+            ref={dealAnalysisRef}
+            className={`grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 lg:gap-8 mt-6 md:mt-8 px-4 md:px-8 pb-8 md:pb-10 rounded-2xl transition-[box-shadow,background-color] duration-500 ${
+              highlightedTarget === 'dealAnalysis'
+                ? 'bg-[#FDF8ED]/60 shadow-[0_0_0_3px_rgba(188,156,69,0.55),0_0_28px_rgba(188,156,69,0.25)]'
+                : ''
+            }`}
+          >
             {/* Left Column */}
             <div className="space-y-6">
               {/* Portfolio Address Cards */}
@@ -2592,7 +2616,14 @@ export default function DealDetailClient({
 
             {/* IRR Calculator Panel */}
             <FadeInOnScroll delay={0.2}>
-              <div className="mt-6">
+              <div
+                ref={returnsCalculatorRef}
+                className={`mt-6 rounded-2xl transition-[box-shadow,background-color] duration-500 ${
+                  highlightedTarget === 'returnsCalculator'
+                    ? 'bg-[#FDF8ED]/60 shadow-[0_0_0_3px_rgba(188,156,69,0.55),0_0_28px_rgba(188,156,69,0.25)]'
+                    : ''
+                }`}
+              >
                 <IRRCalculatorPanel
                   deal={deal}
                   baseIRR={computed.irr ?? 0}
@@ -2702,45 +2733,21 @@ export default function DealDetailClient({
                 </p>
               </div>
 
-              {/* Notification Preferences */}
-              <div className="bg-white rounded-xl border border-[#EEF0F4] p-6 rp-card-shadow">
-                <h4 className="data-label mb-3">
-                  {t('notificationPreferences')}
-                </h4>
-                <div className="space-y-2.5">
-                  {(
-                    [
-                      { key: 'deadline' as const, label: t('newDealsMatching') },
-                      {
-                        key: 'documents' as const,
-                        label: t('newDocumentUploads'),
-                      },
-                      {
-                        key: 'meetings' as const,
-                        label: t('dealActivityUpdates'),
-                      },
-                    ] as const
-                  ).map((pref) => (
-                    <label
-                      key={pref.key}
-                      className="flex items-center gap-2 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={notifPrefs[pref.key]}
-                        onChange={() => toggleNotifPref(pref.key)}
-                        className="w-4 h-4 rounded border-[#D1D5DB] text-[#BC9C45] focus:ring-[#BC9C45]/20"
-                      />
-                      <span className="text-sm text-[#4B5563]">
-                        {pref.label}
-                      </span>
-                    </label>
-                  ))}
+              {/* Notification preferences moved to Settings */}
+              <a
+                href={`/${locale}/portal/settings`}
+                className="block bg-white rounded-xl border border-[#EEF0F4] p-4 rp-card-shadow hover:border-[#BC9C45] transition-colors group"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="data-label mb-1">{t('notificationPreferences')}</div>
+                    <div className="text-[12px] text-[#6B7280]">{t('manageInSettings')}</div>
+                  </div>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-[#9CA3AF] group-hover:text-[#BC9C45] transition-colors">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
                 </div>
-                <p className="text-[10px] text-[#9CA3AF] mt-3">
-                  {t('youControlNotifications')}
-                </p>
-              </div>
+              </a>
 
               {/* Confidential Access Notice */}
               <div className="bg-[#0E3470]/[0.04] border border-[#0E3470]/10 rounded-xl p-4">
