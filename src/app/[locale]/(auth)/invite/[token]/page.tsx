@@ -142,9 +142,13 @@ export default function InviteRegistrationPage() {
         return;
       }
 
-      // Redirect: employees to admin, investors to welcome page
+      // Redirect: employees to admin, team members straight into the portal
+      // (the "founding member" welcome page is only for primary investors),
+      // and primary investors to the welcome page.
       if (validation.role === 'employee') {
         window.location.href = `/${locale}/admin`;
+      } else if (validation.parent_investor_id) {
+        window.location.href = `/${locale}/portal`;
       } else {
         window.location.href = `/${locale}/welcome`;
       }

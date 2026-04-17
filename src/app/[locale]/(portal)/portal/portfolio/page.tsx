@@ -1,9 +1,11 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { getCurrentAuthUser, getCurrentProfile } from '@/lib/supabase/currentUser';
 import { formatPriceCompact, formatPercent } from '@/lib/utils/format';
 import { getTranslations } from 'next-intl/server';
 import PortfolioList from '@/components/portal/PortfolioList';
+import { getHouseholdUserIds } from '@/lib/auth/household';
 
 export const metadata = { title: 'Portfolio — RePrime Terminal Beta' };
 
@@ -41,12 +43,22 @@ export default async function PortfolioPage({
   // Only fetch the columns the UI actually renders.
   const DEAL_COLS = 'id, name, city, state, property_type, purchase_price, irr, equity_required, status';
 
+  // Portfolio is household-scoped: a commitment made by any team member
+  // (parent or sub-user) shows up on every household member's portfolio.
+  // We use the admin client for the commitments read so RLS on
+  // terminal_deal_commitments (which typically limits rows to user_id =
+  // auth.uid()) doesn't hide household siblings' rows. The caller has already
+  // been authenticated above, and we intersect against the vetted household
+  // id list, so this remains safe.
+  const householdIds = await getHouseholdUserIds(user.id);
+  const admin = createAdminClient();
+
   // Phase 1: commitment IDs + assigned deals run in parallel.
   const [commitmentsRes, assignedRes] = await Promise.all([
-    supabase
+    admin
       .from('terminal_deal_commitments')
       .select('deal_id')
-      .eq('user_id', user.id)
+      .in('user_id', householdIds)
       .in('status', ['pending', 'wire_sent', 'confirmed']),
     supabase
       .from('terminal_deals')

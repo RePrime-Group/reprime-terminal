@@ -153,6 +153,19 @@ export default function TeamRequestsClient() {
                   </button>
                 </div>
               )}
+              {r.status === 'approved' &&
+                r.request_type === 'permission' &&
+                r.target_user_id &&
+                r.permission_key && (
+                  <div className="shrink-0">
+                    <RevokePermissionButton
+                      targetUserId={r.target_user_id}
+                      permissionKey={r.permission_key}
+                      targetName={r.target_user?.full_name ?? 'team member'}
+                      onDone={load}
+                    />
+                  </div>
+                )}
             </div>
           ))}
         </div>
@@ -168,6 +181,64 @@ export default function TeamRequestsClient() {
           }}
         />
       )}
+    </div>
+  );
+}
+
+function RevokePermissionButton({
+  targetUserId,
+  permissionKey,
+  targetName,
+  onDone,
+}: {
+  targetUserId: string;
+  permissionKey: TeamPermissionKey;
+  targetName: string;
+  onDone: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function revoke() {
+    const human = permissionKey.replace(/_/g, ' ');
+    if (
+      !confirm(
+        `Revoke "${human}" for ${targetName}? The permission will be turned off immediately and the parent investor will need to re-request it.`,
+      )
+    ) {
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/team-members/${targetUserId}/revoke-permission`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ permission_key: permissionKey }),
+      });
+      if (!res.ok) {
+        setError(await readApiError(res, 'Failed to revoke permission.'));
+        return;
+      }
+      onDone();
+    } catch (err) {
+      setError(friendlyFetchError(err, 'Failed to revoke permission.'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <button
+        type="button"
+        onClick={revoke}
+        disabled={busy}
+        className="px-3 py-1.5 rounded-lg bg-white border border-[#FECACA] text-[12px] font-semibold text-[#B91C1C] hover:bg-[#FEF2F2] transition-colors disabled:opacity-50"
+      >
+        {busy ? 'Revoking…' : 'Revoke permission'}
+      </button>
+      {error && <span className="text-[11px] text-[#DC2626]">{error}</span>}
     </div>
   );
 }

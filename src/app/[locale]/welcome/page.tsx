@@ -16,8 +16,14 @@ export default function WelcomePage() {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
-        supabase.from('terminal_users').select('full_name').eq('id', user.id).single()
+        supabase.from('terminal_users').select('full_name, parent_investor_id').eq('id', user.id).single()
           .then(({ data }) => {
+            // Team-invited sub-users aren't founding members — send them
+            // straight into the portal rather than showing the founding-tier card.
+            if (data?.parent_investor_id) {
+              window.location.href = `/${locale}/portal`;
+              return;
+            }
             setUserName(data?.full_name?.split(' ')[0] ?? 'Member');
             setLoading(false);
           });
@@ -25,7 +31,7 @@ export default function WelcomePage() {
         setLoading(false);
       }
     });
-  }, []);
+  }, [locale]);
 
   const memberSince = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   const expiresDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
