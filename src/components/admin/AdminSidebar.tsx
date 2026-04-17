@@ -96,16 +96,9 @@ export default function AdminSidebar({ user, locale }: AdminSidebarProps) {
   const router = useRouter();
   const supabase = createClient();
 
-  const altLocale = locale === 'en' ? 'he' : 'en';
-
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     router.push(`/${locale}/login`);
-  };
-
-  const handleLanguageSwitch = () => {
-    const pathWithoutLocale = pathname.replace(`/${locale}`, `/${altLocale}`);
-    router.push(pathWithoutLocale);
   };
 
   const roleBadgeClass =
@@ -127,9 +120,14 @@ export default function AdminSidebar({ user, locale }: AdminSidebarProps) {
             <span className="text-rp-navy text-[15px] font-semibold tracking-[3px] leading-tight">
               REPRIME
             </span>
-            <span className="font-[family-name:var(--font-playfair)] text-[#BC9C45] text-[13px] italic leading-tight">
-              Terminal
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="font-[family-name:var(--font-playfair)] text-[#BC9C45] text-[13px] italic leading-tight">
+                Terminal
+              </span>
+              <span className="px-1.5 py-[1px] rounded bg-[#BC9C45] text-white text-[8px] font-bold uppercase tracking-[1.5px] leading-[1.3]">
+                Beta
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -161,19 +159,6 @@ export default function AdminSidebar({ user, locale }: AdminSidebarProps) {
 
       {/* Bottom section */}
       <div className="mt-auto px-4 pb-6 flex flex-col gap-4">
-        {/* Language toggle */}
-        <button
-          onClick={handleLanguageSwitch}
-          className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-[13px] text-rp-gray-500 hover:bg-rp-gray-200/50 transition-colors"
-        >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.2" />
-            <ellipse cx="8" cy="8" rx="3" ry="6.5" stroke="currentColor" strokeWidth="1.2" />
-            <path d="M1.5 8h13" stroke="currentColor" strokeWidth="1.2" />
-          </svg>
-          <span>EN | עב</span>
-        </button>
-
         {/* User info */}
         <div className="flex items-center gap-3 px-2">
           <div className="w-8 h-8 rounded-full bg-rp-navy flex items-center justify-center">

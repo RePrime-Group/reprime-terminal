@@ -24,7 +24,7 @@ export async function sendInviteEmail(
   return getResend().emails.send({
     from,
     to: recipientEmail,
-    subject: 'You\'ve been invited to RePrime Terminal',
+    subject: 'You\'ve been invited to RePrime Terminal Beta',
     react: InviteEmail({ inviteUrl, recipientEmail, inviteCode, expiresAt }),
   });
 }
@@ -33,7 +33,7 @@ export async function sendWelcomeEmail(recipientEmail: string, firstName: string
   return getResend().emails.send({
     from,
     to: recipientEmail,
-    subject: `Welcome to RePrime Terminal, ${firstName}`,
+    subject: `Welcome to RePrime Terminal Beta, ${firstName}`,
     react: WelcomeEmail({ firstName, portalUrl }),
   });
 }
@@ -86,7 +86,7 @@ export async function sendApplicationAckEmail(recipientEmail: string, applicantN
   return getResend().emails.send({
     from,
     to: recipientEmail,
-    subject: 'Application Received — RePrime Terminal',
+    subject: 'Application Received — RePrime Terminal Beta',
     react: ApplicationAckEmail({ applicantName }),
   });
 }
@@ -115,7 +115,7 @@ export async function sendApplicationRejectionEmail(recipientEmail: string, appl
   return getResend().emails.send({
     from,
     to: recipientEmail,
-    subject: 'Update on Your Application — RePrime Terminal',
+    subject: 'Update on Your Application — RePrime Terminal Beta',
     react: ApplicationRejectionEmail({ applicantName }),
   });
 }

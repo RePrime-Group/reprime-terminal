@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import PipelineView from '@/components/admin/PipelineView';
 import DealSubNav from '@/components/admin/DealSubNav';
 
-export const metadata = { title: 'Pipeline — RePrime Terminal Admin' };
+export const metadata = { title: 'Pipeline — RePrime Terminal Beta Admin' };
 
 export default async function PipelinePage({
   params,

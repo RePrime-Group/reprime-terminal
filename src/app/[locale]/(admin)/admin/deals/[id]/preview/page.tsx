@@ -12,7 +12,7 @@ import type {
   DealWithDetails,
 } from '@/lib/types/database';
 
-export const metadata = { title: 'Investor Preview — RePrime Terminal Admin' };
+export const metadata = { title: 'Investor Preview — RePrime Terminal Beta Admin' };
 
 interface DealPreviewPageProps {
   params: Promise<{ locale: string; id: string }>;

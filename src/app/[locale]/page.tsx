@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import LaunchCountdownSplash from '@/components/login/LaunchCountdownSplash';
 
 export default async function RootPage({
   params,
@@ -10,8 +11,9 @@ export default async function RootPage({
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
+  // Unauthenticated visitors land on the beta-launch splash.
   if (!user) {
-    redirect(`/${locale}/login`);
+    return <LaunchCountdownSplash locale={locale} />;
   }
 
   const { data: terminalUser } = await supabase

@@ -87,13 +87,13 @@ export async function POST(request: NextRequest) {
     if (adminEmail) attendees.push(adminEmail);
 
     calendarEvent = await createCalendarEvent({
-      summary: `RePrime Terminal — ${deal.name} Discussion`,
+      summary: `RePrime Terminal Beta — ${deal.name} Discussion`,
       description: [
         `Deal: ${deal.name} — ${deal.city}, ${deal.state}`,
         `Investor: ${investor.full_name} (${investor.email})`,
         notes ? `Notes: ${notes}` : '',
         '',
-        'This meeting was scheduled via RePrime Terminal.',
+        'This meeting was scheduled via RePrime Terminal Beta.',
       ].filter(Boolean).join('\n'),
       startTime: start.toISOString(),
       endTime: end.toISOString(),

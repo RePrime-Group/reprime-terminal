@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import ApplicationsListClient from '@/components/admin/ApplicationsListClient';
 
-export const metadata = { title: 'Applications — RePrime Terminal Admin' };
+export const metadata = { title: 'Applications — RePrime Terminal Beta Admin' };
 
 const PAGE_SIZE = 10;
 

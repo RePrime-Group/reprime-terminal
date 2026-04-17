@@ -4,7 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { parseDealInputs, calculateDeal } from '@/lib/utils/deal-calculator';
 import PortalDashboardClient from '@/components/portal/PortalDashboardClient';
 
-export const metadata = { title: 'Active Opportunities — RePrime Terminal' };
+export const metadata = { title: 'Active Opportunities — RePrime Terminal Beta' };
 
 /** Parse text column to number, stripping $, commas, whitespace */
 function num(val: string | number | null | undefined): number {

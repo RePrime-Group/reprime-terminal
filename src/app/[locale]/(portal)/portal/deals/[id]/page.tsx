@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: DealDetailPageProps) {
   const { id } = await params;
   const supabase = await createClient();
   const { data } = await supabase.from('terminal_deals').select('name').eq('id', id).single();
-  return { title: data ? `${data.name} — RePrime Terminal` : 'Deal — RePrime Terminal' };
+  return { title: data ? `${data.name} — RePrime Terminal Beta` : 'Deal — RePrime Terminal Beta' };
 }
 
 // Columns needed by the overview tab + header + hero + metric bar

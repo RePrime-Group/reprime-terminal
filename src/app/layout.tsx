@@ -18,10 +18,10 @@ const playfairDisplay = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: 'RePrime Terminal',
+  title: 'RePrime Terminal Beta',
   description: 'Institutional commercial real estate investment platform',
   openGraph: {
-    title: 'RePrime Terminal',
+    title: 'RePrime Terminal Beta',
     description: 'Institutional commercial real estate investment platform',
     images: [{ url: '/images/og-image.jpg', width: 1200, height: 630 }],
   },

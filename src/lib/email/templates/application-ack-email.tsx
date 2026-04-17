@@ -10,7 +10,7 @@ export default function ApplicationAckEmail({ applicantName }: ApplicationAckEma
   const firstName = applicantName.split(' ')[0];
 
   return (
-    <BaseLayout preview="Your membership application has been received — RePrime Terminal">
+    <BaseLayout preview="Your membership application has been received — RePrime Terminal Beta">
       <Section style={{ textAlign: 'center' as const, marginBottom: '32px' }}>
         <table cellPadding="0" cellSpacing="0" align="center" style={{ margin: '0 auto 20px', borderCollapse: 'collapse' }}>
           <tr>
@@ -28,7 +28,7 @@ export default function ApplicationAckEmail({ applicantName }: ApplicationAckEma
       </Text>
 
       <Text style={bodyStyle}>
-        Thank you for your interest in the <strong style={{ color: '#0E3470' }}>RePrime Terminal</strong>.
+        Thank you for your interest in the <strong style={{ color: '#0E3470' }}>RePrime Terminal Beta</strong>.
         We have received your membership application and our team is reviewing it.
       </Text>
 

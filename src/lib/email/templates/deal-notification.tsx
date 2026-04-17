@@ -60,7 +60,7 @@ export default function DealNotificationEmail({
       </Section>
 
       <Text style={noteStyle}>
-        This notification was sent because you are a member of RePrime Terminal.
+        This notification was sent because you are a member of RePrime Terminal Beta.
         You can manage your notification preferences in the Terminal settings.
       </Text>
     </BaseLayout>

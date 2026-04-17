@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import AdminSidebar from '@/components/admin/AdminSidebar';
+import BetaLaunchBanner from '@/components/BetaLaunchBanner';
 
-export const metadata = { title: 'Admin — RePrime Terminal' };
+export const metadata = { title: 'Admin — RePrime Terminal Beta' };
 
 export default async function AdminLayout({
   children,
@@ -34,6 +35,7 @@ export default async function AdminLayout({
           {children}
         </div>
       </main>
+      <BetaLaunchBanner />
     </div>
   );
 }

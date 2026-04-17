@@ -15,7 +15,7 @@ export default function InviteEmail({ inviteUrl, recipientEmail, inviteCode, exp
     : '7 days from now';
 
   return (
-    <BaseLayout preview="You've been selected for exclusive access to RePrime Terminal">
+    <BaseLayout preview="You've been selected for exclusive access to RePrime Terminal Beta">
       <Section style={{ textAlign: 'center' as const, marginBottom: '32px' }}>
         <table cellPadding="0" cellSpacing="0" align="center" style={{ margin: '0 auto 20px', borderCollapse: 'collapse' }}>
           <tr>
@@ -29,7 +29,7 @@ export default function InviteEmail({ inviteUrl, recipientEmail, inviteCode, exp
       <Text style={headingStyle}>You&apos;ve Been Selected</Text>
 
       <Text style={bodyStyle}>
-        You have been chosen for exclusive access to the <strong style={{ color: '#0E3470' }}>RePrime Terminal</strong> —
+        You have been chosen for exclusive access to the <strong style={{ color: '#0E3470' }}>RePrime Terminal Beta</strong> —
         a private platform for institutional-grade commercial real estate opportunities.
       </Text>
 

@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "RePrime Terminal",
+    "appName": "RePrime Terminal Beta",
     "signOut": "Sign Out",
     "signingOut": "Signing Out...",
     "loading": "Loading...",
@@ -42,7 +42,7 @@
     "total": "total"
   },
   "auth": {
-    "loginTitle": "Sign In to RePrime Terminal",
+    "loginTitle": "Sign In to RePrime Terminal Beta",
     "email": "Email Address",
     "password": "Password",
     "signIn": "Sign In",
@@ -65,7 +65,7 @@
     "go": "Go",
     "applyForMembership": "Apply for Membership",
     "createYourAccount": "Create Your Account",
-    "completeRegistration": "Complete your registration to access RePrime Terminal",
+    "completeRegistration": "Complete your registration to access RePrime Terminal Beta",
     "enterFullName": "Enter your full name",
     "companyNameOptional": "Company Name (optional)",
     "enterCompanyName": "Enter your company name",
@@ -766,7 +766,7 @@
       "dec": "Dec",
       "am": "AM",
       "pm": "PM",
-      "reprimeterminal": "REPRIME TERMINAL",
+      "reprimeterminal": "REPRIME TERMINAL BETA",
       "yr": "Yr",
       "daysUpper": "DAYS",
       "urgent": "URGENT",
@@ -955,7 +955,7 @@
       "dealSpecificDesc": "Covers this deal only. You'll be prompted for each new deal."
     },
     "onboarding": {
-      "welcome": "Welcome to RePrime Terminal, {firstName}.",
+      "welcome": "Welcome to RePrime Terminal Beta, {firstName}.",
       "accessDescription": "You now have access to institutional-grade commercial real estate opportunities.",
       "tourPrompt": "Take a quick tour — it only takes 30 seconds.",
       "letsStart": "Let's Start",
@@ -1059,7 +1059,7 @@
     "investorLogin": "Investor Login",
     "foundingBadge": "Founding Members — Limited Positions",
     "heroTitle": "Institutional CRE Access",
-    "heroDescription": "The RePrime Terminal connects qualified investors with off-market commercial real estate opportunities backed by 30+ years of institutional diligence.",
+    "heroDescription": "RePrime Terminal Beta connects qualified investors with off-market commercial real estate opportunities backed by 30+ years of institutional diligence.",
     "foundingAccess": "Founding members receive complimentary access through December 2027",
     "mostPopular": "Most Popular",
     "perYear": "/year",

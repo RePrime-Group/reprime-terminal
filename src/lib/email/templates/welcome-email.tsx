@@ -9,11 +9,11 @@ interface WelcomeEmailProps {
 
 export default function WelcomeEmail({ firstName, portalUrl }: WelcomeEmailProps) {
   return (
-    <BaseLayout preview={`Welcome to RePrime Terminal, ${firstName} — your account is active`}>
+    <BaseLayout preview={`Welcome to RePrime Terminal Beta, ${firstName} — your account is active`}>
       <Text style={headingStyle}>Welcome, {firstName}</Text>
 
       <Text style={bodyStyle}>
-        Your RePrime Terminal account is now active. You have been granted access to our
+        Your RePrime Terminal Beta account is now active. You have been granted access to our
         private platform for institutional-grade commercial real estate opportunities.
       </Text>
 

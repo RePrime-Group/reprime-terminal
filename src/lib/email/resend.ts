@@ -14,4 +14,4 @@ export function getResend(): Resend {
 }
 
 export const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'terminal@reprimeterminal.com';
-export const FROM_NAME = 'RePrime Terminal';
+export const FROM_NAME = 'RePrime Terminal Beta';

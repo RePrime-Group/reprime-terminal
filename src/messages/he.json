@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "RePrime Terminal",
+    "appName": "RePrime Terminal Beta",
     "signOut": "יציאה",
     "signingOut": "מתנתק...",
     "loading": "טוען...",
@@ -42,7 +42,7 @@
     "total": "סה\"כ"
   },
   "auth": {
-    "loginTitle": "כניסה ל-RePrime Terminal",
+    "loginTitle": "כניסה ל-RePrime Terminal Beta",
     "email": "כתובת אימייל",
     "password": "סיסמה",
     "signIn": "כניסה",
@@ -65,7 +65,7 @@
     "go": "המשך",
     "applyForMembership": "הגש בקשת חברות",
     "createYourAccount": "צור את החשבון שלך",
-    "completeRegistration": "השלם את ההרשמה כדי לגשת ל-RePrime Terminal",
+    "completeRegistration": "השלם את ההרשמה כדי לגשת ל-RePrime Terminal Beta",
     "enterFullName": "הזן את שמך המלא",
     "companyNameOptional": "שם חברה (אופציונלי)",
     "enterCompanyName": "הזן את שם החברה",
@@ -766,7 +766,7 @@
       "dec": "דצמ",
       "am": "AM",
       "pm": "PM",
-      "reprimeterminal": "REPRIME TERMINAL",
+      "reprimeterminal": "REPRIME TERMINAL BETA",
       "yr": "שנה",
       "daysUpper": "ימים",
       "urgent": "דחוף",
@@ -955,7 +955,7 @@
       "dealSpecificDesc": "מכסה עסקה זו בלבד. תתבקש לחתום עבור כל עסקה חדשה."
     },
     "onboarding": {
-      "welcome": "ברוך הבא ל-RePrime Terminal, {firstName}.",
+      "welcome": "ברוך הבא ל-RePrime Terminal Beta, {firstName}.",
       "accessDescription": "יש לך כעת גישה להזדמנויות נדל\"ן מסחרי ברמה מוסדית.",
       "tourPrompt": "קח סיור מהיר — זה לוקח רק 30 שניות.",
       "letsStart": "בוא נתחיל",
@@ -1059,7 +1059,7 @@
     "investorLogin": "כניסת משקיעים",
     "foundingBadge": "חברי מייסדים — מקומות מוגבלים",
     "heroTitle": "גישה מוסדית לנדל\"ן מסחרי",
-    "heroDescription": "RePrime Terminal מחבר משקיעים מוסמכים עם הזדמנויות נדל\"ן מסחרי מחוץ לשוק, מגובות ב-30+ שנות בדיקת נאותות מוסדית.",
+    "heroDescription": "RePrime Terminal Beta מחבר משקיעים מוסמכים עם הזדמנויות נדל\"ן מסחרי מחוץ לשוק, מגובות ב-30+ שנות בדיקת נאותות מוסדית.",
     "foundingAccess": "חברי מייסדים מקבלים גישה חינם עד דצמבר 2027",
     "mostPopular": "הפופולרי ביותר",
     "perYear": "/שנה",

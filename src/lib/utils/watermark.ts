@@ -7,7 +7,7 @@ export async function watermarkPDF(
   const pdfDoc = await PDFDocument.load(pdfBytes);
   const pages = pdfDoc.getPages();
   const timestamp = new Date().toISOString();
-  const watermarkText = `${investorName} · ${timestamp} · RePrime Terminal — Confidential`;
+  const watermarkText = `${investorName} · ${timestamp} · RePrime Terminal Beta — Confidential`;
 
   for (const page of pages) {
     const { width, height } = page.getSize();

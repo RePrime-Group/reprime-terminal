@@ -111,6 +111,9 @@ export default function PortalNavbar({ firstName, fullName, email, locale }: Por
               <span className="font-[family-name:var(--font-playfair)] text-[#D4A843] italic text-[11px] font-normal">
                 Terminal
               </span>
+              <span className="px-1.5 py-[2px] rounded bg-[#BC9C45] text-[#07090F] text-[8px] font-bold uppercase tracking-[1.5px] leading-none self-center">
+                Beta
+              </span>
             </div>
           </Link>
 
@@ -276,34 +279,6 @@ export default function PortalNavbar({ firstName, fullName, email, locale }: Por
 
           <div className="hidden md:block h-5 w-px bg-white/10" />
 
-          {/* Language toggle */}
-          <div className="hidden md:inline-flex bg-white/[0.06] rounded-full p-0.5 border border-white/[0.08]">
-            <Link
-              href={pathname}
-              locale="en"
-              className={`px-3.5 py-1.5 text-[11px] transition-all rounded-full ${
-                locale === 'en'
-                  ? 'bg-[#D4A843] text-[#07090F] font-semibold shadow-sm'
-                  : 'text-white/40 font-medium hover:text-white/70'
-              }`}
-            >
-              EN
-            </Link>
-            <Link
-              href={pathname}
-              locale="he"
-              className={`px-3.5 py-1.5 text-[11px] transition-all rounded-full ${
-                locale === 'he'
-                  ? 'bg-[#D4A843] text-[#07090F] font-semibold shadow-sm'
-                  : 'text-white/40 font-medium hover:text-white/70'
-              }`}
-            >
-              עב
-            </Link>
-          </div>
-
-          <div className="hidden md:block h-5 w-px bg-white/10" />
-
           {/* Member menu (desktop) */}
           <div className="hidden md:block relative" ref={userMenuRef}>
             <button
@@ -439,28 +414,6 @@ export default function PortalNavbar({ firstName, fullName, email, locale }: Por
             ))}
 
             <div className="h-px bg-white/[0.08] my-3" />
-
-            <div className="flex items-center justify-between px-1">
-              <span className="text-[11px] uppercase tracking-[2px] text-white/40">{tn('member')}</span>
-              <div className="bg-white/[0.06] rounded-full p-0.5 inline-flex border border-white/[0.08]">
-                <Link
-                  href={pathname}
-                  locale="en"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`px-4 py-2 min-h-[36px] text-[12px] transition-all rounded-full ${
-                    locale === 'en' ? 'bg-[#D4A843] text-[#07090F] font-semibold' : 'text-white/50 font-medium'
-                  }`}
-                >EN</Link>
-                <Link
-                  href={pathname}
-                  locale="he"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`px-4 py-2 min-h-[36px] text-[12px] transition-all rounded-full ${
-                    locale === 'he' ? 'bg-[#D4A843] text-[#07090F] font-semibold' : 'text-white/50 font-medium'
-                  }`}
-                >עב</Link>
-              </div>
-            </div>
 
             <Link
               href="/portal/settings"

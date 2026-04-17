@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import CompareClient from '@/components/portal/CompareClient';
 
-export const metadata = { title: 'Deal Comparison — RePrime Terminal' };
+export const metadata = { title: 'Deal Comparison — RePrime Terminal Beta' };
 
 export default async function ComparePage({
   params,

@@ -46,6 +46,12 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
+  // Root landing ("/") is public — shows launch countdown for unauthenticated
+  // visitors; the page component redirects authenticated users to portal/admin.
+  if (pathWithoutLocale === '/' || pathWithoutLocale === '') {
+    return response;
+  }
+
   // Create Supabase client with proper cookie handling for middleware
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -92,14 +98,6 @@ export async function proxy(request: NextRequest) {
 
   const role = terminalUser.role;
   const locale = getLocale(pathname);
-
-  // Root redirect based on role
-  if (pathWithoutLocale === '/' || pathWithoutLocale === '') {
-    if (role === 'investor') {
-      return NextResponse.redirect(new URL(`/${locale}/portal`, request.url));
-    }
-    return NextResponse.redirect(new URL(`/${locale}/admin`, request.url));
-  }
 
   // Admin route protection
   if (pathWithoutLocale.startsWith('/admin')) {

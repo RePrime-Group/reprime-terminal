@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import InvestorListClient from '@/components/admin/InvestorListClient';
 
-export const metadata = { title: 'Investors — RePrime Terminal Admin' };
+export const metadata = { title: 'Investors — RePrime Terminal Beta Admin' };
 
 const PAGE_SIZE = 10;
 

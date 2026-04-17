@@ -620,7 +620,7 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
               <span className="text-white text-[8px] font-bold font-[family-name:var(--font-playfair)] italic">R</span>
             </div>
             <span className="text-[10px] text-[#9CA3AF] tracking-wide">
-              REPRIME TERMINAL
+              REPRIME TERMINAL BETA
             </span>
           </div>
           <p className="text-[10px] text-[#9CA3AF] max-w-[600px] text-left md:text-right leading-relaxed">

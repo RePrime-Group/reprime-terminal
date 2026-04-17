@@ -3,6 +3,7 @@ import { getCurrentAuthUser, getCurrentProfile } from '@/lib/supabase/currentUse
 import PortalNavbar from '@/components/portal/PortalNavbar';
 import MarketTicker from '@/components/portal/MarketTicker';
 import OnboardingOverlay from '@/components/portal/OnboardingOverlay';
+import BetaLaunchBanner from '@/components/BetaLaunchBanner';
 
 export default async function PortalLayout({
   children,
@@ -42,6 +43,7 @@ export default async function PortalLayout({
       <main>
         {children}
       </main>
+      <BetaLaunchBanner />
     </div>
   );
 }

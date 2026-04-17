@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
-import { ACCEPTED_DOC_TYPES, MAX_DOC_SIZE } from '@/lib/constants';
+import { ACCEPTED_DOC_TYPES, ACCEPTED_VIDEO_TYPES, MAX_DOC_SIZE } from '@/lib/constants';
 import DealSubNav from '@/components/admin/DealSubNav';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -264,9 +264,14 @@ export default function DataRoomPage() {
 
     // Check by MIME type OR file extension
     const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
-    const acceptedExtensions = ['pdf', 'xlsx', 'xls', 'docx', 'doc', 'zip', 'csv', 'txt', 'jpg', 'jpeg', 'png'];
-    if (!ACCEPTED_DOC_TYPES.includes(file.type) && !acceptedExtensions.includes(ext)) {
-      setUploadError(`Unsupported file type (${file.type || ext}). Accepted: PDF, XLSX, DOCX, ZIP, images.`);
+    const acceptedExtensions = [
+      'pdf', 'xlsx', 'xls', 'docx', 'doc', 'zip', 'csv', 'txt',
+      'jpg', 'jpeg', 'png',
+      'mp4', 'mov', 'webm', 'avi', 'mkv', 'm4v',
+    ];
+    const acceptedMimeTypes = [...ACCEPTED_DOC_TYPES, ...ACCEPTED_VIDEO_TYPES];
+    if (!acceptedMimeTypes.includes(file.type) && !acceptedExtensions.includes(ext)) {
+      setUploadError(`Unsupported file type (${file.type || ext}). Accepted: PDF, XLSX, DOCX, ZIP, images, videos.`);
       return;
     }
 
@@ -840,7 +845,7 @@ export default function DataRoomPage() {
                   ref={fileInputRef}
                   type="file"
                   className="hidden"
-                  accept={ACCEPTED_DOC_TYPES.join(',')}
+                  accept={[...ACCEPTED_DOC_TYPES, ...ACCEPTED_VIDEO_TYPES].join(',')}
                   onChange={(e) => handleFileSelect(e.target.files)}
                 />
                 <svg

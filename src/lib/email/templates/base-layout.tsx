@@ -98,7 +98,7 @@ export default function BaseLayout({ children, preview }: BaseLayoutProps) {
               <tr>
                 <td>
                   <Text style={footerBrandStyle}>
-                    REPRIME TERMINAL
+                    REPRIME TERMINAL BETA
                   </Text>
                   <Text style={footerTextStyle}>
                     This communication is confidential and intended solely for the

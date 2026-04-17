@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import CommitmentsListClient from '@/components/admin/CommitmentsListClient';
 
-export const metadata = { title: 'Commitments — RePrime Terminal Admin' };
+export const metadata = { title: 'Commitments — RePrime Terminal Beta Admin' };
 
 const PAGE_SIZE = 10;
 

@@ -64,6 +64,14 @@ export const ACCEPTED_DOC_TYPES = [
   'application/x-zip',
   'application/octet-stream',
 ];
+export const ACCEPTED_VIDEO_TYPES = [
+  'video/mp4',
+  'video/quicktime',
+  'video/webm',
+  'video/x-msvideo',
+  'video/x-matroska',
+  'video/x-m4v',
+];
 export const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
 export const MAX_DOC_SIZE = 1024 * 1024 * 1024; // 1GB — no limit for DD uploads
 export const MAX_IMAGE_WIDTH = 1600;

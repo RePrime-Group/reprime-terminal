@@ -5,7 +5,7 @@ import { formatPriceCompact, formatPercent } from '@/lib/utils/format';
 import { getTranslations } from 'next-intl/server';
 import PortfolioList from '@/components/portal/PortfolioList';
 
-export const metadata = { title: 'Portfolio — RePrime Terminal' };
+export const metadata = { title: 'Portfolio — RePrime Terminal Beta' };
 
 interface Deal {
   id: string;

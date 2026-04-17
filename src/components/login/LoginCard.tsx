@@ -87,8 +87,20 @@ export default function LoginCard({ locale }: LoginCardProps) {
   }
 
   return (
-    <div className="w-full max-w-md bg-white/[0.02] border border-white/[0.08] backdrop-blur-[40px] rounded-2xl p-8 shadow-[0_32px_64px_rgba(0,0,0,0.5)] transition-all duration-300 hover:border-[#BC9C45]/20 hover:shadow-[0_0_30px_rgba(188,156,69,0.08)]">
-      <div className="w-14 h-14 bg-gradient-to-br from-rp-gold to-rp-gold-soft rounded-xl flex items-center justify-center mx-auto animate-glow">
+    <div
+      className="w-full max-w-md border rounded-2xl p-8 transition-all duration-300"
+      style={{
+        background: 'rgba(255,255,255,0.02)',
+        borderColor: 'rgba(255,255,255,0.08)',
+        WebkitBackdropFilter: 'blur(40px)',
+        backdropFilter: 'blur(40px)',
+        boxShadow: '0 32px 64px rgba(0,0,0,0.5)',
+      }}
+    >
+      <div
+        className="w-14 h-14 rounded-xl flex items-center justify-center mx-auto animate-glow"
+        style={{ background: 'linear-gradient(135deg, #BC9C45 0%, #D4B96A 100%)' }}
+      >
         <span className="text-2xl font-extrabold text-white font-[family-name:var(--font-playfair)]">
           R
         </span>
@@ -97,12 +109,20 @@ export default function LoginCard({ locale }: LoginCardProps) {
       <h1 className="text-[28px] font-bold text-white tracking-[4px] text-center mt-4">
         REPRIME
       </h1>
-      <p className="text-xs font-[family-name:var(--font-playfair)] italic text-rp-gold text-center mt-1">
-        Terminal
-      </p>
+      <div className="flex items-center justify-center gap-2 mt-1">
+        <p className="text-xs font-[family-name:var(--font-playfair)] italic text-rp-gold">
+          Terminal
+        </p>
+        <span className="px-1.5 py-[2px] rounded bg-[#BC9C45] text-[#07090F] text-[8px] font-bold uppercase tracking-[1.5px] leading-none">
+          Beta
+        </span>
+      </div>
 
       {/* Gold line separator */}
-      <div className="w-12 h-px bg-gradient-to-r from-transparent via-[#BC9C45]/30 to-transparent mx-auto my-6" />
+      <div
+        className="w-12 h-px mx-auto my-6"
+        style={{ background: 'linear-gradient(to right, transparent, rgba(188,156,69,0.3), transparent)' }}
+      />
 
       <form onSubmit={handleLogin} className="space-y-4">
         <input
@@ -111,7 +131,11 @@ export default function LoginCard({ locale }: LoginCardProps) {
           onChange={(e) => setEmail(e.target.value)}
           placeholder={t('email')}
           required
-          className="bg-white/[0.04] border border-white/[0.08] rounded-lg px-4 py-3.5 text-white text-sm placeholder:text-white/30 focus:border-rp-gold/50 focus:outline-none transition-colors w-full"
+          className="rounded-lg px-4 py-3.5 text-white text-sm focus:outline-none transition-colors w-full"
+          style={{
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}
         />
         <input
           type="password"
@@ -119,11 +143,22 @@ export default function LoginCard({ locale }: LoginCardProps) {
           onChange={(e) => setPassword(e.target.value)}
           placeholder={t('password')}
           required
-          className="bg-white/[0.04] border border-white/[0.08] rounded-lg px-4 py-3.5 text-white text-sm placeholder:text-white/30 focus:border-rp-gold/50 focus:outline-none transition-colors w-full"
+          className="rounded-lg px-4 py-3.5 text-white text-sm focus:outline-none transition-colors w-full"
+          style={{
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}
         />
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3 text-red-400 text-sm">
+          <div
+            className="rounded-lg px-4 py-3 text-sm"
+            style={{
+              background: 'rgba(239,68,68,0.1)',
+              border: '1px solid rgba(239,68,68,0.3)',
+              color: '#F87171',
+            }}
+          >
             {error}
           </div>
         )}
@@ -131,26 +166,39 @@ export default function LoginCard({ locale }: LoginCardProps) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3.5 bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-white font-semibold rounded-lg text-sm hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(188,156,69,0.3)] transition-all duration-200 disabled:opacity-50"
+          className="w-full py-3.5 text-white font-semibold rounded-lg text-sm hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50"
+          style={{
+            background: 'linear-gradient(to right, #BC9C45, #D4B96A)',
+            boxShadow: '0 4px 14px rgba(188,156,69,0.25)',
+          }}
         >
           {loading ? `${t('signIn')}...` : t('signIn')}
         </button>
       </form>
 
       {/* Invite code + Apply */}
-      <div className="mt-8 pt-6 border-t border-white/[0.06]">
-        <p className="text-[11px] text-white/30 text-center mb-3">{t('haveInvitationCode')}</p>
-        <div className="flex gap-2">
+      <div className="mt-8 pt-6" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <p className="text-[11px] text-center mb-3" style={{ color: 'rgba(255,255,255,0.3)' }}>{t('haveInvitationCode')}</p>
+        <div className="flex gap-2 min-w-0">
           <input
             type="text"
             placeholder={t('enterCode')}
             value={inviteCode}
             onChange={(e) => setInviteCode(e.target.value)}
-            className="flex-1 px-3.5 py-2.5 rounded-lg bg-white/[0.04] border border-white/[0.08] text-white text-[13px] placeholder:text-white/20 focus:outline-none focus:border-[#BC9C45]/40 transition-colors"
+            className="flex-1 min-w-0 px-3.5 py-2.5 rounded-lg text-white text-[13px] focus:outline-none transition-colors"
+            style={{
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}
           />
           <button
             onClick={handleInviteCode}
-            className="px-4 py-2.5 rounded-lg border border-[#BC9C45]/30 text-[#BC9C45] text-[12px] font-semibold hover:bg-[#BC9C45]/10 transition-colors"
+            className="px-4 py-2.5 rounded-lg text-[12px] font-semibold transition-colors shrink-0"
+            style={{
+              border: '1px solid rgba(188,156,69,0.3)',
+              color: '#BC9C45',
+              background: 'transparent',
+            }}
           >
             {t('go')}
           </button>

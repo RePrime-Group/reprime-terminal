@@ -299,7 +299,7 @@ export default function JoinPage() {
           <div className="w-5 h-5 bg-gradient-to-br from-[#BC9C45] to-[#A88A3D] rounded flex items-center justify-center">
             <span className="text-white text-[8px] font-bold font-[family-name:var(--font-playfair)] italic">R</span>
           </div>
-          <span className="text-[10px] text-white/20 tracking-wide">REPRIME TERMINAL</span>
+          <span className="text-[10px] text-white/20 tracking-wide">REPRIME TERMINAL BETA</span>
         </div>
         <p className="text-[10px] text-white/20 text-center">
           {t('copyright', { year: new Date().getFullYear().toString() })}
