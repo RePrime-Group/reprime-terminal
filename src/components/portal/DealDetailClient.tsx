@@ -1646,16 +1646,29 @@ export default function DealDetailClient({
   const [lazyBookedTimes, setLazyBookedTimes] = useState<string[] | null>(null);
   const [scheduleLoading, setScheduleLoading] = useState(false);
 
-  const OFFICE_EXTENSIONS = ['.xlsx', '.xls', '.docx', '.doc', '.pptx', '.ppt'];
+  // Microsoft Office Online handles these directly (xlsm/xlsb render read-only,
+  // macros stripped). Google Docs Viewer is used as a fallback for TIFF and
+  // other formats browsers won't render natively.
+  const OFFICE_EXTENSIONS = ['.xlsx', '.xls', '.xlsm', '.xlsb', '.docx', '.doc', '.docm', '.pptx', '.ppt', '.pptm'];
+  const GVIEW_EXTENSIONS = ['.tif', '.tiff', '.heic', '.heif'];
   const handleViewDocument = async (url: string, name: string, storagePath?: string) => {
-    const isOfficeFile = OFFICE_EXTENSIONS.some(ext => name.toLowerCase().endsWith(ext));
-    if (isOfficeFile && storagePath) {
+    const lower = name.toLowerCase();
+    const isOfficeFile = OFFICE_EXTENSIONS.some(ext => lower.endsWith(ext));
+    const isGViewFile = GVIEW_EXTENSIONS.some(ext => lower.endsWith(ext));
+    if ((isOfficeFile || isGViewFile) && storagePath) {
       const supabase = createClient();
       const { data } = await supabase.storage
         .from('terminal-dd-documents')
         .createSignedUrl(storagePath, 300);
       if (data?.signedUrl) {
-        setViewerUrl(`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(data.signedUrl)}`);
+        const encoded = encodeURIComponent(data.signedUrl);
+        setViewerUrl(
+          isOfficeFile
+            ? `https://view.officeapps.live.com/op/embed.aspx?src=${encoded}`
+            : `https://docs.google.com/gview?url=${encoded}&embedded=true`,
+        );
+      } else {
+        setViewerUrl(url);
       }
     } else {
       setViewerUrl(url);

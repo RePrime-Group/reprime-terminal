@@ -54,11 +54,49 @@ export const DEAL_STATUS_TRANSITIONS: Record<string, { roles: string[]; to: stri
   closed: { roles: [], to: [] },
 };
 
-export const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+export const ACCEPTED_IMAGE_TYPES = [
+  'image/jpeg',
+  'image/pjpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/bmp',
+  'image/tiff',
+  'image/x-tiff',
+  'image/svg+xml',
+  'image/heic',
+  'image/heif',
+  'image/avif',
+  'image/apng',
+  'image/vnd.microsoft.icon',
+  'image/x-icon',
+];
 export const ACCEPTED_DOC_TYPES = [
+  // PDF
   'application/pdf',
+  'application/x-pdf',
+  'application/acrobat',
+  'applications/vnd.pdf',
+  'text/pdf',
+  'text/x-pdf',
+  // Excel (modern + legacy + macro-enabled + binary + template)
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.template',
+  'application/vnd.ms-excel',
+  'application/vnd.ms-excel.sheet.macroEnabled.12',
+  'application/vnd.ms-excel.sheet.binary.macroEnabled.12',
+  'application/vnd.ms-excel.template.macroEnabled.12',
+  // Word (modern + legacy + macro-enabled)
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.template',
+  'application/msword',
+  'application/vnd.ms-word.document.macroEnabled.12',
+  'application/vnd.ms-word.template.macroEnabled.12',
+  // CSV / text
+  'text/csv',
+  'application/csv',
+  'text/plain',
+  // Zip
   'application/zip',
   'application/x-zip-compressed',
   'application/x-zip',

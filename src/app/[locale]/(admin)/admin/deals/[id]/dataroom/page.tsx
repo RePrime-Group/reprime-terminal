@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
-import { ACCEPTED_DOC_TYPES, ACCEPTED_VIDEO_TYPES, MAX_DOC_SIZE } from '@/lib/constants';
+import { ACCEPTED_DOC_TYPES, ACCEPTED_IMAGE_TYPES, ACCEPTED_VIDEO_TYPES, MAX_DOC_SIZE } from '@/lib/constants';
 import DealSubNav from '@/components/admin/DealSubNav';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -72,6 +72,18 @@ function formatDate(iso: string): string {
 
 function fileIconFor(mime: string): string {
   return FILE_ICON[mime] ?? '\u{1F4C4}';
+}
+
+// Supabase storage keys reject non-ASCII characters (e.g. "×", emoji, accented
+// letters). Replace anything outside [A-Za-z0-9._-] with "_" and collapse runs,
+// while preserving the extension so MIME sniffing downstream still works.
+function sanitizeStorageName(name: string): string {
+  const lastDot = name.lastIndexOf('.');
+  const base = lastDot > 0 ? name.slice(0, lastDot) : name;
+  const ext = lastDot > 0 ? name.slice(lastDot) : '';
+  const safeBase = base.replace(/[^A-Za-z0-9._-]+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '') || 'file';
+  const safeExt = ext.replace(/[^A-Za-z0-9.]+/g, '');
+  return `${safeBase}${safeExt}`;
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -265,20 +277,26 @@ export default function DataRoomPage() {
     // Check by MIME type OR file extension
     const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
     const acceptedExtensions = [
-      'pdf', 'xlsx', 'xls', 'docx', 'doc', 'zip', 'csv', 'txt',
-      'jpg', 'jpeg', 'png',
+      'pdf',
+      'xlsx', 'xls', 'xlsm', 'xlsb', 'xltx', 'xltm', 'csv',
+      'docx', 'doc', 'docm', 'dotx', 'dotm', 'rtf', 'txt',
+      'zip',
+      'jpg', 'jpeg', 'jpe', 'jfif', 'png', 'apng', 'webp', 'gif',
+      'bmp', 'tif', 'tiff', 'svg', 'heic', 'heif', 'avif', 'ico',
       'mp4', 'mov', 'webm', 'avi', 'mkv', 'm4v',
     ];
-    const acceptedMimeTypes = [...ACCEPTED_DOC_TYPES, ...ACCEPTED_VIDEO_TYPES];
-    if (!acceptedMimeTypes.includes(file.type) && !acceptedExtensions.includes(ext)) {
-      setUploadError(`Unsupported file type (${file.type || ext}). Accepted: PDF, XLSX, DOCX, ZIP, images, videos.`);
+    const acceptedMimeTypes = [...ACCEPTED_DOC_TYPES, ...ACCEPTED_IMAGE_TYPES, ...ACCEPTED_VIDEO_TYPES];
+    const isImageMime = file.type.startsWith('image/');
+    if (!isImageMime && !acceptedMimeTypes.includes(file.type) && !acceptedExtensions.includes(ext)) {
+      setUploadError(`Unsupported file type (${file.type || ext}). Accepted: PDF, Excel, Word, ZIP, images, videos.`);
       return;
     }
 
     setUploading(true);
     setUploadProgress(0);
 
-    const storagePath = `${dealId}/${selectedFolderId}/${file.name}`;
+    const safeName = sanitizeStorageName(file.name);
+    const storagePath = `${dealId}/${selectedFolderId}/${safeName}`;
 
     // Simulate incremental progress since Supabase JS doesn't expose upload progress
     const progressInterval = setInterval(() => {
@@ -845,7 +863,7 @@ export default function DataRoomPage() {
                   ref={fileInputRef}
                   type="file"
                   className="hidden"
-                  accept={[...ACCEPTED_DOC_TYPES, ...ACCEPTED_VIDEO_TYPES].join(',')}
+                  accept={['image/*', ...ACCEPTED_DOC_TYPES, ...ACCEPTED_VIDEO_TYPES, '.pdf,.xlsx,.xls,.xlsm,.xlsb,.csv,.docx,.doc,.docm,.rtf,.txt,.zip,.tif,.tiff,.heic,.heif,.avif,.svg,.bmp,.gif,.ico'].join(',')}
                   onChange={(e) => handleFileSelect(e.target.files)}
                 />
                 <svg
@@ -867,7 +885,7 @@ export default function DataRoomPage() {
                   <span className="text-rp-gold font-semibold">click to browse</span>
                 </p>
                 <p className="text-xs text-rp-gray-400">
-                  PDF, XLSX, DOCX, ZIP &middot; Max 50 MB
+                  PDF, Excel, Word, ZIP, images, videos &middot; Max 50 MB
                 </p>
               </div>
 
