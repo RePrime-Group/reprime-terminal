@@ -15,7 +15,7 @@ function getLocale(pathname: string): string {
   return pathname.match(/^\/(en|he)/)?.[1] || 'en';
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const pathWithoutLocale = getPathWithoutLocale(pathname);
 

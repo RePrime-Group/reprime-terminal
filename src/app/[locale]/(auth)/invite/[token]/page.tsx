@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
+import { friendlyAuthError, friendlyFetchError, readApiError } from '@/lib/utils/friendly-error';
 
 type ValidationResult =
   | { valid: true; email: string; role: string }
@@ -32,6 +33,7 @@ export default function InviteRegistrationPage() {
 
   const [loading, setLoading] = useState(true);
   const [validation, setValidation] = useState<ValidationResult | null>(null);
+  const [validationNetworkError, setValidationNetworkError] = useState(false);
 
   const [fullName, setFullName] = useState('');
   const [companyName, setCompanyName] = useState('');
@@ -51,8 +53,10 @@ export default function InviteRegistrationPage() {
         });
         const data: ValidationResult = await res.json();
         setValidation(data);
-      } catch {
-        setValidation({ valid: false, reason: 'not_found' });
+      } catch (err) {
+        console.error('invite token validation failed:', err);
+        // Surface as a network error rather than pretending the token is invalid.
+        setValidationNetworkError(true);
       } finally {
         setLoading(false);
       }
@@ -93,7 +97,7 @@ export default function InviteRegistrationPage() {
       });
 
       if (signUpError) {
-        setError(signUpError.message);
+        setError(friendlyAuthError(signUpError.message, t('accountCreationFailed')));
         setSubmitting(false);
         return;
       }
@@ -121,8 +125,7 @@ export default function InviteRegistrationPage() {
       });
 
       if (!profileRes.ok) {
-        const errData = await profileRes.json();
-        setError(errData.error || t('failedToCreateProfile'));
+        setError(await readApiError(profileRes, t('failedToCreateProfile')));
         setSubmitting(false);
         return;
       }
@@ -145,8 +148,9 @@ export default function InviteRegistrationPage() {
       } else {
         window.location.href = `/${locale}/welcome`;
       }
-    } catch {
-      setError(t('unexpectedError'));
+    } catch (err) {
+      console.error('invite submit failed:', err);
+      setError(friendlyFetchError(err, t('unexpectedError')));
       setSubmitting(false);
     }
   }
@@ -158,6 +162,28 @@ export default function InviteRegistrationPage() {
         <div className="flex flex-col items-center gap-4">
           <div className="text-[#C9A54E] text-4xl font-bold">R</div>
           <div className="text-white/40 text-sm">{t('validatingInvitation')}</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Network failure while validating — distinct from an invalid token so we
+  // don't tell the investor their link is bad when it's actually their connection.
+  if (validationNetworkError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: '#07090F' }}>
+        <div className="w-full max-w-md flex flex-col items-center gap-8">
+          <div className="text-[#C9A54E] text-5xl font-bold tracking-tight">R</div>
+          <div className="w-full rounded-2xl border border-white/[0.08] bg-white/[0.02] backdrop-blur p-8 text-center">
+            <h1 className="text-xl font-semibold text-white mb-2">Connection problem</h1>
+            <p className="text-white/50 text-sm mb-6">We couldn&rsquo;t reach our servers to check your invitation. Please check your internet connection and try again.</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="rounded-lg bg-[#C9A54E] px-5 py-2.5 text-sm font-semibold text-black hover:opacity-90 transition-opacity"
+            >
+              Try again
+            </button>
+          </div>
         </div>
       </div>
     );

@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { getCurrentAuthUser, getCurrentProfile } from '@/lib/supabase/currentUser';
 import PortalNavbar from '@/components/portal/PortalNavbar';
 import MarketTicker from '@/components/portal/MarketTicker';
 import OnboardingOverlay from '@/components/portal/OnboardingOverlay';
@@ -12,17 +12,15 @@ export default async function PortalLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+
+  // Parallelise auth + profile — both are cached per-request so pages in the
+  // same render pass will not re-fetch them.
+  const [user, terminalUser] = await Promise.all([
+    getCurrentAuthUser(),
+    getCurrentProfile(),
+  ]);
 
   if (!user) redirect(`/${locale}/login`);
-
-  const { data: terminalUser } = await supabase
-    .from('terminal_users')
-    .select('role, full_name, onboarding_completed')
-    .eq('id', user.id)
-    .single();
-
   if (!terminalUser) redirect(`/${locale}/login`);
   if (terminalUser.role !== 'investor') redirect(`/${locale}/admin`);
 

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { friendlyFetchError, readApiError } from '@/lib/utils/friendly-error';
 
 interface WatchlistModalProps {
   dealName: string;
@@ -17,19 +18,28 @@ export default function WatchlistModal({ dealName, dealId, onClose, onConfirm }:
   const [channels, setChannels] = useState({ email: true, whatsapp: false, sms: false });
   const [types, setTypes] = useState({ docs: true, deadlines: true, price: true, competing: true });
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const toggleCh = (k: keyof typeof channels) => setChannels((p) => ({ ...p, [k]: !p[k] }));
   const toggleTy = (k: keyof typeof types) => setTypes((p) => ({ ...p, [k]: !p[k] }));
 
   const handleSave = async () => {
     setSaving(true);
+    setError(null);
     try {
-      await fetch(`/api/deals/${dealId}/watch`, {
+      const res = await fetch(`/api/deals/${dealId}/watch`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ frequency: freq, channels, alert_types: types }),
       });
+      if (!res.ok) {
+        setError(await readApiError(res, 'We couldn\u2019t save your alert preferences. Please try again.'));
+        return;
+      }
       onConfirm();
+    } catch (err) {
+      console.error('watchlist save failed:', err);
+      setError(friendlyFetchError(err, 'We couldn\u2019t save your alert preferences. Please try again.'));
     } finally {
       setSaving(false);
     }
@@ -106,6 +116,12 @@ export default function WatchlistModal({ dealName, dealId, onClose, onConfirm }:
               </button>
             ))}
           </div>
+
+          {error && (
+            <div className="mb-3 rounded-lg border border-[#FECACA] bg-[#FEF2F2] px-3 py-2 text-[12px] text-[#DC2626]">
+              {error}
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex gap-3">

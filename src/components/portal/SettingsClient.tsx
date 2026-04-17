@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 import type { NotifPreferences, NotifEventKey, NotifChannel } from '@/lib/notifications/types';
+import { friendlyAuthError, friendlyFetchError, readApiError } from '@/lib/utils/friendly-error';
 
 interface Profile {
   full_name: string;
@@ -40,21 +41,26 @@ export default function SettingsClient({ initialProfile, initialPrefs }: Setting
       return;
     }
     setProfileSave('saving');
-    const res = await fetch('/api/user/profile', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        full_name: profile.full_name.trim(),
-        phone: profile.phone.trim(),
-        company_name: profile.company_name.trim(),
-      }),
-    });
-    if (res.ok) {
-      setProfileSave('saved');
-      setTimeout(() => setProfileSave('idle'), 1800);
-    } else {
-      const body = await res.json().catch(() => ({}));
-      setProfileError(body?.error || t('saveFailed'));
+    try {
+      const res = await fetch('/api/user/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          full_name: profile.full_name.trim(),
+          phone: profile.phone.trim(),
+          company_name: profile.company_name.trim(),
+        }),
+      });
+      if (res.ok) {
+        setProfileSave('saved');
+        setTimeout(() => setProfileSave('idle'), 1800);
+      } else {
+        setProfileError(await readApiError(res, t('saveFailed')));
+        setProfileSave('error');
+      }
+    } catch (err) {
+      console.error('profile save failed:', err);
+      setProfileError(friendlyFetchError(err, t('saveFailed')));
       setProfileSave('error');
     }
   }
@@ -102,7 +108,8 @@ export default function SettingsClient({ initialProfile, initialPrefs }: Setting
 
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (error) {
-      setPasswordError(error.message);
+      console.error('password update failed:', error);
+      setPasswordError(friendlyAuthError(error.message, t('saveFailed')));
       setPasswordSave('error');
       return;
     }
@@ -137,18 +144,23 @@ export default function SettingsClient({ initialProfile, initialPrefs }: Setting
       return;
     }
     setPrefsSave('saving');
-    const res = await fetch('/api/user/notification-prefs', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prefs }),
-    });
-    if (res.ok) {
-      setSavedPrefs(prefs);
-      setPrefsSave('saved');
-      setTimeout(() => setPrefsSave('idle'), 2000);
-    } else {
-      const body = await res.json().catch(() => ({}));
-      setPrefsError(body?.error || t('saveFailed'));
+    try {
+      const res = await fetch('/api/user/notification-prefs', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prefs }),
+      });
+      if (res.ok) {
+        setSavedPrefs(prefs);
+        setPrefsSave('saved');
+        setTimeout(() => setPrefsSave('idle'), 2000);
+      } else {
+        setPrefsError(await readApiError(res, t('saveFailed')));
+        setPrefsSave('error');
+      }
+    } catch (err) {
+      console.error('notif prefs save failed:', err);
+      setPrefsError(friendlyFetchError(err, t('saveFailed')));
       setPrefsSave('error');
     }
   }

@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useCountdown } from '@/lib/hooks/useCountdown';
 import { formatPriceCompact, formatPercent, formatDSCR, formatPrice } from '@/lib/utils/format';
 import type { DealCardData } from '@/components/portal/PortalDashboardClient';
+import { friendlyFetchError, readApiError } from '@/lib/utils/friendly-error';
 
 interface ComingSoonCardProps {
   deal: DealCardData;
@@ -20,6 +21,15 @@ export default function ComingSoonCard({ deal, index }: ComingSoonCardProps) {
   const [loading, setLoading] = useState(false);
   const [committing, setCommitting] = useState(false);
   const [committed, setCommitted] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  // Auto-dismiss transient action errors after a few seconds so the card
+  // doesn't stay stuck in an error state.
+  useEffect(() => {
+    if (!actionError) return;
+    const t = setTimeout(() => setActionError(null), 4000);
+    return () => clearTimeout(t);
+  }, [actionError]);
 
   const isLoiSigned = deal.status === 'loi_signed';
   const psaTarget = deal.psa_draft_start
@@ -31,12 +41,20 @@ export default function ComingSoonCard({ deal, index }: ComingSoonCardProps) {
     e.preventDefault();
     e.stopPropagation();
     setLoading(true);
+    setActionError(null);
     try {
       const method = subscribed ? 'DELETE' : 'POST';
       const res = await fetch(`/api/deals/${deal.id}/subscribe`, { method });
       if (res.ok) {
         setSubscribed(!subscribed);
+      } else {
+        setActionError(await readApiError(res, subscribed
+          ? 'Couldn\u2019t turn off notifications. Please try again.'
+          : 'Couldn\u2019t save your notification preference. Please try again.'));
       }
+    } catch (err) {
+      console.error('subscribe toggle failed:', err);
+      setActionError(friendlyFetchError(err, 'Couldn\u2019t update notifications. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -169,6 +187,12 @@ export default function ComingSoonCard({ deal, index }: ComingSoonCardProps) {
             </div>
           )}
 
+          {actionError && (
+            <div className="mt-4 rounded-lg border border-[#FECACA] bg-[#FEF2F2] px-3 py-2 text-[11px] text-[#DC2626]">
+              {actionError}
+            </div>
+          )}
+
           {/* Subscribe / Commit buttons */}
           <div className="flex gap-2 mt-4">
             <button
@@ -195,6 +219,7 @@ export default function ComingSoonCard({ deal, index }: ComingSoonCardProps) {
                     e.stopPropagation();
                     if (committing) return;
                     setCommitting(true);
+                    setActionError(null);
                     try {
                       const res = await fetch(`/api/deals/${deal.id}/commit`, {
                         method: 'POST',
@@ -202,6 +227,10 @@ export default function ComingSoonCard({ deal, index }: ComingSoonCardProps) {
                         body: JSON.stringify({ type: 'primary' }),
                       });
                       if (res.ok) setCommitted(true);
+                      else setActionError(await readApiError(res, 'We couldn\u2019t save your commitment. Please try again.'));
+                    } catch (err) {
+                      console.error('early commit failed:', err);
+                      setActionError(friendlyFetchError(err, 'We couldn\u2019t save your commitment. Please try again.'));
                     } finally {
                       setCommitting(false);
                     }

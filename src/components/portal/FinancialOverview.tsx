@@ -102,7 +102,7 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
             <h4 className="text-[14px] font-semibold text-[#0E3470]">{t('seniorDebt')}</h4>
             {isEstimated && <span className="text-[10px] italic text-[#D97706] bg-[#FFFBEB] px-2 py-0.5 rounded-full">{t('estimated')}</span>}
           </div>
-          <div className="grid grid-cols-2 gap-x-4 md:gap-x-8 gap-y-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 md:gap-x-8 gap-y-1">
             {[
               [t('loanAmount'), fmtFull(metrics.loanAmount)],
               [t('ltv'), pct(inputs.ltv)],
@@ -112,7 +112,7 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
               [t('loanOrigination'), `${inputs.loanFeePoints} ${t('points')} (${fmtFull(metrics.loanFeeDollar)})`],
               [inputs.sellerFinancing ? t('lenderDscr') : t('dscr'), metrics.lenderDSCR.toFixed(2) + 'x'],
             ].map(([l, v], i) => (
-              <div key={i} className="flex justify-between py-2 border-b border-[#EEF0F4] last:border-b-0">
+              <div key={i} className="flex justify-between items-baseline gap-3 py-2 border-b border-[#EEF0F4] last:border-b-0">
                 <span className="text-[12px] text-[#6B7280]">{l}</span>
                 <span className="text-[12px] font-semibold text-[#0E3470] tabular-nums">{v}</span>
               </div>
@@ -127,7 +127,7 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
               <div className="w-3 h-3 rounded-sm bg-[#BC9C45]" />
               <h4 className="text-[14px] font-semibold text-[#BC9C45]">{t('sellerMezzanine')}</h4>
             </div>
-            <div className="grid grid-cols-2 gap-x-4 md:gap-x-8 gap-y-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 md:gap-x-8 gap-y-1">
               {[
                 [t('mezzanineAmount'), fmtFull(metrics.mezzAmount)],
                 [t('ofPurchasePrice'), pct(inputs.mezzPercent)],
@@ -136,7 +136,7 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
                 [t('annualPayment'), fmtFull(metrics.annualMezzPayment)],
                 [t('balloonAtMaturity'), fmtFull(metrics.mezzBalloon)],
               ].map(([l, v], i) => (
-                <div key={i} className="flex justify-between py-2 border-b border-[#EEF0F4] last:border-b-0">
+                <div key={i} className="flex justify-between items-baseline gap-3 py-2 border-b border-[#EEF0F4] last:border-b-0">
                   <span className="text-[12px] text-[#6B7280]">{l}</span>
                   <span className="text-[12px] font-semibold text-[#BC9C45] tabular-nums">{v}</span>
                 </div>
@@ -150,13 +150,13 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
           <div className="flex items-center gap-2 mb-4">
             <h4 className="text-[14px] font-semibold text-[#374151]">{t('combinedMetrics')}</h4>
           </div>
-          <div className="grid grid-cols-2 gap-x-4 md:gap-x-8 gap-y-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 md:gap-x-8 gap-y-1">
             {[
               [metrics.mezzAmount > 0 ? t('combinedDscr') : t('lenderDscr'), metrics.combinedDSCR.toFixed(2) + 'x'],
               [t('totalLeverage'), pct(metrics.totalLeverage)],
               [t('totalAnnualDebtObligations'), fmtFull(metrics.annualSeniorDS + metrics.annualMezzPayment)],
             ].map(([l, v], i) => (
-              <div key={i} className="flex justify-between py-2 border-b border-[#EEF0F4] last:border-b-0">
+              <div key={i} className="flex justify-between items-baseline gap-3 py-2 border-b border-[#EEF0F4] last:border-b-0">
                 <span className="text-[12px] text-[#6B7280]">{l}</span>
                 <span className="text-[12px] font-bold text-[#0E3470] tabular-nums">{v}</span>
               </div>

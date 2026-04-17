@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { sendCommitmentConfirmation, sendCommitmentWithdrawal } from '@/lib/email/send';
+import { isValidE164 } from '@/lib/countries';
 
 export async function POST(
   request: NextRequest,
@@ -23,7 +24,21 @@ export async function POST(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { type, notes } = await request.json();
+  const { type, notes, phone } = await request.json();
+
+  // Primary commitments require a validated phone number; persist it to the profile.
+  if ((type || 'primary') === 'primary') {
+    if (typeof phone !== 'string' || !isValidE164(phone)) {
+      return NextResponse.json({ error: 'A valid phone number is required.' }, { status: 400 });
+    }
+    const { error: phoneErr } = await supabase
+      .from('terminal_users')
+      .update({ phone })
+      .eq('id', user.id);
+    if (phoneErr) {
+      return NextResponse.json({ error: 'Could not save phone number.' }, { status: 500 });
+    }
+  }
 
   // Get deal info
   const { data: deal } = await supabase
@@ -35,7 +50,7 @@ export async function POST(
   // Get investor info
   const { data: investor } = await supabase
     .from('terminal_users')
-    .select('full_name, email')
+    .select('full_name, email, phone')
     .eq('id', user.id)
     .single();
 
@@ -53,7 +68,18 @@ export async function POST(
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('commitment insert failed:', error);
+    // Unique constraint on (deal_id, user_id) — user already committed.
+    if (/duplicate|unique/i.test(error.message)) {
+      return NextResponse.json(
+        { error: 'You\u2019ve already committed to this deal. Refresh the page to see your commitment.' },
+        { status: 409 },
+      );
+    }
+    return NextResponse.json(
+      { error: 'We couldn\u2019t save your commitment. Please try again, or contact RePrime if this keeps happening.' },
+      { status: 500 },
+    );
   }
 
   // Log activity
@@ -68,6 +94,8 @@ export async function POST(
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://reprimeterminal.com';
   const emailData = {
     investorName: investor?.full_name ?? 'Investor',
+    investorEmail: investor?.email ?? undefined,
+    investorPhone: investor?.phone ?? undefined,
     dealName: deal?.name ?? 'Deal',
     city: deal?.city ?? '',
     state: deal?.state ?? '',
@@ -120,7 +148,7 @@ export async function GET(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
@@ -139,6 +167,20 @@ export async function DELETE(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  // Withdrawal requires a validated phone number (same confirmation as commit).
+  const body = await request.json().catch(() => ({}));
+  const phone: unknown = body?.phone;
+  if (typeof phone !== 'string' || !isValidE164(phone)) {
+    return NextResponse.json({ error: 'A valid phone number is required.' }, { status: 400 });
+  }
+  const { error: phoneErr } = await supabase
+    .from('terminal_users')
+    .update({ phone })
+    .eq('id', user.id);
+  if (phoneErr) {
+    return NextResponse.json({ error: 'Could not save phone number.' }, { status: 500 });
+  }
+
   // Get deal + investor info before deleting
   const { data: deal } = await supabase
     .from('terminal_deals')
@@ -148,7 +190,7 @@ export async function DELETE(
 
   const { data: investor } = await supabase
     .from('terminal_users')
-    .select('full_name, email')
+    .select('full_name, email, phone')
     .eq('id', user.id)
     .single();
 
@@ -160,7 +202,11 @@ export async function DELETE(
     .eq('user_id', user.id);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('commitment delete failed:', error);
+    return NextResponse.json(
+      { error: 'We couldn\u2019t process the withdrawal right now. Please try again, or contact RePrime if this keeps happening.' },
+      { status: 500 },
+    );
   }
 
   // Log activity

@@ -4,6 +4,8 @@ import BaseLayout from './base-layout';
 
 interface CommitmentConfirmationProps {
   investorName: string;
+  investorEmail?: string;
+  investorPhone?: string;
   dealName: string;
   city: string;
   state: string;
@@ -15,6 +17,8 @@ interface CommitmentConfirmationProps {
 
 export default function CommitmentConfirmation({
   investorName,
+  investorEmail,
+  investorPhone,
   dealName,
   city,
   state,
@@ -72,6 +76,27 @@ export default function CommitmentConfirmation({
               <Text style={{ fontSize: '20px', fontWeight: 700, color: '#FFFFFF', margin: 0 }}>
                 {depositAmount}
               </Text>
+            </div>
+          )}
+
+          {(investorPhone || investorEmail) && (
+            <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+              <Text style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '2px', color: 'rgba(255,255,255,0.4)', margin: '0 0 6px 0' }}>
+                INVESTOR CONTACT
+              </Text>
+              <Text style={{ fontSize: '14px', fontWeight: 600, color: '#FFFFFF', margin: '0 0 2px 0' }}>
+                {investorName}
+              </Text>
+              {investorPhone && (
+                <Text style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)', margin: '0 0 2px 0' }}>
+                  {investorPhone}
+                </Text>
+              )}
+              {investorEmail && (
+                <Text style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)', margin: 0 }}>
+                  {investorEmail}
+                </Text>
+              )}
             </div>
           )}
         </div>

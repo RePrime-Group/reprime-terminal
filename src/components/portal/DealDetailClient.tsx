@@ -8,8 +8,10 @@ import { useCountdown } from '@/lib/hooks/useCountdown';
 import { useActivityTracker } from '@/lib/hooks/useActivityTracker';
 import { calculateCustomIRR } from '@/lib/utils/irr-calculator';
 import { createClient } from '@/lib/supabase/client';
+import { friendlyFetchError, readApiError } from '@/lib/utils/friendly-error';
 import FadeInOnScroll from '@/components/ui/FadeInOnScroll';
 import NDAModal from '@/components/portal/NDAModal';
+import PhoneConfirmModal from '@/components/portal/PhoneConfirmModal';
 import DataRoomTab from '@/components/portal/DataRoomTab';
 import { OverviewFinancials, DealStructureFinancials } from '@/components/portal/FinancialOverview';
 import { parseDealInputs, calculateDeal, calculateTraditionalClose, type DealInputs } from '@/lib/utils/deal-calculator';
@@ -397,6 +399,9 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
   const [withdrawing, setWithdrawing] = useState(false);
   const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);
   const [totalCommitments, setTotalCommitments] = useState(0);
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [existingPhone, setExistingPhone] = useState<string>('');
+  const [phoneError, setPhoneError] = useState<string | null>(null);
 
   // Check for existing commitment on mount
   useEffect(() => {
@@ -410,6 +415,14 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
       })
       .catch(() => {});
 
+    // Load phone from profile so the modal can pre-fill.
+    fetch('/api/user/profile')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.profile?.phone) setExistingPhone(data.profile.phone as string);
+      })
+      .catch(() => {});
+
     // Get total commitment count for this deal
     const supabase = createClient();
     supabase
@@ -420,34 +433,56 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
       .then(({ count }) => setTotalCommitments(count ?? 0));
   }, [deal.id]);
 
-  const handleCommit = async (type: 'primary' | 'backup') => {
+  const handleCommit = async (type: 'primary' | 'backup', phone?: string) => {
     setCommitting(true);
+    setPhoneError(null);
     try {
       const res = await fetch(`/api/deals/${deal.id}/commit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type }),
+        body: JSON.stringify({ type, ...(phone ? { phone } : {}) }),
       });
       if (res.ok) {
+        if (phone) setExistingPhone(phone);
         setCommitted(true);
         setCommitType(type);
         setTotalCommitments((p) => p + 1);
+        setShowPhoneModal(false);
+        setShowWire(false);
+        return true;
       }
+      setPhoneError(await readApiError(res, 'We couldn\u2019t save your commitment. Please try again, or contact RePrime if this keeps happening.'));
+      return false;
+    } catch (err) {
+      console.error('commit failed:', err);
+      setPhoneError(friendlyFetchError(err, 'We couldn\u2019t save your commitment. Please try again.'));
+      return false;
     } finally {
       setCommitting(false);
     }
   };
 
-  const handleWithdraw = async () => {
+  const handleWithdraw = async (phone: string) => {
     setWithdrawing(true);
+    setPhoneError(null);
     try {
-      const res = await fetch(`/api/deals/${deal.id}/commit`, { method: 'DELETE' });
+      const res = await fetch(`/api/deals/${deal.id}/commit`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone }),
+      });
       if (res.ok) {
+        setExistingPhone(phone);
         setCommitted(false);
         setCommitType(null);
         setShowWithdrawConfirm(false);
         setTotalCommitments((p) => Math.max(0, p - 1));
+        return;
       }
+      setPhoneError(await readApiError(res, 'We couldn\u2019t process the withdrawal right now. Please try again, or contact RePrime if this keeps happening.'));
+    } catch (err) {
+      console.error('withdraw failed:', err);
+      setPhoneError(friendlyFetchError(err, 'We couldn\u2019t process the withdrawal right now. Please try again.'));
     } finally {
       setWithdrawing(false);
     }
@@ -458,18 +493,18 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
       <div className="mb-6">
         {/* Prominent committed banner */}
         <div className="relative overflow-hidden rounded-xl bg-white border border-[#EEF0F4] rp-card-shadow">
-          <div className="px-8 py-8 flex items-center justify-between">
-            <div className="flex items-center gap-5">
-              <div className="w-14 h-14 rounded-full bg-[#ECFDF5] border-2 border-[#0B8A4D] flex items-center justify-center">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0B8A4D" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <div className="px-5 py-6 md:px-8 md:py-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex items-start md:items-center gap-4 md:gap-5 min-w-0">
+              <div className="w-11 h-11 md:w-14 md:h-14 rounded-full bg-[#ECFDF5] border-2 border-[#0B8A4D] flex items-center justify-center shrink-0">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0B8A4D" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="md:w-6 md:h-6">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="text-[10px] font-semibold text-[#BC9C45] uppercase tracking-[2px] mb-1">
                   {t('dealCommitted')}
                 </div>
-                <h3 className="text-[22px] font-semibold text-[#0E3470] font-[family-name:var(--font-playfair)]">
+                <h3 className="text-[18px] md:text-[22px] font-semibold text-[#0E3470] font-[family-name:var(--font-playfair)] leading-tight">
                   {commitType === 'backup' ? t('backupPositionRegistered') : t('youAreCommitted')}
                 </h3>
                 <p className="text-[13px] text-[#6B7280] mt-1">
@@ -477,54 +512,49 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center justify-between md:justify-end gap-4 shrink-0">
               {totalCommitments > 1 && (
-                <div className="text-right">
-                  <div className="text-[28px] font-bold text-[#BC9C45]">{totalCommitments}</div>
-                  <div className="text-[10px] text-[#9CA3AF] uppercase tracking-[1.5px]">{t('groupsCommitted')}</div>
+                <div className="text-left md:text-right">
+                  <div className="text-[28px] font-bold text-[#BC9C45] leading-none">{totalCommitments}</div>
+                  <div className="text-[10px] text-[#9CA3AF] uppercase tracking-[1.5px] mt-1">{t('groupsCommitted')}</div>
                 </div>
               )}
               <button
-                onClick={() => setShowWithdrawConfirm(true)}
-                className="text-[11px] text-[#9CA3AF] hover:text-[#DC2626] transition-colors font-medium"
+                onClick={() => {
+                  setPhoneError(null);
+                  setShowWithdrawConfirm(true);
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#FCA5A5] text-[#DC2626] text-[11px] font-semibold hover:bg-[#FEF2F2] hover:border-[#DC2626] transition-colors"
               >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 12a9 9 0 1 1-9-9" />
+                  <path d="M21 3v6h-6" />
+                </svg>
                 {t('withdraw')}
               </button>
             </div>
           </div>
 
-          {showWithdrawConfirm && (
-            <div className="px-8 py-5 border-t border-[#EEF0F4] bg-[#FEF2F2]">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-[13px] font-semibold text-[#DC2626]">
-                    {t('withdrawConfirmTitle')}
-                  </p>
-                  <p className="text-[11px] text-[#6B7280] mt-0.5">
-                    {t('withdrawConfirmDesc')}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setShowWithdrawConfirm(false)}
-                    className="px-4 py-2 rounded-lg border border-[#EEF0F4] bg-white text-[#6B7280] text-[12px] font-medium hover:bg-[#F7F8FA] transition-colors"
-                  >
-                    {tcom('cancel')}
-                  </button>
-                  <button
-                    onClick={handleWithdraw}
-                    disabled={withdrawing}
-                    className="px-4 py-2 rounded-lg bg-[#DC2626] text-white text-[12px] font-semibold hover:bg-[#B91C1C] transition-colors disabled:opacity-50"
-                  >
-                    {withdrawing ? t('withdrawing') : t('confirmWithdrawal')}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
           <div className="h-[2px] bg-gradient-to-r from-transparent via-[#BC9C45]/50 to-transparent" />
         </div>
+
+        <PhoneConfirmModal
+          open={showWithdrawConfirm}
+          initialE164={existingPhone}
+          submitting={withdrawing}
+          error={phoneError}
+          title={t('withdrawConfirmTitle')}
+          description={t('withdrawConfirmDesc')}
+          confirmLabel={t('confirmWithdrawal')}
+          confirmingLabel={t('withdrawing')}
+          confirmTone="danger"
+          onCancel={() => {
+            if (withdrawing) return;
+            setShowWithdrawConfirm(false);
+            setPhoneError(null);
+          }}
+          onConfirm={handleWithdraw}
+        />
       </div>
     );
   }
@@ -551,7 +581,7 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
           </h3>
           <p className="text-[13px] text-[#6B7280] mt-2">
             {deal.deposit_amount && <>{t('deposit')} {deal.deposit_amount}</>}
-            {deal.deposit_held_by && <> · {t('heldBy')} {deal.deposit_held_by}</>}
+            {deal.deposit_amount && <> · Held by: Bruce J. Smoler, Esq., Escrow Attorney</>}
             {!deal.deposit_amount && t('contactToDiscuss')}
           </p>
         </div>
@@ -569,14 +599,23 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
           <div className="text-[14px] font-semibold text-[#0E3470] mb-3">
             {t('wire', { amount: deal.deposit_amount || 'deposit' })}
           </div>
-          <div className="bg-white rounded-lg p-4 text-[13px] text-[#4B5563] leading-[2] border border-[#EEF0F4]">
-            {deal.deposit_held_by || t('titleCompany')} · {t('escrowAccount')}<br />
-            {t('wireDeadline')}<br />
-            {t('contactForWiring')}
+          <div className="bg-white rounded-lg p-4 text-[13px] text-[#4B5563] leading-[1.7] border border-[#EEF0F4]">
+            Wire funds to the designated escrow trust account held by Bruce J. Smoler, Esq. at Smoler & Associates, P.A. — J.P. Morgan Chase Florida IOTA Trust Account
+            <br />
+            Acct No.: 991521071
+            <br />
+            ABA No.: 267084131
+            <br />
+            Wire deadline: 72 hours from confirmation.
+            <br />
+            Full wiring instructions will be delivered upon confirmation.
           </div>
           <div className="flex gap-3 mt-4">
             <button
-              onClick={() => handleCommit('primary')}
+              onClick={() => {
+                setPhoneError(null);
+                setShowPhoneModal(true);
+              }}
               disabled={committing}
               className="flex-1 py-3.5 rounded-xl bg-[#BC9C45] hover:bg-[#A88A3D] text-[#0E3470] text-[13px] font-bold transition-colors disabled:opacity-50"
             >
@@ -591,6 +630,19 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
           </div>
         </div>
       )}
+
+      <PhoneConfirmModal
+        open={showPhoneModal}
+        initialE164={existingPhone}
+        submitting={committing}
+        error={phoneError}
+        onCancel={() => {
+          if (committing) return;
+          setShowPhoneModal(false);
+          setPhoneError(null);
+        }}
+        onConfirm={(e164) => handleCommit('primary', e164)}
+      />
 
       {/* Backup position */}
       <div className="p-4 bg-[#F7F8FA] rounded-xl flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
@@ -1541,6 +1593,7 @@ export default function DealDetailClient({
   const [highlightedTarget, setHighlightedTarget] = useState<'dealAnalysis' | 'returnsCalculator' | null>(null);
   const dealAnalysisRef = useRef<HTMLDivElement | null>(null);
   const returnsCalculatorRef = useRef<HTMLDivElement | null>(null);
+  const tabBarRef = useRef<HTMLDivElement | null>(null);
   const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const scrollToTarget = useCallback((target: 'dealAnalysis' | 'returnsCalculator') => {
@@ -1926,9 +1979,9 @@ export default function DealDetailClient({
         {/* DEAL HEADER BAR                                                    */}
         {/* ------------------------------------------------------------------ */}
         <div className="bg-white border-b border-[#EEF0F4] px-4 md:px-8 py-4 md:py-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="font-[family-name:var(--font-playfair)] text-[28px] font-semibold text-[#0E3470] leading-tight tracking-[-0.01em]">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="min-w-0">
+              <h2 className="font-[family-name:var(--font-playfair)] text-[22px] md:text-[28px] font-semibold text-[#0E3470] leading-tight tracking-[-0.01em]">
                 {deal.name}
               </h2>
               <p className="text-[12px] text-[#9CA3AF] mt-1">
@@ -1938,13 +1991,13 @@ export default function DealDetailClient({
                 {deal.class_type ? ` \u00B7 ${tc('classType', { type: deal.class_type })}` : ''}
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 flex-wrap shrink-0">
               {deal.seller_financing && (
-                <span className="bg-[#BC9C45] text-white text-[10px] font-semibold px-3 py-1.5 rounded-full">
+                <span className="bg-[#BC9C45] text-white text-[10px] font-semibold px-3 py-1.5 rounded-full whitespace-nowrap">
                   {t('sellerFinancing')}
                 </span>
               )}
-              <span className="bg-[#F7F8FA] border border-[#EEF0F4] text-[#6B7280] text-[10px] font-semibold px-3 py-1.5 rounded-full">
+              <span className="bg-[#F7F8FA] border border-[#EEF0F4] text-[#6B7280] text-[10px] font-semibold px-3 py-1.5 rounded-full whitespace-nowrap">
                 {tPt.has(deal.property_type) ? tPt(deal.property_type) : deal.property_type}
               </span>
             </div>
@@ -2071,16 +2124,16 @@ export default function DealDetailClient({
                   <path d="M6 14h4" />
                 </svg>
               </div>
-              <div className="flex-1 flex items-center gap-8">
+              <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8">
                 {deal.deposit_amount && (
-                  <div>
+                  <div className="shrink-0">
                     <div className="text-[9px] font-semibold tracking-[2px] uppercase text-[#BC9C45]">{t('depositAmount')}</div>
                     <div className="text-[18px] font-semibold text-[#0E3470] tabular-nums">{deal.deposit_amount}</div>
                   </div>
                 )}
-                <div>
+                <div className="min-w-0">
                   <div className="text-[9px] font-semibold tracking-[2px] uppercase text-[#BC9C45]">{t('heldBy')}</div>
-                  <div className="text-[15px] font-medium text-[#0E3470]">Bruce Smoler (Escrow Agent)</div>
+                  <div className="text-[13px] sm:text-[15px] font-medium text-[#0E3470] break-words">Bruce J. Smoler, Esq. · Smoler & Associates, P.A. — Florida IOTA Trust Account</div>
                 </div>
               </div>
             </div>
@@ -2089,10 +2142,10 @@ export default function DealDetailClient({
         {/* ------------------------------------------------------------------ */}
         {/* 5E. TAB BAR                                                        */}
         {/* ------------------------------------------------------------------ */}
-        <div className="px-4 md:px-8 mt-6 md:mt-8">
+        <div ref={tabBarRef} className="px-4 md:px-8 mt-6 md:mt-8">
           <div className="flex items-center gap-2.5 px-4 py-2.5 bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg mb-4">
             <span className="text-[15px]">🔒</span>
-            <span className="text-[13px] text-[#6B7280]">Held by: <span className="font-bold text-[#0F1B2D]">Bruce Smoler</span> (Escrow Agent)</span>
+            <span className="text-[13px] text-[#6B7280]">Held by: <span className="font-bold text-[#0F1B2D]">Bruce J. Smoler, Esq.</span> — Escrow Attorney, Smoler & Associates, P.A.</span>
           </div>
           <div className="flex border-b border-[#E5E7EB] overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
             {tabs.map((tab) => (
@@ -2818,7 +2871,19 @@ export default function DealDetailClient({
                 💬 {t('whatsApp')}
               </a>
               <button
-                onClick={() => setActiveTab('schedule')}
+                onClick={() => {
+                  setActiveTab('schedule');
+                  requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                      const el = tabBarRef.current;
+                      if (el) {
+                        const rect = el.getBoundingClientRect();
+                        const offset = window.scrollY + rect.top - 80;
+                        window.scrollTo({ top: offset, behavior: 'smooth' });
+                      }
+                    });
+                  });
+                }}
                 className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 min-h-[44px] rounded-lg border border-[#EEF0F4] text-[#6B7280] text-[12px] font-medium hover:border-[#BC9C45] hover:text-[#0E3470] transition-colors"
               >
                 📅 {t('scheduleACall')}

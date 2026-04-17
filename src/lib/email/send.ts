@@ -124,6 +124,8 @@ export async function sendCommitmentConfirmation(
   recipientEmail: string,
   data: {
     investorName: string;
+    investorEmail?: string;
+    investorPhone?: string;
     dealName: string;
     city: string;
     state: string;

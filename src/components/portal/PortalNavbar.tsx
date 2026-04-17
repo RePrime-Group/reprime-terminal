@@ -158,8 +158,18 @@ export default function PortalNavbar({ firstName, fullName, email, locale }: Por
                         if (markingRead) return;
                         setMarkingRead(true);
                         try {
-                          await supabase.from('terminal_notifications').update({ read_at: new Date().toISOString() }).is('read_at', null);
-                          setHasUnread(false);
+                          const { error } = await supabase
+                            .from('terminal_notifications')
+                            .update({ read_at: new Date().toISOString() })
+                            .is('read_at', null);
+                          if (error) {
+                            console.error('mark all read failed:', error);
+                            // Leave hasUnread true so the user can retry.
+                          } else {
+                            setHasUnread(false);
+                          }
+                        } catch (err) {
+                          console.error('mark all read failed:', err);
                         } finally {
                           setMarkingRead(false);
                         }

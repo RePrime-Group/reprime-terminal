@@ -97,43 +97,43 @@ export default function JoinPage() {
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #07090F 0%, #0A1628 40%, #0F1A2E 70%, #07090F 100%)' }}>
       {/* Nav */}
-      <nav className="flex items-center justify-between px-10 py-6">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-gradient-to-br from-[#BC9C45] to-[#A88A3D] rounded-lg flex items-center justify-center shadow-[0_2px_8px_rgba(188,156,69,0.3)]">
+      <nav className="flex items-center justify-between px-5 md:px-10 py-4 md:py-6 gap-3">
+        <div className="flex items-center gap-2 md:gap-3 min-w-0">
+          <div className="w-9 h-9 shrink-0 bg-gradient-to-br from-[#BC9C45] to-[#A88A3D] rounded-lg flex items-center justify-center shadow-[0_2px_8px_rgba(188,156,69,0.3)]">
             <span className="text-white font-bold text-lg font-[family-name:var(--font-playfair)] italic">R</span>
           </div>
-          <span className="text-white font-medium text-[14px] tracking-[4px] uppercase">REPRIME</span>
-          <span className="font-[family-name:var(--font-playfair)] text-[#D4A843] italic text-[11px]">Terminal</span>
+          <span className="text-white font-medium text-[13px] md:text-[14px] tracking-[3px] md:tracking-[4px] uppercase">REPRIME</span>
+          <span className="font-[family-name:var(--font-playfair)] text-[#D4A843] italic text-[11px] hidden sm:inline">Terminal</span>
         </div>
         <Link
           href="/login"
           locale={locale}
-          className="px-5 py-2 border border-white/15 text-white/70 text-[12px] font-medium rounded-lg hover:bg-white/5 transition-colors"
+          className="shrink-0 px-3.5 md:px-5 py-2 border border-white/15 text-white/70 text-[12px] font-medium rounded-lg hover:bg-white/5 transition-colors whitespace-nowrap"
         >
           {t('investorLogin')}
         </Link>
       </nav>
 
       {/* Hero */}
-      <div className="max-w-[1200px] mx-auto px-10 pt-12 pb-8 text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] mb-6">
+      <div className="max-w-[1200px] mx-auto px-5 md:px-10 pt-8 md:pt-12 pb-6 md:pb-8 text-center">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] mb-5 md:mb-6">
           <div className="w-1.5 h-1.5 rounded-full bg-[#0B8A4D] live-dot" />
           <span className="text-[10px] font-medium tracking-[2px] text-[#D4A843] uppercase">{t('foundingBadge')}</span>
         </div>
-        <h1 className="font-[family-name:var(--font-playfair)] text-[48px] font-semibold text-white leading-[1.1] tracking-[-0.02em] mb-5">
+        <h1 className="font-[family-name:var(--font-playfair)] text-[30px] sm:text-[36px] md:text-[48px] font-semibold text-white leading-[1.1] tracking-[-0.02em] mb-4 md:mb-5">
           {t('heroTitle')}
         </h1>
-        <p className="text-[16px] text-white/40 max-w-[600px] mx-auto leading-relaxed font-light mb-3">
+        <p className="text-[14px] md:text-[16px] text-white/40 max-w-[600px] mx-auto leading-relaxed font-light mb-3">
           {t('heroDescription')}
         </p>
-        <p className="text-[14px] text-[#D4A843] font-semibold">
+        <p className="text-[13px] md:text-[14px] text-[#D4A843] font-semibold">
           {t('foundingAccess')}
         </p>
       </div>
 
       {/* Pricing Tiers */}
-      <div className="max-w-[1200px] mx-auto px-10 pb-12">
-        <div className="grid grid-cols-3 gap-5">
+      <div className="max-w-[1200px] mx-auto px-5 md:px-10 pb-10 md:pb-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
           {tiers.map((tier) => (
             <div
               key={tier.nameKey}
@@ -143,7 +143,7 @@ export default function JoinPage() {
                   : 'bg-white/[0.08]'
               }`}
             >
-              <div className={`rounded-2xl p-7 h-full flex flex-col ${
+              <div className={`rounded-2xl p-6 md:p-7 h-full flex flex-col ${
                 tier.featured ? 'bg-[#0A1628]' : 'bg-white/[0.03]'
               }`}>
                 {tier.featured && (
@@ -154,8 +154,8 @@ export default function JoinPage() {
                   </div>
                 )}
                 <h3 className="text-[18px] font-semibold text-white mb-1">{t(tier.nameKey)}</h3>
-                <div className="flex items-baseline gap-1 mb-1">
-                  <span className="text-[32px] font-bold text-white">{tier.price}</span>
+                <div className="flex items-baseline gap-1 mb-1 flex-wrap">
+                  <span className="text-[28px] md:text-[32px] font-bold text-white">{tier.price}</span>
                   <span className="text-[13px] text-white/30">{t('perYear')}</span>
                 </div>
                 <div className="mb-5">
@@ -183,17 +183,17 @@ export default function JoinPage() {
       </div>
 
       {/* Founding Member Banner */}
-      <div className="max-w-[1200px] mx-auto px-10 pb-12">
-        <div className="bg-white/[0.03] border border-[#BC9C45]/20 rounded-2xl p-8 text-center">
+      <div className="max-w-[1200px] mx-auto px-5 md:px-10 pb-10 md:pb-12">
+        <div className="bg-white/[0.03] border border-[#BC9C45]/20 rounded-2xl p-6 md:p-8 text-center">
           <div className="inline-flex items-center gap-2 mb-4">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#BC9C45] to-[#D4B96A] flex items-center justify-center">
               <span className="text-white text-[18px]">★</span>
             </div>
           </div>
-          <h2 className="font-[family-name:var(--font-playfair)] text-[24px] font-semibold text-white mb-2">
+          <h2 className="font-[family-name:var(--font-playfair)] text-[20px] md:text-[24px] font-semibold text-white mb-2">
             {t('foundingMemberAccess')}
           </h2>
-          <p className="text-[14px] text-white/40 max-w-[500px] mx-auto mb-2">
+          <p className="text-[13px] md:text-[14px] text-white/40 max-w-[500px] mx-auto mb-2">
             {t('foundingMemberDesc')}
           </p>
           <p className="text-[12px] text-[#D4A843] font-semibold">
@@ -203,12 +203,12 @@ export default function JoinPage() {
       </div>
 
       {/* Application Form */}
-      <div className="max-w-[1200px] mx-auto px-10 pb-16">
-        <div className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-10">
-          <h2 className="font-[family-name:var(--font-playfair)] text-[24px] font-semibold text-white mb-2 text-center">
+      <div className="max-w-[1200px] mx-auto px-5 md:px-10 pb-12 md:pb-16">
+        <div className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-6 md:p-10">
+          <h2 className="font-[family-name:var(--font-playfair)] text-[20px] md:text-[24px] font-semibold text-white mb-2 text-center">
             {submitted ? t('applicationReceived') : t('membershipApplication')}
           </h2>
-          <p className="text-[13px] text-white/40 mb-8 text-center">
+          <p className="text-[13px] text-white/40 mb-6 md:mb-8 text-center">
             {submitted
               ? t('reviewWithin48')
               : t('foundingByInvitation')
@@ -258,16 +258,16 @@ export default function JoinPage() {
       </div>
 
       {/* Have a code? */}
-      <div className="max-w-[1200px] mx-auto px-10 pb-12">
-        <div className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-8 text-center">
-          <h3 className="text-[18px] font-semibold text-white mb-2">{t('haveInvitationCode')}</h3>
+      <div className="max-w-[1200px] mx-auto px-5 md:px-10 pb-10 md:pb-12">
+        <div className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-6 md:p-8 text-center">
+          <h3 className="text-[16px] md:text-[18px] font-semibold text-white mb-2">{t('haveInvitationCode')}</h3>
           <p className="text-[13px] text-white/40 mb-5">{t('enterCodeBelow')}</p>
-          <div className="max-w-[400px] mx-auto flex gap-2">
+          <div className="max-w-[400px] mx-auto flex flex-col sm:flex-row gap-2">
             <input
               type="text"
               placeholder={t('enterInvitationCode')}
               id="invite-code-input"
-              className="flex-1 px-4 py-3.5 bg-white/[0.04] border border-white/[0.08] rounded-lg text-white text-[14px] placeholder:text-white/25 focus:outline-none focus:border-[#D4A843]/40 transition-colors"
+              className="flex-1 min-w-0 px-4 py-3.5 bg-white/[0.04] border border-white/[0.08] rounded-lg text-white text-[14px] placeholder:text-white/25 focus:outline-none focus:border-[#D4A843]/40 transition-colors"
             />
             <button
               onClick={() => {
@@ -294,14 +294,14 @@ export default function JoinPage() {
       </div>
 
       {/* Footer */}
-      <div className="border-t border-white/[0.06] px-10 py-6 flex items-center justify-between">
+      <div className="border-t border-white/[0.06] px-5 md:px-10 py-5 md:py-6 flex flex-col sm:flex-row items-center sm:justify-between gap-2">
         <div className="flex items-center gap-2">
           <div className="w-5 h-5 bg-gradient-to-br from-[#BC9C45] to-[#A88A3D] rounded flex items-center justify-center">
             <span className="text-white text-[8px] font-bold font-[family-name:var(--font-playfair)] italic">R</span>
           </div>
           <span className="text-[10px] text-white/20 tracking-wide">REPRIME TERMINAL</span>
         </div>
-        <p className="text-[10px] text-white/20">
+        <p className="text-[10px] text-white/20 text-center">
           {t('copyright', { year: new Date().getFullYear().toString() })}
         </p>
       </div>

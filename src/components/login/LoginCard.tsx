@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { createBrowserClient } from '@supabase/ssr';
+import { friendlyAuthError, friendlyFetchError } from '@/lib/utils/friendly-error';
 
 interface LoginCardProps {
   locale: string;
@@ -30,7 +31,7 @@ export default function LoginCard({ locale }: LoginCardProps) {
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!url || !key) {
-      setError('Supabase configuration missing.');
+      setError('Sign-in is temporarily unavailable. Please try again shortly.');
       setLoading(false);
       return;
     }
@@ -46,13 +47,13 @@ export default function LoginCard({ locale }: LoginCardProps) {
       });
 
       if (authError) {
-        setError(`Sign in failed: ${authError.message}`);
+        setError(friendlyAuthError(authError.message, 'We couldn\u2019t sign you in. Please check your email and password and try again.'));
         setLoading(false);
         return;
       }
 
       if (!data?.session) {
-        setError('Email not confirmed. Confirm the account in Supabase Dashboard → Authentication → Users.');
+        setError('Your email hasn\u2019t been confirmed yet. Please check your inbox for the confirmation link, or contact RePrime if you need help.');
         setLoading(false);
         return;
       }
@@ -64,7 +65,8 @@ export default function LoginCard({ locale }: LoginCardProps) {
         .single();
 
       if (userError || !userData) {
-        setError(`Profile not found. Run the seed migration for user ${data.session.user.id}.`);
+        console.error('terminal_users lookup failed:', userError, data.session.user.id);
+        setError('We couldn\u2019t find your profile. Please contact RePrime to finish setting up your account.');
         setLoading(false);
         return;
       }
@@ -72,7 +74,8 @@ export default function LoginCard({ locale }: LoginCardProps) {
       const loc = locale || 'en';
       redirectTo = userData.role === 'investor' ? `/${loc}/portal` : `/${loc}/admin`;
     } catch (err) {
-      setError(`Error: ${err instanceof Error ? err.message : String(err)}`);
+      console.error('login failed:', err);
+      setError(friendlyFetchError(err, 'Something went wrong while signing in. Please try again.'));
       setLoading(false);
       return;
     }
@@ -120,7 +123,7 @@ export default function LoginCard({ locale }: LoginCardProps) {
         />
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3 text-red-400 text-sm break-all">
+          <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3 text-red-400 text-sm">
             {error}
           </div>
         )}

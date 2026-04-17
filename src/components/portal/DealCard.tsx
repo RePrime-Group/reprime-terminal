@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useCountdown, getUrgencyLevel } from '@/lib/hooks/useCountdown';
 import { Link } from '@/i18n/navigation';
 import { formatPriceCompact, formatPercent, formatDSCR, formatPrice, formatSqFt } from '@/lib/utils/format';
 import type { DealCardData } from '@/components/portal/PortalDashboardClient';
+import { friendlyFetchError } from '@/lib/utils/friendly-error';
 
 interface DealCardProps {
   deal: DealCardData;
@@ -19,6 +20,13 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
   const tPt = useTranslations('portal.propertyTypes');
   const [watched, setWatched] = useState(false);
   const [watchLoading, setWatchLoading] = useState(false);
+  const [watchError, setWatchError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!watchError) return;
+    const t = setTimeout(() => setWatchError(null), 3500);
+    return () => clearTimeout(t);
+  }, [watchError]);
   const countdown = useCountdown(deal.dd_deadline);
   const isAssigned = deal.status === 'assigned' || deal.status === 'closed';
   const urgency = isAssigned ? 'assigned' : getUrgencyLevel(deal.dd_deadline);
@@ -134,10 +142,15 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
               e.stopPropagation();
               if (watchLoading) return;
               setWatchLoading(true);
+              setWatchError(null);
               try {
                 const method = watched ? 'DELETE' : 'POST';
                 const res = await fetch(`/api/deals/${deal.id}/watch`, { method });
                 if (res.ok) setWatched(!watched);
+                else setWatchError('Couldn\u2019t save. Try again.');
+              } catch (err) {
+                console.error('watch toggle failed:', err);
+                setWatchError(friendlyFetchError(err, 'Couldn\u2019t save. Try again.'));
               } finally {
                 setWatchLoading(false);
               }
@@ -155,6 +168,11 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
                 </svg>
               )}
             </div>
+            {watchError && (
+              <div className="absolute top-full right-0 mt-1 whitespace-nowrap rounded-md bg-[#DC2626] px-2 py-1 text-[10px] font-semibold text-white shadow-md z-[4]">
+                {watchError}
+              </div>
+            )}
           </div>
 
           {/* Quarter badge */}

@@ -6,6 +6,20 @@ export interface MarketDataPoint {
 }
 
 const FRED_BASE = 'https://api.stlouisfed.org/fred/series/observations';
+const FRED_TIMEOUT_MS = 5_000;
+
+async function fredFetch(url: string) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FRED_TIMEOUT_MS);
+  try {
+    return await fetch(url, {
+      signal: controller.signal,
+      next: { revalidate: 3600 }, // 1 hour cache
+    });
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 export async function fetchFredSeries(seriesId: string): Promise<{ value: number; date: string } | null> {
   const apiKey = process.env.FRED_API_KEY;
@@ -13,7 +27,7 @@ export async function fetchFredSeries(seriesId: string): Promise<{ value: number
 
   try {
     const url = `${FRED_BASE}?series_id=${seriesId}&api_key=${apiKey}&file_type=json&sort_order=desc&limit=2`;
-    const res = await fetch(url, { next: { revalidate: 3600 } }); // 1 hour cache
+    const res = await fredFetch(url);
     if (!res.ok) return null;
 
     const data = await res.json();
@@ -40,7 +54,7 @@ export async function fetchFredSeriesWithChange(seriesId: string): Promise<{
 
   try {
     const url = `${FRED_BASE}?series_id=${seriesId}&api_key=${apiKey}&file_type=json&sort_order=desc&limit=2`;
-    const res = await fetch(url, { next: { revalidate: 3600 } });
+    const res = await fredFetch(url);
     if (!res.ok) return null;
 
     const data = await res.json();
