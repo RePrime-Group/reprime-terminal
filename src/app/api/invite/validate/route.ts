@@ -27,5 +27,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ valid: false, reason: 'expired' });
   }
 
-  return NextResponse.json({ valid: true, email: data.email, role: data.role });
+  // If this is a team-invite, attach the parent investor's display name so the
+  // acceptance page can show "{ParentName} invited you to join their team."
+  let parentName: string | null = null;
+  if (data.parent_investor_id) {
+    const { data: parent } = await supabase
+      .from('terminal_users')
+      .select('full_name, company_name')
+      .eq('id', data.parent_investor_id)
+      .single();
+    if (parent) {
+      parentName = parent.full_name ?? parent.company_name ?? null;
+    }
+  }
+
+  return NextResponse.json({
+    valid: true,
+    email: data.email,
+    role: data.role,
+    parent_investor_id: data.parent_investor_id ?? null,
+    parent_name: parentName,
+  });
 }

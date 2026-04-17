@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { friendlyAuthError, friendlyFetchError, readApiError } from '@/lib/utils/friendly-error';
 
 type ValidationResult =
-  | { valid: true; email: string; role: string }
+  | { valid: true; email: string; role: string; parent_investor_id?: string | null; parent_name?: string | null }
   | { valid: false; reason: 'expired' | 'used' | 'not_found' };
 
 export default function InviteRegistrationPage() {
@@ -221,7 +221,14 @@ export default function InviteRegistrationPage() {
         <div className="flex flex-col items-center gap-2">
           <div className="text-[#C9A54E] text-5xl font-bold tracking-tight">R</div>
           <h1 className="text-white text-xl font-semibold">{t('createYourAccount')}</h1>
-          <p className="text-white/40 text-sm">{t('completeRegistration')}</p>
+          {validation.parent_investor_id && validation.parent_name ? (
+            <p className="text-white/60 text-sm text-center px-4">
+              <span className="text-[#C9A54E] font-medium">{validation.parent_name}</span>
+              {' '}invited you to join their RePrime team.
+            </p>
+          ) : (
+            <p className="text-white/40 text-sm">{t('completeRegistration')}</p>
+          )}
         </div>
 
         <div className="w-full rounded-2xl border border-white/[0.08] bg-white/[0.02] backdrop-blur p-8">

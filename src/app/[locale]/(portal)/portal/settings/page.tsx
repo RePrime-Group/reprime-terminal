@@ -15,9 +15,19 @@ export default async function SettingsPage({
 
   const { data } = await supabase
     .from('terminal_users')
-    .select('full_name, email, phone, company_name, notification_preferences')
+    .select('full_name, email, phone, company_name, notification_preferences, parent_investor_id')
     .eq('id', user.id)
     .single();
+
+  let parentName: string | null = null;
+  if (data?.parent_investor_id) {
+    const { data: parent } = await supabase
+      .from('terminal_users')
+      .select('full_name, company_name')
+      .eq('id', data.parent_investor_id)
+      .single();
+    parentName = parent?.full_name ?? parent?.company_name ?? null;
+  }
 
   return (
     <SettingsClient
@@ -28,6 +38,9 @@ export default async function SettingsPage({
         company_name: data?.company_name ?? '',
       }}
       initialPrefs={normalizePrefs(data?.notification_preferences)}
+      isSubUser={!!data?.parent_investor_id}
+      parentName={parentName}
+      locale={locale}
     />
   );
 }

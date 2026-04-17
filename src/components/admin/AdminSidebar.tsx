@@ -63,6 +63,18 @@ const navItems = [
     ),
   },
   {
+    labelKey: 'sidebar.teamRequests' as const,
+    href: '/admin/team-requests',
+    ownerOnly: true,
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 17c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="#0E3470" strokeWidth="1.5" strokeLinecap="round" />
+        <circle cx="8" cy="6" r="3" stroke="#0E3470" strokeWidth="1.5" />
+        <path d="M13.5 10.5l1.8 1.8 3.2-3.3" stroke="#BC9C45" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
     labelKey: 'sidebar.activity' as const,
     href: '/admin/activity',
     ownerOnly: true,

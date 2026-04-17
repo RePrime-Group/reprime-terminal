@@ -14,6 +14,16 @@ export type ActivityAction =
   | 'om_downloaded'
   | 'portal_viewed';
 
+export type TeamPermissionKey =
+  | 'view_deals'
+  | 'manage_watchlist'
+  | 'commit_withdraw'
+  | 'download_documents'
+  | 'schedule_meetings'
+  | 'message_team';
+
+export type TeamPermissions = Partial<Record<TeamPermissionKey, boolean>>;
+
 export interface TerminalUser {
   id: string;
   email: string;
@@ -27,16 +37,36 @@ export interface TerminalUser {
   last_active_at: string | null;
   created_at: string;
   updated_at: string;
+  parent_investor_id: string | null;
+  permissions: TeamPermissions;
+  team_invite_limit: number;
 }
 
 export interface TerminalInviteToken {
   id: string;
   email: string;
-  role: 'investor' | 'employee';
+  role: 'investor' | 'employee' | 'team_member';
   token: string;
   invited_by: string | null;
+  parent_investor_id: string | null;
+  permissions: TeamPermissions | null;
   accepted_at: string | null;
   expires_at: string;
+  created_at: string;
+}
+
+export interface TerminalTeamRequest {
+  id: string;
+  investor_id: string;
+  request_type: 'invite_limit' | 'permission';
+  requested_total: number | null;
+  target_user_id: string | null;
+  permission_key: TeamPermissionKey | null;
+  reason: string | null;
+  status: 'pending' | 'approved' | 'rejected';
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  admin_notes: string | null;
   created_at: string;
 }
 

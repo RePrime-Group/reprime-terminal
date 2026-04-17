@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { watermarkPDF } from '@/lib/utils/watermark';
+import { getInvestorAuth, permissionDenied } from '@/lib/auth/requireInvestor';
 
 export async function GET(
   request: NextRequest,
@@ -23,20 +24,12 @@ export async function GET(
     }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const { data: terminalUser } = await supabase
-    .from('terminal_users')
-    .select('full_name')
-    .eq('id', user.id)
-    .single();
-
-  if (!terminalUser) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const authResult = await getInvestorAuth();
+  if (!authResult.ok) return authResult.response;
+  const denied = permissionDenied(authResult.user, 'download_documents');
+  if (denied) return denied;
+  const user = { id: authResult.user.userId };
+  const terminalUser = { full_name: authResult.user.fullName ?? '' };
 
   const { data: doc } = await supabase
     .from('terminal_dd_documents')

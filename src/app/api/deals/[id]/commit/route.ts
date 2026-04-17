@@ -3,6 +3,8 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { sendCommitmentConfirmation, sendCommitmentWithdrawal } from '@/lib/email/send';
 import { isValidE164 } from '@/lib/countries';
+import { getInvestorAuth, permissionDenied } from '@/lib/auth/requireInvestor';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function POST(
   request: NextRequest,
@@ -21,8 +23,11 @@ export async function POST(
     }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const authResult = await getInvestorAuth();
+  if (!authResult.ok) return authResult.response;
+  const denied = permissionDenied(authResult.user, 'commit_withdraw');
+  if (denied) return denied;
+  const user = { id: authResult.user.userId };
 
   const { type, notes, phone } = await request.json();
 
@@ -90,7 +95,7 @@ export async function POST(
     metadata: { commitment_id: commitment?.id, type },
   });
 
-  // Send confirmation emails
+  // Send confirmation emails — CC the parent investor when a sub-user commits.
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://reprimeterminal.com';
   const emailData = {
     investorName: investor?.full_name ?? 'Investor',
@@ -104,9 +109,29 @@ export async function POST(
     portalUrl: `${baseUrl}/en/portal/deals/${id}`,
   };
 
+  const cc = ['shirel@reprime.com', 'g@reprime.com', 'steve@reprime.com'];
+  if (authResult.user.parentInvestorId) {
+    const admin = createAdminClient();
+    const { data: parent } = await admin
+      .from('terminal_users')
+      .select('email, id')
+      .eq('id', authResult.user.parentInvestorId)
+      .single();
+    if (parent?.email) cc.push(parent.email);
+    if (parent?.id) {
+      await admin.from('terminal_notifications').insert({
+        user_id: parent.id,
+        deal_id: id,
+        type: 'team_commit',
+        title: `${investor?.full_name ?? 'Your team member'} committed to ${deal?.name ?? 'a deal'}`,
+        description: `${deal?.city ?? ''}${deal?.city && deal?.state ? ', ' : ''}${deal?.state ?? ''}`.trim(),
+      });
+    }
+  }
+
   try {
     if (investor?.email) {
-      await sendCommitmentConfirmation(investor.email, emailData, ['shirel@reprime.com', 'g@reprime.com', 'steve@reprime.com']);
+      await sendCommitmentConfirmation(investor.email, emailData, cc);
     }
   } catch (emailErr) {
     console.error('Commitment email failed:', emailErr);
@@ -164,8 +189,11 @@ export async function DELETE(
     }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const authResult = await getInvestorAuth();
+  if (!authResult.ok) return authResult.response;
+  const denied = permissionDenied(authResult.user, 'commit_withdraw');
+  if (denied) return denied;
+  const user = { id: authResult.user.userId };
 
   // Withdrawal requires a validated phone number (same confirmation as commit).
   const body = await request.json().catch(() => ({}));
@@ -217,7 +245,7 @@ export async function DELETE(
     metadata: {},
   });
 
-  // Send withdrawal emails
+  // Send withdrawal emails — CC the parent investor when a sub-user withdraws.
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://reprimeterminal.com';
   const emailData = {
     investorName: investor?.full_name ?? 'Investor',
@@ -227,9 +255,29 @@ export async function DELETE(
     portalUrl: `${baseUrl}/en/portal/deals/${id}`,
   };
 
+  const cc = ['shirel@reprime.com', 'g@reprime.com', 'steve@reprime.com'];
+  if (authResult.user.parentInvestorId) {
+    const admin = createAdminClient();
+    const { data: parent } = await admin
+      .from('terminal_users')
+      .select('email, id')
+      .eq('id', authResult.user.parentInvestorId)
+      .single();
+    if (parent?.email) cc.push(parent.email);
+    if (parent?.id) {
+      await admin.from('terminal_notifications').insert({
+        user_id: parent.id,
+        deal_id: id,
+        type: 'team_withdraw',
+        title: `${investor?.full_name ?? 'Your team member'} withdrew from ${deal?.name ?? 'a deal'}`,
+        description: `${deal?.city ?? ''}${deal?.city && deal?.state ? ', ' : ''}${deal?.state ?? ''}`.trim(),
+      });
+    }
+  }
+
   try {
     if (investor?.email) {
-      await sendCommitmentWithdrawal(investor.email, emailData, ['shirel@reprime.com', 'g@reprime.com', 'steve@reprime.com']);
+      await sendCommitmentWithdrawal(investor.email, emailData, cc);
     }
   } catch (emailErr) {
     console.error('Withdrawal email failed:', emailErr);

@@ -15,6 +15,10 @@ interface InvestorRow {
   created_at: string;
   last_active_at: string | null;
   deals_viewed: number;
+  is_active: boolean;
+  parent_investor_id: string | null;
+  parent_name: string | null;
+  parent_inactive: boolean;
 }
 
 interface InvitationRow {
@@ -242,6 +246,7 @@ export default function InvestorListClient({
                   <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('joined')}</th>
                   <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('lastActive')}</th>
                   <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('dealsViewed')}</th>
+                  <th className="text-right text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{tc('actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -251,14 +256,41 @@ export default function InvestorListClient({
                     onClick={() => setSelectedId(investor.id === selectedId ? null : investor.id)}
                     className={`border-b border-rp-gray-100 last:border-b-0 cursor-pointer transition-colors ${
                       investor.id === selectedId ? 'bg-rp-gold/5' : 'hover:bg-rp-gray-100'
-                    }`}
+                    } ${!investor.is_active ? 'bg-rp-gray-50' : ''}`}
                   >
-                    <td className="px-5 py-3.5 text-sm font-medium text-rp-navy">{investor.full_name}</td>
+                    <td className="px-5 py-3.5 text-sm font-medium text-rp-navy">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className={!investor.is_active ? 'line-through text-rp-gray-400' : ''}>
+                          {investor.full_name}
+                        </span>
+                        {!investor.is_active && (
+                          <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-rp-gray-500 bg-rp-gray-100 rounded px-1.5 py-0.5">
+                            Revoked
+                          </span>
+                        )}
+                        {investor.parent_investor_id && (
+                          <span
+                            className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#0E3470] bg-[#EEF2FF] border border-[#C7D2FE] rounded px-1.5 py-0.5"
+                            title={investor.parent_name ? `Team member of ${investor.parent_name}` : 'Team member'}
+                          >
+                            Team{investor.parent_name ? ` · ${investor.parent_name.split(' ')[0]}` : ''}
+                          </span>
+                        )}
+                        {investor.parent_inactive && (
+                          <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#92400E] bg-[#FEF3C7] border border-[#FDE68A] rounded px-1.5 py-0.5">
+                            Parent inactive
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-5 py-3.5 text-sm text-rp-gray-600">{investor.email}</td>
                     <td className="px-5 py-3.5 text-sm text-rp-gray-600">{investor.company_name ?? '\u2014'}</td>
                     <td className="px-5 py-3.5 text-sm text-rp-gray-600">{formatDate(investor.created_at)}</td>
                     <td className="px-5 py-3.5 text-sm text-rp-gray-600">{formatRelativeTime(investor.last_active_at, t)}</td>
                     <td className="px-5 py-3.5 text-sm text-rp-gray-600">{investor.deals_viewed}</td>
+                    <td className="px-5 py-3.5 text-right text-sm" onClick={(e) => e.stopPropagation()}>
+                      <SetActiveButton investorId={investor.id} isActive={investor.is_active} onDone={() => router.refresh()} />
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -267,6 +299,8 @@ export default function InvestorListClient({
           </div>
         )
       )}
+
+      {/* Active tab action button component defined below */}
 
       {/* Invitations Tab */}
       {tab === 'invitations' && (
@@ -350,5 +384,47 @@ export default function InvestorListClient({
         </>
       )}
     </div>
+  );
+}
+
+function SetActiveButton({
+  investorId,
+  isActive,
+  onDone,
+}: {
+  investorId: string;
+  isActive: boolean;
+  onDone: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+
+  async function toggle() {
+    const nextActive = !isActive;
+    const verb = nextActive ? 'reactivate' : 'revoke';
+    if (!confirm(`Are you sure you want to ${verb} this user's access?`)) return;
+    setBusy(true);
+    try {
+      await fetch(`/api/admin/investors/${investorId}/set-active`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: nextActive }),
+      });
+      onDone();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      disabled={busy}
+      className={`text-xs font-semibold transition-colors disabled:opacity-50 ${
+        isActive ? 'text-red-500 hover:text-red-700' : 'text-green-600 hover:text-green-800'
+      }`}
+    >
+      {busy ? '…' : isActive ? 'Revoke' : 'Reactivate'}
+    </button>
   );
 }

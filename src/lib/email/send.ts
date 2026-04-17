@@ -10,6 +10,9 @@ import ApplicationRejectionEmail from './templates/application-rejection-email';
 import CommitmentWithdrawal from './templates/commitment-withdrawal';
 import DocumentUploadEmail from './templates/document-upload-notification';
 import DealActivityEmail from './templates/deal-activity-notification';
+import TeamInviteEmail from './templates/team-invite-email';
+import TeamRequestAdminEmail from './templates/team-request-admin-email';
+import type { TeamPermissionKey } from '@/lib/types/database';
 
 const from = `${FROM_NAME} <${FROM_EMAIL}>`;
 
@@ -179,6 +182,58 @@ export async function sendDealActivityEmail(
     to: recipientEmail,
     subject: `Deal Update: ${data.dealName} — ${data.city}, ${data.state}`,
     react: DealActivityEmail(data),
+  });
+}
+
+export async function sendTeamInviteEmail(
+  recipientEmail: string,
+  data: {
+    parentName: string;
+    inviteeName: string;
+    inviteUrl: string;
+    inviteCode?: string;
+    expiresAt?: string;
+  },
+) {
+  return getResend().emails.send({
+    from,
+    to: recipientEmail,
+    subject: `${data.parentName} invited you to their RePrime team`,
+    react: TeamInviteEmail(data),
+  });
+}
+
+/**
+ * Notify RePrime admins that an investor has submitted a team request
+ * (either an invite-limit raise or a permission approval).
+ */
+export async function sendTeamRequestAdminNotification(data: {
+  requestType: 'invite_limit' | 'permission';
+  investorName: string;
+  investorEmail: string;
+  requestedTotal?: number;
+  currentLimit?: number;
+  targetName?: string;
+  targetEmail?: string;
+  permissionKey?: TeamPermissionKey;
+  reason?: string | null;
+}) {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://reprimeterminal.com';
+  const adminUrl = `${baseUrl}/en/admin/team-requests`;
+  const subject =
+    data.requestType === 'invite_limit'
+      ? `Invite limit request: ${data.investorName}`
+      : `Team permission request: ${data.investorName} → ${data.targetName ?? 'team member'}`;
+
+  return getResend().emails.send({
+    from,
+    to: 'g@reprime.com',
+    cc: ['steve@reprime.com', 'shirel@reprime.com'],
+    subject,
+    react: TeamRequestAdminEmail({
+      ...data,
+      adminUrl,
+    }),
   });
 }
 

@@ -34,10 +34,26 @@ export default async function InvestorsPage({ params, searchParams }: InvestorsP
 
   const { data: investors } = await supabase
     .from('terminal_users')
-    .select('id, full_name, email, company_name, created_at, last_active_at')
+    .select('id, full_name, email, company_name, created_at, last_active_at, is_active, parent_investor_id')
     .eq('role', 'investor')
     .order('created_at', { ascending: false })
     .range(investorFrom, investorTo);
+
+  // Resolve parent names for team members and look up parent is_active state so
+  // we can flag "Parent Inactive" in the UI.
+  const parentIds = [
+    ...new Set((investors ?? []).map((i) => i.parent_investor_id).filter(Boolean) as string[]),
+  ];
+  const parentMap = new Map<string, { full_name: string; is_active: boolean }>();
+  if (parentIds.length > 0) {
+    const { data: parents } = await supabase
+      .from('terminal_users')
+      .select('id, full_name, is_active')
+      .in('id', parentIds);
+    for (const p of parents ?? []) {
+      parentMap.set(p.id, { full_name: p.full_name, is_active: p.is_active !== false });
+    }
+  }
 
   const investorRows = await Promise.all(
     (investors ?? []).map(async (investor) => {
@@ -47,6 +63,8 @@ export default async function InvestorsPage({ params, searchParams }: InvestorsP
         .eq('user_id', investor.id)
         .eq('action', 'deal_viewed');
 
+      const parent = investor.parent_investor_id ? parentMap.get(investor.parent_investor_id) : null;
+
       return {
         id: investor.id,
         full_name: investor.full_name,
@@ -54,6 +72,10 @@ export default async function InvestorsPage({ params, searchParams }: InvestorsP
         company_name: investor.company_name,
         created_at: investor.created_at,
         last_active_at: investor.last_active_at,
+        is_active: investor.is_active !== false,
+        parent_investor_id: investor.parent_investor_id ?? null,
+        parent_name: parent?.full_name ?? null,
+        parent_inactive: !!(investor.parent_investor_id && parent && !parent.is_active),
         deals_viewed: count ?? 0,
       };
     })

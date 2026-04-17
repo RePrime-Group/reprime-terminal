@@ -27,7 +27,7 @@ export const getCurrentProfile = cache(async () => {
   const supabase = await createClient();
   const { data } = await supabase
     .from('terminal_users')
-    .select('id, role, full_name, email, phone, company_name, onboarding_completed')
+    .select('id, role, full_name, email, phone, company_name, onboarding_completed, is_active, parent_investor_id, permissions, team_invite_limit')
     .eq('id', user.id)
     .maybeSingle();
   return data;

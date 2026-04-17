@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 import type { NotifPreferences, NotifEventKey, NotifChannel } from '@/lib/notifications/types';
 import { friendlyAuthError, friendlyFetchError, readApiError } from '@/lib/utils/friendly-error';
+import TeamMembersSection from '@/components/portal/TeamMembersSection';
 
 interface Profile {
   full_name: string;
@@ -16,11 +17,14 @@ interface Profile {
 interface SettingsClientProps {
   initialProfile: Profile;
   initialPrefs: NotifPreferences;
+  isSubUser?: boolean;
+  parentName?: string | null;
+  locale: string;
 }
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 
-export default function SettingsClient({ initialProfile, initialPrefs }: SettingsClientProps) {
+export default function SettingsClient({ initialProfile, initialPrefs, isSubUser, parentName, locale }: SettingsClientProps) {
   const t = useTranslations('portal.settings');
   const td = useTranslations('portal.dealDetail');
 
@@ -381,6 +385,20 @@ export default function SettingsClient({ initialProfile, initialPrefs }: Setting
           )}
         </div>
       </SectionCard>
+
+      {/* Team Members — only visible to parent investors (not sub-users) */}
+      {!isSubUser && <TeamMembersSection locale={locale} />}
+
+      {/* Sub-user info panel */}
+      {isSubUser && (
+        <section className="bg-white rounded-xl border border-[#EEF0F4] p-5 md:p-7 mb-5 md:mb-6 rp-card-shadow">
+          <h2 className="text-[17px] md:text-[19px] font-semibold text-[#0E3470]">Team Access</h2>
+          <p className="text-[13px] text-[#4B5563] mt-2 leading-relaxed">
+            You&rsquo;re a team member{parentName ? <> on <strong>{parentName}</strong>&rsquo;s</> : null} RePrime account.
+            They control what actions you can perform. Contact them if you need access to more features.
+          </p>
+        </section>
+      )}
     </div>
   );
 }

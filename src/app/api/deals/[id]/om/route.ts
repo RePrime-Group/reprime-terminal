@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { getInvestorAuth, permissionDenied } from '@/lib/auth/requireInvestor';
 
 export async function GET(
   _request: NextRequest,
@@ -20,11 +21,12 @@ export async function GET(
     }
   );
 
-  // Verify auth
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  // Verify auth + document permission (team sub-users must have it enabled)
+  const authResult = await getInvestorAuth();
+  if (!authResult.ok) return authResult.response;
+  const denied = permissionDenied(authResult.user, 'download_documents');
+  if (denied) return denied;
+  const user = { id: authResult.user.userId };
 
   // Get deal's OM path
   const { data: deal } = await supabase

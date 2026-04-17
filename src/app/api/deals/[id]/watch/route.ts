@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { getInvestorAuth, permissionDenied } from '@/lib/auth/requireInvestor';
 
 function createSupabase(cookieStore: Awaited<ReturnType<typeof cookies>>) {
   return createServerClient(
@@ -39,8 +40,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const { id } = await params;
   const cookieStore = await cookies();
   const supabase = createSupabase(cookieStore);
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const authResult = await getInvestorAuth();
+  if (!authResult.ok) return authResult.response;
+  const denied = permissionDenied(authResult.user, 'manage_watchlist');
+  if (denied) return denied;
+  const user = { id: authResult.user.userId };
 
   const body = await request.json().catch(() => ({}));
 
@@ -65,8 +69,11 @@ export async function DELETE(
   const { id } = await params;
   const cookieStore = await cookies();
   const supabase = createSupabase(cookieStore);
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const authResult = await getInvestorAuth();
+  if (!authResult.ok) return authResult.response;
+  const denied = permissionDenied(authResult.user, 'manage_watchlist');
+  if (denied) return denied;
+  const user = { id: authResult.user.userId };
 
   await supabase.from('terminal_watchlist').delete().eq('deal_id', id).eq('user_id', user.id);
   return NextResponse.json({ watching: false });

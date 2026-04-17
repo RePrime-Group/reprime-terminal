@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { createCalendarEvent } from '@/lib/google/calendar';
 import { sendMeetingConfirmation } from '@/lib/email/send';
+import { getInvestorAuth, permissionDenied } from '@/lib/auth/requireInvestor';
 
 export async function POST(request: NextRequest) {
   const cookieStore = await cookies();
@@ -17,8 +18,11 @@ export async function POST(request: NextRequest) {
     }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const authResult = await getInvestorAuth();
+  if (!authResult.ok) return authResult.response;
+  const denied = permissionDenied(authResult.user, 'schedule_meetings');
+  if (denied) return denied;
+  const user = { id: authResult.user.userId };
 
   const { dealId, startTime, notes } = await request.json();
 

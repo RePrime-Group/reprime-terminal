@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
   // Verify the invite token is valid
   const { data: invite } = await supabase
     .from('terminal_invite_tokens')
-    .select('email, role, accepted_at')
+    .select('email, role, accepted_at, parent_investor_id, permissions')
     .eq('token', token)
     .single();
 
@@ -33,6 +33,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Email does not match invite' }, { status: 400 });
   }
 
+  // Team-invited sub-users always get role='investor' so the portal layout's
+  // role check passes. Their sub-user status is tracked via parent_investor_id.
+  const isTeamInvite = invite.role === 'team_member' || !!invite.parent_investor_id;
+  const resolvedRole = isTeamInvite ? 'investor' : invite.role;
+
   // Create the terminal_users profile (bypasses RLS with service role)
   const { error: insertError } = await supabase
     .from('terminal_users')
@@ -40,8 +45,10 @@ export async function POST(request: NextRequest) {
       id: userId,
       email,
       full_name: fullName,
-      role: invite.role,
+      role: resolvedRole,
       company_name: companyName || null,
+      parent_investor_id: invite.parent_investor_id ?? null,
+      permissions: invite.permissions ?? {},
     });
 
   if (insertError) {
@@ -50,6 +57,12 @@ export async function POST(request: NextRequest) {
       await supabase.from('terminal_users').update({
         full_name: fullName,
         company_name: companyName || null,
+        ...(isTeamInvite
+          ? {
+              parent_investor_id: invite.parent_investor_id ?? null,
+              permissions: invite.permissions ?? {},
+            }
+          : {}),
       }).eq('id', userId);
     } else {
       return NextResponse.json({ error: insertError.message }, { status: 500 });
