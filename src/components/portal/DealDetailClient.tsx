@@ -43,6 +43,12 @@ interface DealDetailClientProps {
   investorEmail?: string;
   addresses?: { id: string; label: string; address: string | null; city: string | null; state: string | null; square_footage: string | null; units: string | null; om_storage_path: string | null }[];
   pipelineTasks?: { id: string; name: string; status: string; stage: string }[];
+  /**
+   * When true the view renders exactly as an investor sees it, but every write
+   * action is short-circuited. Used by the /admin/preview routes so admins can
+   * audit the investor experience without creating rows under their own id.
+   */
+  previewMode?: boolean;
 }
 
 type TabKey = 'overview' | 'due-diligence' | 'financial-modeling' | 'deal-structure' | 'schedule';
@@ -389,7 +395,7 @@ function FileTypeBadge({ fileType }: { fileType: string | null }) {
 
 /* ---------- Commitment Card ---------- */
 
-function CommitmentCard({ deal }: { deal: DealWithDetails }) {
+function CommitmentCard({ deal, previewMode = false }: { deal: DealWithDetails; previewMode?: boolean }) {
   const t = useTranslations('portal.dealDetail');
   const tcom = useTranslations('common');
   const [showWire, setShowWire] = useState(false);
@@ -434,6 +440,7 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
   }, [deal.id]);
 
   const handleCommit = async (type: 'primary' | 'backup', phone?: string) => {
+    if (previewMode) return false;
     setCommitting(true);
     setPhoneError(null);
     try {
@@ -463,6 +470,7 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
   };
 
   const handleWithdraw = async (phone: string) => {
+    if (previewMode) return;
     setWithdrawing(true);
     setPhoneError(null);
     try {
@@ -524,7 +532,9 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
                   setPhoneError(null);
                   setShowWithdrawConfirm(true);
                 }}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#FCA5A5] text-[#DC2626] text-[11px] font-semibold hover:bg-[#FEF2F2] hover:border-[#DC2626] transition-colors"
+                disabled={previewMode}
+                title={previewMode ? 'Preview mode — read-only' : undefined}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#FCA5A5] text-[#DC2626] text-[11px] font-semibold hover:bg-[#FEF2F2] hover:border-[#DC2626] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 12a9 9 0 1 1-9-9" />
@@ -587,8 +597,9 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
         </div>
         <button
           onClick={() => setShowWire(true)}
-          disabled={committing}
-          className="w-full md:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] text-[15px] font-bold shadow-[0_6px_24px_rgba(188,156,69,0.3)] hover:opacity-90 transition-opacity disabled:opacity-50"
+          disabled={committing || previewMode}
+          title={previewMode ? 'Preview mode — read-only' : undefined}
+          className="w-full md:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] text-[15px] font-bold shadow-[0_6px_24px_rgba(188,156,69,0.3)] hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {t('lockThisDeal')}
         </button>
@@ -616,8 +627,9 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
                 setPhoneError(null);
                 setShowPhoneModal(true);
               }}
-              disabled={committing}
-              className="flex-1 py-3.5 rounded-xl bg-[#BC9C45] hover:bg-[#A88A3D] text-[#0E3470] text-[13px] font-bold transition-colors disabled:opacity-50"
+              disabled={committing || previewMode}
+              title={previewMode ? 'Preview mode — read-only' : undefined}
+              className="flex-1 py-3.5 rounded-xl bg-[#BC9C45] hover:bg-[#A88A3D] text-[#0E3470] text-[13px] font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {committing ? t('processing') : t('confirmSendWire')}
             </button>
@@ -654,8 +666,9 @@ function CommitmentCard({ deal }: { deal: DealWithDetails }) {
         </div>
         <button
           onClick={() => handleCommit('backup')}
-          disabled={committing}
-          className="w-full sm:w-auto px-5 py-2.5 min-h-[44px] rounded-lg border border-[#EEF0F4] bg-white text-[#0E3470] text-[11px] font-semibold hover:border-[#BC9C45] transition-colors whitespace-nowrap disabled:opacity-50"
+          disabled={committing || previewMode}
+          title={previewMode ? 'Preview mode — read-only' : undefined}
+          className="w-full sm:w-auto px-5 py-2.5 min-h-[44px] rounded-lg border border-[#EEF0F4] bg-white text-[#0E3470] text-[11px] font-semibold hover:border-[#BC9C45] transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {t('registerAsBackup')}
         </button>
@@ -1298,11 +1311,13 @@ function MeetingScheduler({
   slots,
   bookedTimes,
   onMeetingRequested,
+  previewMode = false,
 }: {
   dealId: string;
   slots: TerminalAvailabilitySlot[];
   bookedTimes: string[];
   onMeetingRequested: () => void;
+  previewMode?: boolean;
 }) {
   const t = useTranslations('portal.dealDetail');
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
@@ -1411,6 +1426,7 @@ function MeetingScheduler({
 
   const handleConfirm = async () => {
     if (!selectedSlot) return;
+    if (previewMode) return;
     setConfirming(true);
     try {
       const res = await fetch('/api/calendar/book', {
@@ -1533,8 +1549,9 @@ function MeetingScheduler({
           </div>
           <button
             onClick={handleConfirm}
-            disabled={confirming}
-            className="w-full py-3 bg-[#BC9C45] hover:bg-[#A88A3D] text-white font-semibold text-sm rounded-xl transition-colors disabled:opacity-50"
+            disabled={confirming || previewMode}
+            title={previewMode ? 'Preview mode — read-only' : undefined}
+            className="w-full py-3 bg-[#BC9C45] hover:bg-[#A88A3D] text-white font-semibold text-sm rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {confirming ? t('scheduling') : t('confirmMeeting')}
           </button>
@@ -1579,7 +1596,9 @@ export default function DealDetailClient({
   investorEmail = '',
   addresses = [],
   pipelineTasks = [],
+  previewMode = false,
 }: DealDetailClientProps) {
+  const previewTitle = previewMode ? 'Preview mode — read-only' : undefined;
   const t = useTranslations('portal.dealDetail');
   const tc = useTranslations('portal.dealCard');
   const tcd = useTranslations('portal.countdown');
@@ -1588,7 +1607,10 @@ export default function DealDetailClient({
   const tPt = useTranslations('portal.propertyTypes');
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { trackActivity } = useActivityTracker();
+  const { trackActivity: rawTrackActivity } = useActivityTracker();
+  const trackActivity: typeof rawTrackActivity = previewMode
+    ? (async () => {}) as typeof rawTrackActivity
+    : rawTrackActivity;
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
   const [highlightedTarget, setHighlightedTarget] = useState<'dealAnalysis' | 'returnsCalculator' | null>(null);
   const dealAnalysisRef = useRef<HTMLDivElement | null>(null);
@@ -1621,7 +1643,7 @@ export default function DealDetailClient({
 
   const [viewerUrl, setViewerUrl] = useState<string | null>(null);
   const [viewerName, setViewerName] = useState<string>('');
-  const [ndaSigned, setNdaSigned] = useState(initialNDA);
+  const [ndaSigned, setNdaSigned] = useState(initialNDA || previewMode);
   const [showNDAModal, setShowNDAModal] = useState(false);
 
   // Honor ?tab=... query param on mount (e.g. from in-app notifications).
@@ -1816,6 +1838,7 @@ export default function DealDetailClient({
   };
 
   const handleExpressInterest = async () => {
+    if (previewMode) return;
     setExpressingInterest(true);
     try {
       const supabase = createClient();
@@ -1923,8 +1946,9 @@ export default function DealDetailClient({
             ) : (
               <button
                 onClick={() => setShowExpressModal(true)}
-                disabled={checkingInterest}
-                className="px-3 md:px-5 py-2 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[11px] md:text-[12px] font-semibold rounded-lg transition-colors shadow-[0_2px_6px_rgba(188,156,69,0.25)] disabled:opacity-50 whitespace-nowrap"
+                disabled={checkingInterest || previewMode}
+                title={previewTitle}
+                className="px-3 md:px-5 py-2 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[11px] md:text-[12px] font-semibold rounded-lg transition-colors shadow-[0_2px_6px_rgba(188,156,69,0.25)] disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
               >
                 {t('expressInterest')}
               </button>
@@ -2724,6 +2748,7 @@ export default function DealDetailClient({
                 slots={lazySlots ?? availabilitySlots}
                 bookedTimes={lazyBookedTimes ?? bookedTimes}
                 onMeetingRequested={handleMeetingRequested}
+                previewMode={previewMode}
               />
             </div>
 
@@ -2852,7 +2877,7 @@ export default function DealDetailClient({
           </div>
 
           {/* Lock Deal */}
-          <CommitmentCard deal={deal} />
+          <CommitmentCard deal={deal} previewMode={previewMode} />
 
           {/* How We Source Deals */}
           <div className="bg-white rounded-xl p-8 rp-card-shadow border border-[#EEF0F4] mb-6">
@@ -2945,8 +2970,9 @@ export default function DealDetailClient({
                 </button>
                 <button
                   onClick={handleExpressInterest}
-                  disabled={expressingInterest}
-                  className="flex-1 py-2.5 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[13px] font-semibold rounded-lg transition-colors disabled:opacity-60 flex items-center justify-center gap-1.5"
+                  disabled={expressingInterest || previewMode}
+                  title={previewMode ? 'Preview mode — read-only' : undefined}
+                  className="flex-1 py-2.5 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[13px] font-semibold rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
                 >
                   {expressingInterest && <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />}
                   {expressingInterest ? t('processing') : tcom('confirm')}
@@ -2963,6 +2989,10 @@ export default function DealDetailClient({
           dealName={deal.name}
           onClose={() => setShowNDAModal(false)}
           onSign={async (type, signerInfo) => {
+            if (previewMode) {
+              setShowNDAModal(false);
+              return;
+            }
             const supabase = createClient();
             const { data: { user } } = await supabase.auth.getUser();
             await supabase.from('terminal_nda_signatures').insert({

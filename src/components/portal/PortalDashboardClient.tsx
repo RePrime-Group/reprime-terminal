@@ -23,6 +23,7 @@ export interface DealCardData {
   dscr: number;
   equity_required: number;
   seller_financing: boolean;
+  note_sale: boolean;
   special_terms: string | null;
   dd_deadline: string | null;
   status: string;
@@ -45,12 +46,18 @@ export interface DealCardData {
 interface PortalDashboardClientProps {
   deals: DealCardData[];
   locale: string;
+  /**
+   * When true the dashboard renders read-only (admin previewing /portal).
+   * Child cards route to /admin/deals/[id]/preview instead of /portal/deals/[id]
+   * and disable write toggles (watch, subscribe, commit).
+   */
+  previewMode?: boolean;
 }
 
 type SortKey = 'name' | 'purchase_price' | 'cap_rate' | 'irr' | 'coc' | 'equity_required' | 'noi';
 type SortDir = 'asc' | 'desc';
 
-export default function PortalDashboardClient({ deals, locale }: PortalDashboardClientProps) {
+export default function PortalDashboardClient({ deals, locale, previewMode = false }: PortalDashboardClientProps) {
   const t = useTranslations('portal');
   const tPt = useTranslations('portal.propertyTypes');
 
@@ -540,7 +547,7 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-5 md:gap-6">
                     {upcomingDeals.map((deal, index) => (
-                      <ComingSoonCard key={deal.id} deal={deal} index={index} />
+                      <ComingSoonCard key={deal.id} deal={deal} index={index} previewMode={previewMode} />
                     ))}
                   </div>
                 </div>
@@ -560,7 +567,7 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
                   <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-5 md:gap-7">
                     {activeDeals.map((deal, index) => (
                       <div key={deal.id} {...(index === 0 ? { 'data-tour': 'first-deal' } : {})}>
-                        <DealCard deal={deal} locale={locale} index={index} />
+                        <DealCard deal={deal} locale={locale} index={index} previewMode={previewMode} />
                       </div>
                     ))}
                   </div>
@@ -578,7 +585,7 @@ export default function PortalDashboardClient({ deals, locale }: PortalDashboard
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-5 md:gap-7">
                     {closedDeals.map((deal, index) => (
-                      <DealCard key={deal.id} deal={deal} locale={locale} index={index} />
+                      <DealCard key={deal.id} deal={deal} locale={locale} index={index} previewMode={previewMode} />
                     ))}
                   </div>
                 </div>

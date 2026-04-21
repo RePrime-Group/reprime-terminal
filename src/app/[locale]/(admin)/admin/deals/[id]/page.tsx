@@ -57,6 +57,7 @@ interface DealFormData {
   equity_required: string;
   loan_estimate: string;
   seller_financing: boolean;
+  note_sale: boolean;
   special_terms: string;
   assignment_fee: string;
   assignment_irr: string;
@@ -182,6 +183,7 @@ function dealToForm(deal: TerminalDeal): DealFormData {
     equity_required: deal.equity_required ?? '',
     loan_estimate: deal.loan_estimate ?? '',
     seller_financing: deal.seller_financing,
+    note_sale: deal.note_sale ?? false,
     special_terms: deal.special_terms,
     assignment_fee: deal.assignment_fee,
     assignment_irr: deal.assignment_irr ?? '',
@@ -453,6 +455,7 @@ export default function EditDealPage() {
         equity_required: form.equity_required || null,
         loan_estimate: form.loan_estimate || null,
         seller_financing: form.seller_financing,
+        note_sale: form.note_sale,
         special_terms: form.special_terms,
         assignment_fee: form.assignment_fee,
         assignment_irr: form.assignment_irr || null,
@@ -1144,7 +1147,18 @@ export default function EditDealPage() {
 
       {/* Special Terms */}
       <div className="bg-white rounded-2xl border border-rp-gray-200 p-6 mb-6">
-        <h2 className="text-[16px] font-semibold text-rp-navy mb-3">Special Terms</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-[16px] font-semibold text-rp-navy">Special Terms</h2>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.note_sale}
+              onChange={(e) => updateField('note_sale', e.target.checked)}
+              className="w-4 h-4 rounded border-rp-gray-300 text-rp-gold focus:ring-rp-gold"
+            />
+            <span className="text-[12px] font-medium text-rp-gray-500">Note sale</span>
+          </label>
+        </div>
         <textarea
           value={form.special_terms}
           onChange={(e) => updateField('special_terms', e.target.value)}

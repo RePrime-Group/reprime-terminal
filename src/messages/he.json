@@ -89,6 +89,7 @@
       "commitments": "התחייבויות",
       "teamRequests": "בקשות צוות",
       "activity": "פעילות",
+      "previewAsInvestor": "תצוגת משקיע",
       "settings": "הגדרות"
     },
     "dealList": {
@@ -561,10 +562,12 @@
       "units": "{count} יחידות",
       "classType": "סוג {type}",
       "sellerFinancing": "מימון מוכר",
+      "noteSale": "מכירת שטר",
       "specialTerms": "תנאים מיוחדים",
       "ddDeadline": "מועד אחרון DD",
       "assigned": "הוקצה",
       "expired": "פג תוקף",
+      "tba": "יוכרז בהמשך",
       "purchase": "רכישה",
       "alreadyCommitted": "כבר התחייבו",
       "group": "קבוצה",

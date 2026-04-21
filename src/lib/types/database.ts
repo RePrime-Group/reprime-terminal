@@ -19,8 +19,7 @@ export type TeamPermissionKey =
   | 'manage_watchlist'
   | 'commit_withdraw'
   | 'download_documents'
-  | 'schedule_meetings'
-  | 'message_team';
+  | 'schedule_meetings';
 
 export type TeamPermissions = Partial<Record<TeamPermissionKey, boolean>>;
 
@@ -90,6 +89,7 @@ export interface TerminalDeal {
   equity_required: string | null;
   loan_estimate: string | null;
   seller_financing: boolean;
+  note_sale: boolean;
   special_terms: string;
   assignment_fee: string;
   assignment_irr: string | null;

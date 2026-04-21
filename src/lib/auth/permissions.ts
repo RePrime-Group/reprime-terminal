@@ -6,7 +6,6 @@ export const PERMISSION_KEYS: TeamPermissionKey[] = [
   'commit_withdraw',
   'download_documents',
   'schedule_meetings',
-  'message_team',
 ];
 
 /**
@@ -20,7 +19,6 @@ export const DEFAULT_TEAM_PERMISSIONS: TeamPermissions = {
   commit_withdraw: false,
   download_documents: false,
   schedule_meetings: false,
-  message_team: false,
 };
 
 /**

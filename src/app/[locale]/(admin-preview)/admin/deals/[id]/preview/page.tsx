@@ -18,23 +18,11 @@ interface DealPreviewPageProps {
   params: Promise<{ locale: string; id: string }>;
 }
 
+// Admin role check happens in the (admin-preview) group layout.
 export default async function DealPreviewPage({ params }: DealPreviewPageProps) {
   const { locale, id } = await params;
   const t = await getTranslations('admin.preview');
   const supabase = await createClient();
-
-  // ---------- Verify admin access ----------
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect(`/${locale}/login`);
-
-  const { data: terminalUser } = await supabase
-    .from('terminal_users')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-  if (!terminalUser || terminalUser.role === 'investor') redirect(`/${locale}/portal`);
 
   // ---------- Fetch deal (all statuses visible to admin) ----------
   const { data: dealData } = await supabase
@@ -178,6 +166,8 @@ export default async function DealPreviewPage({ params }: DealPreviewPageProps) 
         availabilitySlots={availabilitySlots}
         bookedTimes={bookedTimes}
         locale={locale}
+        previewMode
+        hasSignedNDA
       />
     </div>
   );

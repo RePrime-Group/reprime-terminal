@@ -89,6 +89,7 @@
       "commitments": "Commitments",
       "teamRequests": "Team Requests",
       "activity": "Activity",
+      "previewAsInvestor": "Preview as Investor",
       "settings": "Settings"
     },
     "dealList": {
@@ -561,10 +562,12 @@
       "units": "{count} Units",
       "classType": "Class {type}",
       "sellerFinancing": "SELLER FINANCING",
+      "noteSale": "NOTE SALE",
       "specialTerms": "SPECIAL TERMS",
       "ddDeadline": "DD DEADLINE",
       "assigned": "ASSIGNED",
       "expired": "EXPIRED",
+      "tba": "TBA",
       "purchase": "Purchase",
       "alreadyCommitted": "already committed",
       "group": "group",

@@ -54,7 +54,6 @@ const PERMISSION_LABELS: Record<TeamPermissionKey, { label: string; description:
   commit_withdraw: { label: 'Commit to deals', description: 'Submit and withdraw commitments. Requires admin approval before enabling.' },
   download_documents: { label: 'Download documents', description: 'Download DD files and the Offering Memorandum.' },
   schedule_meetings: { label: 'Schedule meetings', description: 'Book meetings with the RePrime acquisitions team.' },
-  message_team: { label: 'Send messages', description: 'Post messages in deal rooms.' },
 };
 
 export default function TeamMembersSection({ locale }: { locale: string }) {
@@ -300,7 +299,6 @@ function InviteTeamMemberModal({
     commit_withdraw: false,
     download_documents: false,
     schedule_meetings: false,
-    message_team: false,
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);

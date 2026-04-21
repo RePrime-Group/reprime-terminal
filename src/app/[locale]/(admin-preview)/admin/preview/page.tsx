@@ -1,54 +1,66 @@
-import { redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { parseDealInputs, calculateDeal } from '@/lib/utils/deal-calculator';
 import PortalDashboardClient from '@/components/portal/PortalDashboardClient';
 
-export const metadata = { title: 'Active Opportunities — RePrime Terminal Beta' };
+// Sidebar-free layout is provided by (admin-preview)/admin/layout.tsx.
+// This mirrors the data fetch in /[locale]/(portal)/portal/page.tsx so the
+// admin sees the exact same deal grid an investor would, just read-only.
+export const metadata = { title: 'Investor Preview — RePrime Terminal Beta Admin' };
 
-/** Parse text column to number, stripping $, commas, whitespace */
 function num(val: string | number | null | undefined): number {
   if (val == null) return 0;
   if (typeof val === 'number') return val;
   return parseFloat(val.replace(/[$,%\s]/g, '')) || 0;
 }
 
-export default async function PortalDashboardPage({
+export default async function AdminDashboardPreviewPage({
   params,
 }: {
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  const t = await getTranslations('admin.preview');
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const admin = createAdminClient();
 
-  if (!user) redirect(`/${locale}/login`);
-
-  // Fetch deals — include new pre-pipeline statuses
   const { data: deals } = await supabase
     .from('terminal_deals')
     .select('id, name, city, state, property_type, purchase_price, noi, cap_rate, irr, coc, dscr, equity_required, seller_financing, note_sale, special_terms, dd_deadline, status, assigned_to, quarter_release, square_footage, units, class_type, psa_draft_start, loi_signed_at, teaser_description, ltv, interest_rate, amortization_years, loan_fee_points, io_period_months, mezz_percent, mezz_rate, mezz_term_months, seller_credit, assignment_fee, acq_fee, asset_mgmt_fee, gp_carry, pref_return, hold_period_years, exit_cap_rate, rent_growth')
     .in('status', ['coming_soon', 'loi_signed', 'published', 'assigned', 'closed'])
     .order('created_at', { ascending: false });
 
+  const Banner = (
+    <div className="sticky top-0 z-50 bg-[#0E3470] border-b border-[#BC9C45]/30 text-white px-6 py-3 flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        <span className="text-[10px] font-bold tracking-[1.5px] uppercase text-[#BC9C45]">
+          {t('adminPreview')}
+        </span>
+        <span className="text-[12px] text-white/70">
+          {t('viewingAsInvestor')}
+        </span>
+      </div>
+      <a
+        href={`/${locale}/admin/deals`}
+        className="px-4 py-1.5 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[12px] font-semibold rounded-lg transition-colors"
+      >
+        {t('backToAdmin')}
+      </a>
+    </div>
+  );
+
   if (!deals || deals.length === 0) {
     return (
-      <PortalDashboardClient deals={[]} locale={locale} />
+      <div className="min-h-dvh rp-page-texture overflow-x-hidden">
+        {Banner}
+        <PortalDashboardClient deals={[]} locale={locale} previewMode />
+      </div>
     );
   }
 
-  // Fetch user's subscriptions for Coming Soon deals
-  const { data: subscriptions } = await supabase
-    .from('terminal_deal_subscriptions')
-    .select('deal_id')
-    .eq('user_id', user.id);
-
-  const subscribedDealIds = new Set(subscriptions?.map((s) => s.deal_id) ?? []);
-
-  // Batch-fetch all enrichment data in parallel (4 queries total instead of 4×N)
   const dealIds = deals.map((d) => d.id);
   const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const admin = createAdminClient();
 
   const [
     { data: allPhotos },
@@ -79,7 +91,6 @@ export default async function PortalDashboardPage({
       .in('status', ['pending', 'wire_sent', 'confirmed']),
   ]);
 
-  // Build lookup maps from batch results
   const photoByDeal = new Map<string, string>();
   for (const photo of allPhotos ?? []) {
     if (!photoByDeal.has(photo.deal_id)) {
@@ -103,7 +114,6 @@ export default async function PortalDashboardPage({
     commitmentsByDeal.set(c.deal_id, (commitmentsByDeal.get(c.deal_id) ?? 0) + 1);
   }
 
-  // Enrich deals using lookup maps (no additional queries)
   const enrichedDeals = deals.map((deal) => {
     const storagePath = photoByDeal.get(deal.id);
     let photo_url: string | null = null;
@@ -114,7 +124,6 @@ export default async function PortalDashboardPage({
       photo_url = urlData?.publicUrl ?? null;
     }
 
-    // Compute metrics from deal inputs, fall back to stored DB values
     const inputs = parseDealInputs(deal as unknown as Record<string, unknown>);
     const computed = calculateDeal(inputs);
 
@@ -153,12 +162,11 @@ export default async function PortalDashboardPage({
       psa_draft_start: deal.psa_draft_start ?? null,
       loi_signed_at: deal.loi_signed_at ?? null,
       teaser_description: deal.teaser_description ?? null,
-      is_subscribed: subscribedDealIds.has(deal.id),
+      is_subscribed: false,
       commitment_count: commitmentsByDeal.get(deal.id) ?? 0,
     };
   });
 
-  // Sort: upcoming first, then active by dd_deadline, then closed
   const sorted = enrichedDeals.sort((a, b) => {
     const statusOrder: Record<string, number> = {
       coming_soon: 0, loi_signed: 1, published: 2, assigned: 3, closed: 4,
@@ -176,6 +184,9 @@ export default async function PortalDashboardPage({
   });
 
   return (
-    <PortalDashboardClient deals={sorted} locale={locale} />
+    <div className="min-h-dvh rp-page-texture overflow-x-hidden">
+      {Banner}
+      <PortalDashboardClient deals={sorted} locale={locale} previewMode />
+    </div>
   );
 }

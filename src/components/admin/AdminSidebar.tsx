@@ -171,6 +171,30 @@ export default function AdminSidebar({ user, locale }: AdminSidebarProps) {
 
       {/* Bottom section */}
       <div className="mt-auto px-4 pb-6 flex flex-col gap-4">
+        {/* Preview as Investor — standalone CTA, opens read-only investor view
+            in a new tab so the admin keeps their working context here. */}
+        <Link
+          href={`/${locale}/admin/preview`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border border-[#BC9C45]/40 bg-gradient-to-br from-[#FDF8ED] to-white text-[#BC9C45] hover:border-[#BC9C45] hover:from-[#FBF1DB] transition-colors"
+        >
+          <span className="flex items-center gap-2.5 min-w-0">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
+              <path d="M1 10s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <circle cx="10" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.5" />
+            </svg>
+            <span className="text-[12px] font-semibold tracking-[0.2px] truncate">
+              {t('sidebar.previewAsInvestor')}
+            </span>
+          </span>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-60 group-hover:opacity-100 flex-shrink-0">
+            <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+            <polyline points="15 3 21 3 21 9" />
+            <line x1="10" y1="14" x2="21" y2="3" />
+          </svg>
+        </Link>
+
         {/* User info */}
         <div className="flex items-center gap-3 px-2">
           <div className="w-8 h-8 rounded-full bg-rp-navy flex items-center justify-center">

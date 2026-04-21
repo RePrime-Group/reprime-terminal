@@ -10,9 +10,10 @@ import { friendlyFetchError, readApiError } from '@/lib/utils/friendly-error';
 interface ComingSoonCardProps {
   deal: DealCardData;
   index?: number;
+  previewMode?: boolean;
 }
 
-export default function ComingSoonCard({ deal, index }: ComingSoonCardProps) {
+export default function ComingSoonCard({ deal, index, previewMode = false }: ComingSoonCardProps) {
   const t = useTranslations('portal.dealCard');
   const tc = useTranslations('portal.countdown');
   const tp = useTranslations('portal');
@@ -40,6 +41,7 @@ export default function ComingSoonCard({ deal, index }: ComingSoonCardProps) {
   const handleSubscribe = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (previewMode) return;
     setLoading(true);
     setActionError(null);
     try {
@@ -197,12 +199,13 @@ export default function ComingSoonCard({ deal, index }: ComingSoonCardProps) {
           <div className="flex gap-2 mt-4">
             <button
               onClick={handleSubscribe}
-              disabled={loading}
-              className={`flex-1 py-2.5 min-h-[44px] rounded-lg text-[12px] font-semibold transition-all duration-200 ${
+              disabled={loading || previewMode}
+              title={previewMode ? 'Preview mode — read-only' : undefined}
+              className={`flex-1 py-2.5 min-h-[44px] rounded-lg text-[12px] font-semibold transition-all duration-200 disabled:cursor-not-allowed ${
                 subscribed
                   ? 'bg-[#BC9C45]/[0.08] border border-[#BC9C45]/20 text-[#BC9C45]'
                   : 'bg-transparent border border-[#BC9C45]/30 text-[#BC9C45] hover:bg-[#BC9C45]/5 hover:border-[#BC9C45]/50'
-              }`}
+              } ${previewMode ? 'opacity-50' : ''}`}
             >
               {subscribed ? `✓ ${tp('subscribed')}` : tp('notifyMe')}
             </button>
@@ -217,6 +220,7 @@ export default function ComingSoonCard({ deal, index }: ComingSoonCardProps) {
                   onClick={async (e) => {
                     e.preventDefault();
                     e.stopPropagation();
+                    if (previewMode) return;
                     if (committing) return;
                     setCommitting(true);
                     setActionError(null);
@@ -235,8 +239,9 @@ export default function ComingSoonCard({ deal, index }: ComingSoonCardProps) {
                       setCommitting(false);
                     }
                   }}
-                  disabled={committing}
-                  className="flex-1 py-2.5 min-h-[44px] rounded-lg text-[12px] font-bold bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] hover:opacity-90 transition-opacity disabled:opacity-60 flex items-center justify-center gap-1.5"
+                  disabled={committing || previewMode}
+                  title={previewMode ? 'Preview mode — read-only' : undefined}
+                  className="flex-1 py-2.5 min-h-[44px] rounded-lg text-[12px] font-bold bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
                 >
                   {committing && <div className="w-3 h-3 border-2 border-[#0E3470] border-t-transparent rounded-full animate-spin" />}
                   {committing ? t('committing') : t('commitEarly')}

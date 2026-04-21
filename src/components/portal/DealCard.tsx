@@ -12,9 +12,10 @@ interface DealCardProps {
   deal: DealCardData;
   locale: string;
   index?: number;
+  previewMode?: boolean;
 }
 
-export default function DealCard({ deal, locale, index }: DealCardProps) {
+export default function DealCard({ deal, locale, index, previewMode = false }: DealCardProps) {
   const t = useTranslations('portal.dealCard');
   const tc = useTranslations('portal.countdown');
   const tPt = useTranslations('portal.propertyTypes');
@@ -29,13 +30,19 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
   }, [watchError]);
   const countdown = useCountdown(deal.dd_deadline);
   const isAssigned = deal.status === 'assigned' || deal.status === 'closed';
-  const urgency = isAssigned ? 'assigned' : getUrgencyLevel(deal.dd_deadline);
+  const isTBA = !deal.dd_deadline;
+  const urgency = isAssigned
+    ? 'assigned'
+    : isTBA
+    ? 'tba'
+    : getUrgencyLevel(deal.dd_deadline);
 
   const urgencyMap: Record<string, { bg: string; color: string }> = {
     green:    { bg: 'bg-[#ECFDF5]', color: '#0B8A4D' },
     amber:    { bg: 'bg-[#FFFBEB]', color: '#D97706' },
     red:      { bg: 'bg-[#FEF2F2]', color: '#DC2626' },
     expired:  { bg: 'bg-[#EEF0F4]', color: '#9CA3AF' },
+    tba:      { bg: 'bg-[#EFF4FA]', color: '#0E3470' },
     assigned: { bg: 'bg-[#FDF8ED]', color: '#BC9C45' },
   };
 
@@ -62,7 +69,7 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
 
   return (
     <Link
-      href={`/portal/deals/${deal.id}`}
+      href={previewMode ? `/admin/deals/${deal.id}/preview` : `/portal/deals/${deal.id}`}
       locale={locale}
       className="group relative block opacity-0 animate-fade-up"
       style={{ animationDelay: `${(index || 0) * 120}ms` }}
@@ -130,9 +137,20 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
                 {t('sellerFinancing')}
               </span>
             )}
+            {deal.note_sale && (
+              <span
+                className="text-white text-[10px] font-semibold px-2.5 py-[5px] rounded-full"
+                style={{
+                  background: 'linear-gradient(135deg, #7C1D3F 0%, #A33B5C 50%, #7C1D3F 100%)',
+                }}
+              >
+                {t('noteSale')}
+              </span>
+            )}
           </div>
 
-          {/* Top-right watch icon */}
+          {/* Top-right watch icon — hidden in admin preview (read-only) */}
+          {!previewMode && (
           <div
             role="button"
             aria-label="Watch"
@@ -174,6 +192,7 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
               </div>
             )}
           </div>
+          )}
 
           {/* Quarter badge */}
           {deal.quarter_release && (
@@ -291,6 +310,13 @@ export default function DealCard({ deal, locale, index }: DealCardProps) {
                 style={{ color: urgencyTextColor }}
               >
                 &#9733; {t('assigned')}
+              </span>
+            ) : isTBA ? (
+              <span
+                className="text-[18px] font-extrabold"
+                style={{ color: urgencyTextColor }}
+              >
+                {t('tba')}
               </span>
             ) : countdown.isExpired ? (
               <span
