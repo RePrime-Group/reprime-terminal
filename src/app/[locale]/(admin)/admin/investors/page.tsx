@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import InvestorListClient from '@/components/admin/InvestorListClient';
 
-export const metadata = { title: 'Investors — RePrime Terminal Beta Admin' };
+export const metadata = { title: 'Users — RePrime Terminal Beta Admin' };
 
 const PAGE_SIZE = 10;
 
@@ -15,12 +15,31 @@ export default async function InvestorsPage({ params, searchParams }: InvestorsP
   const sp = await searchParams;
   const supabase = await createClient();
 
-  const tab = sp.tab === 'investors' ? 'investors' : 'invitations';
+  const tab = sp.tab === 'employees'
+    ? 'employees'
+    : sp.tab === 'investors'
+    ? 'investors'
+    : 'invitations';
   const investorPage = Math.max(1, parseInt(sp.ip || '1', 10) || 1);
+  const employeePage = Math.max(1, parseInt(sp.ep || '1', 10) || 1);
   const invitationPage = Math.max(1, parseInt(sp.vp || '1', 10) || 1);
   const inviteFilter = (['all', 'pending', 'accepted', 'expired'].includes(sp.status || '')
     ? sp.status!
     : 'all') as 'all' | 'pending' | 'accepted' | 'expired';
+
+  // Current user's role (to gate role-change UI)
+  const { data: { user: authUser } } = await supabase.auth.getUser();
+  let currentUserRole: 'owner' | 'employee' | 'investor' | null = null;
+  let currentUserId: string | null = null;
+  if (authUser) {
+    currentUserId = authUser.id;
+    const { data: me } = await supabase
+      .from('terminal_users')
+      .select('role')
+      .eq('id', authUser.id)
+      .single();
+    currentUserRole = (me?.role ?? null) as typeof currentUserRole;
+  }
 
   // ── Investors (server-paginated) ──
   const { count: investorTotalCount } = await supabase
@@ -81,6 +100,34 @@ export default async function InvestorsPage({ params, searchParams }: InvestorsP
     })
   );
 
+  // ── Employees (server-paginated) ──
+  const { count: employeeTotalCount } = await supabase
+    .from('terminal_users')
+    .select('*', { count: 'exact', head: true })
+    .in('role', ['employee', 'owner']);
+
+  const employeeTotal = employeeTotalCount ?? 0;
+  const employeeFrom = (employeePage - 1) * PAGE_SIZE;
+  const employeeTo = employeeFrom + PAGE_SIZE - 1;
+
+  const { data: employees } = await supabase
+    .from('terminal_users')
+    .select('id, full_name, email, role, company_name, created_at, last_active_at, is_active')
+    .in('role', ['employee', 'owner'])
+    .order('created_at', { ascending: false })
+    .range(employeeFrom, employeeTo);
+
+  const employeeRows = (employees ?? []).map((emp) => ({
+    id: emp.id,
+    full_name: emp.full_name,
+    email: emp.email,
+    role: emp.role as 'owner' | 'employee',
+    company_name: emp.company_name,
+    created_at: emp.created_at,
+    last_active_at: emp.last_active_at,
+    is_active: emp.is_active !== false,
+  }));
+
   // ── Invitations: status counts (for dropdown) ──
   const now = new Date().toISOString();
 
@@ -124,6 +171,9 @@ export default async function InvestorsPage({ params, searchParams }: InvestorsP
       investors={investorRows}
       investorTotal={investorTotal}
       investorPage={investorPage}
+      employees={employeeRows}
+      employeeTotal={employeeTotal}
+      employeePage={employeePage}
       invitations={invitations ?? []}
       invitationTotal={filteredTotal}
       invitationPage={invitationPage}
@@ -132,6 +182,8 @@ export default async function InvestorsPage({ params, searchParams }: InvestorsP
       locale={locale}
       tab={tab}
       pageSize={PAGE_SIZE}
+      currentUserRole={currentUserRole}
+      currentUserId={currentUserId}
     />
   );
 }

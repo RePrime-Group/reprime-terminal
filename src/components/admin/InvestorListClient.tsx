@@ -21,6 +21,17 @@ interface InvestorRow {
   parent_inactive: boolean;
 }
 
+interface EmployeeRow {
+  id: string;
+  full_name: string;
+  email: string;
+  role: 'owner' | 'employee';
+  company_name: string | null;
+  created_at: string;
+  last_active_at: string | null;
+  is_active: boolean;
+}
+
 interface InvitationRow {
   id: string;
   email: string;
@@ -31,13 +42,17 @@ interface InvitationRow {
   created_at: string;
 }
 
-type Tab = 'investors' | 'invitations';
+type Tab = 'investors' | 'employees' | 'invitations';
 type InviteFilter = 'all' | 'pending' | 'accepted' | 'expired';
+type Role = 'owner' | 'employee' | 'investor';
 
 interface InvestorListClientProps {
   investors: InvestorRow[];
   investorTotal: number;
   investorPage: number;
+  employees: EmployeeRow[];
+  employeeTotal: number;
+  employeePage: number;
   invitations: InvitationRow[];
   invitationTotal: number;
   invitationPage: number;
@@ -46,6 +61,8 @@ interface InvestorListClientProps {
   locale: string;
   tab: Tab;
   pageSize: number;
+  currentUserRole: Role | null;
+  currentUserId: string | null;
 }
 
 function formatDate(dateStr: string): string {
@@ -119,6 +136,9 @@ export default function InvestorListClient({
   investors,
   investorTotal,
   investorPage,
+  employees,
+  employeeTotal,
+  employeePage,
   invitations,
   invitationTotal,
   invitationPage,
@@ -127,6 +147,8 @@ export default function InvestorListClient({
   locale,
   tab,
   pageSize,
+  currentUserRole,
+  currentUserId,
 }: InvestorListClientProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -145,6 +167,7 @@ export default function InvestorListClient({
   };
 
   const investorTotalPages = Math.ceil(investorTotal / pageSize);
+  const employeeTotalPages = Math.ceil(employeeTotal / pageSize);
   const invitationTotalPages = Math.ceil(invitationTotal / pageSize);
 
   const updateParams = useCallback(
@@ -168,6 +191,10 @@ export default function InvestorListClient({
 
   const handleInvestorPage = (p: number) => {
     updateParams({ ip: String(p) });
+  };
+
+  const handleEmployeePage = (p: number) => {
+    updateParams({ ep: String(p) });
   };
 
   const handleInvitationPage = (p: number) => {
@@ -207,6 +234,17 @@ export default function InvestorListClient({
         >
           {t('activeInvestors')}
           <span className="ml-1.5 text-xs text-rp-gray-400">{investorTotal}</span>
+        </button>
+        <button
+          onClick={() => handleTabChange('employees')}
+          className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+            tab === 'employees'
+              ? 'bg-white text-rp-navy shadow-sm'
+              : 'text-rp-gray-500 hover:text-rp-gray-700'
+          }`}
+        >
+          {t('employees')}
+          <span className="ml-1.5 text-xs text-rp-gray-400">{employeeTotal}</span>
         </button>
         <button
           onClick={() => handleTabChange('invitations')}
@@ -289,7 +327,17 @@ export default function InvestorListClient({
                     <td className="px-5 py-3.5 text-sm text-rp-gray-600">{formatRelativeTime(investor.last_active_at, t)}</td>
                     <td className="px-5 py-3.5 text-sm text-rp-gray-600">{investor.deals_viewed}</td>
                     <td className="px-5 py-3.5 text-right text-sm" onClick={(e) => e.stopPropagation()}>
-                      <SetActiveButton investorId={investor.id} isActive={investor.is_active} onDone={() => router.refresh()} />
+                      <div className="flex items-center justify-end gap-3">
+                        {currentUserRole === 'owner' && investor.id !== currentUserId && (
+                          <ChangeRoleButton
+                            userId={investor.id}
+                            currentRole="investor"
+                            labels={{ changeRole: t('changeRole'), confirm: (role: string) => t('confirmChangeRole', { role }), failed: t('roleChangeFailed'), owner: t('owner'), employee: t('employee'), investor: t('investor') }}
+                            onDone={() => router.refresh()}
+                          />
+                        )}
+                        <SetActiveButton investorId={investor.id} isActive={investor.is_active} onDone={() => router.refresh()} />
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -300,7 +348,84 @@ export default function InvestorListClient({
         )
       )}
 
-      {/* Active tab action button component defined below */}
+      {/* Employees Tab */}
+      {tab === 'employees' && (
+        employeeTotal === 0 ? (
+          <div className="bg-white rounded-2xl border border-rp-gray-200 p-12 text-center">
+            <div className="mx-auto w-12 h-12 rounded-full bg-rp-gray-100 flex items-center justify-center mb-4">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="9" cy="7" r="3.5" stroke="#94A3B8" strokeWidth="1.5" />
+                <path d="M2 19c0-3.87 3.13-7 7-7s7 3.13 7 7" stroke="#94A3B8" strokeWidth="1.5" strokeLinecap="round" />
+                <path d="M19 8v6M22 11h-6" stroke="#94A3B8" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </div>
+            <p className="text-rp-gray-500 text-sm mb-1">{t('noEmployeesYet')}</p>
+            <p className="text-rp-gray-400 text-xs">{t('inviteFirstEmployee')}</p>
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl border border-rp-gray-200 overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-rp-gray-200">
+                  <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('name')}</th>
+                  <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('email')}</th>
+                  <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('role')}</th>
+                  <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('joined')}</th>
+                  <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('lastActive')}</th>
+                  <th className="text-right text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{tc('actions')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {employees.map((emp) => (
+                  <tr
+                    key={emp.id}
+                    className={`border-b border-rp-gray-100 last:border-b-0 transition-colors hover:bg-rp-gray-50 ${!emp.is_active ? 'bg-rp-gray-50' : ''}`}
+                  >
+                    <td className="px-5 py-3.5 text-sm font-medium text-rp-navy">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className={!emp.is_active ? 'line-through text-rp-gray-400' : ''}>{emp.full_name}</span>
+                        {!emp.is_active && (
+                          <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-rp-gray-500 bg-rp-gray-100 rounded px-1.5 py-0.5">
+                            Revoked
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-5 py-3.5 text-sm text-rp-gray-600">{emp.email}</td>
+                    <td className="px-5 py-3.5 text-sm">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold uppercase tracking-wider ${
+                        emp.role === 'owner'
+                          ? 'bg-rp-gold/10 text-rp-gold border border-rp-gold/30'
+                          : 'bg-rp-navy/10 text-rp-navy border border-rp-navy/20'
+                      }`}>
+                        {emp.role === 'owner' ? t('owner') : t('employee')}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5 text-sm text-rp-gray-600">{formatDate(emp.created_at)}</td>
+                    <td className="px-5 py-3.5 text-sm text-rp-gray-600">{formatRelativeTime(emp.last_active_at, t)}</td>
+                    <td className="px-5 py-3.5 text-right text-sm">
+                      <div className="flex items-center justify-end gap-3">
+                        {currentUserRole === 'owner' && emp.id !== currentUserId && (
+                          <ChangeRoleButton
+                            userId={emp.id}
+                            currentRole={emp.role}
+                            labels={{ changeRole: t('changeRole'), confirm: (role: string) => t('confirmChangeRole', { role }), failed: t('roleChangeFailed'), owner: t('owner'), employee: t('employee'), investor: t('investor') }}
+                            onDone={() => router.refresh()}
+                          />
+                        )}
+                        {emp.id !== currentUserId && (
+                          <SetActiveButton investorId={emp.id} isActive={emp.is_active} onDone={() => router.refresh()} />
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <Pagination page={employeePage} totalPages={employeeTotalPages} onPageChange={handleEmployeePage} labels={{ page: tc('page'), of: tc('of'), previous: tc('previous'), next: tc('next') }} />
+          </div>
+        )
+      )}
 
       {/* Invitations Tab */}
       {tab === 'invitations' && (
@@ -381,6 +506,80 @@ export default function InvestorListClient({
               <Pagination page={invitationPage} totalPages={invitationTotalPages} onPageChange={handleInvitationPage} labels={{ page: tc('page'), of: tc('of'), previous: tc('previous'), next: tc('next') }} />
             </div>
           )}
+        </>
+      )}
+    </div>
+  );
+}
+
+function ChangeRoleButton({
+  userId,
+  currentRole,
+  labels,
+  onDone,
+}: {
+  userId: string;
+  currentRole: Role;
+  labels: { changeRole: string; confirm: (role: string) => string; failed: string; owner: string; employee: string; investor: string };
+  onDone: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const roleLabel = (r: Role) => r === 'owner' ? labels.owner : r === 'employee' ? labels.employee : labels.investor;
+
+  async function setRole(nextRole: Role) {
+    setOpen(false);
+    if (nextRole === currentRole) return;
+    if (!confirm(labels.confirm(roleLabel(nextRole)))) return;
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/set-role`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: nextRole }),
+      });
+      if (!res.ok) {
+        alert(labels.failed);
+      } else {
+        onDone();
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="relative inline-block">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        disabled={busy}
+        className="text-xs font-semibold text-rp-navy hover:text-rp-navy/80 disabled:opacity-50 transition-colors"
+      >
+        {busy ? '…' : labels.changeRole}
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 z-20 mt-1 w-36 rounded-lg border border-rp-gray-200 bg-white shadow-lg py-1">
+            {(['owner', 'employee', 'investor'] as Role[]).map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setRole(r)}
+                disabled={r === currentRole}
+                className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${
+                  r === currentRole
+                    ? 'text-rp-gray-400 bg-rp-gray-50 cursor-default'
+                    : 'text-rp-gray-700 hover:bg-rp-gray-50'
+                }`}
+              >
+                {roleLabel(r)}
+                {r === currentRole && <span className="ml-1 text-rp-gray-400">(current)</span>}
+              </button>
+            ))}
+          </div>
         </>
       )}
     </div>

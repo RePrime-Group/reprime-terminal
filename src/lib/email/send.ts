@@ -12,6 +12,7 @@ import DocumentUploadEmail from './templates/document-upload-notification';
 import DealActivityEmail from './templates/deal-activity-notification';
 import TeamInviteEmail from './templates/team-invite-email';
 import TeamRequestAdminEmail from './templates/team-request-admin-email';
+import PasswordResetEmail from './templates/password-reset-email';
 import type { TeamPermissionKey } from '@/lib/types/database';
 
 const from = `${FROM_NAME} <${FROM_EMAIL}>`;
@@ -29,6 +30,19 @@ export async function sendInviteEmail(
     to: recipientEmail,
     subject: 'You\'ve been invited to RePrime Terminal Beta',
     react: InviteEmail({ inviteUrl, recipientEmail, inviteCode, expiresAt }),
+  });
+}
+
+export async function sendPasswordResetEmail(
+  recipientEmail: string,
+  resetUrl: string,
+  expiresInMinutes?: number,
+) {
+  return getResend().emails.send({
+    from,
+    to: recipientEmail,
+    subject: 'Reset your RePrime Terminal password',
+    react: PasswordResetEmail({ resetUrl, recipientEmail, expiresInMinutes }),
   });
 }
 

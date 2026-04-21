@@ -26,7 +26,7 @@ const navItems = [
     ),
   },
   {
-    labelKey: 'sidebar.investors' as const,
+    labelKey: 'sidebar.users' as const,
     href: '/admin/investors',
     ownerOnly: true,
     icon: (

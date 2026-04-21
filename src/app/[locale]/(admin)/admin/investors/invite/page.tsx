@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 
@@ -18,7 +17,6 @@ export default function InviteInvestorPage() {
   const params = useParams<{ locale: string }>();
   const locale = params.locale;
   const router = useRouter();
-  const supabase = createClient();
   const t = useTranslations('admin.investors');
   const tc = useTranslations('common');
   const ta = useTranslations('auth');
@@ -41,34 +39,22 @@ export default function InviteInvestorPage() {
     setLoading(true);
     setError(null);
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const createRes = await fetch('/api/admin/invites', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email.trim().toLowerCase(), role }),
+    });
 
-    if (!user) {
-      setError(ta('mustBeLoggedIn'));
+    const createBody = await createRes.json().catch(() => ({}));
+
+    if (!createRes.ok) {
+      setError(createBody?.error || ta('unexpectedError'));
       setLoading(false);
       return;
     }
 
-    const { data, error: insertError } = await supabase
-      .from('terminal_invite_tokens')
-      .insert({
-        email,
-        role,
-        invited_by: user.id,
-      })
-      .select('token, expires_at')
-      .single();
-
-    if (insertError) {
-      setError(insertError.message);
-      setLoading(false);
-      return;
-    }
-
-    const token = data.token;
-    const expiresAt = data.expires_at;
+    const token = createBody.token as string;
+    const expiresAt = createBody.expires_at as string;
     const inviteUrl = `${window.location.origin}/${locale}/invite/${token}`;
 
     setResult({ token, expiresAt });
