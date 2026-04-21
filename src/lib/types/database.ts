@@ -107,6 +107,10 @@ export interface TerminalDeal {
   deposit_amount: string | null;
   deposit_held_by: string | null;
   om_storage_path: string | null;
+  loi_signed_storage_path: string | null;
+  psa_storage_path: string | null;
+  full_report_storage_path: string | null;
+  costar_report_storage_path: string | null;
   // Senior Debt
   ltv: string | null;
   interest_rate: string | null;

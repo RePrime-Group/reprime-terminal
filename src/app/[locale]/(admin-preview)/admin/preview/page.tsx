@@ -28,7 +28,7 @@ export default async function AdminDashboardPreviewPage({
   const { data: deals } = await supabase
     .from('terminal_deals')
     .select('id, name, city, state, property_type, purchase_price, noi, cap_rate, irr, coc, dscr, equity_required, seller_financing, note_sale, special_terms, dd_deadline, status, assigned_to, quarter_release, square_footage, units, class_type, psa_draft_start, loi_signed_at, teaser_description, ltv, interest_rate, amortization_years, loan_fee_points, io_period_months, mezz_percent, mezz_rate, mezz_term_months, seller_credit, assignment_fee, acq_fee, asset_mgmt_fee, gp_carry, pref_return, hold_period_years, exit_cap_rate, rent_growth')
-    .in('status', ['coming_soon', 'loi_signed', 'published', 'assigned', 'closed'])
+    .in('status', ['draft', 'coming_soon', 'loi_signed', 'published', 'assigned', 'closed'])
     .order('created_at', { ascending: false });
 
   const Banner = (
@@ -169,7 +169,7 @@ export default async function AdminDashboardPreviewPage({
 
   const sorted = enrichedDeals.sort((a, b) => {
     const statusOrder: Record<string, number> = {
-      coming_soon: 0, loi_signed: 1, published: 2, assigned: 3, closed: 4,
+      draft: -1, coming_soon: 0, loi_signed: 1, published: 2, assigned: 3, closed: 4,
     };
     const orderA = statusOrder[a.status] ?? 2;
     const orderB = statusOrder[b.status] ?? 2;

@@ -7,7 +7,10 @@ import MarketIntelSidebar from '@/components/portal/MarketIntelSidebar';
 import { formatPrice, formatPriceCompact } from '@/lib/utils/format';
 import { useTranslations } from 'next-intl';
 
-const PAGE_SIZE = 6;
+// Initial page size used until the grid's column count is measured from the DOM
+// (which happens immediately after mount via ResizeObserver).
+const INITIAL_COLUMNS = 4;
+const INITIAL_PAGE_SIZE = INITIAL_COLUMNS * 2;
 
 export interface DealCardData {
   id: string;
@@ -152,18 +155,60 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
     return result;
   }, [deals, searchQuery, selectedTypes, sellerFinancingOnly, priceRange, priceBounds, irrMin, cocMin, sortKey, sortDir]);
 
+  // ── Dynamic page size: two rows worth, where rows-per-row is measured from the grid ──
+  const [columnsPerRow, setColumnsPerRow] = useState<number>(INITIAL_COLUMNS);
+  const pageSize = Math.max(1, columnsPerRow * 2);
+
+  // Observe the first deal grid that mounts and derive columns from the first row.
+  const observedGridRef = useRef<HTMLDivElement | null>(null);
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
+
+  const measureColumns = useCallback((el: HTMLElement) => {
+    const children = Array.from(el.children) as HTMLElement[];
+    if (children.length < 1) return;
+    const firstTop = children[0].offsetTop;
+    const count = children.filter((c) => Math.abs(c.offsetTop - firstTop) < 2).length;
+    if (count > 0) {
+      setColumnsPerRow((prev) => (prev !== count ? count : prev));
+    }
+  }, []);
+
+  const gridRefCallback = useCallback((el: HTMLDivElement | null) => {
+    if (!el) return;
+    // Keep observing the first grid that mounted as long as it's still connected.
+    if (observedGridRef.current && observedGridRef.current.isConnected && observedGridRef.current !== el) return;
+    resizeObserverRef.current?.disconnect();
+    observedGridRef.current = el;
+    measureColumns(el);
+    resizeObserverRef.current = new ResizeObserver(() => measureColumns(el));
+    resizeObserverRef.current.observe(el);
+  }, [measureColumns]);
+
+  useEffect(() => () => {
+    resizeObserverRef.current?.disconnect();
+    resizeObserverRef.current = null;
+    observedGridRef.current = null;
+  }, []);
+
   // ── Infinite scroll ──
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [visibleCount, setVisibleCount] = useState(INITIAL_PAGE_SIZE);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   // Reset visible count when filters change
   useEffect(() => {
-    setVisibleCount(PAGE_SIZE);
+    setVisibleCount(pageSize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, selectedTypes, sellerFinancingOnly, priceRange, irrMin, cocMin, sortKey, sortDir]);
 
+  // When the measured column count changes, snap visibleCount up to the nearest row
+  // boundary so the last row is always filled (no orphans). Never shrinks already-loaded cards.
+  useEffect(() => {
+    setVisibleCount((prev) => Math.max(pageSize, Math.ceil(prev / pageSize) * pageSize));
+  }, [pageSize]);
+
   const loadMore = useCallback(() => {
-    setVisibleCount((c) => Math.min(c + PAGE_SIZE, filteredDeals.length));
-  }, [filteredDeals.length]);
+    setVisibleCount((c) => Math.min(c + pageSize, filteredDeals.length));
+  }, [pageSize, filteredDeals.length]);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -179,6 +224,10 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
   const visibleDeals = filteredDeals.slice(0, visibleCount);
   const hasMore = visibleCount < filteredDeals.length;
 
+  // Drafts are only fetched on /admin/preview (investor queries filter them out),
+  // but we still guard rendering with previewMode so any stray draft in investor
+  // data can never leak into the public dashboard.
+  const draftDeals = previewMode ? visibleDeals.filter((d) => d.status === 'draft') : [];
   const upcomingDeals = visibleDeals.filter((d) => d.status === 'coming_soon' || d.status === 'loi_signed');
   const activeDeals = visibleDeals.filter((d) => d.status === 'published');
   const closedDeals = visibleDeals.filter((d) => d.status === 'assigned' || d.status === 'closed');
@@ -536,6 +585,26 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
         ) : (
           <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
             <div className="flex-1 min-w-0 space-y-8 md:space-y-10">
+              {/* ── Drafts Section (admin preview only) ── */}
+              {previewMode && draftDeals.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-3 mb-5">
+                    <h2 className="font-[family-name:var(--font-playfair)] text-[20px] font-semibold text-[#0E3470] tracking-[-0.01em]">
+                      Drafts
+                    </h2>
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-[1.5px] bg-[#0E3470]/10 text-[#0E3470]">
+                      Admin only
+                    </span>
+                    <div className="flex-1 h-px bg-gradient-to-r from-[#BC9C45]/30 to-transparent" />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-5 md:gap-7">
+                    {draftDeals.map((deal, index) => (
+                      <DealCard key={deal.id} deal={deal} locale={locale} index={index} previewMode={previewMode} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* ── Upcoming Opportunities Section ── */}
               {upcomingDeals.length > 0 && (
                 <div>
@@ -545,7 +614,7 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
                     </h2>
                     <div className="flex-1 h-px bg-gradient-to-r from-[#BC9C45]/30 to-transparent" />
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-5 md:gap-6">
+                  <div ref={gridRefCallback} className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-5 md:gap-6">
                     {upcomingDeals.map((deal, index) => (
                       <ComingSoonCard key={deal.id} deal={deal} index={index} previewMode={previewMode} />
                     ))}
@@ -564,7 +633,7 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
                       <div className="flex-1 h-px bg-gradient-to-r from-[#BC9C45]/30 to-transparent" />
                     </div>
                   )}
-                  <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-5 md:gap-7">
+                  <div ref={gridRefCallback} className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-5 md:gap-7">
                     {activeDeals.map((deal, index) => (
                       <div key={deal.id} {...(index === 0 ? { 'data-tour': 'first-deal' } : {})}>
                         <DealCard deal={deal} locale={locale} index={index} previewMode={previewMode} />
@@ -583,7 +652,7 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
                     </h2>
                     <div className="flex-1 h-px bg-gradient-to-r from-[#9CA3AF]/30 to-transparent" />
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-5 md:gap-7">
+                  <div ref={gridRefCallback} className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-5 md:gap-7">
                     {closedDeals.map((deal, index) => (
                       <DealCard key={deal.id} deal={deal} locale={locale} index={index} previewMode={previewMode} />
                     ))}

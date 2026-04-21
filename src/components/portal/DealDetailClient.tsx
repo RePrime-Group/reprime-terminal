@@ -1953,48 +1953,19 @@ export default function DealDetailClient({
                 {t('expressInterest')}
               </button>
             )}
-            {/* OM buttons — hidden on mobile; accessible from tab content */}
-            {deal.om_storage_path ? (
-              <>
-                <button
-                  onClick={() => handleViewDocument(`/api/deals/${deal.id}/om?view=true`, `${deal.name} — ${t('offeringMemorandum')}`)}
-                  aria-label={t('viewOm')}
-                  className="inline-flex px-3 md:px-4 py-2 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[11px] md:text-[12px] font-semibold rounded-lg transition-colors items-center gap-1.5 shadow-[0_2px_6px_rgba(188,156,69,0.25)] whitespace-nowrap"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-                    <polyline points="14 2 14 8 20 8"/>
-                    <line x1="9" y1="13" x2="15" y2="13"/>
-                    <line x1="9" y1="17" x2="13" y2="17"/>
-                  </svg>
-                  <span className="md:hidden">OM</span>
-                  <span className="hidden md:inline">{t('viewOm')}</span>
-                </button>
-                <a
-                  href={`/api/deals/${deal.id}/om`}
-                  className="hidden md:inline-flex px-4 py-2 border border-[#EEF0F4] hover:border-[#BC9C45] text-[#6B7280] hover:text-[#0E3470] text-[12px] font-semibold rounded-lg transition-colors items-center gap-1.5"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                    <polyline points="7 10 12 15 17 10"/>
-                    <line x1="12" y1="15" x2="12" y2="3"/>
-                  </svg>
-                  {tcom('download')}
-                </a>
-              </>
-            ) : (
-              <span
-                aria-label={t('omPending')}
-                title={t('omPending')}
-                className="inline-flex px-3 md:px-4 py-2 border border-[#EEF0F4] text-[#9CA3AF] text-[11px] md:text-[12px] font-medium rounded-lg items-center gap-1.5 cursor-default whitespace-nowrap"
+            {/* OM download — View OM now lives in the Transaction Documents card below */}
+            {deal.om_storage_path && (
+              <a
+                href={`/api/deals/${deal.id}/om`}
+                className="hidden md:inline-flex px-4 py-2 border border-[#EEF0F4] hover:border-[#BC9C45] text-[#6B7280] hover:text-[#0E3470] text-[12px] font-semibold rounded-lg transition-colors items-center gap-1.5"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-                  <polyline points="14 2 14 8 20 8"/>
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
                 </svg>
-                <span className="md:hidden">OM</span>
-                <span className="hidden md:inline">{t('omPending')}</span>
-              </span>
+                {tcom('download')}
+              </a>
             )}
             <div className="hidden md:block h-4 w-px bg-[#EEF0F4]" />
             <span className="hidden md:inline text-[9px] font-semibold tracking-[2px] uppercase text-[#9CA3AF]">
@@ -2094,10 +2065,10 @@ export default function DealDetailClient({
                   {deal.acquisition_thesis}
                 </p>
                 {/* Footer buttons */}
-                <div className="flex items-center gap-3 mt-5">
-                  {deal.om_storage_path ? (
+                <div className="flex items-center gap-3 mt-5 flex-wrap">
+                  {deal.full_report_storage_path ? (
                     <button
-                      onClick={() => handleViewDocument(`/api/deals/${deal.id}/om?view=true`, `${deal.name} — ${t('fullReport')}`)}
+                      onClick={() => handleViewDocument(`/api/deals/${deal.id}/document/full-report?view=true`, `${deal.name} — ${t('fullReport')}`)}
                       className="px-4 py-2 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[11px] font-semibold rounded-lg transition-colors"
                     >
                       {t('fullReport')}
@@ -2105,6 +2076,18 @@ export default function DealDetailClient({
                   ) : (
                     <span className="px-4 py-2 bg-[#F7F8FA] text-[#9CA3AF] text-[11px] font-semibold rounded-lg cursor-default">
                       {t('fullReportPending')}
+                    </span>
+                  )}
+                  {deal.costar_report_storage_path ? (
+                    <button
+                      onClick={() => handleViewDocument(`/api/deals/${deal.id}/document/costar-report?view=true`, `${deal.name} — ${t('costarReport')}`)}
+                      className="px-4 py-2 bg-[#0E3470] hover:bg-[#0A2656] text-white text-[11px] font-semibold rounded-lg transition-colors"
+                    >
+                      {t('costarReport')}
+                    </button>
+                  ) : (
+                    <span className="px-4 py-2 bg-[#F7F8FA] text-[#9CA3AF] text-[11px] font-semibold rounded-lg cursor-default">
+                      {t('costarReportPending')}
                     </span>
                   )}
                   <button
@@ -2122,6 +2105,66 @@ export default function DealDetailClient({
                 </div>
               </div>
             )}
+
+            {/* ------------------------------------------------------------------ */}
+            {/* 5D. TRANSACTION DOCUMENTS (OM + Signed LOI + PSA)                  */}
+            {/* ------------------------------------------------------------------ */}
+            <div className="bg-white rounded-xl p-6 border border-[#EEF0F4] rp-card-shadow">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-9 h-9 rounded-lg bg-[#0E3470]/10 flex items-center justify-center">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0E3470" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-[12px] font-[700] uppercase tracking-[2px] text-[#0E3470]">
+                    {t('transactionDocuments')}
+                  </div>
+                  <div className="text-[9px] text-[#9CA3AF]">
+                    {t('transactionDocumentsSubtitle')}
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {deal.om_storage_path ? (
+                  <button
+                    onClick={() => handleViewDocument(`/api/deals/${deal.id}/om?view=true`, `${deal.name} — ${t('offeringMemorandum')}`)}
+                    className="px-3 py-2.5 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[11px] font-semibold rounded-lg transition-colors text-center"
+                  >
+                    {t('viewOm')}
+                  </button>
+                ) : (
+                  <span className="px-3 py-2.5 bg-[#F7F8FA] text-[#9CA3AF] text-[11px] font-semibold rounded-lg cursor-default text-center">
+                    {t('omPending')}
+                  </span>
+                )}
+                {deal.loi_signed_storage_path ? (
+                  <button
+                    onClick={() => handleViewDocument(`/api/deals/${deal.id}/document/loi?view=true`, `${deal.name} — ${t('signedLoi')}`)}
+                    className="px-3 py-2.5 border border-[#EEF0F4] hover:border-[#BC9C45] text-[#0E3470] text-[11px] font-semibold rounded-lg transition-colors text-center"
+                  >
+                    {t('viewSignedLoi')}
+                  </button>
+                ) : (
+                  <span className="px-3 py-2.5 bg-[#F7F8FA] text-[#9CA3AF] text-[11px] font-semibold rounded-lg cursor-default text-center">
+                    {t('signedLoiPending')}
+                  </span>
+                )}
+                {deal.psa_storage_path ? (
+                  <button
+                    onClick={() => handleViewDocument(`/api/deals/${deal.id}/document/psa?view=true`, `${deal.name} — ${t('psa')}`)}
+                    className="px-3 py-2.5 border border-[#EEF0F4] hover:border-[#BC9C45] text-[#0E3470] text-[11px] font-semibold rounded-lg transition-colors text-center"
+                  >
+                    {t('viewPsa')}
+                  </button>
+                ) : (
+                  <span className="px-3 py-2.5 bg-[#F7F8FA] text-[#9CA3AF] text-[11px] font-semibold rounded-lg cursor-default text-center">
+                    {t('psaPending')}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 

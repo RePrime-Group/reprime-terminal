@@ -259,6 +259,29 @@ export default function EditDealPage() {
   const [omUploading, setOmUploading] = useState(false);
   const omInputRef = useRef<HTMLInputElement>(null);
 
+  // Additional deal-level documents (signed LOI, PSA, full report, CoStar)
+  type DocKey = 'om' | 'loi' | 'psa' | 'full-report' | 'costar-report';
+  const DOC_CONFIG: Record<DocKey, {
+    label: string;
+    column: 'om_storage_path' | 'loi_signed_storage_path' | 'psa_storage_path' | 'full_report_storage_path' | 'costar_report_storage_path';
+    pathSegment: string;
+    tabLabel: string;
+  }> = {
+    'om': { label: 'Offering Memorandum (OM)', column: 'om_storage_path', pathSegment: 'om', tabLabel: 'OM' },
+    'loi': { label: 'Signed LOI', column: 'loi_signed_storage_path', pathSegment: 'loi', tabLabel: 'Signed LOI' },
+    'psa': { label: 'Purchase and Sale Agreement (PSA)', column: 'psa_storage_path', pathSegment: 'psa', tabLabel: 'PSA' },
+    'full-report': { label: 'Full Report', column: 'full_report_storage_path', pathSegment: 'full-report', tabLabel: 'Full Report' },
+    'costar-report': { label: 'CoStar Report', column: 'costar_report_storage_path', pathSegment: 'costar', tabLabel: 'CoStar Report' },
+  };
+  const [docPaths, setDocPaths] = useState<Record<Exclude<DocKey, 'om'>, string | null>>({
+    'loi': null, 'psa': null, 'full-report': null, 'costar-report': null,
+  });
+  const [activeDocTab, setActiveDocTab] = useState<DocKey>('om');
+  const [docUploading, setDocUploading] = useState<DocKey | null>(null);
+  const docInputRefs = useRef<Record<Exclude<DocKey, 'om'>, HTMLInputElement | null>>({
+    'loi': null, 'psa': null, 'full-report': null, 'costar-report': null,
+  });
+
   // Portfolio addresses
   const [addresses, setAddresses] = useState<TerminalDealAddress[]>([]);
   const [showAddAddress, setShowAddAddress] = useState(false);
@@ -306,6 +329,12 @@ export default function EditDealPage() {
       setForm(dealToForm(typedDeal));
       setNewStatus(typedDeal.status);
       setOmPath(typedDeal.om_storage_path ?? null);
+      setDocPaths({
+        'loi': typedDeal.loi_signed_storage_path ?? null,
+        'psa': typedDeal.psa_storage_path ?? null,
+        'full-report': typedDeal.full_report_storage_path ?? null,
+        'costar-report': typedDeal.costar_report_storage_path ?? null,
+      });
 
       const { data: photosData } = await supabase
         .from('terminal_deal_photos')
@@ -725,6 +754,50 @@ export default function EditDealPage() {
     await supabase.storage.from('terminal-dd-documents').remove([omPath]);
     await supabase.from('terminal_deals').update({ om_storage_path: null }).eq('id', dealId);
     setOmPath(null);
+  };
+
+  const handleDocUpload = async (
+    docKey: Exclude<DocKey, 'om'>,
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.type !== 'application/pdf') {
+      alert(`${DOC_CONFIG[docKey].label} must be a PDF file.`);
+      return;
+    }
+
+    setDocUploading(docKey);
+    try {
+      const path = `${dealId}/${DOC_CONFIG[docKey].pathSegment}/${Date.now()}-${file.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from('terminal-dd-documents')
+        .upload(path, file, { upsert: true });
+      if (uploadError) {
+        alert(`Upload failed: ${uploadError.message}`);
+        return;
+      }
+      await supabase
+        .from('terminal_deals')
+        .update({ [DOC_CONFIG[docKey].column]: path })
+        .eq('id', dealId);
+      setDocPaths((prev) => ({ ...prev, [docKey]: path }));
+    } finally {
+      setDocUploading(null);
+      const input = docInputRefs.current[docKey];
+      if (input) input.value = '';
+    }
+  };
+
+  const handleDocRemove = async (docKey: Exclude<DocKey, 'om'>) => {
+    const current = docPaths[docKey];
+    if (!current) return;
+    await supabase.storage.from('terminal-dd-documents').remove([current]);
+    await supabase
+      .from('terminal_deals')
+      .update({ [DOC_CONFIG[docKey].column]: null })
+      .eq('id', dealId);
+    setDocPaths((prev) => ({ ...prev, [docKey]: null }));
   };
 
   // Address management
@@ -1407,7 +1480,7 @@ export default function EditDealPage() {
         )}
       </div>
 
-      {/* OM Upload */}
+      {/* Deal Documents — tabbed upload card (OM + Signed LOI + PSA + Full Report + CoStar Report) */}
       <div className="bg-white rounded-2xl border border-rp-gold-border p-6 mb-6">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-8 h-8 rounded-lg bg-rp-gold/10 flex items-center justify-center">
@@ -1420,55 +1493,109 @@ export default function EditDealPage() {
             </svg>
           </div>
           <div>
-            <h2 className="text-[16px] font-semibold text-rp-navy">Offering Memorandum (OM)</h2>
-            <p className="text-[12px] text-rp-gray-400">This is the first document investors will download.</p>
+            <h2 className="text-[16px] font-semibold text-rp-navy">Deal Documents</h2>
+            <p className="text-[12px] text-rp-gray-400">Upload the key deal-level documents. Each tab stores a separate file.</p>
           </div>
         </div>
 
-        {omPath ? (
-          <div className="flex items-center justify-between bg-rp-gold-bg border border-rp-gold-border rounded-xl p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-rp-gold/15 flex items-center justify-center">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#BC9C45" strokeWidth="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              </div>
-              <div>
-                <p className="text-[13px] font-medium text-rp-navy">OM Uploaded</p>
-                <p className="text-[11px] text-rp-gray-400 truncate max-w-[300px]">{omPath.split('/').pop()}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
+        {/* Tabs */}
+        <div className="flex flex-wrap gap-2 border-b border-rp-gray-200 mb-5">
+          {(Object.keys(DOC_CONFIG) as DocKey[]).map((key) => {
+            const hasFile = key === 'om' ? !!omPath : !!docPaths[key as Exclude<DocKey, 'om'>];
+            const active = activeDocTab === key;
+            return (
               <button
-                onClick={() => omInputRef.current?.click()}
-                className="text-[12px] font-medium text-rp-gold hover:underline"
+                key={key}
+                type="button"
+                onClick={() => setActiveDocTab(key)}
+                className={`relative px-4 py-2 text-[12px] font-semibold transition-colors -mb-px border-b-2 ${
+                  active
+                    ? 'text-rp-gold border-rp-gold'
+                    : 'text-rp-gray-500 hover:text-rp-navy border-transparent'
+                }`}
               >
-                Replace
+                {DOC_CONFIG[key].tabLabel}
+                {hasFile && (
+                  <span className="ml-2 inline-block w-1.5 h-1.5 rounded-full bg-[#0B8A4D]" />
+                )}
               </button>
-              <button
-                onClick={handleOmRemove}
-                className="text-[12px] font-medium text-rp-red hover:underline"
-              >
-                Remove
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div
-            className="border-2 border-dashed border-rp-gold-border rounded-xl p-8 text-center hover:border-rp-gold/60 transition-colors cursor-pointer bg-rp-gold-bg/50"
-            onClick={() => omInputRef.current?.click()}
-          >
-            <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-rp-gold/10 flex items-center justify-center">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#BC9C45" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                <polyline points="17 8 12 3 7 8" />
-                <line x1="12" y1="3" x2="12" y2="15" />
-              </svg>
-            </div>
-            <p className="text-sm text-rp-navy font-medium">
-              {omUploading ? 'Uploading OM...' : 'Click to upload Offering Memorandum'}
-            </p>
-            <p className="text-xs text-rp-gray-400 mt-1">PDF only</p>
-          </div>
-        )}
+            );
+          })}
+        </div>
+
+        {/* Active tab panel */}
+        {(() => {
+          const cfg = DOC_CONFIG[activeDocTab];
+          const currentPath =
+            activeDocTab === 'om'
+              ? omPath
+              : docPaths[activeDocTab as Exclude<DocKey, 'om'>];
+          const uploading =
+            activeDocTab === 'om' ? omUploading : docUploading === activeDocTab;
+          const triggerClick = () => {
+            if (activeDocTab === 'om') omInputRef.current?.click();
+            else docInputRefs.current[activeDocTab as Exclude<DocKey, 'om'>]?.click();
+          };
+          const removeCurrent = () => {
+            if (activeDocTab === 'om') return handleOmRemove();
+            return handleDocRemove(activeDocTab as Exclude<DocKey, 'om'>);
+          };
+          return (
+            <>
+              <p className="text-[12px] text-rp-gray-400 mb-3">
+                {activeDocTab === 'om'
+                  ? 'This is the first document investors will download.'
+                  : `Stored separately from the OM. Investors access ${cfg.label} via its own button in the deal detail page.`}
+              </p>
+              {currentPath ? (
+                <div className="flex items-center justify-between bg-rp-gold-bg border border-rp-gold-border rounded-xl p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-rp-gold/15 flex items-center justify-center">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#BC9C45" strokeWidth="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    </div>
+                    <div>
+                      <p className="text-[13px] font-medium text-rp-navy">{cfg.label} Uploaded</p>
+                      <p className="text-[11px] text-rp-gray-400 truncate max-w-[300px]">{currentPath.split('/').pop()}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={triggerClick}
+                      className="text-[12px] font-medium text-rp-gold hover:underline"
+                    >
+                      Replace
+                    </button>
+                    <button
+                      onClick={removeCurrent}
+                      className="text-[12px] font-medium text-rp-red hover:underline"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  className="border-2 border-dashed border-rp-gold-border rounded-xl p-8 text-center hover:border-rp-gold/60 transition-colors cursor-pointer bg-rp-gold-bg/50"
+                  onClick={triggerClick}
+                >
+                  <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-rp-gold/10 flex items-center justify-center">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#BC9C45" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                      <polyline points="17 8 12 3 7 8" />
+                      <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                  </div>
+                  <p className="text-sm text-rp-navy font-medium">
+                    {uploading ? `Uploading ${cfg.label}...` : `Click to upload ${cfg.label}`}
+                  </p>
+                  <p className="text-xs text-rp-gray-400 mt-1">PDF only</p>
+                </div>
+              )}
+            </>
+          );
+        })()}
+
+        {/* Hidden inputs — one per doc type */}
         <input
           ref={omInputRef}
           type="file"
@@ -1476,6 +1603,16 @@ export default function EditDealPage() {
           onChange={handleOmUpload}
           className="hidden"
         />
+        {(['loi', 'psa', 'full-report', 'costar-report'] as Exclude<DocKey, 'om'>[]).map((key) => (
+          <input
+            key={key}
+            ref={(el) => { docInputRefs.current[key] = el; }}
+            type="file"
+            accept="application/pdf"
+            onChange={(e) => handleDocUpload(key, e)}
+            className="hidden"
+          />
+        ))}
       </div>
 
       {/* Photo Management */}
