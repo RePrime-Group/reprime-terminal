@@ -92,3 +92,16 @@ export function formatNumber(value: string | number | null | undefined): string 
   if (isNaN(n)) return value?.toString() || '—';
   return numberFmt.format(n);
 }
+
+/** Unicode ∞ for fully-financed deals where there is no investor equity. */
+export const INFINITY_SYMBOL = '∞';
+export const INFINITY_GREEN = '#0B8A4D';
+
+/**
+ * Return the display string for CoC / IRR / Equity Multiple when the deal
+ * has zero-or-negative investor equity. Shows ∞ if the expected return is
+ * positive, "N/A" if not (can't promise infinite returns on negative cash flow).
+ */
+export function formatInfinityMetric(hasPositiveReturn: boolean): string {
+  return hasPositiveReturn ? INFINITY_SYMBOL : 'N/A';
+}

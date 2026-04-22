@@ -44,6 +44,10 @@ export interface DealCardData {
   teaser_description?: string | null;
   is_subscribed?: boolean;
   commitment_count?: number;
+  /** True when net equity ≤ 0 (fully financed deal — render ∞ / $0). */
+  fully_financed?: boolean;
+  /** True when distributable cash flow > 0 (only show ∞ if positive). */
+  has_positive_cash_flow?: boolean;
 }
 
 interface PortalDashboardClientProps {

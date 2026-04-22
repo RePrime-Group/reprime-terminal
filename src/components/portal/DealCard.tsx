@@ -58,12 +58,15 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
   if (deal.class_type) subtitleParts.push(t('classType', { type: deal.class_type }));
   const subtitle = subtitleParts.join(' \u00B7 ');
 
+  const infReturn = deal.fully_financed
+    ? (deal.has_positive_cash_flow ? '∞' : 'N/A')
+    : null;
   const metrics = [
     { label: t('purchase'), value: formatPriceCompact(deal.purchase_price), highlight: false },
     { label: t('noi'), value: formatPrice(deal.noi), highlight: false },
     { label: t('capRate'), value: formatPercent(deal.cap_rate), highlight: false },
-    { label: t('irr'), value: formatPercent(deal.irr), highlight: true },
-    { label: t('coc'), value: formatPercent(deal.coc), highlight: true },
+    { label: t('irr'), value: infReturn ?? formatPercent(deal.irr), highlight: true, infinityValue: !!infReturn && infReturn === '∞' },
+    { label: t('coc'), value: infReturn ?? formatPercent(deal.coc), highlight: true, infinityValue: !!infReturn && infReturn === '∞' },
     { label: t('dscr'), value: formatDSCR(deal.dscr), highlight: false },
   ];
 
@@ -254,7 +257,7 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
                 </div>
                 <div
                   className={`text-[14px] font-semibold tabular-nums ${
-                    m.highlight ? 'text-[#0B8A4D]' : 'text-[#0E3470]'
+                    m.infinityValue ? 'text-[#0B8A4D] text-[18px]' : (m.highlight ? 'text-[#0B8A4D]' : 'text-[#0E3470]')
                   }`}
                 >
                   {m.value}
@@ -268,8 +271,8 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
             <div className="text-[8px] font-bold text-gray-400 uppercase tracking-[2px]">
               {t('equityRequired')}
             </div>
-            <div className="text-[22px] font-bold text-[#0E3470] tracking-tight leading-tight tabular-nums">
-              {formatPrice(deal.equity_required)}
+            <div className={`text-[22px] font-bold tracking-tight leading-tight tabular-nums ${deal.fully_financed ? 'text-[#0B8A4D]' : 'text-[#0E3470]'}`}>
+              {deal.fully_financed ? '$0' : formatPrice(deal.equity_required)}
             </div>
           </div>
 

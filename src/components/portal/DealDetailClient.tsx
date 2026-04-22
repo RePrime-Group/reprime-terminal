@@ -693,7 +693,7 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
   const [exitCap, setExitCap] = useState(
     baseInputs.exitCapRate > 0
       ? String(baseInputs.exitCapRate)
-      : String(+baseMetrics.capRate.toFixed(2))
+      : String(+(baseMetrics.capRate + 1).toFixed(2))
   );
   const [holdYears, setHoldYears] = useState(String(baseInputs.holdPeriodYears || 5));
   const [rentGrowth, setRentGrowth] = useState('3');
@@ -727,13 +727,17 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
     { label: t('interestRatePercent'), val: rate, set: setRate, min: '3', max: '10', step: '0.25' },
   ];
 
+  const mmFullyFinanced = mm.netEquity <= 0;
+  const mmHasPositiveCF = mm.distributableCashFlow > 0;
+  const mmInfReturn = mmFullyFinanced ? (mmHasPositiveCF ? '∞' : 'N/A') : null;
+  const greenOrDefault = mmFullyFinanced ? '#0B8A4D' : undefined;
   const results = [
     { l: t('exitValue'), v: fmt(mm.exitPrice), c: '#0E3470' },
     { l: t('totalProfit'), v: fmt(totalProfit), c: totalProfit > 0 ? '#0B8A4D' : '#DC2626' },
-    { l: t('equityMultiple'), v: mm.equityMultiple.toFixed(2) + 'x', c: '#BC9C45' },
-    { l: t('estLeveredIrr'), v: mm.irr !== null ? mm.irr.toFixed(2) + '%' : 'N/A', c: '#0B8A4D' },
+    { l: t('equityMultiple'), v: mmInfReturn ?? (mm.equityMultiple !== null ? mm.equityMultiple.toFixed(2) + 'x' : '—'), c: greenOrDefault ?? '#BC9C45' },
+    { l: t('estLeveredIrr'), v: mmInfReturn ?? (mm.irr !== null ? mm.irr.toFixed(2) + '%' : 'N/A'), c: '#0B8A4D' },
     { l: t('annualDebtService'), v: fmt(mm.annualSeniorDS + mm.annualMezzPayment), c: '#0E3470' },
-    { l: t('equityRequired'), v: fmt(mm.netEquity), c: '#BC9C45' },
+    { l: t('equityRequired'), v: mmFullyFinanced ? '$0' : fmt(mm.netEquity), c: greenOrDefault ?? '#BC9C45' },
   ];
 
   // Exit NOI for cap rate sensitivity (grown NOI at hold period end)
@@ -1108,6 +1112,8 @@ function IRRCalculatorPanel({
   acqFeeDollar,
   assetMgmtFeeDollar,
   onSliderChange,
+  fullyFinanced = false,
+  hasPositiveCashFlow = true,
 }: {
   deal: DealWithDetails;
   baseIRR: number;
@@ -1115,6 +1121,8 @@ function IRRCalculatorPanel({
   acqFeeDollar: number;
   assetMgmtFeeDollar: number;
   onSliderChange: () => void;
+  fullyFinanced?: boolean;
+  hasPositiveCashFlow?: boolean;
 }) {
   const t = useTranslations('portal.dealDetail');
   const ts = useTranslations('portal.structure');
@@ -1126,6 +1134,8 @@ function IRRCalculatorPanel({
   const customIRR = useMemo(() => {
     return calculateCustomIRR(baseIRRProp, { lpSplit, prefReturn, acqFee });
   }, [baseIRRProp, lpSplit, prefReturn, acqFee]);
+
+  const infReturn = fullyFinanced ? (hasPositiveCashFlow ? '∞' : 'N/A') : null;
 
   const handleSliderChange = (
     setter: (v: number) => void,
@@ -1174,7 +1184,7 @@ function IRRCalculatorPanel({
           <div className="mb-4">
             <div className="text-[#9CA3AF] text-xs mb-1">{t('projectedIrr')}</div>
             <div className="text-[52px] font-[800] text-[#0B8A4D] leading-none">
-              {assignmentIRRProp !== null ? assignmentIRRProp.toFixed(2) + '%' : '--'}
+              {infReturn ?? (assignmentIRRProp !== null ? assignmentIRRProp.toFixed(2) + '%' : '--')}
             </div>
           </div>
           <div className="text-xs text-[#9CA3AF] mt-2">
@@ -1205,7 +1215,7 @@ function IRRCalculatorPanel({
           <div className="mb-4">
             <div className="text-[#9CA3AF] text-xs mb-1">{t('projectedIrr')}</div>
             <div className="text-[52px] font-[800] text-[#0B8A4D] leading-none">
-              {baseIRRProp > 0 ? baseIRRProp.toFixed(2) + '%' : '--'}
+              {infReturn ?? (baseIRRProp > 0 ? baseIRRProp.toFixed(2) + '%' : '--')}
             </div>
           </div>
         </div>
@@ -1291,7 +1301,7 @@ function IRRCalculatorPanel({
           <div>
             <div className="text-[#9CA3AF] text-xs mb-1">{t('calculatedIrr')}</div>
             <div className="text-[52px] font-[800] text-[#0B8A4D] leading-none">
-              {customIRR.toFixed(2)}%
+              {infReturn ?? `${customIRR.toFixed(2)}%`}
             </div>
           </div>
         </div>
@@ -2172,15 +2182,20 @@ export default function DealDetailClient({
         {/* 5D. SEVEN-METRIC BAR (left border metric cards - keep as is)       */}
         {/* ------------------------------------------------------------------ */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 md:gap-3 px-4 md:px-8 mt-6 md:mt-8">
-          {[
-            { label: tc('purchasePrice'), value: formatPrice(deal.purchase_price), borderColor: '#0E3470' },
-            { label: tc('noi'), value: formatPrice(deal.noi), borderColor: '#0E3470' },
-            { label: tc('capRate'), value: computed.capRate > 0 ? computed.capRate.toFixed(2) + '%' : formatPercent(deal.cap_rate), borderColor: '#BC9C45' },
-            { label: tc('irr'), value: computed.irr !== null ? computed.irr.toFixed(2) + '%' : (deal.irr ? formatPercent(deal.irr) : '—'), borderColor: '#0B8A4D', valueColor: '#0B8A4D' },
-            { label: tc('coc'), value: computed.cocReturn !== 0 ? computed.cocReturn.toFixed(2) + '%' : (deal.coc ? formatPercent(deal.coc) : '—'), borderColor: '#0B8A4D', valueColor: '#0B8A4D' },
-            { label: tc('dscr'), value: computed.combinedDSCR > 0 ? computed.combinedDSCR.toFixed(2) + 'x' : formatDSCR(deal.dscr), borderColor: '#0E3470' },
-            { label: tc('equityRequired'), value: computed.netEquity > 0 ? '$' + Math.round(computed.netEquity).toLocaleString() : formatPrice(deal.equity_required), borderColor: '#BC9C45' },
-          ].map((m, idx) => (
+          {(() => {
+            const fullyFinanced = computed.netEquity <= 0;
+            const hasPositiveCF = computed.distributableCashFlow > 0;
+            const infReturn = fullyFinanced ? (hasPositiveCF ? '∞' : 'N/A') : null;
+            return [
+              { label: tc('purchasePrice'), value: formatPrice(deal.purchase_price), borderColor: '#0E3470' },
+              { label: tc('noi'), value: formatPrice(deal.noi), borderColor: '#0E3470' },
+              { label: tc('capRate'), value: computed.capRate > 0 ? computed.capRate.toFixed(2) + '%' : formatPercent(deal.cap_rate), borderColor: '#BC9C45' },
+              { label: tc('irr'), value: infReturn ?? (computed.irr !== null ? computed.irr.toFixed(2) + '%' : (deal.irr ? formatPercent(deal.irr) : '—')), borderColor: '#0B8A4D', valueColor: '#0B8A4D' },
+              { label: tc('coc'), value: infReturn ?? (computed.cocReturn !== null ? computed.cocReturn.toFixed(2) + '%' : (deal.coc ? formatPercent(deal.coc) : '—')), borderColor: '#0B8A4D', valueColor: '#0B8A4D' },
+              { label: tc('dscr'), value: computed.combinedDSCR > 0 ? computed.combinedDSCR.toFixed(2) + 'x' : formatDSCR(deal.dscr), borderColor: '#0E3470' },
+              { label: tc('equityRequired'), value: fullyFinanced ? '$0' : (computed.netEquity > 0 ? '$' + Math.round(computed.netEquity).toLocaleString() : formatPrice(deal.equity_required)), borderColor: '#BC9C45', valueColor: fullyFinanced ? '#0B8A4D' : undefined },
+            ];
+          })().map((m, idx) => (
             <FadeInOnScroll key={m.label} delay={idx * 0.05}>
               <MetricCard
                 label={m.label}
@@ -2382,9 +2397,33 @@ export default function DealDetailClient({
                 </FadeInOnScroll>
               )}
 
+              {/* Fully-financed highlight (only when netEquity <= 0 and CF > 0) */}
+              {computed.netEquity <= 0 && computed.distributableCashFlow > 0 && (
+                <FadeInOnScroll delay={0.18}>
+                  <div className="bg-[#FDF8ED] border border-[#ECD9A0] rounded-xl px-5 py-4">
+                    <div className="text-[10px] font-bold text-[#BC9C45] uppercase tracking-[1.5px]">
+                      {t('annualCashFlowToInvestor')}
+                    </div>
+                    <div className="text-[26px] md:text-[30px] font-bold text-[#0B8A4D] tabular-nums leading-tight mt-1">
+                      ${Math.round(computed.distributableCashFlow).toLocaleString()}
+                    </div>
+                    <div className="text-[11px] text-[#6B7280] mt-1">
+                      {t('zeroEquityCallout')}
+                    </div>
+                  </div>
+                </FadeInOnScroll>
+              )}
+
               {/* Capital Stack + Return Comparison + Cash Flow Summary */}
               <FadeInOnScroll delay={0.2}>
                 <OverviewFinancials {...financialProps} />
+              </FadeInOnScroll>
+
+              {/* Beta disclaimer — understated, below Cash Flow Summary */}
+              <FadeInOnScroll delay={0.22}>
+                <p className="text-[12px] text-[#9CA3AF] leading-relaxed px-1">
+                  <span className="text-[#BC9C45]">*</span> {t('betaDisclaimer')}
+                </p>
               </FadeInOnScroll>
 
               {deal.special_terms && deal.special_terms !== 'None' && (
@@ -2737,7 +2776,9 @@ export default function DealDetailClient({
                       {t('projectedIrr')}
                     </div>
                     <div className="text-2xl font-bold text-[#0B8A4D]">
-                      {computed.irr !== null ? computed.irr.toFixed(2) + '%' : '--'}
+                      {computed.netEquity <= 0
+                        ? (computed.distributableCashFlow > 0 ? '∞' : 'N/A')
+                        : (computed.irr !== null ? computed.irr.toFixed(2) + '%' : '--')}
                     </div>
                     <div className="text-[11px] text-[#6B7280] mt-1">
                       {t('allFeesIncludedShort')}
@@ -2764,6 +2805,8 @@ export default function DealDetailClient({
                   acqFeeDollar={computed.acqFeeDollar}
                   assetMgmtFeeDollar={computed.assetMgmtFeeDollar}
                   onSliderChange={handleIRRSliderChange}
+                  fullyFinanced={computed.netEquity <= 0}
+                  hasPositiveCashFlow={computed.distributableCashFlow > 0}
                 />
               </div>
             </FadeInOnScroll>

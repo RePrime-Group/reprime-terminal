@@ -458,7 +458,7 @@ export default function NewDealPage() {
         await supabase.from('terminal_deals').update({
           cap_rate: cm.capRate > 0 ? cm.capRate.toFixed(2) : null,
           irr: cm.irr !== null ? cm.irr.toFixed(2) : null,
-          coc: cm.cocReturn !== 0 ? cm.cocReturn.toFixed(2) : null,
+          coc: cm.cocReturn !== null ? cm.cocReturn.toFixed(2) : null,
           dscr: cm.lenderDSCR > 0 ? cm.lenderDSCR.toFixed(2) : null,
           equity_required: cm.netEquity > 0 ? String(Math.round(cm.netEquity)) : null,
           loan_estimate: cm.loanAmount > 0 ? String(Math.round(cm.loanAmount)) : null,
@@ -850,12 +850,17 @@ export default function NewDealPage() {
               <span className="text-[10px] text-white/30 ml-1">Updates live</span>
             </div>
             <div className="grid grid-cols-4 gap-2 mb-3">
-              {[
-                { l: 'Cap Rate', v: pct(m.capRate), c: '#BC9C45' },
-                { l: 'CoC Return', v: pct(m.cocReturn), c: m.cocReturn >= 0 ? '#0B8A4D' : '#DC2626' },
-                { l: 'IRR', v: m.irr !== null ? pct(m.irr) : 'N/A', c: '#0B8A4D' },
-                { l: 'Eq. Multiple', v: m.equityMultiple.toFixed(2) + 'x', c: '#BC9C45' },
-              ].map((x) => (
+              {(() => {
+                const fullyFinanced = m.netEquity <= 0;
+                const hasPositiveCF = m.distributableCashFlow > 0;
+                const infMetric = fullyFinanced ? (hasPositiveCF ? '∞' : 'N/A') : null;
+                return [
+                  { l: 'Cap Rate', v: pct(m.capRate), c: '#BC9C45' },
+                  { l: 'CoC Return', v: infMetric ?? (m.cocReturn !== null ? pct(m.cocReturn) : '—'), c: fullyFinanced ? '#0B8A4D' : (m.cocReturn !== null && m.cocReturn >= 0 ? '#0B8A4D' : '#DC2626') },
+                  { l: 'IRR', v: infMetric ?? (m.irr !== null ? pct(m.irr) : 'N/A'), c: '#0B8A4D' },
+                  { l: 'Eq. Multiple', v: infMetric ?? (m.equityMultiple !== null ? m.equityMultiple.toFixed(2) + 'x' : '—'), c: '#BC9C45' },
+                ];
+              })().map((x) => (
                 <div key={x.l} className="bg-white/[0.05] rounded-lg p-3 border border-white/[0.05]">
                   <div className="text-[8px] font-bold text-white/25 uppercase tracking-[1.5px]">{x.l}</div>
                   <div className="text-[20px] font-bold tabular-nums mt-0.5" style={{ color: x.c }}>{x.v}</div>
@@ -865,7 +870,7 @@ export default function NewDealPage() {
             <div className="grid grid-cols-3 gap-2">
               {[
                 { l: 'Loan Amount', v: fmt(m.loanAmount) },
-                { l: 'Net Equity', v: fmt(m.netEquity) },
+                { l: 'Net Equity', v: m.netEquity > 0 ? fmt(m.netEquity) : '$0' },
                 { l: 'Lender DSCR', v: m.lenderDSCR.toFixed(2) + 'x' },
                 { l: 'Distributable CF', v: fmt(m.distributableCashFlow) },
                 { l: 'Total Leverage', v: pct(m.totalLeverage) },

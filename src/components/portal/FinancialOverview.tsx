@@ -37,14 +37,22 @@ export function OverviewFinancials({ inputs, metrics, traditional }: FinancialPr
             <span className="text-[13px] text-[#374151]">{t('noi')}</span>
             <span className="text-[14px] font-bold text-[#0E3470] tabular-nums">{fmtFull(inputs.noi)}</span>
           </div>
+          {metrics.capex > 0 && (
+            <div className="flex justify-between py-2 border-b border-[#EEF0F4]">
+              <span className="text-[13px] text-[#6B7280]">− {t('capexReserves')}</span>
+              <span className="text-[14px] font-semibold text-[#DC2626]/80 tabular-nums">{fmtFull(metrics.capex)}</span>
+            </div>
+          )}
           <div className="flex justify-between py-2 border-b border-[#EEF0F4]">
             <span className="text-[13px] text-[#6B7280]">− {t('totalDebtService')}</span>
             <span className="text-[14px] font-semibold text-[#DC2626]/80 tabular-nums">{fmtFull(metrics.annualSeniorDS + metrics.annualMezzPayment)}</span>
           </div>
-          <div className="flex justify-between py-2 border-b border-[#EEF0F4]">
-            <span className="text-[13px] text-[#6B7280]">− {t('assetManagementFee')} ({pct(inputs.assetMgmtFee)})</span>
-            <span className="text-[14px] font-semibold text-[#DC2626]/80 tabular-nums">{fmtFull(metrics.assetMgmtFeeDollar)}</span>
-          </div>
+          {inputs.assetMgmtFee > 0 && (
+            <div className="flex justify-between py-2 border-b border-[#EEF0F4]">
+              <span className="text-[13px] text-[#6B7280]">− {t('assetManagementFee')} ({pct(inputs.assetMgmtFee)})</span>
+              <span className="text-[14px] font-semibold text-[#DC2626]/80 tabular-nums">{fmtFull(metrics.assetMgmtFeeDollar)}</span>
+            </div>
+          )}
           <div className="flex justify-between py-3 border-t-2 border-[#0E3470] mt-1">
             <span className="text-[13px] font-bold text-[#374151]">{t('distributableCashFlow')}</span>
             <span className="text-[15px] font-bold tabular-nums" style={{ color: metrics.distributableCashFlow >= 0 ? '#0B8A4D' : '#DC2626' }}>
@@ -72,9 +80,10 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
         <h3 className="text-[15px] font-semibold text-[#0E3470] mb-4">{t('annualWaterfall')}</h3>
         {[
           { label: t('noi'), value: inputs.noi, positive: true },
+          ...(metrics.capex > 0 ? [{ label: t('capexReserves'), value: -metrics.capex }] : []),
           { label: t('seniorDebtService'), value: -metrics.annualSeniorDS },
           ...(metrics.mezzAmount > 0 ? [{ label: t('mezzIoPayment'), value: -metrics.annualMezzPayment }] : []),
-          { label: t('assetManagementFee'), value: -metrics.assetMgmtFeeDollar },
+          ...(inputs.assetMgmtFee > 0 ? [{ label: t('assetManagementFee'), value: -metrics.assetMgmtFeeDollar }] : []),
         ].map((row, i) => (
           <div key={i} className={`flex justify-between items-center py-2.5 px-3 ${i % 2 === 0 ? 'bg-[#F7F8FA]' : 'bg-white'} rounded`}>
             <span className={`text-[13px] ${row.positive ? 'text-[#374151] font-medium' : 'text-[#6B7280]'}`}>
@@ -201,33 +210,46 @@ function CapitalStackVisual({ inputs, metrics, isEstimated }: { inputs: DealInpu
   // Bar percentages based on Net Basis (purchasePrice - sellerCredit)
   const pp = inputs.purchasePrice;
   const nb = metrics.netBasis;
-  const seniorPct = nb > 0 ? (metrics.loanAmount / nb) * 100 : 0;
-  const mezzPct = nb > 0 && metrics.mezzAmount > 0 ? (metrics.mezzAmount / nb) * 100 : 0;
+  const fullyFinanced = metrics.netEquity <= 0;
+  const rawSeniorPct = nb > 0 ? (metrics.loanAmount / nb) * 100 : 0;
+  const rawMezzPct = nb > 0 && metrics.mezzAmount > 0 ? (metrics.mezzAmount / nb) * 100 : 0;
   const equityGapPct = nb > 0 ? ((nb - metrics.loanAmount - metrics.mezzAmount) / nb) * 100 : 0;
-  const totalCapital = metrics.loanAmount + metrics.mezzAmount + metrics.netEquity;
+  // When over-leveraged, rescale Senior+Mezz widths so the bar still fills 100%.
+  // Labels keep the real % of net basis (which may sum to >100%).
+  const debtSum = rawSeniorPct + rawMezzPct;
+  const seniorWidth = fullyFinanced && debtSum > 0 ? (rawSeniorPct / debtSum) * 100 : rawSeniorPct;
+  const mezzWidth = fullyFinanced && debtSum > 0 ? (rawMezzPct / debtSum) * 100 : rawMezzPct;
+  const totalCapital = fullyFinanced
+    ? nb + metrics.closingCosts
+    : metrics.loanAmount + metrics.mezzAmount + metrics.netEquity;
 
   return (
     <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 rp-card-shadow">
       <h4 className="text-[14px] font-semibold text-[#0E3470] mb-4">{t('capitalStack')}</h4>
       {/* Bar segments based on Net Basis (LTV structure) */}
       <div className="h-9 rounded-lg overflow-hidden flex mb-3">
-        {seniorPct > 0 && (
-          <div className="flex items-center justify-center text-white text-[10px] font-bold whitespace-nowrap px-1" style={{ width: `${seniorPct}%`, backgroundColor: '#0E3470' }}>
-            {t('senior')} {Math.round(seniorPct)}%
+        {seniorWidth > 0 && (
+          <div className="flex items-center justify-center text-white text-[10px] font-bold whitespace-nowrap px-1" style={{ width: `${seniorWidth}%`, backgroundColor: '#0E3470' }}>
+            {t('senior')} {Math.round(rawSeniorPct)}%
           </div>
         )}
-        {mezzPct > 0 && (
-          <div className="flex items-center justify-center text-white text-[10px] font-bold whitespace-nowrap px-1" style={{ width: `${mezzPct}%`, backgroundColor: '#BC9C45', minWidth: '70px' }}>
-            {t('mezz')} {Math.round(mezzPct)}%
+        {mezzWidth > 0 && (
+          <div className="flex items-center justify-center text-white text-[10px] font-bold whitespace-nowrap px-1" style={{ width: `${mezzWidth}%`, backgroundColor: '#BC9C45', minWidth: '70px' }}>
+            {t('mezz')} {Math.round(rawMezzPct)}%
           </div>
         )}
-        {equityGapPct > 0 && (
+        {!fullyFinanced && equityGapPct > 0 && (
           <div className="flex items-center justify-center text-white text-[10px] font-bold whitespace-nowrap px-1" style={{ width: `${equityGapPct}%`, backgroundColor: '#0B8A4D', minWidth: '70px' }}>
             {t('equity')} {Math.round(equityGapPct)}%
           </div>
         )}
       </div>
-      {/* Dollar amounts — equity shows actual investor check size */}
+      {fullyFinanced && (
+        <div className="mb-3 text-[11px] font-semibold text-[#0B8A4D]">
+          {t('fullyFinanced')}
+        </div>
+      )}
+      {/* Dollar amounts */}
       <div className="space-y-1.5">
         <div className="flex justify-between items-center py-1.5 border-b border-[#EEF0F4]">
           <div className="flex items-center gap-2">
@@ -251,7 +273,7 @@ function CapitalStackVisual({ inputs, metrics, isEstimated }: { inputs: DealInpu
             <div className="w-2.5 h-2.5 rounded-sm bg-[#0B8A4D]" />
             <span className="text-[12px] text-[#374151]">{t('investorEquity')}</span>
           </div>
-          <span className="text-[13px] font-bold text-[#0B8A4D] tabular-nums">{fmtFull(metrics.netEquity)}</span>
+          <span className="text-[13px] font-bold text-[#0B8A4D] tabular-nums">{fullyFinanced ? '$0' : fmtFull(metrics.netEquity)}</span>
         </div>
       </div>
       {/* Summary lines */}
@@ -280,6 +302,32 @@ function CapitalStackVisual({ inputs, metrics, isEstimated }: { inputs: DealInpu
           <span className="text-[#6B7280]">{t('totalCapitalRequired')}</span>
           <span className="font-bold text-[#0E3470] tabular-nums">{fmtFull(totalCapital)}</span>
         </div>
+        {fullyFinanced && (
+          <>
+            <div className="mt-2 pt-2 border-t border-[#EEF0F4]" />
+            <div className="text-[10px] font-bold text-[#6B7280] uppercase tracking-[1.5px]">
+              {t('fundedBy')}
+            </div>
+            <div className="flex justify-between items-center text-[12px]">
+              <span className="text-[#6B7280]">{t('seniorDebt')} ({Math.round(rawSeniorPct)}%)</span>
+              <span className="font-semibold text-[#0E3470] tabular-nums">{fmtFull(metrics.loanAmount)}</span>
+            </div>
+            {metrics.mezzAmount > 0 && (
+              <div className="flex justify-between items-center text-[12px]">
+                <span className="text-[#6B7280]">{t('sellerMezzanine')} ({Math.round(rawMezzPct)}%)</span>
+                <span className="font-semibold text-[#BC9C45] tabular-nums">{fmtFull(metrics.mezzAmount)}</span>
+              </div>
+            )}
+            <div className="flex justify-between items-center text-[12px]">
+              <span className="text-[#6B7280]">{t('totalFinancing')}</span>
+              <span className="font-semibold text-[#0E3470] tabular-nums">{fmtFull(metrics.loanAmount + metrics.mezzAmount)}</span>
+            </div>
+            <div className="flex justify-between items-center text-[12px]">
+              <span className="text-[#6B7280]">{t('investorEquity')}</span>
+              <span className="font-bold text-[#0B8A4D] tabular-nums">$0</span>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -290,13 +338,21 @@ function CapitalStackVisual({ inputs, metrics, isEstimated }: { inputs: DealInpu
 // ═══════════════════════════════════════════════════════════
 function ReturnComparison({ inputs, metrics, traditional }: { inputs: DealInputs; metrics: DealMetrics; traditional: DealMetrics }) {
   const t = useTranslations('portal.financial');
+  const mFullyFinanced = metrics.netEquity <= 0;
+  const mHasPositiveCF = metrics.distributableCashFlow > 0;
+  const mInf = mFullyFinanced ? (mHasPositiveCF ? '∞' : 'N/A') : null;
+  const mCoC = mInf ?? (metrics.cocReturn !== null ? pct(metrics.cocReturn, 2) : 'N/A');
+  const mIRR = mInf ?? (metrics.irr !== null ? pct(metrics.irr, 2) : 'N/A');
+  const mEquity = mFullyFinanced ? '$0' : fmtFull(metrics.netEquity);
+  const tCoC = traditional.cocReturn !== null ? pct(traditional.cocReturn, 2) : 'N/A';
+  const tIRR = traditional.irr !== null ? pct(traditional.irr, 2) : 'N/A';
   const rows = [
     { label: t('seniorDebt'), t: fmtFull(traditional.loanAmount), m: fmtFull(metrics.loanAmount) },
     { label: t('sellerMezz'), t: '—', m: `${fmtFull(metrics.mezzAmount)} ${t('at')} ${pct(inputs.mezzRate)} ${t('io')}` },
-    { label: t('investorEquity'), t: fmtFull(traditional.netEquity), m: fmtFull(metrics.netEquity) },
+    { label: t('investorEquity'), t: fmtFull(traditional.netEquity), m: mEquity },
     { label: t('annualCashFlow'), t: fmtFull(traditional.distributableCashFlow), m: fmtFull(metrics.distributableCashFlow) },
-    { label: t('cocReturn'), t: pct(traditional.cocReturn, 2), m: pct(metrics.cocReturn, 2), bold: true, greenIfBetter: metrics.cocReturn - traditional.cocReturn > 2 },
-    { label: `${t('irr')} (${inputs.holdPeriodYears}yr)`, t: traditional.irr !== null ? pct(traditional.irr, 2) : 'N/A', m: metrics.irr !== null ? pct(metrics.irr, 2) : 'N/A', bold: true, greenIfBetter: (metrics.irr ?? 0) - (traditional.irr ?? 0) > 2 },
+    { label: t('cocReturn'), t: tCoC, m: mCoC, bold: true, greenIfBetter: mFullyFinanced || ((metrics.cocReturn ?? 0) - (traditional.cocReturn ?? 0) > 2) },
+    { label: `${t('irr')} (${inputs.holdPeriodYears}yr)`, t: tIRR, m: mIRR, bold: true, greenIfBetter: mFullyFinanced || ((metrics.irr ?? 0) - (traditional.irr ?? 0) > 2) },
   ];
 
   return (
