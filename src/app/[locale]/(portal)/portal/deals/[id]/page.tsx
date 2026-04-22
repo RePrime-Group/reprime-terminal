@@ -30,7 +30,9 @@ const DEAL_COLUMNS = [
   'ltv', 'interest_rate', 'amortization_years', 'loan_fee_points', 'io_period_months',
   'mezz_percent', 'mezz_rate', 'mezz_term_months',
   'seller_credit', 'pref_return',
-  'hold_period_years', 'exit_cap_rate', 'debt_terms_quoted',
+  'hold_period_years', 'exit_cap_rate', 'rent_growth',
+  'legal_title_estimate', 'disposition_cost_pct', 'capex',
+  'debt_terms_quoted',
   'status',
 ].join(', ');
 

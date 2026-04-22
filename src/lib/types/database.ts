@@ -128,6 +128,9 @@ export interface TerminalDeal {
   hold_period_years: string | null;
   exit_cap_rate: string | null;
   rent_growth: string | null;
+  legal_title_estimate: string | null;
+  disposition_cost_pct: string | null;
+  capex: string | null;
   debt_terms_quoted: boolean;
   status: DealStatus;
   neighborhood: string | null;

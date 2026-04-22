@@ -32,10 +32,17 @@ export interface DealInputs {
 
   // Hold/Exit
   holdPeriodYears: number; // years (e.g. 5)
-  exitCapRate: number;     // % (uses entry cap if 0)
+  exitCapRate: number;     // % (blank/0 defaults to entry cap + 1%)
 
   // Growth
   rentGrowth?: number;     // annual % rent growth, defaults to 0
+
+  // Closing / Disposition (beta: all optional, default 0)
+  legalTitleEstimate?: number;  // flat $ estimate for legal + title at close
+  dispositionCostPct?: number;  // % of exit price (e.g. 2 = 2%)
+
+  // CapEx / Capital Reserves
+  capex?: number;               // flat annual $ capital reserve, deducted from NOI
 }
 
 export interface DealMetrics {
@@ -66,14 +73,21 @@ export interface DealMetrics {
   cashFlowAfterAllDS: number;
   assetMgmtFeeDollar: number;
   distributableCashFlow: number;
-  cocReturn: number;
+  // CoC is null when netEquity <= 0 (no investor equity = undefined % return).
+  // UI interprets null + positive CF as an "infinite" return (fully financed deal).
+  cocReturn: number | null;
   lenderDSCR: number;
   combinedDSCR: number;
+
+  // CapEx (exposed for investor UI rendering)
+  capex: number;
+  adjustedNOI: number;
 
   // IRR (multi-year)
   irr: number | null;          // GP/LP net IRR (after all fees and carry)
   assignmentIRR: number | null; // Assignment structure IRR (net of assignment fee)
-  equityMultiple: number;
+  // Equity multiple is null when netEquity <= 0 (same "∞" semantics as CoC).
+  equityMultiple: number | null;
 
   // Fee Dollars
   assignmentFeeDollar: number;
@@ -103,21 +117,24 @@ export function parseDealInputs(deal: Record<string, unknown>): DealInputs {
     ltv: p(deal.ltv as string) || 75,
     interestRate: p(deal.interest_rate as string) || 6.00,
     amortYears: p(deal.amortization_years as string) || 30,
-    loanFeePoints: p(deal.loan_fee_points as string) || 1,
+    loanFeePoints: p(deal.loan_fee_points as string) || 0,
     ioPeriodMonths: p(deal.io_period_months as string) || 0,
     sellerFinancing: !!deal.seller_financing,
     mezzPercent: p(deal.mezz_percent as string) || 15,
     mezzRate: p(deal.mezz_rate as string) || 5.00,
     mezzTermMonths: p(deal.mezz_term_months as string) || 60,
     sellerCredit: p(deal.seller_credit as string) || 0,
-    assignmentFee: p(deal.assignment_fee as string) || 3,
-    acqFee: p(deal.acq_fee as string) || 1,
-    assetMgmtFee: p(deal.asset_mgmt_fee as string) || 4,
-    gpCarry: p(deal.gp_carry as string) || 20,
-    prefReturn: p(deal.pref_return as string) || 8,
+    assignmentFee: p(deal.assignment_fee as string) || 0,
+    acqFee: p(deal.acq_fee as string) || 0,
+    assetMgmtFee: p(deal.asset_mgmt_fee as string) || 0,
+    gpCarry: p(deal.gp_carry as string) || 0,
+    prefReturn: p(deal.pref_return as string) || 0,
     holdPeriodYears: p(deal.hold_period_years as string) || 5,
     exitCapRate: p(deal.exit_cap_rate as string) || 0,
     rentGrowth: p(deal.rent_growth as string) || 0,
+    legalTitleEstimate: p(deal.legal_title_estimate as string) || 0,
+    dispositionCostPct: p(deal.disposition_cost_pct as string) || 0,
+    capex: p(deal.capex as string) || 0,
   };
 }
 
@@ -128,7 +145,14 @@ export function calculateDeal(inputs: DealInputs): DealMetrics {
     sellerCredit, assignmentFee, acqFee, assetMgmtFee, gpCarry, prefReturn,
     holdPeriodYears, exitCapRate: exitCapInput,
     rentGrowth = 0,
+    legalTitleEstimate: legalTitleEstimateInput,
+    dispositionCostPct: dispositionCostPctInput,
+    capex: capexInput,
   } = inputs;
+
+  const legalTitleEstimate = legalTitleEstimateInput ?? 0;
+  const dispositionCostPct = dispositionCostPctInput ?? 0;
+  const capex = capexInput ?? 0;
 
   const warnings: string[] = [];
 
@@ -159,7 +183,6 @@ export function calculateDeal(inputs: DealInputs): DealMetrics {
   const mezzBalloon = mezzAmount; // full principal at maturity
 
   // ═══════ EQUITY & CAPITAL STACK ═══════
-  const legalTitleEstimate = 25000; // placeholder
   const closingCosts = loanFeeDollar + (purchasePrice * (acqFee / 100)) + legalTitleEstimate;
   const grossEquity = netBasis - loanAmount - mezzAmount;
   const netEquity = grossEquity + closingCosts;
@@ -167,15 +190,21 @@ export function calculateDeal(inputs: DealInputs): DealMetrics {
 
   // ═══════ RETURN METRICS ═══════
   const capRate = netBasis > 0 ? (noi / netBasis) * 100 : 0;
-  const cashFlowAfterSenior = noi - annualSeniorDS;
-  const cashFlowAfterAllDS = noi - annualSeniorDS - annualMezzPayment;
+  // CapEx is a fixed annual capital reserve deducted from NOI before debt service
+  // and asset-level distributable cash flow. AMF is still computed on NOI (income-
+  // based fee, not income-after-capex), which is correct when AMF > 0.
+  const adjustedNOI = noi - capex;
+  const cashFlowAfterSenior = adjustedNOI - annualSeniorDS;
+  const cashFlowAfterAllDS = adjustedNOI - annualSeniorDS - annualMezzPayment;
   const assetMgmtFeeDollar = noi * (assetMgmtFee / 100);
   const distributableCashFlow = cashFlowAfterAllDS - assetMgmtFeeDollar;
-  const cocReturn = netEquity > 0 ? (distributableCashFlow / netEquity) * 100 : 0;
+  // Return null (not 0) when no investor equity is required — the UI renders
+  // this as "∞" for fully-financed deals with positive cash flow.
+  const cocReturn = netEquity > 0 ? (distributableCashFlow / netEquity) * 100 : null;
 
-  const lenderDSCR = annualSeniorDS > 0 ? noi / annualSeniorDS : 0;
+  const lenderDSCR = annualSeniorDS > 0 ? adjustedNOI / annualSeniorDS : 0;
   const totalAnnualDS = annualSeniorDS + annualMezzPayment;
-  const combinedDSCR = totalAnnualDS > 0 ? noi / totalAnnualDS : 0;
+  const combinedDSCR = totalAnnualDS > 0 ? adjustedNOI / totalAnnualDS : 0;
 
   // Fee dollars
   const assignmentFeeDollar = purchasePrice * (assignmentFee / 100);
@@ -184,18 +213,20 @@ export function calculateDeal(inputs: DealInputs): DealMetrics {
   // ═══════ WARNINGS ═══════
   if (lenderDSCR > 0 && lenderDSCR < 1.0) warnings.push('Lender DSCR below 1.0x — deal may not be financeable');
   if (combinedDSCR > 0 && combinedDSCR < 1.0) warnings.push('Combined DSCR below 1.0x — negative cash flow after debt service');
-  if (cocReturn < 0) warnings.push('Negative Cash-on-Cash return');
+  if (cocReturn !== null && cocReturn < 0) warnings.push('Negative Cash-on-Cash return');
   if (totalLeverage > 90) warnings.push('Total leverage exceeds 90% — extremely thin equity position');
 
   // ═══════ IRR CALCULATION ═══════
-  const exitCap = exitCapInput > 0 ? exitCapInput / 100 : capRate / 100;
+  // Default exit cap = entry cap + 1% (conservative exit assumption).
+  // Explicit values override. 0/blank falls back to entry + 100 bps expansion.
+  const exitCap = exitCapInput > 0 ? exitCapInput / 100 : (capRate + 1) / 100;
   // Exit NOI is one period ahead of final operating year — a buyer in
   // year 5 is purchasing the forward income stream (year 6), which is
   // standard CRE underwriting practice.
   const exitGrowthFactor = Math.pow(1 + (rentGrowth / 100), holdPeriodYears);
   const exitNOI = noi * exitGrowthFactor;
   const exitPrice = exitCap > 0 ? exitNOI / exitCap : 0;
-  const dispositionCosts = exitPrice * 0.02;
+  const dispositionCosts = exitPrice * (dispositionCostPct / 100);
 
   // Remaining senior loan balance after hold period
   let seniorPayoffAtExit = loanAmount;
@@ -219,7 +250,10 @@ export function calculateDeal(inputs: DealInputs): DealMetrics {
   for (let yr = 0; yr < holdPeriodYears; yr++) {
     const growthFactor = Math.pow(1 + (rentGrowth / 100), yr);
     const yearNOI = noi * growthFactor;
-    const yearCashFlow = yearNOI - annualSeniorDS - annualMezzPayment - (yearNOI * (assetMgmtFee / 100));
+    // CapEx is a flat annual amount (not grown with rents). AMF is still
+    // applied to the grown yearNOI since it is an income-based fee.
+    const yearAdjustedNOI = yearNOI - capex;
+    const yearCashFlow = yearAdjustedNOI - annualSeniorDS - annualMezzPayment - (yearNOI * (assetMgmtFee / 100));
     annualCashFlows.push(yearCashFlow);
     cumulativeDistributions += yearCashFlow;
   }
@@ -251,7 +285,7 @@ export function calculateDeal(inputs: DealInputs): DealMetrics {
 
   const equityMultiple = netEquity > 0
     ? (cumulativeDistributions + netSaleProceeds) / netEquity
-    : 0;
+    : null;
 
   return {
     netBasis,
@@ -260,6 +294,7 @@ export function calculateDeal(inputs: DealInputs): DealMetrics {
     closingCosts, grossEquity, netEquity, totalLeverage,
     capRate, cashFlowAfterSenior, cashFlowAfterAllDS, assetMgmtFeeDollar,
     distributableCashFlow, cocReturn, lenderDSCR, combinedDSCR,
+    capex, adjustedNOI,
     irr, assignmentIRR, equityMultiple,
     assignmentFeeDollar, acqFeeDollar,
     annualCashFlows, exitPrice, seniorPayoffAtExit, netSaleProceeds,

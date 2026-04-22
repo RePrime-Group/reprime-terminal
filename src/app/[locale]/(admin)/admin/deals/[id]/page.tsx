@@ -83,6 +83,9 @@ interface DealFormData {
   hold_period_years: string;
   exit_cap_rate: string;
   rent_growth: string;
+  legal_title_estimate: string;
+  disposition_cost_pct: string;
+  capex: string;
   debt_terms_quoted: boolean;
   // Asset mgmt fee already exists as asset_mgmt_fee
   dd_deadline: string;
@@ -195,16 +198,19 @@ function dealToForm(deal: TerminalDeal): DealFormData {
     ltv: deal.ltv ?? '75',
     interest_rate: deal.interest_rate ?? '6.00',
     amortization_years: deal.amortization_years ?? '30',
-    loan_fee_points: deal.loan_fee_points ?? '1',
+    loan_fee_points: deal.loan_fee_points ?? '0',
     io_period_months: deal.io_period_months ?? '0',
     mezz_percent: deal.mezz_percent ?? '15',
     mezz_rate: deal.mezz_rate ?? '5.00',
     mezz_term_months: deal.mezz_term_months ?? '60',
     seller_credit: deal.seller_credit ?? '0',
-    pref_return: deal.pref_return ?? '8',
+    pref_return: deal.pref_return ?? '0',
     hold_period_years: deal.hold_period_years ?? '5',
     exit_cap_rate: deal.exit_cap_rate ?? '',
     rent_growth: deal.rent_growth ?? '',
+    legal_title_estimate: deal.legal_title_estimate ?? '',
+    disposition_cost_pct: deal.disposition_cost_pct ?? '',
+    capex: deal.capex ?? '',
     debt_terms_quoted: deal.debt_terms_quoted ?? false,
     dd_deadline: toDatetimeLocal(deal.dd_deadline),
     close_deadline: toDatetimeLocal(deal.close_deadline),
@@ -496,16 +502,19 @@ export default function EditDealPage() {
         ltv: form.ltv || '75',
         interest_rate: form.interest_rate || '6.00',
         amortization_years: form.amortization_years || '30',
-        loan_fee_points: form.loan_fee_points || '1',
+        loan_fee_points: form.loan_fee_points || '0',
         io_period_months: form.io_period_months || '0',
         mezz_percent: form.mezz_percent || '15',
         mezz_rate: form.mezz_rate || '5.00',
         mezz_term_months: form.mezz_term_months || '60',
         seller_credit: form.seller_credit || '0',
-        pref_return: form.pref_return || '8',
+        pref_return: form.pref_return || '0',
         hold_period_years: form.hold_period_years || '5',
         exit_cap_rate: form.exit_cap_rate || null,
         rent_growth: form.rent_growth || null,
+        legal_title_estimate: form.legal_title_estimate || null,
+        disposition_cost_pct: form.disposition_cost_pct || null,
+        capex: form.capex || null,
         debt_terms_quoted: form.debt_terms_quoted,
         dd_deadline: form.dd_deadline || null,
         close_deadline: form.close_deadline || null,
@@ -533,7 +542,7 @@ export default function EditDealPage() {
       const computedMetrics = calculateDeal(computedInputs);
       updateData.cap_rate = computedMetrics.capRate > 0 ? computedMetrics.capRate.toFixed(2) : null;
       updateData.irr = computedMetrics.irr !== null ? computedMetrics.irr.toFixed(2) : null;
-      updateData.coc = computedMetrics.cocReturn !== 0 ? computedMetrics.cocReturn.toFixed(2) : null;
+      updateData.coc = computedMetrics.cocReturn !== null ? computedMetrics.cocReturn.toFixed(2) : null;
       updateData.dscr = computedMetrics.combinedDSCR > 0 ? computedMetrics.combinedDSCR.toFixed(2) : null;
       updateData.equity_required = computedMetrics.netEquity > 0 ? String(Math.round(computedMetrics.netEquity)) : null;
       updateData.loan_estimate = computedMetrics.loanAmount > 0 ? String(Math.round(computedMetrics.loanAmount)) : null;
@@ -1084,6 +1093,9 @@ export default function EditDealPage() {
           gp_carry: form.gp_carry, pref_return: form.pref_return,
           hold_period_years: form.hold_period_years, exit_cap_rate: form.exit_cap_rate,
           rent_growth: form.rent_growth,
+          legal_title_estimate: form.legal_title_estimate,
+          disposition_cost_pct: form.disposition_cost_pct,
+          capex: form.capex,
         });
         const m = calculateDeal(inputs);
         const fmt = (n: number) => '$' + Math.round(n).toLocaleString();
@@ -1117,7 +1129,7 @@ export default function EditDealPage() {
               <Input label="LTV %" value={form.ltv} onChange={(e) => updateField('ltv', e.target.value)} placeholder="75" />
               <Input label="Interest Rate %" value={form.interest_rate} onChange={(e) => updateField('interest_rate', e.target.value)} placeholder="6.00" />
               <Input label="Amortization (yrs)" value={form.amortization_years} onChange={(e) => updateField('amortization_years', e.target.value)} placeholder="30" />
-              <Input label="Loan Fee (pts)" value={form.loan_fee_points} onChange={(e) => updateField('loan_fee_points', e.target.value)} placeholder="1" />
+              <Input label="Loan Fee (pts)" value={form.loan_fee_points} onChange={(e) => updateField('loan_fee_points', e.target.value)} placeholder="0 (blank = 0 pts)" />
               <Input label="IO Period (mo)" value={form.io_period_months} onChange={(e) => updateField('io_period_months', e.target.value)} placeholder="0" />
             </div>
           </div>
@@ -1146,10 +1158,13 @@ export default function EditDealPage() {
             <h2 className="text-[16px] font-semibold text-rp-navy mb-5">Credits & Exit Assumptions</h2>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <Input label="Seller Credit ($)" value={form.seller_credit} onChange={(e) => updateField('seller_credit', e.target.value)} placeholder="0" />
+              <Input label="CapEx / Capital Reserves ($)" value={form.capex} onChange={(e) => updateField('capex', e.target.value)} placeholder="e.g. 25000 (blank = $0)" />
               <Input label="Hold Period (yrs)" value={form.hold_period_years} onChange={(e) => updateField('hold_period_years', e.target.value)} placeholder="5" />
-              <Input label="Exit Cap Rate %" value={form.exit_cap_rate} onChange={(e) => updateField('exit_cap_rate', e.target.value)} placeholder="Same as entry" />
-              <Input label="Pref Return %" value={form.pref_return} onChange={(e) => updateField('pref_return', e.target.value)} placeholder="8" />
+              <Input label="Exit Cap Rate %" value={form.exit_cap_rate} onChange={(e) => updateField('exit_cap_rate', e.target.value)} placeholder="e.g. 9.5 (blank = entry cap + 1%)" />
+              <Input label="Pref Return %" value={form.pref_return} onChange={(e) => updateField('pref_return', e.target.value)} placeholder="0 (blank = 0%)" />
               <Input label="Annual Rent Growth %" value={form.rent_growth} onChange={(e) => updateField('rent_growth', e.target.value)} placeholder="e.g. 3.0 (blank = 0%)" />
+              <Input label="Legal/Title Estimate ($)" value={form.legal_title_estimate} onChange={(e) => updateField('legal_title_estimate', e.target.value)} placeholder="e.g. 25000 (blank = $0)" />
+              <Input label="Disposition Cost %" value={form.disposition_cost_pct} onChange={(e) => updateField('disposition_cost_pct', e.target.value)} placeholder="e.g. 2.0 (blank = 0%)" />
             </div>
           </div>
 
@@ -1170,12 +1185,17 @@ export default function EditDealPage() {
             )}
 
             <div className="grid grid-cols-4 gap-3 mb-4">
-              {[
-                { label: 'Cap Rate', value: pct(m.capRate), color: '#BC9C45' },
-                { label: 'Cash-on-Cash', value: pct(m.cocReturn), color: m.cocReturn >= 0 ? '#0B8A4D' : '#DC2626' },
-                { label: 'IRR', value: m.irr !== null ? pct(m.irr) : 'N/A', color: '#0B8A4D' },
-                { label: 'Equity Multiple', value: m.equityMultiple.toFixed(2) + 'x', color: '#BC9C45' },
-              ].map((metric) => (
+              {(() => {
+                const fullyFinanced = m.netEquity <= 0;
+                const hasPositiveCF = m.distributableCashFlow > 0;
+                const infMetric = fullyFinanced ? (hasPositiveCF ? '∞' : 'N/A') : null;
+                return [
+                  { label: 'Cap Rate', value: pct(m.capRate), color: '#BC9C45' },
+                  { label: 'Cash-on-Cash', value: infMetric ?? (m.cocReturn !== null ? pct(m.cocReturn) : '—'), color: fullyFinanced ? '#0B8A4D' : (m.cocReturn !== null && m.cocReturn >= 0 ? '#0B8A4D' : '#DC2626') },
+                  { label: 'IRR', value: infMetric ?? (m.irr !== null ? pct(m.irr) : 'N/A'), color: '#0B8A4D' },
+                  { label: 'Equity Multiple', value: infMetric ?? (m.equityMultiple !== null ? m.equityMultiple.toFixed(2) + 'x' : '—'), color: '#BC9C45' },
+                ];
+              })().map((metric) => (
                 <div key={metric.label} className="bg-white/[0.06] rounded-xl p-3.5 border border-white/[0.06]">
                   <div className="text-[9px] font-bold text-white/30 uppercase tracking-[2px]">{metric.label}</div>
                   <div className="text-[22px] font-bold tabular-nums mt-1" style={{ color: metric.color }}>{metric.value}</div>
@@ -1193,7 +1213,7 @@ export default function EditDealPage() {
                   { label: 'Annual Mezz IO', value: fmt(m.annualMezzPayment) },
                   { label: 'Combined DSCR', value: m.combinedDSCR.toFixed(2) + 'x' },
                 ] : []),
-                { label: 'Net Equity (Check Size)', value: fmt(m.netEquity) },
+                { label: 'Net Equity (Check Size)', value: m.netEquity > 0 ? fmt(m.netEquity) : '$0' },
                 { label: 'Distributable CF', value: fmt(m.distributableCashFlow) },
                 { label: 'Total Leverage', value: pct(m.totalLeverage) },
               ].map((row) => (
@@ -1211,10 +1231,10 @@ export default function EditDealPage() {
       <div className="bg-white rounded-2xl border border-rp-gray-200 p-6 mb-6">
         <h2 className="text-[16px] font-semibold text-rp-navy mb-5">Fee Structure</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Input label="Assignment Fee %" value={form.assignment_fee} onChange={(e) => updateField('assignment_fee', e.target.value)} placeholder="3" />
-          <Input label="Acquisition Fee %" value={form.acq_fee} onChange={(e) => updateField('acq_fee', e.target.value)} placeholder="1" />
-          <Input label="Asset Mgmt Fee %" value={form.asset_mgmt_fee} onChange={(e) => updateField('asset_mgmt_fee', e.target.value)} placeholder="2" />
-          <Input label="GP Carry %" value={form.gp_carry} onChange={(e) => updateField('gp_carry', e.target.value)} placeholder="20" />
+          <Input label="Assignment Fee %" value={form.assignment_fee} onChange={(e) => updateField('assignment_fee', e.target.value)} placeholder="0 (blank = 0%)" />
+          <Input label="Acquisition Fee %" value={form.acq_fee} onChange={(e) => updateField('acq_fee', e.target.value)} placeholder="0 (blank = 0%)" />
+          <Input label="Asset Mgmt Fee %" value={form.asset_mgmt_fee} onChange={(e) => updateField('asset_mgmt_fee', e.target.value)} placeholder="0 (blank = 0%)" />
+          <Input label="GP Carry %" value={form.gp_carry} onChange={(e) => updateField('gp_carry', e.target.value)} placeholder="0 (blank = 0%)" />
         </div>
       </div>
 
