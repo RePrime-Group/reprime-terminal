@@ -115,8 +115,8 @@ export default function JoinPage() {
       </nav>
 
       {/* Hero */}
-      <div className="max-w-[1200px] mx-auto px-5 md:px-10 pt-8 md:pt-12 pb-6 md:pb-8 text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] mb-5 md:mb-6">
+      <div className="max-w-[1200px] mx-auto px-5 md:px-10 pt-4 md:pt-6 pb-5 md:pb-7 text-center">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] mb-4 md:mb-5">
           <div className="w-1.5 h-1.5 rounded-full bg-[#0B8A4D] live-dot" />
           <span className="text-[10px] font-medium tracking-[2px] text-[#D4A843] uppercase">{t('foundingBadge')}</span>
         </div>
@@ -132,7 +132,7 @@ export default function JoinPage() {
       </div>
 
       {/* Pricing Tiers */}
-      <div className="max-w-[1200px] mx-auto px-5 md:px-10 pb-10 md:pb-12">
+      <div className="max-w-[1200px] mx-auto px-5 md:px-10 pb-6 md:pb-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
           {tiers.map((tier) => (
             <div
@@ -183,9 +183,9 @@ export default function JoinPage() {
       </div>
 
       {/* Founding Member Banner */}
-      <div className="max-w-[1200px] mx-auto px-5 md:px-10 pb-10 md:pb-12">
-        <div className="bg-white/[0.03] border border-[#BC9C45]/20 rounded-2xl p-6 md:p-8 text-center">
-          <div className="inline-flex items-center gap-2 mb-4">
+      <div className="max-w-[1200px] mx-auto px-5 md:px-10 pb-6 md:pb-8">
+        <div className="bg-white/[0.03] border border-[#BC9C45]/20 rounded-2xl p-5 md:p-7 text-center">
+          <div className="inline-flex items-center gap-2 mb-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#BC9C45] to-[#D4B96A] flex items-center justify-center">
               <span className="text-white text-[18px]">★</span>
             </div>
@@ -203,12 +203,12 @@ export default function JoinPage() {
       </div>
 
       {/* Application Form */}
-      <div className="max-w-[1200px] mx-auto px-5 md:px-10 pb-12 md:pb-16">
-        <div className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-6 md:p-10">
+      <div className="max-w-[1200px] mx-auto px-5 md:px-10 pb-6 md:pb-8">
+        <div className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-6 md:p-8">
           <h2 className="font-[family-name:var(--font-playfair)] text-[20px] md:text-[24px] font-semibold text-white mb-2 text-center">
             {submitted ? t('applicationReceived') : t('membershipApplication')}
           </h2>
-          <p className="text-[13px] text-white/40 mb-6 md:mb-8 text-center">
+          <p className="text-[13px] text-white/40 mb-5 md:mb-6 text-center">
             {submitted
               ? t('reviewWithin48')
               : t('foundingByInvitation')
@@ -258,8 +258,8 @@ export default function JoinPage() {
       </div>
 
       {/* Have a code? */}
-      <div className="max-w-[1200px] mx-auto px-5 md:px-10 pb-10 md:pb-12">
-        <div className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-6 md:p-8 text-center">
+      <div className="max-w-[1200px] mx-auto px-5 md:px-10 pb-6 md:pb-10">
+        <div className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-6 md:p-7 text-center">
           <h3 className="text-[16px] md:text-[18px] font-semibold text-white mb-2">{t('haveInvitationCode')}</h3>
           <p className="text-[13px] text-white/40 mb-5">{t('enterCodeBelow')}</p>
           <div className="max-w-[400px] mx-auto flex flex-col sm:flex-row gap-2">

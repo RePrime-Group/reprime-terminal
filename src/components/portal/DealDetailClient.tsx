@@ -345,17 +345,17 @@ function MetricCard({
 }) {
   return (
     <div
-      className="bg-white rounded-xl p-3.5 border border-[#EEF0F4] rp-card-shadow"
-      style={{ borderLeft: `3px solid ${borderColor}` }}
+      className="group relative h-full bg-white rounded-xl p-3 md:p-3.5 border border-[#EEF0F4] rp-card-shadow hover:shadow-[0_6px_24px_rgba(14,52,112,0.08)] hover:-translate-y-[1px] transition-all duration-200"
+      style={{ borderLeft: `4px solid ${borderColor}` }}
     >
-      <div className="data-label mb-1">
+      <div className="data-label mb-1.5">
         {label}
       </div>
       <div
-        className="text-[18px] font-bold"
+        className="text-[20px] md:text-[27px] font-bold tabular-nums leading-none tracking-tight"
         style={{ color: valueColor ?? '#0E3470' }}
       >
-        {value ?? '--'}
+        {value ?? '—'}
       </div>
     </div>
   );
@@ -1702,6 +1702,23 @@ export default function DealDetailClient({
   const [showExpressModal, setShowExpressModal] = useState(false);
   const [expressingInterest, setExpressingInterest] = useState(false);
   const [checkingInterest, setCheckingInterest] = useState(true);
+  const [thesisExpanded, setThesisExpanded] = useState(false);
+  const [thesisOverflows, setThesisOverflows] = useState(false);
+  const thesisRef = useRef<HTMLParagraphElement | null>(null);
+
+  // Detect whether the thesis paragraph is actually being clamped so we only show the toggle when useful.
+  useEffect(() => {
+    const el = thesisRef.current;
+    if (!el) return;
+    const measure = () => {
+      if (thesisExpanded) return;
+      setThesisOverflows(el.scrollHeight - el.clientHeight > 1);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [deal.acquisition_thesis, thesisExpanded]);
 
   // Track deal_viewed on mount
   useEffect(() => {
@@ -2015,13 +2032,11 @@ export default function DealDetailClient({
         {/* ------------------------------------------------------------------ */}
         {/* 2. HERO SECTION                                                    */}
         {/* ------------------------------------------------------------------ */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6 p-4 md:p-8">
-          {/* Left: Image Carousel */}
-          <ImageCarousel urls={photoUrls} />
-
-          {/* Right: 5B Circular Countdown Rings */}
-          <div className="flex flex-col gap-4">
-            <div className="bg-white rounded-2xl border border-[#EEF0F4] p-4 md:p-6 rp-card-shadow">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.7fr_1fr] gap-4 md:gap-6 p-4 md:p-8 items-stretch">
+          {/* Left: Image Carousel + Countdown Rings (rings pinned to bottom to align w/ right col) */}
+          <div className="flex flex-col gap-4 h-full">
+            <ImageCarousel urls={photoUrls} />
+            <div className="mt-auto bg-white rounded-2xl border border-[#EEF0F4] p-4 md:p-6 rp-card-shadow">
               <div className="flex items-center justify-around gap-2 flex-wrap sm:flex-nowrap">
                 <CountdownRing
                   label={t('dueDiligence')}
@@ -2040,14 +2055,39 @@ export default function DealDetailClient({
                 />
               </div>
             </div>
+          </div>
+
+          {/* Right: Metric Cards + Terminal Intelligence + Transaction Documents */}
+          <div className="flex flex-col gap-3 justify-between">
+            {/* Seven-Metric Cards — primary signal above the fold */}
+            <div className="grid grid-cols-2 gap-2 md:gap-2.5">
+              {[
+                { label: tc('purchasePrice'), value: formatPrice(deal.purchase_price), borderColor: '#0E3470', span: 'col-span-2' },
+                { label: tc('noi'), value: formatPrice(deal.noi), borderColor: '#0E3470', span: 'col-span-2' },
+                { label: tc('capRate'), value: computed.capRate > 0 ? computed.capRate.toFixed(2) + '%' : formatPercent(deal.cap_rate), borderColor: '#BC9C45', span: 'col-span-1' },
+                { label: tc('irr'), value: computed.irr !== null ? computed.irr.toFixed(2) + '%' : (deal.irr ? formatPercent(deal.irr) : '—'), borderColor: '#0B8A4D', valueColor: '#0B8A4D', span: 'col-span-1' },
+                { label: tc('coc'), value: computed.cocReturn !== 0 ? computed.cocReturn.toFixed(2) + '%' : (deal.coc ? formatPercent(deal.coc) : '—'), borderColor: '#0B8A4D', valueColor: '#0B8A4D', span: 'col-span-1' },
+                { label: tc('dscr'), value: computed.combinedDSCR > 0 ? computed.combinedDSCR.toFixed(2) + 'x' : formatDSCR(deal.dscr), borderColor: '#0E3470', span: 'col-span-1' },
+                { label: tc('equityRequired'), value: computed.netEquity > 0 ? '$' + Math.round(computed.netEquity).toLocaleString() : formatPrice(deal.equity_required), borderColor: '#BC9C45', span: 'col-span-2' },
+              ].map((m, idx) => (
+                <FadeInOnScroll key={m.label} delay={idx * 0.05} className={m.span}>
+                  <MetricCard
+                    label={m.label}
+                    value={m.value}
+                    borderColor={m.borderColor}
+                    valueColor={m.valueColor}
+                  />
+                </FadeInOnScroll>
+              ))}
+            </div>
 
             {/* ------------------------------------------------------------------ */}
             {/* 5C. TERMINAL INTELLIGENCE PANEL                                    */}
             {/* ------------------------------------------------------------------ */}
             {deal.acquisition_thesis && (
-              <div className="bg-white rounded-xl p-6 border border-[#EEF0F4] rp-card-shadow">
+              <div className="bg-white rounded-xl p-5 border border-[#EEF0F4] rp-card-shadow">
                 {/* Header */}
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-center gap-3 mb-3">
                   <div className="w-9 h-9 rounded-lg bg-[#BC9C45]/10 flex items-center justify-center">
                     <span className="text-[#BC9C45] text-lg">{'\u26A1'}</span>
                   </div>
@@ -2061,11 +2101,23 @@ export default function DealDetailClient({
                   </div>
                 </div>
                 {/* Body */}
-                <p className="text-[13px] text-[#4B5563] leading-[1.7]">
+                <p
+                  ref={thesisRef}
+                  className={`text-[13px] text-[#4B5563] leading-[1.7] ${thesisExpanded ? '' : 'line-clamp-4'}`}
+                >
                   {deal.acquisition_thesis}
                 </p>
+                {(thesisOverflows || thesisExpanded) && (
+                  <button
+                    type="button"
+                    onClick={() => setThesisExpanded((v) => !v)}
+                    className="mt-2 text-[11px] font-semibold text-[#BC9C45] hover:text-[#A88A3D] transition-colors"
+                  >
+                    {thesisExpanded ? t('hide') : t('readMore')}
+                  </button>
+                )}
                 {/* Footer buttons */}
-                <div className="flex items-center gap-3 mt-5 flex-wrap">
+                <div className="flex items-center gap-3 mt-4 flex-wrap">
                   {deal.full_report_storage_path ? (
                     <button
                       onClick={() => handleViewDocument(`/api/deals/${deal.id}/document/full-report?view=true`, `${deal.name} — ${t('fullReport')}`)}
@@ -2109,8 +2161,8 @@ export default function DealDetailClient({
             {/* ------------------------------------------------------------------ */}
             {/* 5D. TRANSACTION DOCUMENTS (OM + Signed LOI + PSA)                  */}
             {/* ------------------------------------------------------------------ */}
-            <div className="bg-white rounded-xl p-6 border border-[#EEF0F4] rp-card-shadow">
-              <div className="flex items-center gap-3 mb-4">
+            <div className="bg-white rounded-xl p-5 border border-[#EEF0F4] rp-card-shadow">
+              <div className="flex items-center gap-3 mb-3">
                 <div className="w-9 h-9 rounded-lg bg-[#0E3470]/10 flex items-center justify-center">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0E3470" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
@@ -2166,30 +2218,6 @@ export default function DealDetailClient({
               </div>
             </div>
           </div>
-        </div>
-
-        {/* ------------------------------------------------------------------ */}
-        {/* 5D. SEVEN-METRIC BAR (left border metric cards - keep as is)       */}
-        {/* ------------------------------------------------------------------ */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 md:gap-3 px-4 md:px-8 mt-6 md:mt-8">
-          {[
-            { label: tc('purchasePrice'), value: formatPrice(deal.purchase_price), borderColor: '#0E3470' },
-            { label: tc('noi'), value: formatPrice(deal.noi), borderColor: '#0E3470' },
-            { label: tc('capRate'), value: computed.capRate > 0 ? computed.capRate.toFixed(2) + '%' : formatPercent(deal.cap_rate), borderColor: '#BC9C45' },
-            { label: tc('irr'), value: computed.irr !== null ? computed.irr.toFixed(2) + '%' : (deal.irr ? formatPercent(deal.irr) : '—'), borderColor: '#0B8A4D', valueColor: '#0B8A4D' },
-            { label: tc('coc'), value: computed.cocReturn !== 0 ? computed.cocReturn.toFixed(2) + '%' : (deal.coc ? formatPercent(deal.coc) : '—'), borderColor: '#0B8A4D', valueColor: '#0B8A4D' },
-            { label: tc('dscr'), value: computed.combinedDSCR > 0 ? computed.combinedDSCR.toFixed(2) + 'x' : formatDSCR(deal.dscr), borderColor: '#0E3470' },
-            { label: tc('equityRequired'), value: computed.netEquity > 0 ? '$' + Math.round(computed.netEquity).toLocaleString() : formatPrice(deal.equity_required), borderColor: '#BC9C45' },
-          ].map((m, idx) => (
-            <FadeInOnScroll key={m.label} delay={idx * 0.05}>
-              <MetricCard
-                label={m.label}
-                value={m.value}
-                borderColor={m.borderColor}
-                valueColor={m.valueColor}
-              />
-            </FadeInOnScroll>
-          ))}
         </div>
 
         {/* ------------------------------------------------------------------ */}

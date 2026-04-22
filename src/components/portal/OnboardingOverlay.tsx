@@ -46,7 +46,11 @@ export default function OnboardingOverlay({ firstName, userId }: OnboardingOverl
   }, [userId]);
 
   const updateSpotlight = useCallback(() => {
-    if (stage !== 'tour') return;
+    // Parent layout gates this component on a server-rendered flag, so after
+    // `dismissed` flips true the component stays mounted and returns null
+    // until a hard reload. Without this guard the scroll listener keeps
+    // calling scrollIntoView and traps the user at the last tour target.
+    if (dismissed || stage !== 'tour') return;
     const step = TOUR_STEP_DEFS[tourStep];
     if (!step) return;
     const el = document.querySelector(`[data-tour="${step.target}"]`);
@@ -57,7 +61,7 @@ export default function OnboardingOverlay({ firstName, userId }: OnboardingOverl
     } else {
       setSpotlight(null);
     }
-  }, [stage, tourStep]);
+  }, [stage, tourStep, dismissed]);
 
   useEffect(() => {
     updateSpotlight();

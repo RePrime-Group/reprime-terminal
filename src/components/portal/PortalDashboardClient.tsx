@@ -271,8 +271,8 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
             backgroundSize: '40px 40px',
           }}
         />
-        <div className="max-w-[1600px] mx-auto relative px-4 py-8 md:px-10 md:py-12">
-          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between md:gap-0 mb-6 md:mb-8">
+        <div className="max-w-[1600px] mx-auto relative px-4 pt-8 pb-5 md:px-10 md:pt-12 md:pb-7">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between md:gap-0 mb-5 md:mb-7">
             <div>
               {quarterLabel && (
                 <div className="flex items-center gap-2.5 mb-3">
@@ -313,12 +313,12 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
         </div>
 
         {/* Gradient fade from hero into page background */}
-        <div className="h-24" style={{ background: 'linear-gradient(180deg, transparent 0%, #F8F6F1 100%)' }} />
+        <div className="h-20" style={{ background: 'linear-gradient(180deg, rgba(26,74,138,0) 0%, #F8F6F1 100%)' }} />
       </div>
 
       {/* ── Search, Filter & Sort Bar ── */}
       {hasAnyDeals && (
-        <div className="px-4 md:px-10 -mt-4 mb-0 relative z-10">
+        <div className="px-4 md:px-10 -mt-14 mb-0 relative z-10">
           <div className="max-w-[1600px] mx-auto">
             {/* Main bar */}
             <div className="bg-white rounded-xl border border-[#EEF0F4] rp-card-shadow px-4 md:px-5 py-3.5 flex flex-wrap items-center gap-3">

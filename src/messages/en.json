@@ -678,6 +678,8 @@
       "confidential": "CONFIDENTIAL",
       "terminalIntelligence": "TERMINAL INTELLIGENCE",
       "institutionalAnalysis": "Institutional analysis by RePrime research team",
+      "readMore": "Read more",
+      "hide": "Hide",
       "fullReport": "Full Report",
       "fullReportPending": "Full Report — Pending",
       "costarReport": "CoStar Report",
