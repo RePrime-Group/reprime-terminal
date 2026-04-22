@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { parseDealInputs, calculateDeal } from '@/lib/utils/deal-calculator';
+import { parseDealInputs, calculatePropertyMetrics } from '@/lib/utils/deal-calculator';
 import PortalDashboardClient from '@/components/portal/PortalDashboardClient';
 
 // Sidebar-free layout is provided by (admin-preview)/admin/layout.tsx.
@@ -125,7 +125,7 @@ export default async function AdminDashboardPreviewPage({
     }
 
     const inputs = parseDealInputs(deal as unknown as Record<string, unknown>);
-    const computed = calculateDeal(inputs);
+    const computed = calculatePropertyMetrics(inputs);
 
     const dbCapRate = num(deal.cap_rate);
     const dbIrr = num(deal.irr);

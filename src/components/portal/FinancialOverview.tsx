@@ -109,7 +109,7 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
           <div className="flex items-center gap-2 mb-4">
             <div className="w-3 h-3 rounded-sm bg-[#0E3470]" />
             <h4 className="text-[14px] font-semibold text-[#0E3470]">{t('seniorDebt')}</h4>
-            {isEstimated && <span className="text-[10px] italic text-[#D97706] bg-[#FFFBEB] px-2 py-0.5 rounded-full">{t('estimated')}</span>}
+            {isEstimated && <span className="text-[13px] font-medium text-[#BC9C45]">— {t('estimated')}</span>}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 md:gap-x-8 gap-y-1">
             {[
@@ -179,16 +179,18 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
         <ReturnComparison inputs={inputs} metrics={metrics} traditional={traditional} />
       )}
 
-      {/* Fee Disclosure — Compact Grid */}
+      {/* Fee Disclosure — reads real fee % from `inputs` (unzeroed) and
+          computes dollars inline. Metrics-dollar fields would read 0 here
+          because headline metrics use calculatePropertyMetrics. */}
       <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 rp-card-shadow">
         <h4 className="text-[14px] font-semibold text-[#0E3470] mb-3">{t('feeDisclosure')}</h4>
         <div className="grid grid-cols-2 gap-x-4 md:gap-x-6 gap-y-1">
           {[
-            [`${t('assignmentFee')} (${pct(inputs.assignmentFee)})`, fmtFull(metrics.assignmentFeeDollar)],
-            [`${t('acquisitionFee')} (${pct(inputs.acqFee)})`, fmtFull(metrics.acqFeeDollar)],
-            [`${t('assetMgmtFee')} (${pct(inputs.assetMgmtFee)}${t('yr')})`, fmtFull(metrics.assetMgmtFeeDollar) + t('yr')],
+            [`${t('assignmentFee')} (${pct(inputs.assignmentFee)})`, fmtFull(inputs.purchasePrice * inputs.assignmentFee / 100)],
+            [`${t('acquisitionFee')} (${pct(inputs.acqFee)})`, fmtFull(inputs.purchasePrice * inputs.acqFee / 100)],
+            [`${t('assetMgmtFee')} (${pct(inputs.assetMgmtFee)}${t('yr')})`, fmtFull(inputs.noi * inputs.assetMgmtFee / 100) + t('yr')],
             [t('gpCarry'), `${pct(inputs.gpCarry, 0)} ${t('above')} ${pct(inputs.prefReturn, 0)} ${t('pref')}`],
-            [`${t('loanOrigination')} (${inputs.loanFeePoints} ${t('points')})`, fmtFull(metrics.loanFeeDollar)],
+            [`${t('loanOrigination')} (${inputs.loanFeePoints} ${t('points')})`, fmtFull(metrics.loanAmount * inputs.loanFeePoints / 100)],
           ].map(([l, v], i) => (
             <div key={i} className="flex justify-between py-1.5 border-b border-[#EEF0F4] last:border-b-0">
               <span className="text-[11px] text-[#6B7280]">{l}</span>
@@ -295,13 +297,18 @@ function CapitalStackVisual({ inputs, metrics, isEstimated }: { inputs: DealInpu
           </>
         )}
         <div className="flex justify-between items-center text-[12px]">
-          <span className="text-[#6B7280]">+ {t('closingCosts')}</span>
-          <span className="font-semibold text-[#0E3470] tabular-nums">{fmtFull(metrics.closingCosts)}</span>
+          <span className="text-[#6B7280]">+ {metrics.closingCosts === 0 ? t('estClosingCosts') : t('closingCosts')}</span>
+          <span className="font-semibold text-[#0E3470] tabular-nums">{metrics.closingCosts === 0 ? 'TBD*' : fmtFull(metrics.closingCosts)}</span>
         </div>
         <div className="flex justify-between items-center text-[12px]">
           <span className="text-[#6B7280]">{t('totalCapitalRequired')}</span>
-          <span className="font-bold text-[#0E3470] tabular-nums">{fmtFull(totalCapital)}</span>
+          <span className="font-bold text-[#0E3470] tabular-nums">{fmtFull(totalCapital)}{metrics.closingCosts === 0 ? '+' : ''}</span>
         </div>
+        {metrics.closingCosts === 0 && (
+          <p className="text-[11px] text-[#9CA3AF] leading-relaxed pt-1">
+            {t('closingCostsFootnote')}
+          </p>
+        )}
         {fullyFinanced && (
           <>
             <div className="mt-2 pt-2 border-t border-[#EEF0F4]" />
@@ -386,9 +393,9 @@ function ReturnComparison({ inputs, metrics, traditional }: { inputs: DealInputs
 
 // Default export for backward compatibility
 export default function FinancialOverview({ deal }: { deal: Record<string, unknown> }) {
-  const { parseDealInputs: parse, calculateDeal: calc, calculateTraditionalClose: calcTrad } = require('@/lib/utils/deal-calculator');
+  const { parseDealInputs: parse, calculatePropertyMetrics: calcProp, calculateTraditionalClose: calcTrad } = require('@/lib/utils/deal-calculator');
   const inputs = parse(deal);
-  const metrics = calc(inputs);
+  const metrics = calcProp(inputs);
   const traditional = inputs.sellerFinancing ? calcTrad(inputs) : null;
   return <DealStructureFinancials inputs={inputs} metrics={metrics} traditional={traditional} isEstimated={!deal.debt_terms_quoted} />;
 }

@@ -8,7 +8,7 @@ import Input from '@/components/ui/Input';
 import Badge from '@/components/ui/Badge';
 import Modal from '@/components/ui/Modal';
 import DealSubNav from '@/components/admin/DealSubNav';
-import { parseDealInputs, calculateDeal } from '@/lib/utils/deal-calculator';
+import { parseDealInputs, calculatePropertyMetrics } from '@/lib/utils/deal-calculator';
 import { createClient } from '@/lib/supabase/client';
 import {
   DEAL_STATUS_LABELS,
@@ -551,7 +551,7 @@ export default function EditDealPage() {
 
       // Persist computed metrics from calculation engine
       const computedInputs = parseDealInputs(updateData as Record<string, unknown>);
-      const computedMetrics = calculateDeal(computedInputs);
+      const computedMetrics = calculatePropertyMetrics(computedInputs);
       updateData.cap_rate = computedMetrics.capRate > 0 ? computedMetrics.capRate.toFixed(2) : null;
       updateData.irr = computedMetrics.irr !== null ? computedMetrics.irr.toFixed(2) : null;
       updateData.coc = computedMetrics.cocReturn !== null ? computedMetrics.cocReturn.toFixed(2) : null;
@@ -1115,7 +1115,7 @@ export default function EditDealPage() {
           disposition_cost_pct: form.disposition_cost_pct,
           capex: form.capex,
         });
-        const m = calculateDeal(inputs);
+        const m = calculatePropertyMetrics(inputs);
         const fmt = (n: number) => '$' + Math.round(n).toLocaleString();
         const pct = (n: number, d = 2) => n.toFixed(d) + '%';
 

@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { parseDealInputs, calculateDeal } from '@/lib/utils/deal-calculator';
+import { parseDealInputs, calculatePropertyMetrics } from '@/lib/utils/deal-calculator';
 import PortalDashboardClient from '@/components/portal/PortalDashboardClient';
 
 export const metadata = { title: 'Active Opportunities — RePrime Terminal Beta' };
@@ -116,7 +116,7 @@ export default async function PortalDashboardPage({
 
     // Compute metrics from deal inputs, fall back to stored DB values
     const inputs = parseDealInputs(deal as unknown as Record<string, unknown>);
-    const computed = calculateDeal(inputs);
+    const computed = calculatePropertyMetrics(inputs);
 
     const dbCapRate = num(deal.cap_rate);
     const dbIrr = num(deal.irr);
