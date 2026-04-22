@@ -79,6 +79,7 @@ export interface TerminalDeal {
   units: string | null;
   class_type: string | null;
   year_built: number | null;
+  year_renovated: string | null;
   occupancy: string | null;
   purchase_price: string;
   noi: string | null;
@@ -101,6 +102,7 @@ export interface TerminalDeal {
   dd_deadline: string | null;
   close_deadline: string | null;
   extension_deadline: string | null;
+  timeline_note: string | null;
   psa_draft_start: string | null;
   loi_signed_at: string | null;
   teaser_description: string | null;
@@ -124,6 +126,9 @@ export interface TerminalDeal {
   // Credits & Fees
   seller_credit: string | null;
   pref_return: string | null;
+  // Market benchmarks
+  area_cap_rate: string | null;
+  asking_cap_rate: string | null;
   // Hold/Exit
   hold_period_years: string | null;
   exit_cap_rate: string | null;

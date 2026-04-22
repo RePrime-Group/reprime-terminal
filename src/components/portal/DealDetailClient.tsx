@@ -15,6 +15,7 @@ import PhoneConfirmModal from '@/components/portal/PhoneConfirmModal';
 import DataRoomTab from '@/components/portal/DataRoomTab';
 import { OverviewFinancials, DealStructureFinancials } from '@/components/portal/FinancialOverview';
 import { parseDealInputs, calculateDeal, calculateTraditionalClose, type DealInputs } from '@/lib/utils/deal-calculator';
+import { exportDealToExcel } from '@/lib/utils/excel-export';
 import type {
   DealWithDetails,
   TerminalDDFolder,
@@ -743,13 +744,38 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
   // Exit NOI for cap rate sensitivity (grown NOI at hold period end)
   const exitNOI = baseInputs.noi * Math.pow(1 + (parseFloat(rentGrowth) || 0) / 100, holdNum);
 
+  const handleExportExcel = () => {
+    exportDealToExcel(deal, baseInputs, mm, {
+      ltv: parseFloat(ltv) || baseInputs.ltv,
+      rate: parseFloat(rate) || baseInputs.interestRate,
+      holdYears: parseInt(holdYears) || baseInputs.holdPeriodYears || 5,
+      exitCap: parseFloat(exitCap) || 0,
+      rentGrowth: parseFloat(rentGrowth) || 0,
+    });
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-6">
       {/* Assumptions Panel */}
       <div className="bg-white rounded-xl border border-[#EEF0F4] p-6 rp-card-shadow">
-        <h3 className="font-[family-name:var(--font-playfair)] text-[16px] font-semibold text-[#0E3470] mb-5">
-          {t('assumptions')}
-        </h3>
+        <div className="flex items-center justify-between mb-5 gap-3">
+          <h3 className="font-[family-name:var(--font-playfair)] text-[16px] font-semibold text-[#0E3470]">
+            {t('assumptions')}
+          </h3>
+          <button
+            type="button"
+            onClick={handleExportExcel}
+            className="inline-flex items-center gap-1.5 px-3 py-2 bg-[#FDF8ED] border border-[#BC9C45] text-[#BC9C45] hover:bg-[#BC9C45] hover:text-white text-[11px] font-semibold rounded-lg transition-colors"
+            aria-label={t('exportToExcel')}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            {t('exportToExcel')}
+          </button>
+        </div>
         {sliders.map((inp, i) => {
           const pct = ((parseFloat(inp.val) - parseFloat(inp.min)) / (parseFloat(inp.max) - parseFloat(inp.min))) * 100;
           return (
@@ -1980,20 +2006,7 @@ export default function DealDetailClient({
                 {t('expressInterest')}
               </button>
             )}
-            {/* OM download — View OM now lives in the Transaction Documents card below */}
-            {deal.om_storage_path && (
-              <a
-                href={`/api/deals/${deal.id}/om`}
-                className="hidden md:inline-flex px-4 py-2 border border-[#EEF0F4] hover:border-[#BC9C45] text-[#6B7280] hover:text-[#0E3470] text-[12px] font-semibold rounded-lg transition-colors items-center gap-1.5"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                  <polyline points="7 10 12 15 17 10"/>
-                  <line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
-                {tcom('download')}
-              </a>
-            )}
+            {/* Header download button removed — View OM and per-document buttons live in the Transaction Documents card below. */}
             <div className="hidden md:block h-4 w-px bg-[#EEF0F4]" />
             <span className="hidden md:inline text-[9px] font-semibold tracking-[2px] uppercase text-[#9CA3AF]">
               {t('confidential')}
@@ -2064,6 +2077,14 @@ export default function DealDetailClient({
                   accentColor="#1D5FB8"
                 />
               </div>
+              {deal.timeline_note && (
+                <div className="mt-4 px-4 py-3 bg-[#FDF8ED] border-l-[3px] border-[#BC9C45] rounded-md text-[13px] text-[#6B7280] leading-[1.6]">
+                  <span className="font-bold text-[#BC9C45] mr-2 tracking-[1px]">
+                    ℹ {t('timelineNoteLabel')}
+                  </span>
+                  {deal.timeline_note}
+                </div>
+              )}
             </div>
           </div>
 
@@ -2266,10 +2287,6 @@ export default function DealDetailClient({
         {/* 5E. TAB BAR                                                        */}
         {/* ------------------------------------------------------------------ */}
         <div ref={tabBarRef} className="px-4 md:px-8 mt-6 md:mt-8">
-          <div className="flex items-center gap-2.5 px-4 py-2.5 bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg mb-4">
-            <span className="text-[15px]">🔒</span>
-            <span className="text-[13px] text-[#6B7280]">Held by: <span className="font-bold text-[#0F1B2D]">Bruce J. Smoler, Esq.</span> — Escrow Attorney, Smoler & Associates, P.A.</span>
-          </div>
           <div className="flex border-b border-[#E5E7EB] overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
             {tabs.map((tab) => (
               <button
@@ -2598,30 +2615,130 @@ export default function DealDetailClient({
                   {t('propertyDetails')}
                 </h3>
                 <div className="space-y-0">
-                  {[
-                    { key: 'type', label: t('type'), value: tPt.has(deal.property_type) ? tPt(deal.property_type) : deal.property_type },
-                    { key: 'class', label: t('class'), value: deal.class_type },
-                    { key: 'yearBuilt', label: t('yearBuilt'), value: deal.year_built?.toString() },
-                    { key: 'sqFt', label: t('sqFt'), value: formatSqFt(deal.square_footage) },
-                    { key: 'units', label: t('units'), value: deal.units },
-                    { key: 'neighborhood', label: t('neighborhood'), value: deal.neighborhood },
-                  ].map((row, idx) => (
-                    <div
-                      key={row.key}
-                      className={`flex justify-between gap-3 py-2.5 ${
-                        idx % 2 === 0 ? 'bg-[#F7F8FA]' : ''
-                      } px-2 rounded`}
-                    >
-                      <span className="data-label shrink-0">
-                        {row.label}
-                      </span>
-                      <span className="text-sm font-semibold text-[#0E3470] text-right break-words min-w-0">
-                        {row.value ?? '--'}
-                      </span>
-                    </div>
-                  ))}
+                  {(() => {
+                    const ppNum = parseFloat(deal.purchase_price ?? '0');
+                    const sfNum = parseFloat((deal.square_footage ?? '').replace(/,/g, ''));
+                    const pricePerSf = ppNum > 0 && sfNum > 0
+                      ? `$${(ppNum / sfNum).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                      : null;
+
+                    const rows: { key: string; label: string; value: string | null | undefined }[] = [
+                      { key: 'type', label: t('type'), value: tPt.has(deal.property_type) ? tPt(deal.property_type) : deal.property_type },
+                      { key: 'class', label: t('class'), value: deal.class_type },
+                      { key: 'yearBuilt', label: t('yearBuilt'), value: deal.year_built?.toString() },
+                    ];
+                    if (deal.year_renovated) {
+                      rows.push({ key: 'yearRenovated', label: t('yearRenovated'), value: deal.year_renovated });
+                    }
+                    rows.push(
+                      { key: 'sqFt', label: t('sqFt'), value: formatSqFt(deal.square_footage) },
+                      { key: 'units', label: t('units'), value: deal.units },
+                      { key: 'neighborhood', label: t('neighborhood'), value: deal.neighborhood },
+                    );
+                    if (pricePerSf) {
+                      rows.push({ key: 'pricePerSf', label: t('pricePerSf'), value: pricePerSf });
+                    }
+                    return rows.map((row, idx) => (
+                      <div
+                        key={row.key}
+                        className={`flex justify-between gap-3 py-2.5 ${
+                          idx % 2 === 0 ? 'bg-[#F7F8FA]' : ''
+                        } px-2 rounded`}
+                      >
+                        <span className="data-label shrink-0">
+                          {row.label}
+                        </span>
+                        <span className="text-sm font-semibold text-[#0E3470] text-right break-words min-w-0">
+                          {row.value ?? '--'}
+                        </span>
+                      </div>
+                    ));
+                  })()}
                 </div>
               </div>
+
+              {/* Negotiation Summary — only when seller asking cap rate is set */}
+              {(() => {
+                const askingCap = parseFloat(deal.asking_cap_rate ?? '');
+                if (!(askingCap > 0)) return null;
+                const negotiatedCap = computed.capRate;
+                const areaCap = parseFloat(deal.area_cap_rate ?? '');
+                const hasArea = areaCap > 0;
+
+                const vsAskBps = Math.round((negotiatedCap - askingCap) * 100);
+                const vsMarketBps = hasArea ? Math.round((negotiatedCap - areaCap) * 100) : null;
+
+                const fmtBps = (bps: number) => {
+                  const sign = bps >= 0 ? '+' : '';
+                  return `${sign}${bps} ${t('bps')}`;
+                };
+                const arrow = (bps: number) => (bps >= 0 ? '▲' : '▼');
+                const tone = (bps: number) =>
+                  bps >= 0 ? { color: '#0B8A4D', bg: 'rgba(11,138,77,0.08)' } : { color: '#C0392B', bg: 'rgba(192,57,43,0.08)' };
+
+                return (
+                  <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 rp-card-shadow">
+                    <h3 className="text-sm font-semibold text-[#0E3470] mb-4 flex items-center gap-2">
+                      <span className="text-[10px] font-bold tracking-[2px] uppercase text-[#BC9C45]">★</span>
+                      {t('negotiationSummary')}
+                    </h3>
+                    <div className="space-y-1.5 mb-4">
+                      {hasArea && (
+                        <div className="flex justify-between items-center py-2 px-2 bg-[#F7F8FA] rounded">
+                          <span className="data-label">{t('areaCapRate')}</span>
+                          <span className="text-sm font-semibold text-[#0E3470] tabular-nums">{areaCap.toFixed(2)}%</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center py-2 px-2 rounded">
+                        <span className="data-label">{t('askingCapRate')}</span>
+                        <span className="text-sm font-semibold text-[#0E3470] tabular-nums">{askingCap.toFixed(2)}%</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2 px-2 bg-[#FDF8ED] rounded border-l-[3px] border-[#BC9C45]">
+                        <span className="text-[11px] font-semibold uppercase tracking-[1.5px] text-[#BC9C45]">{t('negotiatedCapRate')}</span>
+                        <span className="text-base font-bold text-[#0E3470] tabular-nums">{negotiatedCap.toFixed(2)}%</span>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      {(() => {
+                        const t1 = tone(vsAskBps);
+                        return (
+                          <div
+                            className="flex items-center justify-between px-3 py-2.5 rounded-lg"
+                            style={{ background: t1.bg }}
+                          >
+                            <span className="data-label">{t('vsSellerAsk')}</span>
+                            <span
+                              className="text-base font-bold tabular-nums flex items-center gap-1"
+                              style={{ color: t1.color }}
+                            >
+                              <span>{arrow(vsAskBps)}</span>
+                              {fmtBps(vsAskBps)}
+                            </span>
+                          </div>
+                        );
+                      })()}
+                      {vsMarketBps !== null && (() => {
+                        const t2 = tone(vsMarketBps);
+                        return (
+                          <div
+                            className="flex items-center justify-between px-3 py-2.5 rounded-lg"
+                            style={{ background: t2.bg }}
+                          >
+                            <span className="data-label">{t('vsMarket')}</span>
+                            <span
+                              className="text-base font-bold tabular-nums flex items-center gap-1"
+                              style={{ color: t2.color }}
+                            >
+                              <span>{arrow(vsMarketBps)}</span>
+                              {fmtBps(vsMarketBps)}
+                            </span>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Cap Rate Sparkline */}
               <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 rp-card-shadow">
@@ -2988,6 +3105,14 @@ export default function DealDetailClient({
                 <CountdownRing label={t('extension')} targetDate={deal.extension_deadline} accentColor="#6B7280" />
               )}
             </div>
+            {deal.timeline_note && (
+              <div className="mt-6 px-4 py-3 bg-[#FDF8ED] border-l-[3px] border-[#BC9C45] rounded-md text-[13px] text-[#6B7280] leading-[1.6]">
+                <span className="font-bold text-[#BC9C45] mr-2 tracking-[1px]">
+                  ℹ {t('timelineNoteLabel')}
+                </span>
+                {deal.timeline_note}
+              </div>
+            )}
           </div>
 
           {/* Lock Deal */}

@@ -31,6 +31,7 @@ interface DealFormData {
   units: string;
   class_type: string;
   year_built: string;
+  year_renovated: string;
   occupancy: string;
   purchase_price: string;
   noi: string;
@@ -63,6 +64,8 @@ interface DealFormData {
   // Credits
   seller_credit: string;
   pref_return: string;
+  area_cap_rate: string;
+  asking_cap_rate: string;
   // Exit
   hold_period_years: string;
   exit_cap_rate: string;
@@ -70,6 +73,7 @@ interface DealFormData {
   dd_deadline: string;
   close_deadline: string;
   extension_deadline: string;
+  timeline_note: string;
   psa_draft_start: string;
   loi_signed_at: string;
   teaser_description: string;
@@ -92,6 +96,7 @@ const initialFormData: DealFormData = {
   units: '',
   class_type: '',
   year_built: '',
+  year_renovated: '',
   occupancy: '',
   purchase_price: '',
   noi: '',
@@ -121,12 +126,15 @@ const initialFormData: DealFormData = {
   mezz_term_months: '60',
   seller_credit: '0',
   pref_return: '8',
+  area_cap_rate: '',
+  asking_cap_rate: '',
   hold_period_years: '5',
   exit_cap_rate: '',
   debt_terms_quoted: false,
   dd_deadline: '',
   close_deadline: '',
   extension_deadline: '',
+  timeline_note: '',
   psa_draft_start: '',
   loi_signed_at: '',
   teaser_description: '',
@@ -389,6 +397,7 @@ export default function NewDealPage() {
         units: form.units || null,
         class_type: form.class_type || null,
         year_built: form.year_built ? parseInt(form.year_built, 10) : null,
+        year_renovated: form.year_renovated.trim() || null,
         occupancy: form.occupancy || null,
         purchase_price: form.purchase_price.trim(),
         noi: form.noi || null,
@@ -411,6 +420,7 @@ export default function NewDealPage() {
         dd_deadline: form.dd_deadline || null,
         close_deadline: form.close_deadline || null,
         extension_deadline: form.extension_deadline || null,
+        timeline_note: form.timeline_note.trim() || null,
         psa_draft_start: form.psa_draft_start || null,
         loi_signed_at: form.loi_signed_at || null,
         teaser_description: form.teaser_description || null,
@@ -433,6 +443,8 @@ export default function NewDealPage() {
         mezz_term_months: form.mezz_term_months || '60',
         seller_credit: form.seller_credit || '0',
         pref_return: form.pref_return || '8',
+        area_cap_rate: form.area_cap_rate.trim() || null,
+        asking_cap_rate: form.asking_cap_rate.trim() || null,
         hold_period_years: form.hold_period_years || '5',
         exit_cap_rate: form.exit_cap_rate || null,
         debt_terms_quoted: form.debt_terms_quoted || false,
@@ -777,6 +789,12 @@ export default function NewDealPage() {
             type="number"
           />
           <Input
+            label="Year Renovated"
+            value={form.year_renovated}
+            onChange={(e) => updateField('year_renovated', e.target.value)}
+            placeholder="e.g. 2019"
+          />
+          <Input
             label="Occupancy %"
             value={form.occupancy}
             onChange={(e) => updateField('occupancy', e.target.value)}
@@ -839,6 +857,27 @@ export default function NewDealPage() {
               <Input label="Hold (yrs)" value={form.hold_period_years} onChange={(e) => updateField('hold_period_years', e.target.value)} placeholder="5" />
               <Input label="Exit Cap %" value={form.exit_cap_rate} onChange={(e) => updateField('exit_cap_rate', e.target.value)} placeholder="Same as entry" />
               <Input label="Pref Return %" value={form.pref_return} onChange={(e) => updateField('pref_return', e.target.value)} placeholder="8" />
+            </div>
+
+            <div className="mt-5 pt-5 border-t border-rp-gray-200">
+              <h3 className="text-[13px] font-semibold text-rp-gray-500 mb-1">Market Benchmarks</h3>
+              <p className="text-[11px] text-rp-gray-400 mb-3">
+                Powers the Negotiation Summary on the investor page. Leave blank to hide.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <Input
+                  label="Area Market Cap %"
+                  value={form.area_cap_rate}
+                  onChange={(e) => updateField('area_cap_rate', e.target.value)}
+                  placeholder="e.g. 7.5"
+                />
+                <Input
+                  label="Seller Asking Cap %"
+                  value={form.asking_cap_rate}
+                  onChange={(e) => updateField('asking_cap_rate', e.target.value)}
+                  placeholder="e.g. 8.0"
+                />
+              </div>
             </div>
           </div>
 
@@ -994,6 +1033,21 @@ export default function NewDealPage() {
             value={form.extension_deadline}
             onChange={(e) => updateField('extension_deadline', e.target.value)}
           />
+        </div>
+        <div className="mt-4">
+          <label className="block text-[13px] font-medium text-rp-gray-700 mb-1.5">
+            Timeline Note
+          </label>
+          <textarea
+            value={form.timeline_note}
+            onChange={(e) => updateField('timeline_note', e.target.value)}
+            placeholder="e.g. Extended DD: seller traveling abroad. Full access maintained remotely."
+            rows={2}
+            className="w-full px-3.5 py-2.5 border border-rp-gray-300 rounded-lg text-sm text-rp-gray-700 focus:outline-none focus:ring-[3px] focus:ring-rp-gold/15 focus:border-rp-gold placeholder:text-rp-gray-400 transition-all resize-vertical"
+          />
+          <p className="mt-1 text-[11px] text-rp-gray-500">
+            Optional context shown below the countdown clocks on the investor page.
+          </p>
         </div>
       </div>
 

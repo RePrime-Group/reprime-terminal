@@ -17,12 +17,12 @@ export async function generateMetadata({ params }: DealDetailPageProps) {
 // Columns needed by the overview tab + header + hero + metric bar
 const DEAL_COLUMNS = [
   'id', 'name', 'city', 'state', 'property_type',
-  'square_footage', 'units', 'class_type', 'year_built', 'occupancy',
+  'square_footage', 'units', 'class_type', 'year_built', 'year_renovated', 'occupancy',
   'purchase_price', 'noi', 'cap_rate', 'irr', 'coc', 'dscr',
   'equity_required', 'loan_estimate', 'seller_financing', 'special_terms',
   'assignment_fee', 'assignment_irr', 'gplp_irr',
   'acq_fee', 'asset_mgmt_fee', 'gp_carry', 'loan_fee',
-  'dd_deadline', 'close_deadline', 'extension_deadline',
+  'dd_deadline', 'close_deadline', 'extension_deadline', 'timeline_note',
   'deposit_amount', 'deposit_held_by', 'om_storage_path',
   'loi_signed_storage_path', 'psa_storage_path', 'full_report_storage_path', 'costar_report_storage_path',
   'neighborhood', 'metro_population', 'job_growth',
@@ -30,6 +30,7 @@ const DEAL_COLUMNS = [
   'ltv', 'interest_rate', 'amortization_years', 'loan_fee_points', 'io_period_months',
   'mezz_percent', 'mezz_rate', 'mezz_term_months',
   'seller_credit', 'pref_return',
+  'area_cap_rate', 'asking_cap_rate',
   'hold_period_years', 'exit_cap_rate', 'rent_growth',
   'legal_title_estimate', 'disposition_cost_pct', 'capex',
   'debt_terms_quoted',

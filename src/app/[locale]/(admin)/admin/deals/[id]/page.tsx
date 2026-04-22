@@ -47,6 +47,7 @@ interface DealFormData {
   units: string;
   class_type: string;
   year_built: string;
+  year_renovated: string;
   occupancy: string;
   purchase_price: string;
   noi: string;
@@ -79,6 +80,8 @@ interface DealFormData {
   // Credits
   seller_credit: string;
   pref_return: string;
+  area_cap_rate: string;
+  asking_cap_rate: string;
   // Exit
   hold_period_years: string;
   exit_cap_rate: string;
@@ -91,6 +94,7 @@ interface DealFormData {
   dd_deadline: string;
   close_deadline: string;
   extension_deadline: string;
+  timeline_note: string;
   psa_draft_start: string;
   loi_signed_at: string;
   teaser_description: string;
@@ -176,6 +180,7 @@ function dealToForm(deal: TerminalDeal): DealFormData {
     units: deal.units ?? '',
     class_type: deal.class_type ?? '',
     year_built: deal.year_built?.toString() ?? '',
+    year_renovated: deal.year_renovated ?? '',
     occupancy: deal.occupancy ?? '',
     purchase_price: deal.purchase_price,
     noi: deal.noi ?? '',
@@ -205,6 +210,8 @@ function dealToForm(deal: TerminalDeal): DealFormData {
     mezz_term_months: deal.mezz_term_months ?? '60',
     seller_credit: deal.seller_credit ?? '0',
     pref_return: deal.pref_return ?? '0',
+    area_cap_rate: deal.area_cap_rate ?? '',
+    asking_cap_rate: deal.asking_cap_rate ?? '',
     hold_period_years: deal.hold_period_years ?? '5',
     exit_cap_rate: deal.exit_cap_rate ?? '',
     rent_growth: deal.rent_growth ?? '',
@@ -215,6 +222,7 @@ function dealToForm(deal: TerminalDeal): DealFormData {
     dd_deadline: toDatetimeLocal(deal.dd_deadline),
     close_deadline: toDatetimeLocal(deal.close_deadline),
     extension_deadline: toDatetimeLocal(deal.extension_deadline),
+    timeline_note: deal.timeline_note ?? '',
     psa_draft_start: toDatetimeLocal(deal.psa_draft_start),
     loi_signed_at: toDatetimeLocal(deal.loi_signed_at),
     teaser_description: deal.teaser_description ?? '',
@@ -480,6 +488,7 @@ export default function EditDealPage() {
         units: form.units || null,
         class_type: form.class_type || null,
         year_built: form.year_built ? parseInt(form.year_built, 10) : null,
+        year_renovated: form.year_renovated.trim() || null,
         occupancy: form.occupancy || null,
         purchase_price: form.purchase_price.trim(),
         noi: form.noi || null,
@@ -509,6 +518,8 @@ export default function EditDealPage() {
         mezz_term_months: form.mezz_term_months || '60',
         seller_credit: form.seller_credit || '0',
         pref_return: form.pref_return || '0',
+        area_cap_rate: form.area_cap_rate.trim() || null,
+        asking_cap_rate: form.asking_cap_rate.trim() || null,
         hold_period_years: form.hold_period_years || '5',
         exit_cap_rate: form.exit_cap_rate || null,
         rent_growth: form.rent_growth || null,
@@ -519,6 +530,7 @@ export default function EditDealPage() {
         dd_deadline: form.dd_deadline || null,
         close_deadline: form.close_deadline || null,
         extension_deadline: form.extension_deadline || null,
+        timeline_note: form.timeline_note.trim() || null,
         psa_draft_start: form.psa_draft_start || null,
         loi_signed_at: form.loi_signed_at || null,
         teaser_description: form.teaser_description || null,
@@ -1072,6 +1084,12 @@ export default function EditDealPage() {
             type="number"
           />
           <Input
+            label="Year Renovated"
+            value={form.year_renovated}
+            onChange={(e) => updateField('year_renovated', e.target.value)}
+            placeholder="e.g. 2019"
+          />
+          <Input
             label="Occupancy %"
             value={form.occupancy}
             onChange={(e) => updateField('occupancy', e.target.value)}
@@ -1165,6 +1183,28 @@ export default function EditDealPage() {
               <Input label="Annual Rent Growth %" value={form.rent_growth} onChange={(e) => updateField('rent_growth', e.target.value)} placeholder="e.g. 3.0 (blank = 0%)" />
               <Input label="Legal/Title Estimate ($)" value={form.legal_title_estimate} onChange={(e) => updateField('legal_title_estimate', e.target.value)} placeholder="e.g. 25000 (blank = $0)" />
               <Input label="Disposition Cost %" value={form.disposition_cost_pct} onChange={(e) => updateField('disposition_cost_pct', e.target.value)} placeholder="e.g. 2.0 (blank = 0%)" />
+            </div>
+          </div>
+
+          {/* Market Benchmarks */}
+          <div className="bg-white rounded-2xl border border-rp-gray-200 p-6 mb-6">
+            <h2 className="text-[16px] font-semibold text-rp-navy mb-1">Market Benchmarks</h2>
+            <p className="text-[12px] text-rp-gray-500 mb-5">
+              Powers the Negotiation Summary card on the investor page. Leave blank to hide that section.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                label="Area Market Cap Rate %"
+                value={form.area_cap_rate}
+                onChange={(e) => updateField('area_cap_rate', e.target.value)}
+                placeholder="e.g. 7.5"
+              />
+              <Input
+                label="Seller Asking Cap Rate %"
+                value={form.asking_cap_rate}
+                onChange={(e) => updateField('asking_cap_rate', e.target.value)}
+                placeholder="e.g. 8.0"
+              />
             </div>
           </div>
 
@@ -1285,6 +1325,21 @@ export default function EditDealPage() {
             value={form.extension_deadline}
             onChange={(e) => updateField('extension_deadline', e.target.value)}
           />
+        </div>
+        <div className="mt-4">
+          <label className="block text-[13px] font-medium text-rp-gray-700 mb-1.5">
+            Timeline Note
+          </label>
+          <textarea
+            value={form.timeline_note}
+            onChange={(e) => updateField('timeline_note', e.target.value)}
+            placeholder="e.g. Extended DD: seller traveling abroad. Full access maintained remotely."
+            rows={2}
+            className="w-full px-3.5 py-2.5 border border-rp-gray-300 rounded-lg text-sm text-rp-gray-700 focus:outline-none focus:ring-[3px] focus:ring-rp-gold/15 focus:border-rp-gold placeholder:text-rp-gray-400 transition-all resize-vertical"
+          />
+          <p className="mt-1 text-[11px] text-rp-gray-500">
+            Optional context shown below the countdown clocks on the investor page.
+          </p>
         </div>
       </div>
 
