@@ -158,6 +158,7 @@ export default function InvestorListClient({
   const tc = useTranslations('common');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const filterLabels: Record<InviteFilter, string> = {
     all: t('allInvitations'),
@@ -337,6 +338,15 @@ export default function InvestorListClient({
                           />
                         )}
                         <SetActiveButton investorId={investor.id} isActive={investor.is_active} onDone={() => router.refresh()} />
+                        {currentUserRole === 'owner' && investor.id !== currentUserId && (
+                          <button
+                            type="button"
+                            onClick={() => setDeleteTarget({ id: investor.id, name: investor.full_name })}
+                            className="text-xs font-semibold text-red-600 hover:text-red-800 transition-colors"
+                          >
+                            {tc('delete')}
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -415,6 +425,15 @@ export default function InvestorListClient({
                         )}
                         {emp.id !== currentUserId && (
                           <SetActiveButton investorId={emp.id} isActive={emp.is_active} onDone={() => router.refresh()} />
+                        )}
+                        {currentUserRole === 'owner' && emp.id !== currentUserId && (
+                          <button
+                            type="button"
+                            onClick={() => setDeleteTarget({ id: emp.id, name: emp.full_name })}
+                            className="text-xs font-semibold text-red-600 hover:text-red-800 transition-colors"
+                          >
+                            {tc('delete')}
+                          </button>
                         )}
                       </div>
                     </td>
@@ -508,6 +527,123 @@ export default function InvestorListClient({
           )}
         </>
       )}
+
+      {deleteTarget && (
+        <DeleteUserModal
+          target={deleteTarget}
+          onClose={() => setDeleteTarget(null)}
+          onDone={() => {
+            setDeleteTarget(null);
+            router.refresh();
+          }}
+          labels={{
+            title: t('deleteUserTitle'),
+            body: t('deleteUserBody', { name: deleteTarget.name }),
+            passwordLabel: t('yourPassword'),
+            passwordPlaceholder: t('passwordPlaceholder'),
+            cancel: tc('cancel'),
+            confirm: t('deleteUserConfirm'),
+            deleting: tc('deleting'),
+            failed: t('deleteUserFailed'),
+            incorrectPassword: t('incorrectPassword'),
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function DeleteUserModal({
+  target,
+  onClose,
+  onDone,
+  labels,
+}: {
+  target: { id: string; name: string };
+  onClose: () => void;
+  onDone: () => void;
+  labels: {
+    title: string;
+    body: string;
+    passwordLabel: string;
+    passwordPlaceholder: string;
+    cancel: string;
+    confirm: string;
+    deleting: string;
+    failed: string;
+    incorrectPassword: string;
+  };
+}) {
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!password || busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/users/${target.id}/delete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      if (!res.ok) {
+        setError(res.status === 401 ? labels.incorrectPassword : labels.failed);
+        setBusy(false);
+        return;
+      }
+      onDone();
+    } catch {
+      setError(labels.failed);
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+      <div
+        className="w-full max-w-md rounded-2xl bg-white shadow-xl border border-rp-gray-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <form onSubmit={submit}>
+          <div className="px-6 pt-6 pb-4">
+            <h2 className="text-lg font-bold text-rp-navy mb-2">{labels.title}</h2>
+            <p className="text-sm text-rp-gray-600 mb-4">{labels.body}</p>
+            <label className="block text-xs font-semibold text-rp-gray-600 mb-1.5">
+              {labels.passwordLabel}
+            </label>
+            <input
+              type="password"
+              autoFocus
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder={labels.passwordPlaceholder}
+              className="w-full px-3 py-2 text-sm border border-rp-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rp-gold/20 focus:border-rp-gold"
+              disabled={busy}
+            />
+            {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+          </div>
+          <div className="flex items-center justify-end gap-2 px-6 py-4 bg-rp-gray-50 rounded-b-2xl border-t border-rp-gray-200">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={busy}
+              className="px-4 py-2 text-sm font-medium text-rp-gray-700 hover:bg-rp-gray-100 rounded-lg disabled:opacity-50 transition-colors"
+            >
+              {labels.cancel}
+            </button>
+            <button
+              type="submit"
+              disabled={busy || !password}
+              className="px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {busy ? labels.deleting : labels.confirm}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
