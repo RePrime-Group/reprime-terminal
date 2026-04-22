@@ -2071,15 +2071,20 @@ export default function DealDetailClient({
           <div className="flex flex-col gap-3 justify-between">
             {/* Seven-Metric Cards — primary signal above the fold */}
             <div className="grid grid-cols-2 gap-2 md:gap-2.5">
-              {[
-                { label: tc('purchasePrice'), value: formatPrice(deal.purchase_price), borderColor: '#0E3470', span: 'col-span-2' },
-                { label: tc('noi'), value: formatPrice(deal.noi), borderColor: '#0E3470', span: 'col-span-2' },
-                { label: tc('capRate'), value: computed.capRate > 0 ? computed.capRate.toFixed(2) + '%' : formatPercent(deal.cap_rate), borderColor: '#BC9C45', span: 'col-span-1' },
-                { label: tc('irr'), value: computed.irr !== null ? computed.irr.toFixed(2) + '%' : (deal.irr ? formatPercent(deal.irr) : '—'), borderColor: '#0B8A4D', valueColor: '#0B8A4D', span: 'col-span-1' },
-                { label: tc('coc'), value: computed.cocReturn !== 0 ? computed.cocReturn.toFixed(2) + '%' : (deal.coc ? formatPercent(deal.coc) : '—'), borderColor: '#0B8A4D', valueColor: '#0B8A4D', span: 'col-span-1' },
-                { label: tc('dscr'), value: computed.combinedDSCR > 0 ? computed.combinedDSCR.toFixed(2) + 'x' : formatDSCR(deal.dscr), borderColor: '#0E3470', span: 'col-span-1' },
-                { label: tc('equityRequired'), value: computed.netEquity > 0 ? '$' + Math.round(computed.netEquity).toLocaleString() : formatPrice(deal.equity_required), borderColor: '#BC9C45', span: 'col-span-2' },
-              ].map((m, idx) => (
+              {(() => {
+                const fullyFinanced = computed.netEquity <= 0;
+                const hasPositiveCF = computed.distributableCashFlow > 0;
+                const infReturn = fullyFinanced ? (hasPositiveCF ? '∞' : 'N/A') : null;
+                return [
+                  { label: tc('purchasePrice'), value: formatPrice(deal.purchase_price), borderColor: '#0E3470', span: 'col-span-2' },
+                  { label: tc('noi'), value: formatPrice(deal.noi), borderColor: '#0E3470', span: 'col-span-2' },
+                  { label: tc('capRate'), value: computed.capRate > 0 ? computed.capRate.toFixed(2) + '%' : formatPercent(deal.cap_rate), borderColor: '#BC9C45', span: 'col-span-1' },
+                  { label: tc('irr'), value: infReturn ?? (computed.irr !== null ? computed.irr.toFixed(2) + '%' : (deal.irr ? formatPercent(deal.irr) : '—')), borderColor: '#0B8A4D', valueColor: '#0B8A4D', span: 'col-span-1' },
+                  { label: tc('coc'), value: infReturn ?? (computed.cocReturn !== null ? computed.cocReturn.toFixed(2) + '%' : (deal.coc ? formatPercent(deal.coc) : '—')), borderColor: '#0B8A4D', valueColor: '#0B8A4D', span: 'col-span-1' },
+                  { label: tc('dscr'), value: computed.combinedDSCR > 0 ? computed.combinedDSCR.toFixed(2) + 'x' : formatDSCR(deal.dscr), borderColor: '#0E3470', span: 'col-span-1' },
+                  { label: tc('equityRequired'), value: fullyFinanced ? '$0' : (computed.netEquity > 0 ? '$' + Math.round(computed.netEquity).toLocaleString() : formatPrice(deal.equity_required)), borderColor: '#BC9C45', valueColor: fullyFinanced ? '#0B8A4D' : undefined, span: 'col-span-2' },
+                ];
+              })().map((m, idx) => (
                 <FadeInOnScroll key={m.label} delay={idx * 0.05} className={m.span}>
                   <MetricCard
                     label={m.label}
@@ -2228,35 +2233,6 @@ export default function DealDetailClient({
               </div>
             </div>
           </div>
-        </div>
-
-        {/* ------------------------------------------------------------------ */}
-        {/* 5D. SEVEN-METRIC BAR (left border metric cards - keep as is)       */}
-        {/* ------------------------------------------------------------------ */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 md:gap-3 px-4 md:px-8 mt-6 md:mt-8">
-          {(() => {
-            const fullyFinanced = computed.netEquity <= 0;
-            const hasPositiveCF = computed.distributableCashFlow > 0;
-            const infReturn = fullyFinanced ? (hasPositiveCF ? '∞' : 'N/A') : null;
-            return [
-              { label: tc('purchasePrice'), value: formatPrice(deal.purchase_price), borderColor: '#0E3470' },
-              { label: tc('noi'), value: formatPrice(deal.noi), borderColor: '#0E3470' },
-              { label: tc('capRate'), value: computed.capRate > 0 ? computed.capRate.toFixed(2) + '%' : formatPercent(deal.cap_rate), borderColor: '#BC9C45' },
-              { label: tc('irr'), value: infReturn ?? (computed.irr !== null ? computed.irr.toFixed(2) + '%' : (deal.irr ? formatPercent(deal.irr) : '—')), borderColor: '#0B8A4D', valueColor: '#0B8A4D' },
-              { label: tc('coc'), value: infReturn ?? (computed.cocReturn !== null ? computed.cocReturn.toFixed(2) + '%' : (deal.coc ? formatPercent(deal.coc) : '—')), borderColor: '#0B8A4D', valueColor: '#0B8A4D' },
-              { label: tc('dscr'), value: computed.combinedDSCR > 0 ? computed.combinedDSCR.toFixed(2) + 'x' : formatDSCR(deal.dscr), borderColor: '#0E3470' },
-              { label: tc('equityRequired'), value: fullyFinanced ? '$0' : (computed.netEquity > 0 ? '$' + Math.round(computed.netEquity).toLocaleString() : formatPrice(deal.equity_required)), borderColor: '#BC9C45', valueColor: fullyFinanced ? '#0B8A4D' : undefined },
-            ];
-          })().map((m, idx) => (
-            <FadeInOnScroll key={m.label} delay={idx * 0.05}>
-              <MetricCard
-                label={m.label}
-                value={m.value}
-                borderColor={m.borderColor}
-                valueColor={m.valueColor}
-              />
-            </FadeInOnScroll>
-          ))}
         </div>
 
         {/* ------------------------------------------------------------------ */}
