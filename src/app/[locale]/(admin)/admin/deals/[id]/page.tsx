@@ -41,6 +41,7 @@ const CLASS_TYPES = ['A', 'B', 'C'] as const;
 interface DealFormData {
   name: string;
   property_type: string;
+  address: string;
   city: string;
   state: string;
   square_footage: string;
@@ -174,6 +175,7 @@ function dealToForm(deal: TerminalDeal): DealFormData {
   return {
     name: deal.name,
     property_type: deal.property_type,
+    address: deal.address ?? '',
     city: deal.city,
     state: deal.state,
     square_footage: deal.square_footage ?? '',
@@ -304,6 +306,8 @@ export default function EditDealPage() {
   const [newAddressCity, setNewAddressCity] = useState('');
   const [newAddressState, setNewAddressState] = useState('');
   const addressOmRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const [portfolioToggleError, setPortfolioToggleError] = useState<string | null>(null);
+  const [togglingPortfolio, setTogglingPortfolio] = useState(false);
 
   // Pipeline stage
   const [pipelineStage, setPipelineStage] = useState<string | null>(null);
@@ -482,6 +486,7 @@ export default function EditDealPage() {
       const updateData: Record<string, unknown> = {
         name: form.name.trim(),
         property_type: form.property_type,
+        address: !deal.is_portfolio && form.address.trim() ? form.address.trim() : null,
         city: form.city.trim(),
         state: form.state.trim(),
         square_footage: form.square_footage || null,
@@ -852,6 +857,68 @@ export default function EditDealPage() {
     setAddresses((prev) => prev.filter((a) => a.id !== addressId));
   };
 
+  const handleTogglePortfolio = async () => {
+    if (!deal) return;
+    const flipTo = !deal.is_portfolio;
+
+    if (!flipTo && addresses.length > 1) {
+      setPortfolioToggleError(
+        `This portfolio has ${addresses.length} addresses. Delete all but one to convert it to a single-property deal.`
+      );
+      return;
+    }
+    setPortfolioToggleError(null);
+    setTogglingPortfolio(true);
+
+    try {
+      const update: Record<string, unknown> = { is_portfolio: flipTo };
+      let addressToDelete: string | null = null;
+
+      // Flipping portfolio -> single with exactly one address: lift its street
+      // (and OM if the deal-level slot is empty) up to terminal_deals.
+      if (!flipTo && addresses.length === 1) {
+        const a = addresses[0];
+        update.address = a.address ?? deal.address ?? null;
+        if (!deal.om_storage_path && a.om_storage_path) {
+          update.om_storage_path = a.om_storage_path;
+        }
+        addressToDelete = a.id;
+      }
+
+      // Flipping single -> portfolio: the street field becomes unused on the deal.
+      if (flipTo) {
+        update.address = null;
+      }
+
+      const { error } = await supabase
+        .from('terminal_deals')
+        .update(update)
+        .eq('id', dealId);
+
+      if (error) {
+        alert(`Failed to change deal type: ${error.message}`);
+        return;
+      }
+
+      if (addressToDelete) {
+        await supabase.from('terminal_deal_addresses').delete().eq('id', addressToDelete);
+        setAddresses([]);
+      }
+
+      const updatedDeal: TerminalDeal = {
+        ...deal,
+        is_portfolio: flipTo,
+        address: (update.address as string | null | undefined) ?? deal.address ?? null,
+        om_storage_path: (update.om_storage_path as string | null | undefined) ?? deal.om_storage_path,
+      };
+      setDeal(updatedDeal);
+      setForm((prev) => (prev ? { ...prev, address: updatedDeal.address ?? '' } : prev));
+      if (update.om_storage_path) setOmPath(update.om_storage_path as string);
+    } finally {
+      setTogglingPortfolio(false);
+    }
+  };
+
   const handleAddressOmUpload = async (addressId: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || file.type !== 'application/pdf') return;
@@ -1058,6 +1125,15 @@ export default function EditDealPage() {
             error={errors.state}
             placeholder="State"
           />
+          {!deal.is_portfolio && (
+            <Input
+              label="Street Address"
+              value={form.address}
+              onChange={(e) => updateField('address', e.target.value)}
+              placeholder="e.g. 123 Main St"
+              className="md:col-span-2"
+            />
+          )}
           <Input
             label="Square Footage"
             value={form.square_footage}
@@ -1445,7 +1521,49 @@ export default function EditDealPage() {
         </div>
       </div>
 
-      {/* Portfolio Addresses */}
+      {/* Deal Type */}
+      <div className="bg-white rounded-2xl border border-rp-gray-200 p-6 mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h2 className="text-[16px] font-semibold text-rp-navy">Deal Type</h2>
+            <p className="text-[12px] text-rp-gray-400 mt-0.5">
+              {deal.is_portfolio
+                ? 'Portfolio — multiple addresses, each with its own OM and DD folders.'
+                : 'Single property — one street address, one OM.'}
+            </p>
+          </div>
+          <div className="bg-rp-gray-100 rounded-lg p-1 inline-flex">
+            <button
+              type="button"
+              disabled={togglingPortfolio}
+              onClick={() => { if (deal.is_portfolio) handleTogglePortfolio(); }}
+              className={`px-4 py-2 text-[12px] font-semibold rounded-md transition-all disabled:opacity-60 ${
+                !deal.is_portfolio ? 'bg-rp-navy text-white' : 'text-rp-gray-500 hover:text-rp-navy'
+              }`}
+            >
+              Single Property
+            </button>
+            <button
+              type="button"
+              disabled={togglingPortfolio}
+              onClick={() => { if (!deal.is_portfolio) handleTogglePortfolio(); }}
+              className={`px-4 py-2 text-[12px] font-semibold rounded-md transition-all disabled:opacity-60 ${
+                deal.is_portfolio ? 'bg-rp-navy text-white' : 'text-rp-gray-500 hover:text-rp-navy'
+              }`}
+            >
+              Portfolio
+            </button>
+          </div>
+        </div>
+        {portfolioToggleError && (
+          <div className="mt-2 p-3 bg-rp-red/5 border border-rp-red/20 rounded-lg">
+            <p className="text-[12px] text-rp-red">{portfolioToggleError}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Portfolio Addresses — only for portfolios */}
+      {deal.is_portfolio && (
       <div className="bg-white rounded-2xl border border-rp-gray-200 p-6 mb-6">
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
@@ -1554,6 +1672,7 @@ export default function EditDealPage() {
           </div>
         )}
       </div>
+      )}
 
       {/* Deal Documents — tabbed upload card (OM + Signed LOI + PSA + Full Report + CoStar Report) */}
       <div className="bg-white rounded-2xl border border-rp-gold-border p-6 mb-6">

@@ -110,11 +110,27 @@ CRITICAL RULES:
    - For IRR: estimate using cash flow + exit value at same cap rate after hold period
 4. purchase_price, noi, equity_required, loan_estimate should be PLAIN NUMBERS as strings (no $ or commas). Example: "2333500" not "$2,333,500"
 
+PORTFOLIO DETECTION (read carefully — this is where mistakes happen):
+- An OM is a PORTFOLIO only when it markets MULTIPLE DISTINCT PROPERTIES as one deal.
+  Positive signals: multiple separate street addresses, per-property rent rolls,
+  per-property financial breakouts, language like "portfolio", "collection",
+  "package", "X-Property Offering", "Y-Building Portfolio".
+- A single building is NOT a portfolio — even if it has many tenants, many suites,
+  or several parcels at one address.
+- A strip center with multiple storefronts at ONE street address is NOT a portfolio.
+- Two or more buildings at DIFFERENT street addresses sold as one deal IS a portfolio.
+
+Output accordingly:
+- Single property: set is_portfolio=false, fill "address" with the street address, and addresses MUST be [].
+- Portfolio: set is_portfolio=true, set "address"=null, and addresses MUST have >= 2 entries.
+
 Extract ALL fields. If not found, use null. Return ONLY valid JSON.
 
 {
-  "name": "Property name",
-  "city": "City",
+  "name": "Property name (for portfolio, a portfolio-level name)",
+  "is_portfolio": true or false,
+  "address": "Street address for single-property deals, null for portfolios",
+  "city": "City (for portfolio, pick primary or metro)",
   "state": "State abbreviation (e.g. IL, NY, TX)",
   "property_type": "One of: Office, Retail, Industrial, Multifamily, Mixed-Use, Hospitality, Medical, Other",
   "square_footage": "Total square footage as string",
@@ -159,17 +175,15 @@ Extract ALL fields. If not found, use null. Return ONLY valid JSON.
       "noi": "NOI for this specific address as plain number or null"
     }
   ],
-  "source_notes": "Explain which values came from OM vs LOI. Highlight any differences (e.g. 'OM asking $2.5M, LOI negotiated $2.33M'). Show your cap rate calculation."
+  "source_notes": "Explain which values came from OM vs LOI. Highlight any differences (e.g. 'OM asking $2.5M, LOI negotiated $2.33M'). Show your cap rate calculation. Also justify is_portfolio — one sentence on why this is or is not a portfolio."
 }
-
-If portfolio with multiple properties/addresses, fill addresses array with per-property data. If single property, addresses = [].
 
 JSON only:`,
   });
 
   try {
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 4096,
       messages: [{ role: 'user', content: contentBlocks }],
     });
@@ -182,6 +196,23 @@ JSON only:`,
     }
 
     const extracted = JSON.parse(jsonMatch[0]);
+
+    // Safety net: a portfolio must have >= 2 distinct addresses. If the model
+    // returned is_portfolio=true with fewer entries, or produced a single-entry
+    // addresses array while claiming single-property, force it back to single.
+    const addrCount = Array.isArray(extracted.addresses) ? extracted.addresses.length : 0;
+    if (addrCount < 2) {
+      extracted.is_portfolio = false;
+      if (addrCount === 1 && !extracted.address) {
+        // Lift the one address entry's street up to the top-level field so we
+        // don't lose it when we discard the addresses array.
+        extracted.address = extracted.addresses[0]?.address ?? null;
+      }
+      extracted.addresses = [];
+    } else {
+      extracted.is_portfolio = true;
+      extracted.address = null;
+    }
 
     return NextResponse.json({
       success: true,

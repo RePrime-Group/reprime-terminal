@@ -25,6 +25,7 @@ const CLASS_TYPES = ['A', 'B', 'C'] as const;
 interface DealFormData {
   name: string;
   property_type: string;
+  address: string;
   city: string;
   state: string;
   square_footage: string;
@@ -90,6 +91,7 @@ interface DealFormData {
 const initialFormData: DealFormData = {
   name: '',
   property_type: '',
+  address: '',
   city: '',
   state: '',
   square_footage: '',
@@ -262,6 +264,7 @@ export default function NewDealPage() {
       setForm((prev) => ({
         ...prev,
         name: d.name || prev.name,
+        address: d.address || prev.address,
         city: d.city || prev.city,
         state: d.state || prev.state,
         property_type: d.property_type || prev.property_type,
@@ -303,8 +306,9 @@ export default function NewDealPage() {
           : prev.close_deadline,
       }));
 
-      // Handle portfolio addresses from AI
-      if (d.addresses && d.addresses.length > 0) {
+      // Handle portfolio addresses from AI. The extract API enforces
+      // is_portfolio <=> addresses.length >= 2, so we trust the flag.
+      if (d.is_portfolio === true && Array.isArray(d.addresses) && d.addresses.length >= 2) {
         setIsPortfolio(true);
         setPortfolioAddresses(d.addresses.map((a: { label?: string; address?: string; city?: string; state?: string; square_footage?: string; units?: string }) => ({
           label: a.label || '',
@@ -314,6 +318,9 @@ export default function NewDealPage() {
           sf: a.square_footage || '',
           units: a.units || '',
         })));
+      } else {
+        setIsPortfolio(false);
+        setPortfolioAddresses([]);
       }
 
       if (d.source_notes) {
@@ -391,6 +398,8 @@ export default function NewDealPage() {
       const { data: newDeal, error } = await supabase.from('terminal_deals').insert({
         name: form.name.trim(),
         property_type: form.property_type,
+        is_portfolio: isPortfolio,
+        address: !isPortfolio && form.address.trim() ? form.address.trim() : null,
         city: form.city.trim(),
         state: form.state.trim(),
         square_footage: form.square_footage || null,
@@ -483,7 +492,8 @@ export default function NewDealPage() {
         return;
       }
 
-      // Create portfolio addresses if any
+      // Create portfolio addresses only when actually a portfolio.
+      // Single-property deals keep the street on terminal_deals.address.
       if (isPortfolio && portfolioAddresses.length > 0) {
         const addressInserts = portfolioAddresses
           .filter((a) => a.label.trim())
@@ -763,6 +773,15 @@ export default function NewDealPage() {
             error={errors.state}
             placeholder="State"
           />
+          {!isPortfolio && (
+            <Input
+              label="Street Address"
+              value={form.address}
+              onChange={(e) => updateField('address', e.target.value)}
+              placeholder="e.g. 123 Main St"
+              className="md:col-span-2"
+            />
+          )}
           <Input
             label="Square Footage"
             value={form.square_footage}

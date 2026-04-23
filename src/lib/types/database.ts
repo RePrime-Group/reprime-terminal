@@ -74,6 +74,8 @@ export interface TerminalDeal {
   name: string;
   city: string;
   state: string;
+  address: string | null;
+  is_portfolio: boolean;
   property_type: string;
   square_footage: string | null;
   units: string | null;

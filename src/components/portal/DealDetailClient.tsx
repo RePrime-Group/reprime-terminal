@@ -1682,6 +1682,20 @@ export default function DealDetailClient({
   const [ndaSigned, setNdaSigned] = useState(initialNDA || previewMode);
   const [showNDAModal, setShowNDAModal] = useState(false);
 
+  // Portfolio OM dropdown (Transaction Documents)
+  const [omMenuOpen, setOmMenuOpen] = useState(false);
+  const omMenuRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!omMenuOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (omMenuRef.current && !omMenuRef.current.contains(e.target as Node)) {
+        setOmMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [omMenuOpen]);
+
   // Honor ?tab=... query param on mount (e.g. from in-app notifications).
   useEffect(() => {
     const qTab = searchParams?.get('tab');
@@ -2215,18 +2229,62 @@ export default function DealDetailClient({
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                {deal.om_storage_path ? (
-                  <button
-                    onClick={() => handleViewDocument(`/api/deals/${deal.id}/om?view=true`, `${deal.name} — ${t('offeringMemorandum')}`)}
-                    className="px-3 py-2.5 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[11px] font-semibold rounded-lg transition-colors text-center"
-                  >
-                    {t('viewOm')}
-                  </button>
-                ) : (
-                  <span className="px-3 py-2.5 bg-[#F7F8FA] text-[#9CA3AF] text-[11px] font-semibold rounded-lg cursor-default text-center">
-                    {t('omPending')}
-                  </span>
-                )}
+                {(() => {
+                  const portfolioAddrOms = deal.is_portfolio
+                    ? (addresses ?? []).filter((a) => a.om_storage_path)
+                    : [];
+
+                  // Portfolio with per-address OMs uploaded → single button with a dropdown
+                  if (portfolioAddrOms.length > 0) {
+                    return (
+                      <div ref={omMenuRef} className="relative">
+                        <button
+                          onClick={() => setOmMenuOpen((o) => !o)}
+                          className="w-full px-3 py-2.5 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[11px] font-semibold rounded-lg transition-colors text-center flex items-center justify-center gap-1.5"
+                        >
+                          {t('viewOm')}
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${omMenuOpen ? 'rotate-180' : ''}`}>
+                            <polyline points="6 9 12 15 18 9" />
+                          </svg>
+                        </button>
+                        {omMenuOpen && (
+                          <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-[#EEF0F4] rounded-lg shadow-lg z-10 overflow-hidden">
+                            {portfolioAddrOms.map((a) => (
+                              <button
+                                key={a.id}
+                                onClick={() => {
+                                  setOmMenuOpen(false);
+                                  handleViewDocument(`/api/deals/${deal.id}/om?addressId=${a.id}&view=true`, `${a.label} — ${t('offeringMemorandum')}`);
+                                }}
+                                className="w-full px-3 py-2.5 text-left text-[11px] font-medium text-[#0E3470] hover:bg-[#FDF8ED] transition-colors border-b border-[#EEF0F4] last:border-b-0"
+                              >
+                                {a.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  // Single property, or portfolio fallback while per-address OMs pending
+                  if (deal.om_storage_path) {
+                    return (
+                      <button
+                        onClick={() => handleViewDocument(`/api/deals/${deal.id}/om?view=true`, `${deal.name} — ${t('offeringMemorandum')}`)}
+                        className="px-3 py-2.5 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[11px] font-semibold rounded-lg transition-colors text-center"
+                      >
+                        {t('viewOm')}
+                      </button>
+                    );
+                  }
+
+                  return (
+                    <span className="px-3 py-2.5 bg-[#F7F8FA] text-[#9CA3AF] text-[11px] font-semibold rounded-lg cursor-default text-center">
+                      {t('omPending')}
+                    </span>
+                  );
+                })()}
                 {deal.loi_signed_storage_path ? (
                   <button
                     onClick={() => handleViewDocument(`/api/deals/${deal.id}/document/loi?view=true`, `${deal.name} — ${t('signedLoi')}`)}
@@ -2338,8 +2396,8 @@ export default function DealDetailClient({
           >
             {/* Left Column */}
             <div className="space-y-6">
-              {/* Portfolio Address Cards */}
-              {addresses.length > 0 && (
+              {/* Portfolio Address Cards — only for portfolios */}
+              {deal.is_portfolio && addresses.length > 0 && (
                 <FadeInOnScroll delay={0}>
                   <div>
                     <h3 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#0E3470] mb-4">
@@ -2370,16 +2428,6 @@ export default function DealDetailClient({
                               )}
                             </div>
                           </div>
-                          {/* Address OM */}
-                          {addr.om_storage_path && (
-                            <button
-                              onClick={() => handleViewDocument(`/api/deals/${deal.id}/om?addressId=${addr.id}&view=true`, `${addr.label} — ${t('offeringMemorandum')}`)}
-                              className="mt-3 w-full py-2 rounded-lg text-[11px] font-semibold bg-[#BC9C45]/10 text-[#BC9C45] hover:bg-[#BC9C45]/20 transition-colors flex items-center justify-center gap-1.5"
-                            >
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                              {t('viewOm')}
-                            </button>
-                          )}
                         </div>
                       ))}
                     </div>
@@ -2622,11 +2670,15 @@ export default function DealDetailClient({
                       ? `$${(ppNum / sfNum).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                       : null;
 
-                    const rows: { key: string; label: string; value: string | null | undefined }[] = [
+                    const rows: { key: string; label: string; value: string | null | undefined }[] = [];
+                    if (deal.address) {
+                      rows.push({ key: 'address', label: t('address'), value: deal.address });
+                    }
+                    rows.push(
                       { key: 'type', label: t('type'), value: tPt.has(deal.property_type) ? tPt(deal.property_type) : deal.property_type },
                       { key: 'class', label: t('class'), value: deal.class_type },
                       { key: 'yearBuilt', label: t('yearBuilt'), value: deal.year_built?.toString() },
-                    ];
+                    );
                     if (deal.year_renovated) {
                       rows.push({ key: 'yearRenovated', label: t('yearRenovated'), value: deal.year_renovated });
                     }

@@ -642,6 +642,7 @@
       "jobGrowth": "Job Growth",
       "occupancy": "Occupancy",
       "type": "Type",
+      "address": "Address",
       "class": "Class",
       "yearBuilt": "Year Built",
       "yearRenovated": "Year Renovated",

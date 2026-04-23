@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: DealDetailPageProps) {
 
 // Columns needed by the overview tab + header + hero + metric bar
 const DEAL_COLUMNS = [
-  'id', 'name', 'city', 'state', 'property_type',
+  'id', 'name', 'city', 'state', 'address', 'is_portfolio', 'property_type',
   'square_footage', 'units', 'class_type', 'year_built', 'year_renovated', 'occupancy',
   'purchase_price', 'noi', 'cap_rate', 'irr', 'coc', 'dscr',
   'equity_required', 'loan_estimate', 'seller_financing', 'special_terms',
