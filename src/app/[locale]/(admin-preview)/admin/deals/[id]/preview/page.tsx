@@ -128,6 +128,24 @@ export default async function DealPreviewPage({ params }: DealPreviewPageProps) 
     (m: { scheduled_at: string }) => m.scheduled_at
   );
 
+  // ---------- Fetch portfolio addresses (for Portfolio Properties + OM dropdown) ----------
+  const { data: addressesData } = await supabase
+    .from('terminal_deal_addresses')
+    .select('id, label, address, city, state, square_footage, units, om_storage_path, display_order')
+    .eq('deal_id', id)
+    .order('display_order', { ascending: true });
+
+  const addresses = (addressesData ?? []) as {
+    id: string;
+    label: string;
+    address: string | null;
+    city: string | null;
+    state: string | null;
+    square_footage: string | null;
+    units: string | null;
+    om_storage_path: string | null;
+  }[];
+
   // ---------- Build deal with details ----------
   const dealWithDetails: DealWithDetails = {
     ...deal,
@@ -166,6 +184,7 @@ export default async function DealPreviewPage({ params }: DealPreviewPageProps) 
         availabilitySlots={availabilitySlots}
         bookedTimes={bookedTimes}
         locale={locale}
+        addresses={addresses}
         previewMode
         hasSignedNDA
       />
