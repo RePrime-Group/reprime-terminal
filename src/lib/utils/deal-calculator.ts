@@ -335,9 +335,33 @@ function solveIRR(cashFlows: number[], guess = 0.10, maxIter = 100, tol = 1e-7):
   return null; // didn't converge
 }
 
-// Compute "Traditional Close" metrics (no mezz) for comparison
-export function calculateTraditionalClose(inputs: DealInputs): DealMetrics {
+/**
+ * Compute property-level metrics by forcing every fee input to 0 before
+ * running the engine. Headline surfaces (metric strip, portal cards, admin
+ * live panel, FM tab) use this so fees entered in the admin don't contaminate
+ * cap rate / CoC / IRR / equity / DSCR.
+ *
+ * The Returns Calculator and Fee Disclosure section continue reading the deal
+ * record's real fee values — this helper is display-only.
+ */
+export function calculatePropertyMetrics(inputs: DealInputs): DealMetrics {
   return calculateDeal({
+    ...inputs,
+    loanFeePoints: 0,
+    acqFee: 0,
+    assignmentFee: 0,
+    assetMgmtFee: 0,
+    gpCarry: 0,
+    prefReturn: 0,
+    legalTitleEstimate: 0,
+    dispositionCostPct: 0,
+  });
+}
+
+// Compute "Traditional Close" metrics (no mezz) for comparison — also
+// property-level (no fees) so the comparison is apples-to-apples.
+export function calculateTraditionalClose(inputs: DealInputs): DealMetrics {
+  return calculatePropertyMetrics({
     ...inputs,
     sellerFinancing: false,
     sellerCredit: 0, // seller credits contingent on mezz structure excluded

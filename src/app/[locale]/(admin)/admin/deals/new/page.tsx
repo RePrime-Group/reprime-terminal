@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { createClient } from '@/lib/supabase/client';
-import { parseDealInputs, calculateDeal } from '@/lib/utils/deal-calculator';
+import { parseDealInputs, calculatePropertyMetrics } from '@/lib/utils/deal-calculator';
 import type { DealStatus } from '@/lib/types/database';
 
 const PROPERTY_TYPES = [
@@ -475,7 +475,7 @@ export default function NewDealPage() {
           exit_cap_rate: form.exit_cap_rate,
         };
         const ci = parseDealInputs(insertData);
-        const cm = calculateDeal(ci);
+        const cm = calculatePropertyMetrics(ci);
         await supabase.from('terminal_deals').update({
           cap_rate: cm.capRate > 0 ? cm.capRate.toFixed(2) : null,
           irr: cm.irr !== null ? cm.irr.toFixed(2) : null,
@@ -835,7 +835,7 @@ export default function NewDealPage() {
           gp_carry: form.gp_carry, pref_return: form.pref_return,
           hold_period_years: form.hold_period_years, exit_cap_rate: form.exit_cap_rate,
         });
-        const m = calculateDeal(ci);
+        const m = calculatePropertyMetrics(ci);
         const fmt = (n: number) => '$' + Math.round(n).toLocaleString();
         const pct = (n: number, d = 1) => n.toFixed(d) + '%';
         return (<>

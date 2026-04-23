@@ -9,7 +9,7 @@
 
 import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
-import { parseDealInputs, calculateDeal } from './src/lib/utils/deal-calculator';
+import { parseDealInputs, calculatePropertyMetrics } from './src/lib/utils/deal-calculator';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -38,7 +38,7 @@ async function main() {
 
   for (const deal of deals) {
     const inputs = parseDealInputs(deal as unknown as Record<string, unknown>);
-    const metrics = calculateDeal(inputs);
+    const metrics = calculatePropertyMetrics(inputs);
 
     const { error: updateError } = await supabase
       .from('terminal_deals')

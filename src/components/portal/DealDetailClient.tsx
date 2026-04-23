@@ -14,7 +14,7 @@ import NDAModal from '@/components/portal/NDAModal';
 import PhoneConfirmModal from '@/components/portal/PhoneConfirmModal';
 import DataRoomTab from '@/components/portal/DataRoomTab';
 import { OverviewFinancials, DealStructureFinancials } from '@/components/portal/FinancialOverview';
-import { parseDealInputs, calculateDeal, calculateTraditionalClose, type DealInputs } from '@/lib/utils/deal-calculator';
+import { parseDealInputs, calculateDeal, calculatePropertyMetrics, calculateTraditionalClose, type DealInputs, type DealMetrics } from '@/lib/utils/deal-calculator';
 import { exportDealToExcel } from '@/lib/utils/excel-export';
 import type {
   DealWithDetails,
@@ -333,16 +333,38 @@ function ImageCarousel({ urls }: { urls: string[] }) {
 
 /* ---------- Metric Card ---------- */
 
+/**
+ * Build the IRR assumptions note shown below the IRR value on metric cards.
+ * Uses the deal's stored exit cap / hold / rent growth, with a "(entry +1%)"
+ * qualifier when exit cap falls back to the default.
+ */
+function buildIrrAssumptions(
+  deal: { exit_cap_rate?: string | null; hold_period_years?: string | null; rent_growth?: string | null },
+  metrics: Pick<DealMetrics, 'capRate'>
+): string {
+  const storedExit = deal.exit_cap_rate ? parseFloat(String(deal.exit_cap_rate)) : 0;
+  const exitCapStr = storedExit > 0
+    ? `${storedExit.toFixed(1)}% exit`
+    : `${(metrics.capRate + 1).toFixed(1)}% exit (entry +1%)`;
+  const hold = deal.hold_period_years ? parseInt(String(deal.hold_period_years), 10) : 5;
+  const holdStr = `${hold}yr hold`;
+  const growth = deal.rent_growth ? parseFloat(String(deal.rent_growth)) : 0;
+  const growthStr = growth > 0 ? ` · ${growth.toFixed(1)}% growth` : '';
+  return `${exitCapStr} · ${holdStr}${growthStr}`;
+}
+
 function MetricCard({
   label,
   value,
   borderColor,
   valueColor,
+  note,
 }: {
   label: string;
   value: string | null;
   borderColor: string;
   valueColor?: string;
+  note?: string;
 }) {
   return (
     <div
@@ -358,6 +380,11 @@ function MetricCard({
       >
         {value ?? '—'}
       </div>
+      {note && (
+        <div className="text-[10px] text-[#9CA3AF] mt-1.5 leading-tight">
+          {note}
+        </div>
+      )}
     </div>
   );
 }
@@ -688,7 +715,7 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
     () => parseDealInputs(deal as unknown as Record<string, unknown>),
     [deal]
   );
-  const baseMetrics = useMemo(() => calculateDeal(baseInputs), [baseInputs]);
+  const baseMetrics = useMemo(() => calculatePropertyMetrics(baseInputs), [baseInputs]);
 
   // Slider state — initialized from deal's actual data
   const [exitCap, setExitCap] = useState(
@@ -711,7 +738,7 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
       exitCapRate: parseFloat(exitCap) || 0,
       rentGrowth: parseFloat(rentGrowth) || 0,
     };
-    return calculateDeal(overriddenInputs);
+    return calculatePropertyMetrics(overriddenInputs);
   }, [baseInputs, ltv, rate, holdYears, exitCap, rentGrowth]);
 
   const holdNum = parseInt(holdYears) || 5;
@@ -1926,9 +1953,13 @@ export default function DealDetailClient({
     }
   };
 
-  // Computed financial metrics from calculation engine — SINGLE SOURCE OF TRUTH
+  // Headline metrics — property-level (fees forced to 0) so admin-entered fees
+  // never move cap rate / CoC / IRR / DSCR / equity. Fee impact is surfaced
+  // only in the Fee Disclosure section and the Returns Calculator below.
   const dealInputs = useMemo(() => parseDealInputs(deal as unknown as Record<string, unknown>), [deal]);
-  const computed = useMemo(() => calculateDeal(dealInputs), [dealInputs]);
+  const computed = useMemo(() => calculatePropertyMetrics(dealInputs), [dealInputs]);
+  // Fee-adjusted metrics for the Returns Calculator (Option A, Option B).
+  const feeAdjustedMetrics = useMemo(() => calculateDeal(dealInputs), [dealInputs]);
   const traditionalMetrics = useMemo(() => dealInputs.sellerFinancing ? calculateTraditionalClose(dealInputs) : null, [dealInputs]);
   const financialProps = useMemo(() => ({
     inputs: dealInputs,
@@ -2110,15 +2141,16 @@ export default function DealDetailClient({
                 const fullyFinanced = computed.netEquity <= 0;
                 const hasPositiveCF = computed.distributableCashFlow > 0;
                 const infReturn = fullyFinanced ? (hasPositiveCF ? '∞' : 'N/A') : null;
+                const irrNote = fullyFinanced ? undefined : buildIrrAssumptions(deal, computed);
                 return [
                   { label: tc('purchasePrice'), value: formatPrice(deal.purchase_price), borderColor: '#0E3470', span: 'col-span-2' },
                   { label: tc('noi'), value: formatPrice(deal.noi), borderColor: '#0E3470', span: 'col-span-2' },
                   { label: tc('capRate'), value: computed.capRate > 0 ? computed.capRate.toFixed(2) + '%' : formatPercent(deal.cap_rate), borderColor: '#BC9C45', span: 'col-span-1' },
-                  { label: tc('irr'), value: infReturn ?? (computed.irr !== null ? computed.irr.toFixed(2) + '%' : (deal.irr ? formatPercent(deal.irr) : '—')), borderColor: '#0B8A4D', valueColor: '#0B8A4D', span: 'col-span-1' },
+                  { label: tc('irr'), value: infReturn ?? (computed.irr !== null ? computed.irr.toFixed(2) + '%' : (deal.irr ? formatPercent(deal.irr) : '—')), borderColor: '#0B8A4D', valueColor: '#0B8A4D', span: 'col-span-1', note: irrNote },
                   { label: tc('coc'), value: infReturn ?? (computed.cocReturn !== null ? computed.cocReturn.toFixed(2) + '%' : (deal.coc ? formatPercent(deal.coc) : '—')), borderColor: '#0B8A4D', valueColor: '#0B8A4D', span: 'col-span-1' },
                   { label: tc('dscr'), value: computed.combinedDSCR > 0 ? computed.combinedDSCR.toFixed(2) + 'x' : formatDSCR(deal.dscr), borderColor: '#0E3470', span: 'col-span-1' },
                   { label: tc('equityRequired'), value: fullyFinanced ? '$0' : (computed.netEquity > 0 ? '$' + Math.round(computed.netEquity).toLocaleString() : formatPrice(deal.equity_required)), borderColor: '#BC9C45', valueColor: fullyFinanced ? '#0B8A4D' : undefined, span: 'col-span-2' },
-                ];
+                ] as { label: string; value: string; borderColor: string; valueColor?: string; span: string; note?: string }[];
               })().map((m, idx) => (
                 <FadeInOnScroll key={m.label} delay={idx * 0.05} className={m.span}>
                   <MetricCard
@@ -2126,6 +2158,7 @@ export default function DealDetailClient({
                     value={m.value}
                     borderColor={m.borderColor}
                     valueColor={m.valueColor}
+                    note={m.note}
                   />
                 </FadeInOnScroll>
               ))}
@@ -2923,8 +2956,15 @@ export default function DealDetailClient({
                       {t('projectedIrr')}
                     </div>
                     <div className="text-2xl font-bold text-[#0B8A4D]">
-                      {computed.assignmentIRR !== null ? computed.assignmentIRR.toFixed(2) + '%' : '--'}
+                      {computed.netEquity <= 0
+                        ? (computed.distributableCashFlow > 0 ? '∞' : 'N/A')
+                        : (feeAdjustedMetrics.assignmentIRR !== null ? feeAdjustedMetrics.assignmentIRR.toFixed(2) + '%' : '--')}
                     </div>
+                    {computed.netEquity > 0 && (
+                      <div className="text-[10px] text-[#9CA3AF] mt-1 leading-tight">
+                        {buildIrrAssumptions(deal as unknown as { exit_cap_rate?: string | null; hold_period_years?: string | null; rent_growth?: string | null }, computed)}
+                      </div>
+                    )}
                     <div className="text-[11px] text-[#6B7280] mt-1">
                       {t('feeIncluded')}
                     </div>
@@ -2950,8 +2990,8 @@ export default function DealDetailClient({
                   </h3>
                   <div className="space-y-2 mb-4">
                     {[
-                      { label: t('acquisitionFee'), value: `${deal.acq_fee} ($${Math.round(computed.acqFeeDollar).toLocaleString()})` },
-                      { label: t('assetMgmtFee'), value: `${deal.asset_mgmt_fee} ($${Math.round(computed.assetMgmtFeeDollar).toLocaleString()}/yr)` },
+                      { label: t('acquisitionFee'), value: `${deal.acq_fee} ($${Math.round(feeAdjustedMetrics.acqFeeDollar).toLocaleString()})` },
+                      { label: t('assetMgmtFee'), value: `${deal.asset_mgmt_fee} ($${Math.round(feeAdjustedMetrics.assetMgmtFeeDollar).toLocaleString()}/yr)` },
                       { label: t('gpCarry'), value: deal.gp_carry },
                       { label: t('equityRequired'), value: formatPrice(deal.equity_required) },
                     ].map((row) => (
@@ -2975,8 +3015,13 @@ export default function DealDetailClient({
                     <div className="text-2xl font-bold text-[#0B8A4D]">
                       {computed.netEquity <= 0
                         ? (computed.distributableCashFlow > 0 ? '∞' : 'N/A')
-                        : (computed.irr !== null ? computed.irr.toFixed(2) + '%' : '--')}
+                        : (feeAdjustedMetrics.irr !== null ? feeAdjustedMetrics.irr.toFixed(2) + '%' : '--')}
                     </div>
+                    {computed.netEquity > 0 && (
+                      <div className="text-[10px] text-[#9CA3AF] mt-1 leading-tight">
+                        {buildIrrAssumptions(deal as unknown as { exit_cap_rate?: string | null; hold_period_years?: string | null; rent_growth?: string | null }, computed)}
+                      </div>
+                    )}
                     <div className="text-[11px] text-[#6B7280] mt-1">
                       {t('allFeesIncludedShort')}
                     </div>
@@ -2997,10 +3042,10 @@ export default function DealDetailClient({
               >
                 <IRRCalculatorPanel
                   deal={deal}
-                  baseIRR={computed.irr ?? 0}
-                  assignmentIRRProp={computed.assignmentIRR}
-                  acqFeeDollar={computed.acqFeeDollar}
-                  assetMgmtFeeDollar={computed.assetMgmtFeeDollar}
+                  baseIRR={feeAdjustedMetrics.irr ?? 0}
+                  assignmentIRRProp={feeAdjustedMetrics.assignmentIRR}
+                  acqFeeDollar={feeAdjustedMetrics.acqFeeDollar}
+                  assetMgmtFeeDollar={feeAdjustedMetrics.assetMgmtFeeDollar}
                   onSliderChange={handleIRRSliderChange}
                   fullyFinanced={computed.netEquity <= 0}
                   hasPositiveCashFlow={computed.distributableCashFlow > 0}
