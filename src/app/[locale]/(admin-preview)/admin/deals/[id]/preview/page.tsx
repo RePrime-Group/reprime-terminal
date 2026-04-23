@@ -10,6 +10,8 @@ import type {
   TerminalAvailabilitySlot,
   TerminalSetting,
   TerminalTenantLease,
+  CapExItem,
+  ExitScenario,
   DealWithDetails,
 } from '@/lib/types/database';
 
@@ -156,6 +158,24 @@ export default async function DealPreviewPage({ params }: DealPreviewPageProps) 
 
   const tenants = (tenantsData ?? []) as TerminalTenantLease[];
 
+  // ---------- Fetch CapEx items ----------
+  const { data: capexData } = await supabase
+    .from('capex_items')
+    .select('*')
+    .eq('deal_id', id)
+    .order('sort_order', { ascending: true });
+
+  const capexItems = (capexData ?? []) as CapExItem[];
+
+  // ---------- Fetch exit scenarios ----------
+  const { data: exitScenariosData } = await supabase
+    .from('exit_scenarios')
+    .select('*')
+    .eq('deal_id', id)
+    .order('sort_order', { ascending: true });
+
+  const exitScenarios = (exitScenariosData ?? []) as ExitScenario[];
+
   // ---------- Build deal with details ----------
   const dealWithDetails: DealWithDetails = {
     ...deal,
@@ -196,6 +216,8 @@ export default async function DealPreviewPage({ params }: DealPreviewPageProps) 
         locale={locale}
         addresses={addresses}
         tenants={tenants}
+        capexItems={capexItems}
+        exitScenarios={exitScenarios}
         previewMode
         hasSignedNDA
       />

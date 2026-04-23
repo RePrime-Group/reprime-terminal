@@ -37,12 +37,14 @@ export function OverviewFinancials({ inputs, metrics, traditional }: FinancialPr
             <span className="text-[13px] text-[#374151]">{t('noi')}</span>
             <span className="text-[14px] font-bold text-[#0E3470] tabular-nums">{fmtFull(inputs.noi)}</span>
           </div>
-          {metrics.capex > 0 && (
-            <div className="flex justify-between py-2 border-b border-[#EEF0F4]">
-              <span className="text-[13px] text-[#6B7280]">− {t('capexReserves')}</span>
+          <div className="flex justify-between py-2 border-b border-[#EEF0F4]">
+            <span className="text-[13px] text-[#6B7280]">− {t('capexReserves')}</span>
+            {metrics.capex > 0 ? (
               <span className="text-[14px] font-semibold text-[#DC2626]/80 tabular-nums">{fmtFull(metrics.capex)}</span>
-            </div>
-          )}
+            ) : (
+              <span className="text-[12px] font-medium text-[#6B7280] italic">Calculated at Closing*</span>
+            )}
+          </div>
           <div className="flex justify-between py-2 border-b border-[#EEF0F4]">
             <span className="text-[13px] text-[#6B7280]">− {t('totalDebtService')}</span>
             <span className="text-[14px] font-semibold text-[#DC2626]/80 tabular-nums">{fmtFull(metrics.annualSeniorDS + metrics.annualMezzPayment)}</span>
@@ -60,6 +62,11 @@ export function OverviewFinancials({ inputs, metrics, traditional }: FinancialPr
             </span>
           </div>
         </div>
+        {metrics.capex === 0 && (
+          <p className="mt-3 text-[11px] text-[#9CA3AF] leading-relaxed italic">
+            * CapEx reserves will be determined during due diligence and reflected in final offering terms.
+          </p>
+        )}
       </div>
     </div>
   );
@@ -78,20 +85,29 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
       {/* Cash Flow Waterfall — Full Detail */}
       <div className="bg-white rounded-xl border border-[#EEF0F4] p-6 rp-card-shadow">
         <h3 className="text-[15px] font-semibold text-[#0E3470] mb-4">{t('annualWaterfall')}</h3>
-        {[
+        {([
           { label: t('noi'), value: inputs.noi, positive: true },
-          ...(metrics.capex > 0 ? [{ label: t('capexReserves'), value: -metrics.capex }] : []),
+          // CapEx is always shown; when unset (=0), we display "Calculated at
+          // Closing*" in place of a dollar amount so investors know reserves
+          // are still pending rather than truly zero.
+          metrics.capex > 0
+            ? { label: t('capexReserves'), value: -metrics.capex }
+            : { label: t('capexReserves'), value: 0, displayText: 'Calculated at Closing*' },
           { label: t('seniorDebtService'), value: -metrics.annualSeniorDS },
           ...(metrics.mezzAmount > 0 ? [{ label: t('mezzIoPayment'), value: -metrics.annualMezzPayment }] : []),
           ...(inputs.assetMgmtFee > 0 ? [{ label: t('assetManagementFee'), value: -metrics.assetMgmtFeeDollar }] : []),
-        ].map((row, i) => (
+        ] as Array<{ label: string; value: number; positive?: boolean; displayText?: string }>).map((row, i) => (
           <div key={i} className={`flex justify-between items-center py-2.5 px-3 ${i % 2 === 0 ? 'bg-[#F7F8FA]' : 'bg-white'} rounded`}>
             <span className={`text-[13px] ${row.positive ? 'text-[#374151] font-medium' : 'text-[#6B7280]'}`}>
               {!row.positive && '−  '}{row.label}
             </span>
-            <span className={`text-[14px] font-semibold tabular-nums text-right ${row.positive ? 'text-[#0E3470]' : 'text-[#DC2626]/80'}`}>
-              {fmtFull(Math.abs(row.value))}
-            </span>
+            {row.displayText ? (
+              <span className="text-[12px] font-medium text-[#6B7280] italic">{row.displayText}</span>
+            ) : (
+              <span className={`text-[14px] font-semibold tabular-nums text-right ${row.positive ? 'text-[#0E3470]' : 'text-[#DC2626]/80'}`}>
+                {fmtFull(Math.abs(row.value))}
+              </span>
+            )}
           </div>
         ))}
         <div className="flex justify-between items-center py-3 px-3 mt-1 border-t-2 border-[#0E3470] bg-[#F7F8FA] rounded-b">
@@ -100,6 +116,11 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
             {fmtFull(metrics.distributableCashFlow)}
           </span>
         </div>
+        {metrics.capex === 0 && (
+          <p className="mt-3 text-[11px] text-[#9CA3AF] leading-relaxed italic">
+            * CapEx reserves will be determined during due diligence and reflected in final offering terms.
+          </p>
+        )}
       </div>
 
       {/* Financing Detail — 3 Blocks */}

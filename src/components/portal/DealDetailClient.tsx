@@ -14,6 +14,9 @@ import NDAModal from '@/components/portal/NDAModal';
 import PhoneConfirmModal from '@/components/portal/PhoneConfirmModal';
 import DataRoomTab from '@/components/portal/DataRoomTab';
 import RentRollTab from '@/components/portal/RentRollTab';
+import CapExTab from '@/components/portal/CapExTab';
+import ExitStrategyTab from '@/components/portal/ExitStrategyTab';
+import { parseHoldPeriod } from '@/lib/utils/capex';
 import { OverviewFinancials, DealStructureFinancials } from '@/components/portal/FinancialOverview';
 import { parseDealInputs, calculateDeal, calculatePropertyMetrics, calculateTraditionalClose, type DealInputs, type DealMetrics } from '@/lib/utils/deal-calculator';
 import { exportDealToExcel } from '@/lib/utils/excel-export';
@@ -23,6 +26,8 @@ import type {
   TerminalDDDocument,
   TerminalAvailabilitySlot,
   TerminalTenantLease,
+  CapExItem,
+  ExitScenario,
 } from '@/lib/types/database';
 import { computeWALT, computeOccupancy, formatYears } from '@/lib/utils/rent-roll';
 
@@ -48,6 +53,8 @@ interface DealDetailClientProps {
   addresses?: { id: string; label: string; address: string | null; city: string | null; state: string | null; square_footage: string | null; units: string | null; om_storage_path: string | null }[];
   pipelineTasks?: { id: string; name: string; status: string; stage: string }[];
   tenants?: TerminalTenantLease[];
+  capexItems?: CapExItem[];
+  exitScenarios?: ExitScenario[];
   /**
    * When true the view renders exactly as an investor sees it, but every write
    * action is short-circuited. Used by the /admin/preview routes so admins can
@@ -1672,6 +1679,8 @@ export default function DealDetailClient({
   addresses = [],
   pipelineTasks = [],
   tenants = [],
+  capexItems = [],
+  exitScenarios = [],
   previewMode = false,
 }: DealDetailClientProps) {
   const previewTitle = previewMode ? 'Preview mode — read-only' : undefined;
@@ -2975,6 +2984,43 @@ export default function DealDetailClient({
                   return Number.isFinite(n) && n > 0 ? n : null;
                 })(),
               }))}
+            />
+          </div>
+        </div>
+
+        {/* ========== 5G1b. CAPEX & CONDITION TAB ========== */}
+        <div
+          className="transition-opacity duration-200"
+          style={{ display: activeTab === 'capex' ? 'block' : 'none' }}
+        >
+          <div className="mt-6 md:mt-8 px-4 md:px-8 pb-8 md:pb-10">
+            <CapExTab
+              items={capexItems}
+              holdPeriodYears={parseHoldPeriod(deal.hold_period_years, 5)}
+              isPortfolio={!!deal.is_portfolio}
+              buildings={addresses.map((a) => ({ id: a.id, label: a.label }))}
+            />
+          </div>
+        </div>
+
+        {/* ========== 5G1c. EXIT STRATEGY TAB ========== */}
+        <div
+          className="transition-opacity duration-200"
+          style={{ display: activeTab === 'exit-strategy' ? 'block' : 'none' }}
+        >
+          <div className="mt-6 md:mt-8 px-4 md:px-8 pb-8 md:pb-10">
+            <ExitStrategyTab
+              scenarios={exitScenarios}
+              context={{
+                distributableCF: computed.distributableCashFlow,
+                loanAmount: computed.loanAmount,
+                seniorRatePct: dealInputs.interestRate,
+                amortYears: dealInputs.amortYears,
+                hasMezz: dealInputs.sellerFinancing && computed.mezzAmount > 0,
+                mezzAmount: computed.mezzAmount,
+                mezzTermMonths: dealInputs.mezzTermMonths,
+                equityInvested: computed.netEquity,
+              }}
             />
           </div>
         </div>

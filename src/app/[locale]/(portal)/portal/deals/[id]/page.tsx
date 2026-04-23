@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import DealDetailClient from '@/components/portal/DealDetailClient';
-import type { TerminalDeal, TerminalDealPhoto, TerminalTenantLease } from '@/lib/types/database';
+import type { TerminalDeal, TerminalDealPhoto, TerminalTenantLease, CapExItem, ExitScenario } from '@/lib/types/database';
 
 interface DealDetailPageProps {
   params: Promise<{ locale: string; id: string }>;
@@ -57,6 +57,8 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
     { data: blanketNDA },
     { data: dealNDA },
     { data: tenantsData },
+    { data: capexItemsData },
+    { data: exitScenariosData },
   ] = await Promise.all([
     supabase
       .from('terminal_deals')
@@ -106,6 +108,16 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
       .limit(1),
     supabase
       .from('tenant_leases')
+      .select('*')
+      .eq('deal_id', id)
+      .order('sort_order', { ascending: true }),
+    supabase
+      .from('capex_items')
+      .select('*')
+      .eq('deal_id', id)
+      .order('sort_order', { ascending: true }),
+    supabase
+      .from('exit_scenarios')
       .select('*')
       .eq('deal_id', id)
       .order('sort_order', { ascending: true }),
@@ -174,6 +186,8 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
       addresses={addressesData ?? []}
       pipelineTasks={tasks as { id: string; name: string; status: string; stage: string }[]}
       tenants={(tenantsData ?? []) as TerminalTenantLease[]}
+      capexItems={(capexItemsData ?? []) as CapExItem[]}
+      exitScenarios={(exitScenariosData ?? []) as ExitScenario[]}
     />
   );
 }

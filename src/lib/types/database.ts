@@ -138,6 +138,7 @@ export interface TerminalDeal {
   legal_title_estimate: string | null;
   disposition_cost_pct: string | null;
   capex: string | null;
+  capex_narrative: string | null;
   debt_terms_quoted: boolean;
   status: DealStatus;
   neighborhood: string | null;
@@ -332,7 +333,65 @@ export interface TerminalDealAddress {
   year_built: number | null;
   om_storage_path: string | null;
   display_order: number;
+  capex_narrative: string | null;
   created_at: string;
+}
+
+export type CapExCondition = 'Excellent' | 'Good' | 'Fair' | 'Poor' | 'Unknown';
+export type CapExPriority = 'Immediate' | 'Near-Term' | 'During Hold' | 'Post-Hold' | 'N/A';
+
+export interface CapExItem {
+  id: string;
+  deal_id: string;
+  address_id: string | null;
+  component_name: string;
+  current_condition: CapExCondition;
+  year_last_replaced: string | null;
+  useful_life_remaining: string | null;
+  estimated_replacement_cost: string | null;
+  priority: CapExPriority;
+  notes: string | null;
+  sort_order: number;
+  ai_extracted: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ExitScenarioType = 'conservative' | 'moderate' | 'aggressive' | 'refinance';
+export type BuyerProfile =
+  | 'Value Investor'
+  | 'Stabilized Asset Buyer'
+  | 'Institutional'
+  | 'Net Lease Buyer'
+  | '1031 Exchange Buyer'
+  | 'Private Equity'
+  | 'Local Investor'
+  | 'N/A';
+
+export interface ExitRefiParams {
+  ltv: number;         // %
+  rate: number;        // %
+  amortYears: number;  // years
+}
+
+export interface ExitScenario {
+  id: string;
+  deal_id: string;
+  scenario_type: ExitScenarioType;
+  scenario_name: string;
+  exit_year: number;
+  exit_cap_rate: string | null;
+  exit_noi: string | null;
+  additional_capex: string | null;
+  strategy_narrative: string | null;
+  buyer_profile: BuyerProfile | null;
+  market_comps: string | null;
+  refi_params: ExitRefiParams | null;
+  is_enabled: boolean;
+  sort_order: number;
+  ai_generated_narrative: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface TerminalDealSubscription {
