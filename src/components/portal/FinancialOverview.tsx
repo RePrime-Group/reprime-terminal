@@ -46,9 +46,17 @@ export function OverviewFinancials({ inputs, metrics, traditional }: FinancialPr
             )}
           </div>
           <div className="flex justify-between py-2 border-b border-[#EEF0F4]">
-            <span className="text-[13px] text-[#6B7280]">− {t('totalDebtService')}</span>
-            <span className="text-[14px] font-semibold text-[#DC2626]/80 tabular-nums">{fmtFull(metrics.annualSeniorDS + metrics.annualMezzPayment)}</span>
+            <span className="text-[13px] text-[#6B7280]">
+              − {metrics.ioPeriodMonths > 0 ? t('seniorDebtServiceIO') + '*' : t('seniorDebtService')}
+            </span>
+            <span className="text-[14px] font-semibold text-[#DC2626]/80 tabular-nums">{fmtFull(metrics.headlineSeniorDS)}</span>
           </div>
+          {metrics.mezzAmount > 0 && (
+            <div className="flex justify-between py-2 border-b border-[#EEF0F4]">
+              <span className="text-[13px] text-[#6B7280]">− {t('mezzIoPayment')}</span>
+              <span className="text-[14px] font-semibold text-[#DC2626]/80 tabular-nums">{fmtFull(metrics.annualMezzPayment)}</span>
+            </div>
+          )}
           {inputs.assetMgmtFee > 0 && (
             <div className="flex justify-between py-2 border-b border-[#EEF0F4]">
               <span className="text-[13px] text-[#6B7280]">− {t('assetManagementFee')} ({pct(inputs.assetMgmtFee)})</span>
@@ -62,6 +70,11 @@ export function OverviewFinancials({ inputs, metrics, traditional }: FinancialPr
             </span>
           </div>
         </div>
+        {metrics.ioPeriodMonths > 0 && (
+          <p className="mt-3 text-[11px] text-[#9CA3AF] leading-relaxed italic">
+            {t('ioFootnote', { months: metrics.ioPeriodMonths, piAmount: fmtFull(metrics.annualSeniorDS) })}
+          </p>
+        )}
         {metrics.capex === 0 && (
           <p className="mt-3 text-[11px] text-[#9CA3AF] leading-relaxed italic">
             * CapEx reserves will be determined during due diligence and reflected in final offering terms.
@@ -93,7 +106,10 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
           metrics.capex > 0
             ? { label: t('capexReserves'), value: -metrics.capex }
             : { label: t('capexReserves'), value: 0, displayText: 'Calculated at Closing*' },
-          { label: t('seniorDebtService'), value: -metrics.annualSeniorDS },
+          {
+            label: metrics.ioPeriodMonths > 0 ? t('seniorDebtServiceIO') + '*' : t('seniorDebtService'),
+            value: -metrics.headlineSeniorDS,
+          },
           ...(metrics.mezzAmount > 0 ? [{ label: t('mezzIoPayment'), value: -metrics.annualMezzPayment }] : []),
           ...(inputs.assetMgmtFee > 0 ? [{ label: t('assetManagementFee'), value: -metrics.assetMgmtFeeDollar }] : []),
         ] as Array<{ label: string; value: number; positive?: boolean; displayText?: string }>).map((row, i) => (
@@ -116,6 +132,11 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
             {fmtFull(metrics.distributableCashFlow)}
           </span>
         </div>
+        {metrics.ioPeriodMonths > 0 && (
+          <p className="mt-3 text-[11px] text-[#9CA3AF] leading-relaxed italic">
+            {t('ioFootnote', { months: metrics.ioPeriodMonths, piAmount: fmtFull(metrics.annualSeniorDS) })}
+          </p>
+        )}
         {metrics.capex === 0 && (
           <p className="mt-3 text-[11px] text-[#9CA3AF] leading-relaxed italic">
             * CapEx reserves will be determined during due diligence and reflected in final offering terms.
@@ -133,15 +154,26 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
             {isEstimated && <span className="text-[13px] font-medium text-[#BC9C45]">— {t('estimated')}</span>}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 md:gap-x-8 gap-y-1">
-            {[
+            {([
               [t('loanAmount'), fmtFull(metrics.loanAmount)],
               [t('ltv'), pct(inputs.ltv)],
               [t('interestRate'), pct(inputs.interestRate, 2)],
               [t('amortization'), `${inputs.amortYears} ${t('years')}`],
-              [t('annualDebtService'), fmtFull(metrics.annualSeniorDS)],
+              ...(metrics.ioPeriodMonths > 0
+                ? [
+                    [t('ioPeriod'), `${metrics.ioPeriodMonths} ${t('months')}`],
+                    [t('annualDebtServiceIO'), fmtFull(metrics.annualIODS)],
+                    [t('annualDebtServicePI'), fmtFull(metrics.annualSeniorDS)],
+                  ]
+                : [[t('annualDebtService'), fmtFull(metrics.annualSeniorDS)]]),
               [t('loanOrigination'), `${inputs.loanFeePoints} ${t('points')} (${fmtFull(metrics.loanFeeDollar)})`],
-              [inputs.sellerFinancing ? t('lenderDscr') : t('dscr'), metrics.lenderDSCR.toFixed(2) + 'x'],
-            ].map(([l, v], i) => (
+              [
+                inputs.sellerFinancing
+                  ? (metrics.ioPeriodMonths > 0 ? `${t('lenderDscr')} (IO)` : t('lenderDscr'))
+                  : (metrics.ioPeriodMonths > 0 ? t('dscrIO') : t('dscr')),
+                metrics.lenderDSCR.toFixed(2) + 'x',
+              ],
+            ] as Array<[string, string]>).map(([l, v], i) => (
               <div key={i} className="flex justify-between items-baseline gap-3 py-2 border-b border-[#EEF0F4] last:border-b-0">
                 <span className="text-[12px] text-[#6B7280]">{l}</span>
                 <span className="text-[12px] font-semibold text-[#0E3470] tabular-nums">{v}</span>
@@ -184,7 +216,7 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
             {[
               [metrics.mezzAmount > 0 ? t('combinedDscr') : t('lenderDscr'), metrics.combinedDSCR.toFixed(2) + 'x'],
               [t('totalLeverage'), pct(metrics.totalLeverage)],
-              [t('totalAnnualDebtObligations'), fmtFull(metrics.annualSeniorDS + metrics.annualMezzPayment)],
+              [t('totalAnnualDebtObligations'), fmtFull(metrics.headlineSeniorDS + metrics.annualMezzPayment)],
             ].map(([l, v], i) => (
               <div key={i} className="flex justify-between items-baseline gap-3 py-2 border-b border-[#EEF0F4] last:border-b-0">
                 <span className="text-[12px] text-[#6B7280]">{l}</span>

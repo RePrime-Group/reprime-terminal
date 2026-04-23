@@ -52,9 +52,12 @@ export interface DealMetrics {
   // Senior Debt
   loanAmount: number;
   monthlyPayment: number;
-  annualSeniorDS: number;
+  annualSeniorDS: number;       // fully amortizing P&I (post-IO)
   loanFeeDollar: number;
-  annualIODS: number;       // if IO period > 0
+  annualIODS: number;           // interest-only DS (if IO period > 0)
+  headlineSeniorDS: number;     // Year 1 DS used for CoC/DSCR (IO if applicable, else amortizing)
+  ioYears: number;              // full years of IO within the hold
+  ioPeriodMonths: number;       // raw IO period passed through for display
 
   // Mezzanine
   mezzAmount: number;
@@ -177,6 +180,14 @@ export function calculateDeal(inputs: DealInputs): DealMetrics {
   // IO debt service (if IO period specified)
   const annualIODS = ioPeriodMonths > 0 ? loanAmount * (interestRate / 100) : 0;
 
+  // ═══════ IO PERIOD TIMELINE ═══════
+  // Number of full years of interest-only payments within the hold.
+  // e.g. 48-month IO = 4 IO years; 18-month IO = 1 IO year (partial Y2 treated as amort).
+  const ioYears = Math.floor(ioPeriodMonths / 12);
+  // Year 1 debt service — IO if any IO period exists, else fully amortizing.
+  // Used for CoC / DSCR / headline distributable CF.
+  const headlineSeniorDS = ioPeriodMonths > 0 ? annualIODS : annualSeniorDS;
+
   // ═══════ MEZZANINE ═══════
   const mezzAmount = sellerFinancing ? netBasis * (mezzPercent / 100) : 0;
   const annualMezzPayment = sellerFinancing ? mezzAmount * (mezzRate / 100) : 0; // IO ONLY. Always.
@@ -194,16 +205,17 @@ export function calculateDeal(inputs: DealInputs): DealMetrics {
   // and asset-level distributable cash flow. AMF is still computed on NOI (income-
   // based fee, not income-after-capex), which is correct when AMF > 0.
   const adjustedNOI = noi - capex;
-  const cashFlowAfterSenior = adjustedNOI - annualSeniorDS;
-  const cashFlowAfterAllDS = adjustedNOI - annualSeniorDS - annualMezzPayment;
+  // Headline CF uses Year 1 DS — IO-adjusted when applicable.
+  const cashFlowAfterSenior = adjustedNOI - headlineSeniorDS;
+  const cashFlowAfterAllDS = adjustedNOI - headlineSeniorDS - annualMezzPayment;
   const assetMgmtFeeDollar = noi * (assetMgmtFee / 100);
   const distributableCashFlow = cashFlowAfterAllDS - assetMgmtFeeDollar;
   // Return null (not 0) when no investor equity is required — the UI renders
   // this as "∞" for fully-financed deals with positive cash flow.
   const cocReturn = netEquity > 0 ? (distributableCashFlow / netEquity) * 100 : null;
 
-  const lenderDSCR = annualSeniorDS > 0 ? adjustedNOI / annualSeniorDS : 0;
-  const totalAnnualDS = annualSeniorDS + annualMezzPayment;
+  const lenderDSCR = headlineSeniorDS > 0 ? adjustedNOI / headlineSeniorDS : 0;
+  const totalAnnualDS = headlineSeniorDS + annualMezzPayment;
   const combinedDSCR = totalAnnualDS > 0 ? adjustedNOI / totalAnnualDS : 0;
 
   // Fee dollars
@@ -228,13 +240,19 @@ export function calculateDeal(inputs: DealInputs): DealMetrics {
   const exitPrice = exitCap > 0 ? exitNOI / exitCap : 0;
   const dispositionCosts = exitPrice * (dispositionCostPct / 100);
 
-  // Remaining senior loan balance after hold period
+  // Remaining senior loan balance after hold period.
+  // IO months contribute zero principal paydown — only amortizing months reduce balance.
   let seniorPayoffAtExit = loanAmount;
   if (monthlyRate > 0 && numPayments > 0) {
-    const paymentsAtExit = holdPeriodYears * 12;
-    seniorPayoffAtExit = loanAmount *
-      (Math.pow(1 + monthlyRate, numPayments) - Math.pow(1 + monthlyRate, paymentsAtExit)) /
-      (Math.pow(1 + monthlyRate, numPayments) - 1);
+    const amortizingMonths = Math.max(0, (holdPeriodYears * 12) - ioPeriodMonths);
+    if (amortizingMonths <= 0) {
+      // Entire hold is within IO period — no principal paydown.
+      seniorPayoffAtExit = loanAmount;
+    } else {
+      seniorPayoffAtExit = loanAmount *
+        (Math.pow(1 + monthlyRate, numPayments) - Math.pow(1 + monthlyRate, amortizingMonths)) /
+        (Math.pow(1 + monthlyRate, numPayments) - 1);
+    }
   }
 
   // Mezz balloon (if due within hold period)
@@ -253,7 +271,9 @@ export function calculateDeal(inputs: DealInputs): DealMetrics {
     // CapEx is a flat annual amount (not grown with rents). AMF is still
     // applied to the grown yearNOI since it is an income-based fee.
     const yearAdjustedNOI = yearNOI - capex;
-    const yearCashFlow = yearAdjustedNOI - annualSeniorDS - annualMezzPayment - (yearNOI * (assetMgmtFee / 100));
+    // IO years use interest-only DS; post-IO years flip to amortizing P&I.
+    const yearSeniorDS = yr < ioYears ? annualIODS : annualSeniorDS;
+    const yearCashFlow = yearAdjustedNOI - yearSeniorDS - annualMezzPayment - (yearNOI * (assetMgmtFee / 100));
     annualCashFlows.push(yearCashFlow);
     cumulativeDistributions += yearCashFlow;
   }
@@ -290,6 +310,7 @@ export function calculateDeal(inputs: DealInputs): DealMetrics {
   return {
     netBasis,
     loanAmount, monthlyPayment, annualSeniorDS, loanFeeDollar, annualIODS,
+    headlineSeniorDS, ioYears, ioPeriodMonths,
     mezzAmount, annualMezzPayment, mezzBalloon,
     closingCosts, grossEquity, netEquity, totalLeverage,
     capRate, cashFlowAfterSenior, cashFlowAfterAllDS, assetMgmtFeeDollar,

@@ -1011,10 +1011,12 @@ export default function NewDealPage() {
               {[
                 { l: 'Loan Amount', v: fmt(m.loanAmount) },
                 { l: 'Net Equity', v: m.netEquity > 0 ? fmt(m.netEquity) : '$0' },
-                { l: 'Lender DSCR', v: m.lenderDSCR.toFixed(2) + 'x' },
+                { l: m.ioPeriodMonths > 0 ? 'Lender DSCR (IO)' : 'Lender DSCR', v: m.lenderDSCR.toFixed(2) + 'x' },
                 { l: 'Distributable CF', v: fmt(m.distributableCashFlow) },
                 { l: 'Total Leverage', v: pct(m.totalLeverage) },
-                ...(form.seller_financing ? [{ l: 'Combined DSCR', v: m.combinedDSCR.toFixed(2) + 'x' }] : [{ l: 'Annual DS', v: fmt(m.annualSeniorDS) }]),
+                ...(form.seller_financing
+                  ? [{ l: m.ioPeriodMonths > 0 ? 'Combined DSCR (IO)' : 'Combined DSCR', v: m.combinedDSCR.toFixed(2) + 'x' }]
+                  : [{ l: m.ioPeriodMonths > 0 ? 'Annual DS (IO)' : 'Annual DS', v: fmt(m.headlineSeniorDS) }]),
               ].map((x) => (
                 <div key={x.l} className="flex justify-between items-center py-1.5 px-2.5 bg-white/[0.03] rounded">
                   <span className="text-[10px] text-white/30">{x.l}</span>

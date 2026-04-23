@@ -783,7 +783,7 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
     { l: t('totalProfit'), v: fmt(totalProfit), c: totalProfit > 0 ? '#0B8A4D' : '#DC2626' },
     { l: t('equityMultiple'), v: mmInfReturn ?? (mm.equityMultiple !== null ? mm.equityMultiple.toFixed(2) + 'x' : '—'), c: greenOrDefault ?? '#BC9C45' },
     { l: t('estLeveredIrr'), v: mmInfReturn ?? (mm.irr !== null ? mm.irr.toFixed(2) + '%' : 'N/A'), c: '#0B8A4D' },
-    { l: t('annualDebtService'), v: fmt(mm.annualSeniorDS + mm.annualMezzPayment), c: '#0E3470' },
+    { l: t('annualDebtService'), v: fmt(mm.headlineSeniorDS + mm.annualMezzPayment), c: '#0E3470' },
     { l: t('equityRequired'), v: mmFullyFinanced ? '$0' : fmt(mm.netEquity), c: greenOrDefault ?? '#BC9C45' },
   ];
 

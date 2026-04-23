@@ -1332,12 +1332,17 @@ export default function EditDealPage() {
             <div className="grid grid-cols-3 gap-3 mb-4">
               {[
                 { label: 'Loan Amount', value: fmt(m.loanAmount) },
-                { label: 'Annual Senior DS', value: fmt(m.annualSeniorDS) },
-                { label: 'Lender DSCR', value: m.lenderDSCR.toFixed(2) + 'x' },
+                ...(m.ioPeriodMonths > 0
+                  ? [
+                      { label: `Senior DS (IO · Yr 1-${m.ioYears})`, value: fmt(m.annualIODS) },
+                      { label: 'Senior DS (P&I post-IO)', value: fmt(m.annualSeniorDS) },
+                    ]
+                  : [{ label: 'Annual Senior DS', value: fmt(m.annualSeniorDS) }]),
+                { label: m.ioPeriodMonths > 0 ? 'Lender DSCR (IO)' : 'Lender DSCR', value: m.lenderDSCR.toFixed(2) + 'x' },
                 ...(form.seller_financing ? [
                   { label: 'Mezz Amount', value: fmt(m.mezzAmount) },
                   { label: 'Annual Mezz IO', value: fmt(m.annualMezzPayment) },
-                  { label: 'Combined DSCR', value: m.combinedDSCR.toFixed(2) + 'x' },
+                  { label: m.ioPeriodMonths > 0 ? 'Combined DSCR (IO)' : 'Combined DSCR', value: m.combinedDSCR.toFixed(2) + 'x' },
                 ] : []),
                 { label: 'Net Equity (Check Size)', value: m.netEquity > 0 ? fmt(m.netEquity) : '$0' },
                 { label: 'Distributable CF', value: fmt(m.distributableCashFlow) },
