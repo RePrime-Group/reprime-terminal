@@ -13,6 +13,7 @@ import FadeInOnScroll from '@/components/ui/FadeInOnScroll';
 import NDAModal from '@/components/portal/NDAModal';
 import PhoneConfirmModal from '@/components/portal/PhoneConfirmModal';
 import DataRoomTab from '@/components/portal/DataRoomTab';
+import RentRollTab from '@/components/portal/RentRollTab';
 import { OverviewFinancials, DealStructureFinancials } from '@/components/portal/FinancialOverview';
 import { parseDealInputs, calculateDeal, calculatePropertyMetrics, calculateTraditionalClose, type DealInputs, type DealMetrics } from '@/lib/utils/deal-calculator';
 import { exportDealToExcel } from '@/lib/utils/excel-export';
@@ -21,7 +22,9 @@ import type {
   TerminalDDFolder,
   TerminalDDDocument,
   TerminalAvailabilitySlot,
+  TerminalTenantLease,
 } from '@/lib/types/database';
+import { computeWALT, computeOccupancy, formatYears } from '@/lib/utils/rent-roll';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -44,6 +47,7 @@ interface DealDetailClientProps {
   investorEmail?: string;
   addresses?: { id: string; label: string; address: string | null; city: string | null; state: string | null; square_footage: string | null; units: string | null; om_storage_path: string | null }[];
   pipelineTasks?: { id: string; name: string; status: string; stage: string }[];
+  tenants?: TerminalTenantLease[];
   /**
    * When true the view renders exactly as an investor sees it, but every write
    * action is short-circuited. Used by the /admin/preview routes so admins can
@@ -52,7 +56,15 @@ interface DealDetailClientProps {
   previewMode?: boolean;
 }
 
-type TabKey = 'overview' | 'due-diligence' | 'financial-modeling' | 'deal-structure' | 'schedule';
+type TabKey =
+  | 'overview'
+  | 'due-diligence'
+  | 'rent-roll'
+  | 'financial-modeling'
+  | 'deal-structure'
+  | 'capex'
+  | 'exit-strategy'
+  | 'schedule';
 type CalculatorMode = 'assignment' | 'gplp' | 'custom';
 
 // ---------------------------------------------------------------------------
@@ -1659,6 +1671,7 @@ export default function DealDetailClient({
   investorEmail = '',
   addresses = [],
   pipelineTasks = [],
+  tenants = [],
   previewMode = false,
 }: DealDetailClientProps) {
   const previewTitle = previewMode ? 'Preview mode — read-only' : undefined;
@@ -1727,7 +1740,7 @@ export default function DealDetailClient({
   useEffect(() => {
     const qTab = searchParams?.get('tab');
     if (!qTab) return;
-    const valid: TabKey[] = ['overview', 'due-diligence', 'financial-modeling', 'deal-structure', 'schedule'];
+    const valid: TabKey[] = ['overview', 'due-diligence', 'rent-roll', 'financial-modeling', 'deal-structure', 'capex', 'exit-strategy', 'schedule'];
     if (!valid.includes(qTab as TabKey)) return;
     if (qTab === 'due-diligence' && !ndaSigned) {
       setShowNDAModal(true);
@@ -1981,12 +1994,20 @@ export default function DealDetailClient({
 
   // Notification preferences (localStorage)
 
-  const tabs: { key: TabKey; label: string }[] = [
-    { key: 'overview', label: t('overview') },
-    { key: 'due-diligence', label: t('dueDiligence') },
-    { key: 'financial-modeling', label: t('financialModeling') },
-    { key: 'deal-structure', label: t('dealStructure') },
-    { key: 'schedule', label: t('scheduleContact') },
+  const dealRecord = deal as unknown as Record<string, unknown>;
+  const showRentRoll = dealRecord.show_rent_roll !== false; // default TRUE
+  const showCapex = dealRecord.show_capex === true; // default FALSE
+  const showExitStrategy = dealRecord.show_exit_strategy === true; // default FALSE
+
+  const tabs: { key: TabKey; label: string; enabled: boolean }[] = [
+    { key: 'overview', label: t('overview'), enabled: true },
+    { key: 'due-diligence', label: t('dueDiligence'), enabled: true },
+    { key: 'rent-roll', label: 'Rent Roll', enabled: showRentRoll },
+    { key: 'financial-modeling', label: t('financialModeling'), enabled: true },
+    { key: 'deal-structure', label: t('dealStructure'), enabled: true },
+    { key: 'capex', label: 'CapEx & Condition', enabled: showCapex },
+    { key: 'exit-strategy', label: 'Exit Strategy', enabled: showExitStrategy },
+    { key: 'schedule', label: t('scheduleContact'), enabled: true },
   ];
 
   // Social proof visibility
@@ -2379,34 +2400,42 @@ export default function DealDetailClient({
         {/* ------------------------------------------------------------------ */}
         <div ref={tabBarRef} className="px-4 md:px-8 mt-6 md:mt-8">
           <div className="flex border-b border-[#E5E7EB] overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
-            {tabs.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => {
-                  if (tab.key === 'due-diligence' && !ndaSigned) {
-                    setShowNDAModal(true);
-                    return;
-                  }
-                  setActiveTab(tab.key);
-                }}
-                className={`relative px-5 py-3 text-[13px] font-medium transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
-                  activeTab === tab.key
-                    ? 'text-[#0F1B2D] font-semibold'
-                    : 'text-[#9CA3AF] hover:text-[#6B7280]'
-                }`}
-              >
-                {tab.label}
-                {tab.key === 'due-diligence' && !ndaSigned && (
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="opacity-50">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                    <path d="M7 11V7a5 5 0 0110 0v4" />
-                  </svg>
-                )}
-                {activeTab === tab.key && (
-                  <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#C8A951] rounded-t-full" />
-                )}
-              </button>
-            ))}
+            {tabs.map((tab) => {
+              const disabled = !tab.enabled;
+              return (
+                <button
+                  key={tab.key}
+                  disabled={disabled}
+                  onClick={() => {
+                    if (disabled) return;
+                    if (tab.key === 'due-diligence' && !ndaSigned) {
+                      setShowNDAModal(true);
+                      return;
+                    }
+                    setActiveTab(tab.key);
+                  }}
+                  className={`relative px-5 py-3 text-[13px] font-medium transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
+                    disabled
+                      ? 'text-[#9CA3AF] opacity-40 cursor-not-allowed'
+                      : activeTab === tab.key
+                        ? 'text-[#0F1B2D] font-semibold'
+                        : 'text-[#9CA3AF] hover:text-[#6B7280]'
+                  }`}
+                  title={disabled ? 'Coming soon' : undefined}
+                >
+                  {tab.label}
+                  {tab.key === 'due-diligence' && !ndaSigned && (
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="opacity-50">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                      <path d="M7 11V7a5 5 0 0110 0v4" />
+                    </svg>
+                  )}
+                  {!disabled && activeTab === tab.key && (
+                    <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#C8A951] rounded-t-full" />
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -2718,6 +2747,28 @@ export default function DealDetailClient({
                     rows.push(
                       { key: 'sqFt', label: t('sqFt'), value: formatSqFt(deal.square_footage) },
                       { key: 'units', label: t('units'), value: deal.units },
+                    );
+                    // WALT + Occupancy from tenant data (only if tenant rows exist)
+                    if (tenants.length > 0) {
+                      const wVal = computeWALT(tenants);
+                      const occ = computeOccupancy(
+                        tenants,
+                        Number.isFinite(sfNum) && sfNum > 0 ? sfNum : null,
+                      );
+                      if (wVal !== null) {
+                        rows.push({ key: 'walt', label: 'WALT', value: formatYears(wVal) });
+                      }
+                      if (occ.occupancyPct !== null) {
+                        rows.push({
+                          key: 'occupancy',
+                          label: 'Occupancy',
+                          value: `${occ.occupancyPct.toFixed(1)}%`,
+                        });
+                      }
+                    } else if (deal.occupancy) {
+                      rows.push({ key: 'occupancy', label: 'Occupancy', value: `${deal.occupancy}%` });
+                    }
+                    rows.push(
                       { key: 'neighborhood', label: t('neighborhood'), value: deal.neighborhood },
                     );
                     if (pricePerSf) {
@@ -2900,6 +2951,31 @@ export default function DealDetailClient({
                 onDocumentDownload={handleDocumentDownload}
               />
             )}
+          </div>
+        </div>
+
+        {/* ========== 5G1. RENT ROLL TAB ========== */}
+        <div
+          className="transition-opacity duration-200"
+          style={{ display: activeTab === 'rent-roll' ? 'block' : 'none' }}
+        >
+          <div className="mt-6 md:mt-8 px-4 md:px-8 pb-8 md:pb-10">
+            <RentRollTab
+              tenants={tenants}
+              dealTotalSf={(() => {
+                const sfNum = parseFloat((deal.square_footage ?? '').replace(/,/g, ''));
+                return Number.isFinite(sfNum) && sfNum > 0 ? sfNum : null;
+              })()}
+              isPortfolio={!!deal.is_portfolio}
+              buildings={addresses.map((a) => ({
+                id: a.id,
+                label: a.label,
+                squareFootage: (() => {
+                  const n = parseFloat((a.square_footage ?? '').replace(/,/g, ''));
+                  return Number.isFinite(n) && n > 0 ? n : null;
+                })(),
+              }))}
+            />
           </div>
         </div>
 

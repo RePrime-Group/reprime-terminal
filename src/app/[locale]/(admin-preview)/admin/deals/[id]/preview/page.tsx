@@ -9,6 +9,7 @@ import type {
   TerminalDDDocument,
   TerminalAvailabilitySlot,
   TerminalSetting,
+  TerminalTenantLease,
   DealWithDetails,
 } from '@/lib/types/database';
 
@@ -146,6 +147,15 @@ export default async function DealPreviewPage({ params }: DealPreviewPageProps) 
     om_storage_path: string | null;
   }[];
 
+  // ---------- Fetch tenant rent roll ----------
+  const { data: tenantsData } = await supabase
+    .from('tenant_leases')
+    .select('*')
+    .eq('deal_id', id)
+    .order('sort_order', { ascending: true });
+
+  const tenants = (tenantsData ?? []) as TerminalTenantLease[];
+
   // ---------- Build deal with details ----------
   const dealWithDetails: DealWithDetails = {
     ...deal,
@@ -185,6 +195,7 @@ export default async function DealPreviewPage({ params }: DealPreviewPageProps) 
         bookedTimes={bookedTimes}
         locale={locale}
         addresses={addresses}
+        tenants={tenants}
         previewMode
         hasSignedNDA
       />

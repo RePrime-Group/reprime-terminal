@@ -107,6 +107,10 @@ interface DealFormData {
   quarter_release: string;
   investment_highlights: string[];
   acquisition_thesis: string;
+  // Tab visibility
+  show_rent_roll: boolean;
+  show_capex: boolean;
+  show_exit_strategy: boolean;
 }
 
 interface FormErrors {
@@ -239,6 +243,9 @@ function dealToForm(deal: TerminalDeal): DealFormData {
         ? deal.investment_highlights
         : [''],
     acquisition_thesis: deal.acquisition_thesis ?? '',
+    show_rent_roll: deal.show_rent_roll !== false,
+    show_capex: deal.show_capex === true,
+    show_exit_strategy: deal.show_exit_strategy === true,
   };
 }
 
@@ -547,6 +554,9 @@ export default function EditDealPage() {
         quarter_release: form.quarter_release || null,
         investment_highlights: highlights.length > 0 ? highlights : null,
         acquisition_thesis: form.acquisition_thesis || null,
+        show_rent_roll: form.show_rent_roll !== false,
+        show_capex: !!form.show_capex,
+        show_exit_strategy: !!form.show_exit_strategy,
         status: statusToSave,
       };
 
@@ -1896,6 +1906,47 @@ export default function EditDealPage() {
           <p className="text-xs text-rp-gray-400 mt-1">
             JPG, PNG, or WebP up to 10MB
           </p>
+        </div>
+      </div>
+
+      {/* Tab Visibility */}
+      <div className="bg-white rounded-2xl border border-rp-gray-200 p-6 mb-6">
+        <h2 className="text-[16px] font-semibold text-rp-navy mb-1">Tab Visibility</h2>
+        <p className="text-[12px] text-rp-gray-500 mb-4">
+          Controls which tabs investors see on the deal detail page. Disabled tabs appear greyed out.
+        </p>
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 cursor-not-allowed opacity-70">
+            <input
+              type="checkbox"
+              checked
+              disabled
+              className="w-4 h-4 rounded border-rp-gray-300 text-rp-gold focus:ring-rp-gold"
+            />
+            <span className="text-[13px] font-medium text-rp-gray-700">
+              Rent Roll <span className="text-[11px] text-rp-gray-400">(always on)</span>
+            </span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.show_capex}
+              onChange={(e) => updateField('show_capex', e.target.checked)}
+              className="w-4 h-4 rounded border-rp-gray-300 text-rp-gold focus:ring-rp-gold"
+            />
+            <span className="text-[13px] font-medium text-rp-gray-700">
+              CapEx &amp; Property Condition
+            </span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.show_exit_strategy}
+              onChange={(e) => updateField('show_exit_strategy', e.target.checked)}
+              className="w-4 h-4 rounded border-rp-gray-300 text-rp-gold focus:ring-rp-gold"
+            />
+            <span className="text-[13px] font-medium text-rp-gray-700">Exit Strategy</span>
+          </label>
         </div>
       </div>
 

@@ -217,6 +217,7 @@ export default function NewDealPage() {
   const aiFileRef = useRef<HTMLInputElement>(null);
   const [isPortfolio, setIsPortfolio] = useState(false);
   const [portfolioAddresses, setPortfolioAddresses] = useState<{ label: string; address: string; city: string; state: string; sf: string; units: string }[]>([]);
+  const [extractedTenants, setExtractedTenants] = useState<Record<string, unknown>[]>([]);
 
   const handleAIExtract = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -325,6 +326,11 @@ export default function NewDealPage() {
 
       if (d.source_notes) {
         setAiNotes(d.source_notes);
+      }
+
+      // Capture extracted tenant roster (saved after deal creation).
+      if (Array.isArray(d.tenants)) {
+        setExtractedTenants(d.tenants as Record<string, unknown>[]);
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown error';
@@ -492,8 +498,10 @@ export default function NewDealPage() {
         return;
       }
 
-      // Create portfolio addresses only when actually a portfolio.
+      // Create portfolio addresses first, so we can map extracted tenants
+      // to their building's UUID by label.
       // Single-property deals keep the street on terminal_deals.address.
+      const labelToAddressId = new Map<string, string>();
       if (isPortfolio && portfolioAddresses.length > 0) {
         const addressInserts = portfolioAddresses
           .filter((a) => a.label.trim())
@@ -509,7 +517,81 @@ export default function NewDealPage() {
           }));
 
         if (addressInserts.length > 0) {
-          await supabase.from('terminal_deal_addresses').insert(addressInserts);
+          const { data: insertedAddresses } = await supabase
+            .from('terminal_deal_addresses')
+            .insert(addressInserts)
+            .select('id, label');
+          for (const row of insertedAddresses ?? []) {
+            const label = (row as { label?: string }).label;
+            const id = (row as { id?: string }).id;
+            if (label && id) labelToAddressId.set(label.toLowerCase(), id);
+          }
+        }
+      }
+
+      // Save AI-extracted tenant roster (ai_extracted=true — admin reviews).
+      if (extractedTenants.length > 0) {
+        const LEASE_TYPES_SET = new Set(['NNN', 'NN', 'Modified Gross', 'Gross', 'Ground']);
+        const CREDIT_SET = new Set(['Investment Grade', 'National Credit', 'Regional', 'Local', 'Unknown']);
+        const toNum = (v: unknown): number | null => {
+          if (typeof v === 'number' && Number.isFinite(v)) return v;
+          if (typeof v === 'string') {
+            const n = parseFloat(v.replace(/[$,\s]/g, ''));
+            return Number.isFinite(n) ? n : null;
+          }
+          return null;
+        };
+        const toStr = (v: unknown): string | null =>
+          typeof v === 'string' && v.trim() ? v.trim() : null;
+        const toBool = (v: unknown): boolean =>
+          v === true || v === 'true' || v === 'yes';
+
+        // Resolve the AI-supplied address_label into the actual address UUID.
+        // Single-property deals always land with address_id=NULL.
+        const resolveAddressId = (rawLabel: unknown): string | null => {
+          if (!isPortfolio) return null;
+          const label = toStr(rawLabel);
+          if (!label) return null;
+          return labelToAddressId.get(label.toLowerCase()) ?? null;
+        };
+
+        const tenantRows = extractedTenants
+          .filter((t) => toStr(t.tenant_name) || toBool(t.is_vacant))
+          .map((t, idx) => {
+            const vacant = toBool(t.is_vacant);
+            const leaseType = toStr(t.lease_type);
+            const credit = toStr(t.tenant_credit_rating);
+            return {
+              deal_id: newDeal.id,
+              address_id: resolveAddressId(t.address_label),
+              tenant_name: vacant ? 'Vacant' : (toStr(t.tenant_name) ?? 'Unknown'),
+              suite_unit: toStr(t.suite_unit),
+              leased_sf: (() => {
+                const n = toNum(t.leased_sf);
+                return n !== null ? Math.round(n) : null;
+              })(),
+              annual_base_rent: vacant ? null : toNum(t.annual_base_rent),
+              rent_per_sf: vacant ? null : toNum(t.rent_per_sf),
+              lease_type: vacant
+                ? null
+                : leaseType && LEASE_TYPES_SET.has(leaseType) ? leaseType : 'NNN',
+              lease_start_date: toStr(t.lease_start_date),
+              lease_end_date: toStr(t.lease_end_date),
+              option_renewals: toStr(t.option_renewals),
+              escalation_structure: toStr(t.escalation_structure),
+              is_anchor: toBool(t.is_anchor),
+              is_vacant: vacant,
+              tenant_industry: toStr(t.tenant_industry),
+              guarantor: toStr(t.guarantor),
+              tenant_credit_rating: credit && CREDIT_SET.has(credit) ? credit : null,
+              market_rent_estimate: vacant ? toNum(t.market_rent_estimate) : null,
+              status: 'Active',
+              sort_order: idx,
+              ai_extracted: true,
+            };
+          });
+        if (tenantRows.length > 0) {
+          await supabase.from('tenant_leases').insert(tenantRows);
         }
       }
 

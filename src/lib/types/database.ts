@@ -148,6 +148,50 @@ export interface TerminalDeal {
   quarter_release: string | null;
   created_by: string | null;
   assigned_to: string | null;
+  // Tab visibility toggles
+  show_rent_roll: boolean;
+  show_capex: boolean;
+  show_exit_strategy: boolean;
+  // Cached computed value for portal card display
+  computed_walt: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type LeaseType = 'NNN' | 'NN' | 'Modified Gross' | 'Gross' | 'Ground';
+export type LeaseStatus = 'Active' | 'Expired' | 'Month-to-Month' | 'In Negotiation';
+export type TenantCreditRating = 'Investment Grade' | 'National Credit' | 'Regional' | 'Local' | 'Unknown';
+
+export interface TerminalTenantLease {
+  id: string;
+  deal_id: string;
+  address_id: string | null;
+  tenant_name: string;
+  suite_unit: string | null;
+  leased_sf: number | null;
+  annual_base_rent: string | null;
+  rent_per_sf: string | null;
+  lease_type: LeaseType;
+  lease_start_date: string | null;
+  lease_end_date: string | null;
+  rent_commencement_date: string | null;
+  option_renewals: string | null;
+  escalation_structure: string | null;
+  cam_reimbursement: string | null;
+  tax_reimbursement: string | null;
+  insurance_reimbursement: string | null;
+  percentage_rent: string | null;
+  security_deposit: string | null;
+  guarantor: string | null;
+  tenant_credit_rating: TenantCreditRating | null;
+  tenant_industry: string | null;
+  is_anchor: boolean;
+  is_vacant: boolean;
+  market_rent_estimate: string | null;
+  notes: string | null;
+  status: LeaseStatus;
+  sort_order: number;
+  ai_extracted: boolean;
   created_at: string;
   updated_at: string;
 }

@@ -175,8 +175,38 @@ Extract ALL fields. If not found, use null. Return ONLY valid JSON.
       "noi": "NOI for this specific address as plain number or null"
     }
   ],
+  "tenants": [
+    {
+      "tenant_name": "Tenant name, or 'Vacant' for empty spaces",
+      "address_label": "For PORTFOLIO deals only: the label of the building this tenant belongs to. Must exactly match one of the 'label' values in the 'addresses' array (case-insensitive). Null for single-property deals or when the tenant's building cannot be determined.",
+      "suite_unit": "Suite or unit number, null if unknown",
+      "leased_sf": "Leased square footage as plain number, e.g. 25000",
+      "annual_base_rent": "Annual base rent as plain number (no $, no commas)",
+      "rent_per_sf": "Rent per SF as plain number, e.g. 6.50",
+      "lease_type": "One of: NNN, NN, Modified Gross, Gross, Ground. Default NNN if unknown.",
+      "lease_start_date": "e.g. '01/2020' or '2020-01-01' or null",
+      "lease_end_date": "e.g. '12/2031' or null",
+      "option_renewals": "e.g. '2x5yr' or null",
+      "escalation_structure": "e.g. '2% annual', 'CPI', '10% at year 5', or null",
+      "is_anchor": true,
+      "is_vacant": false,
+      "tenant_industry": "e.g. 'Grocery', 'Medical', 'Restaurant', or null",
+      "guarantor": "Corporate, Personal, None, or null",
+      "tenant_credit_rating": "One of: Investment Grade, National Credit, Regional, Local, Unknown",
+      "market_rent_estimate": "For vacant spaces only: estimated market rent per SF as plain number"
+    }
+  ],
   "source_notes": "Explain which values came from OM vs LOI. Highlight any differences (e.g. 'OM asking $2.5M, LOI negotiated $2.33M'). Show your cap rate calculation. Also justify is_portfolio — one sentence on why this is or is not a portfolio."
 }
+
+TENANT EXTRACTION:
+- Extract the COMPLETE tenant roster if the OM includes one.
+- Include VACANT SPACES as entries with is_vacant=true (tenant_name="Vacant").
+- Best-effort: use null for fields not stated in the document. Do NOT fabricate.
+- If the OM only says "anchored by Kroger" with no full roster, return one entry with tenant_name="Kroger", is_anchor=true, everything else null.
+- If there is no tenant information at all, return "tenants": [].
+- PORTFOLIO DEALS: every tenant MUST include address_label, and the value must match one of the labels in the 'addresses' array exactly (case-insensitive). Use null only when the building genuinely cannot be determined.
+- SINGLE-PROPERTY DEALS: always set address_label=null.
 
 JSON only:`,
   });
@@ -184,7 +214,7 @@ JSON only:`,
   try {
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 4096,
+      max_tokens: 25000,
       messages: [{ role: 'user', content: contentBlocks }],
     });
 

@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import DealDetailClient from '@/components/portal/DealDetailClient';
-import type { TerminalDeal, TerminalDealPhoto } from '@/lib/types/database';
+import type { TerminalDeal, TerminalDealPhoto, TerminalTenantLease } from '@/lib/types/database';
 
 interface DealDetailPageProps {
   params: Promise<{ locale: string; id: string }>;
@@ -34,6 +34,7 @@ const DEAL_COLUMNS = [
   'hold_period_years', 'exit_cap_rate', 'rent_growth',
   'legal_title_estimate', 'disposition_cost_pct', 'capex',
   'debt_terms_quoted',
+  'show_rent_roll', 'show_capex', 'show_exit_strategy', 'computed_walt',
   'status',
 ].join(', ');
 
@@ -44,7 +45,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect(`/${locale}/login`);
 
-  // Parallel batch 1: deal + photos + counts + pipeline + addresses + investor + NDA checks
+  // Parallel batch 1: deal + photos + counts + pipeline + addresses + investor + NDA + tenants
   const [
     { data: dealData },
     { data: photosData },
@@ -55,6 +56,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
     { data: investorProfile },
     { data: blanketNDA },
     { data: dealNDA },
+    { data: tenantsData },
   ] = await Promise.all([
     supabase
       .from('terminal_deals')
@@ -102,6 +104,11 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
       .eq('nda_type', 'deal')
       .eq('deal_id', id)
       .limit(1),
+    supabase
+      .from('tenant_leases')
+      .select('*')
+      .eq('deal_id', id)
+      .order('sort_order', { ascending: true }),
   ]);
 
   if (!dealData) redirect(`/${locale}/portal`);
@@ -166,6 +173,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
       investorEmail={investorProfile?.email ?? ''}
       addresses={addressesData ?? []}
       pipelineTasks={tasks as { id: string; name: string; status: string; stage: string }[]}
+      tenants={(tenantsData ?? []) as TerminalTenantLease[]}
     />
   );
 }
