@@ -15,6 +15,7 @@ const INITIAL_PAGE_SIZE = INITIAL_COLUMNS * 2;
 export interface DealCardData {
   id: string;
   name: string;
+  address?: string | null;
   city: string;
   state: string;
   property_type: string;
@@ -25,10 +26,12 @@ export interface DealCardData {
   coc: number;
   dscr: number;
   equity_required: number;
+  occupancy?: string | null;
   seller_financing: boolean;
   note_sale: boolean;
   special_terms: string | null;
   dd_deadline: string | null;
+  close_deadline?: string | null;
   status: string;
   assigned_to: string | null;
   quarter_release: string | null;

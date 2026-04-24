@@ -176,6 +176,35 @@ export default async function DealPreviewPage({ params }: DealPreviewPageProps) 
 
   const exitScenarios = (exitScenariosData ?? []) as ExitScenario[];
 
+  // ---------- Prev/Next deal navigation (admin preview includes drafts) ----------
+  const ADMIN_STATUS_ORDER: Record<string, number> = {
+    draft: -1, coming_soon: 0, loi_signed: 1, published: 2, assigned: 3, closed: 4,
+  };
+  const { data: navDealsData } = await supabase
+    .from('terminal_deals')
+    .select('id, name, status, dd_deadline')
+    .in('status', ['draft', 'coming_soon', 'loi_signed', 'published', 'assigned', 'closed'])
+    .order('created_at', { ascending: false });
+
+  const navDeals = (navDealsData ?? []).slice().sort((a, b) => {
+    const orderA = ADMIN_STATUS_ORDER[a.status] ?? 2;
+    const orderB = ADMIN_STATUS_ORDER[b.status] ?? 2;
+    if (orderA !== orderB) return orderA - orderB;
+    if (a.dd_deadline && b.dd_deadline) {
+      return new Date(a.dd_deadline).getTime() - new Date(b.dd_deadline).getTime();
+    }
+    if (a.dd_deadline) return -1;
+    if (b.dd_deadline) return 1;
+    return 0;
+  });
+  const currentIdx = navDeals.findIndex((d) => d.id === id);
+  const prevDeal = currentIdx > 0
+    ? { id: navDeals[currentIdx - 1].id, name: navDeals[currentIdx - 1].name }
+    : null;
+  const nextDeal = currentIdx >= 0 && currentIdx < navDeals.length - 1
+    ? { id: navDeals[currentIdx + 1].id, name: navDeals[currentIdx + 1].name }
+    : null;
+
   // ---------- Build deal with details ----------
   const dealWithDetails: DealWithDetails = {
     ...deal,
@@ -218,6 +247,8 @@ export default async function DealPreviewPage({ params }: DealPreviewPageProps) 
         tenants={tenants}
         capexItems={capexItems}
         exitScenarios={exitScenarios}
+        prevDeal={prevDeal}
+        nextDeal={nextDeal}
         previewMode
         hasSignedNDA
       />

@@ -27,7 +27,7 @@ export default async function PortalDashboardPage({
   // Fetch deals — include new pre-pipeline statuses
   const { data: deals } = await supabase
     .from('terminal_deals')
-    .select('id, name, city, state, property_type, purchase_price, noi, cap_rate, irr, coc, dscr, equity_required, seller_financing, note_sale, special_terms, dd_deadline, status, assigned_to, quarter_release, square_footage, units, class_type, year_renovated, psa_draft_start, loi_signed_at, teaser_description, ltv, interest_rate, amortization_years, loan_fee_points, io_period_months, mezz_percent, mezz_rate, mezz_term_months, seller_credit, assignment_fee, acq_fee, asset_mgmt_fee, gp_carry, pref_return, hold_period_years, exit_cap_rate, rent_growth, legal_title_estimate, disposition_cost_pct, capex, area_cap_rate, asking_cap_rate')
+    .select('id, name, address, city, state, property_type, purchase_price, noi, cap_rate, irr, coc, dscr, equity_required, occupancy, seller_financing, note_sale, special_terms, dd_deadline, close_deadline, status, assigned_to, quarter_release, square_footage, units, class_type, year_renovated, psa_draft_start, loi_signed_at, teaser_description, ltv, interest_rate, amortization_years, loan_fee_points, io_period_months, mezz_percent, mezz_rate, mezz_term_months, seller_credit, assignment_fee, acq_fee, asset_mgmt_fee, gp_carry, pref_return, hold_period_years, exit_cap_rate, rent_growth, legal_title_estimate, disposition_cost_pct, capex, area_cap_rate, asking_cap_rate')
     .in('status', ['coming_soon', 'loi_signed', 'published', 'assigned', 'closed'])
     .order('created_at', { ascending: false });
 
@@ -127,6 +127,7 @@ export default async function PortalDashboardPage({
     return {
       id: deal.id,
       name: deal.name,
+      address: deal.address ?? null,
       city: deal.city,
       state: deal.state,
       property_type: deal.property_type,
@@ -137,12 +138,14 @@ export default async function PortalDashboardPage({
       coc: computed.cocReturn !== null && computed.cocReturn !== 0 ? computed.cocReturn : dbCoc,
       dscr: computed.combinedDSCR > 0 ? computed.combinedDSCR : dbDscr,
       equity_required: computed.netEquity > 0 ? computed.netEquity : dbEquity,
+      occupancy: deal.occupancy ?? null,
       fully_financed: computed.netEquity <= 0,
       has_positive_cash_flow: computed.distributableCashFlow > 0,
       seller_financing: deal.seller_financing,
       note_sale: deal.note_sale ?? false,
       special_terms: deal.special_terms,
       dd_deadline: deal.dd_deadline,
+      close_deadline: deal.close_deadline ?? null,
       status: deal.status,
       assigned_to: deal.assigned_to,
       quarter_release: deal.quarter_release,

@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { friendlyFetchError } from '@/lib/utils/friendly-error';
 
 interface CommitmentRow {
   id: string;
@@ -59,6 +61,9 @@ export default function CommitmentsListClient({
   const t = useTranslations('admin.commitments');
   const tc = useTranslations('common');
   const totalPages = Math.ceil(total / pageSize);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [cancelError, setCancelError] = useState<string | null>(null);
 
   const statusLabels: Record<string, string> = {
     pending: t('pending'),
@@ -82,6 +87,25 @@ export default function CommitmentsListClient({
     if (newPage > 1) params.set('p', String(newPage));
     const qs = params.toString();
     router.push(`/${locale}/admin/commitments${qs ? `?${qs}` : ''}`);
+  };
+
+  const handleCancel = async (id: string) => {
+    setCancelError(null);
+    setCancellingId(id);
+    try {
+      const res = await fetch(`/api/admin/commitments/${id}/cancel`, { method: 'POST' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setCancelError(data?.error ?? 'Could not cancel. Try again.');
+        return;
+      }
+      setConfirmId(null);
+      router.refresh();
+    } catch (err) {
+      setCancelError(friendlyFetchError(err, 'Could not cancel. Try again.'));
+    } finally {
+      setCancellingId(null);
+    }
   };
 
   return (
@@ -116,6 +140,12 @@ export default function CommitmentsListClient({
         ))}
       </div>
 
+      {cancelError && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-[12px] text-red-700">
+          {cancelError}
+        </div>
+      )}
+
       {/* Table */}
       <div className="bg-white rounded-xl border border-[#EEF0F4] overflow-hidden rp-card-shadow">
         <table className="w-full">
@@ -126,12 +156,13 @@ export default function CommitmentsListClient({
               <th className="text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-[1.5px] px-5 py-3">{t('type')}</th>
               <th className="text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-[1.5px] px-5 py-3">{t('status')}</th>
               <th className="text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-[1.5px] px-5 py-3">{t('date')}</th>
+              <th className="text-right text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-[1.5px] px-5 py-3">{t('actions')}</th>
             </tr>
           </thead>
           <tbody>
             {commitments.length === 0 ? (
               <tr>
-                <td colSpan={5} className="text-center py-12 text-[#9CA3AF] text-sm">
+                <td colSpan={6} className="text-center py-12 text-[#9CA3AF] text-sm">
                   {t('noCommitmentsFound')}
                 </td>
               </tr>
@@ -162,12 +193,68 @@ export default function CommitmentsListClient({
                   <td className="px-5 py-4 text-[12px] text-[#6B7280]">
                     {formatDate(c.created_at)}
                   </td>
+                  <td className="px-5 py-4 text-right">
+                    {c.status !== 'cancelled' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCancelError(null);
+                          setConfirmId(c.id);
+                        }}
+                        disabled={cancellingId === c.id}
+                        className="inline-flex items-center gap-1 rounded-md border border-red-200 px-2.5 py-1 text-[11px] font-semibold text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors disabled:opacity-50"
+                      >
+                        {cancellingId === c.id ? t('cancelling') : t('cancel')}
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
       </div>
+
+      {/* Confirm modal */}
+      {confirmId && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+          onClick={() => {
+            if (cancellingId) return;
+            setConfirmId(null);
+          }}
+        >
+          <div
+            className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-[16px] font-semibold text-[#0E3470]">
+              {t('confirmCancelTitle')}
+            </h3>
+            <p className="mt-2 text-[13px] text-[#6B7280]">
+              {t('confirmCancelBody')}
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirmId(null)}
+                disabled={cancellingId !== null}
+                className="rounded-md border border-[#EEF0F4] px-3 py-1.5 text-[12px] font-medium text-[#6B7280] hover:border-[#BC9C45] hover:text-[#0E3470] transition-colors disabled:opacity-50"
+              >
+                {tc('cancel')}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleCancel(confirmId)}
+                disabled={cancellingId !== null}
+                className="rounded-md bg-red-600 px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-red-700 transition-colors disabled:opacity-50"
+              >
+                {cancellingId ? t('cancelling') : t('confirmCancelAction')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (

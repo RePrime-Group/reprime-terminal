@@ -55,6 +55,8 @@ interface DealDetailClientProps {
   tenants?: TerminalTenantLease[];
   capexItems?: CapExItem[];
   exitScenarios?: ExitScenario[];
+  prevDeal?: { id: string; name: string } | null;
+  nextDeal?: { id: string; name: string } | null;
   /**
    * When true the view renders exactly as an investor sees it, but every write
    * action is short-circuited. Used by the /admin/preview routes so admins can
@@ -78,6 +80,72 @@ type CalculatorMode = 'assignment' | 'gplp' | 'custom';
 // Sub-components
 // ---------------------------------------------------------------------------
 
+/* ---------- Prev/Next Deal Arrow ---------- */
+
+function DealNavArrow({
+  direction,
+  target,
+  locale,
+  previewMode,
+  activeTab,
+  label,
+  compact = false,
+}: {
+  direction: 'prev' | 'next';
+  target: { id: string; name: string } | null;
+  locale: string;
+  previewMode: boolean;
+  activeTab: string;
+  label: string;
+  compact?: boolean;
+}) {
+  const basePath = previewMode
+    ? `/${locale}/admin/deals`
+    : `/${locale}/portal/deals`;
+  const tabQuery = activeTab && activeTab !== 'overview' ? `?tab=${activeTab}` : '';
+  const href = target
+    ? (previewMode
+        ? `${basePath}/${target.id}/preview${tabQuery}`
+        : `${basePath}/${target.id}${tabQuery}`)
+    : null;
+
+  const titleText = target ? `${label}: ${target.name}` : label;
+  const isPrev = direction === 'prev';
+  // Full-viewBox chevron so the icon fills the button nicely.
+  const iconPath = isPrev ? 'M15 18l-6-6 6-6' : 'M9 18l6-6-6-6';
+  const sizeClass = compact ? 'w-9 h-9' : 'w-11 h-11 md:w-12 md:h-12';
+  const iconSize = compact ? 18 : 22;
+  const sharedClass = `flex items-center justify-center ${sizeClass} rounded-full border-2 transition-all shrink-0`;
+
+  if (!href) {
+    return (
+      <span
+        aria-disabled="true"
+        aria-label={label}
+        title={titleText}
+        className={`${sharedClass} border-[#EEF0F4] bg-white opacity-40 cursor-not-allowed shadow-[0_4px_14px_rgba(14,52,112,0.08)]`}
+      >
+        <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d={iconPath} />
+        </svg>
+      </span>
+    );
+  }
+
+  return (
+    <a
+      href={href}
+      aria-label={titleText}
+      title={titleText}
+      className={`${sharedClass} border-[#BC9C45]/40 bg-white text-[#0E3470] shadow-[0_4px_14px_rgba(14,52,112,0.12)] hover:border-[#BC9C45] hover:bg-[#BC9C45] hover:text-white hover:shadow-[0_6px_20px_rgba(188,156,69,0.35)] hover:-translate-y-0.5`}
+    >
+      <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d={iconPath} />
+      </svg>
+    </a>
+  );
+}
+
 /* ---------- Circular Countdown Ring ---------- */
 
 function CountdownRing({
@@ -93,8 +161,8 @@ function CountdownRing({
     useCountdown(targetDate);
   const t = useTranslations('portal.dealDetail');
 
-  const size = 130;
-  const strokeWidth = 6;
+  const size = 150;
+  const strokeWidth = 7;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
 
@@ -141,15 +209,15 @@ function CountdownRing({
         {/* Center content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span
-            className="text-[28px] font-[800] leading-none"
+            className="text-[52px] font-[800] leading-none tracking-tight tabular-nums"
             style={{ color: ringColor }}
           >
             {isExpired ? '00' : days}
           </span>
-          <span className="text-[9px] font-[700] uppercase tracking-[2px] text-[#9CA3AF] mt-0.5">
+          <span className="text-[10px] font-[700] uppercase tracking-[2px] text-[#6B7280] mt-1">
             {t('daysUpper')}
           </span>
-          <span className="text-[13px] text-[#9CA3AF] mt-1 font-mono">
+          <span className="text-[12px] text-[#9CA3AF] mt-1 font-mono tabular-nums">
             {hh}:{mm}:{ss}
           </span>
         </div>
@@ -162,7 +230,7 @@ function CountdownRing({
         {isExpired && (
           <div className="w-2 h-2 rounded-full bg-[#D1D5DB]" />
         )}
-        <span className="text-[10px] uppercase font-[700] tracking-[2px] text-[#9CA3AF]">
+        <span className="text-[12px] uppercase font-[700] tracking-[2px] text-[#0E3470]">
           {label}
         </span>
       </div>
@@ -183,6 +251,10 @@ function ImageCarousel({ urls }: { urls: string[] }) {
   const [imageLoading, setImageLoading] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxLoading, setLightboxLoading] = useState(true);
+  // Touch-swipe tracking. swipedRef suppresses the img's onClick
+  // (which opens the lightbox) when the tap was actually a swipe.
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const swipedRef = useRef(false);
 
   if (urls.length === 0) {
     return (
@@ -204,14 +276,47 @@ function ImageCarousel({ urls }: { urls: string[] }) {
   const goPrev = () => { setImageLoading(true); setLightboxLoading(true); setCurrent((p) => (p - 1 + urls.length) % urls.length); };
   const goTo = (idx: number) => { if (idx !== current) { setImageLoading(true); setLightboxLoading(true); setCurrent(idx); } };
 
+  const onTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    touchStartRef.current = { x: t.clientX, y: t.clientY };
+    swipedRef.current = false;
+  };
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    const t = e.touches[0];
+    const dx = t.clientX - touchStartRef.current.x;
+    const dy = t.clientY - touchStartRef.current.y;
+    if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) swipedRef.current = true;
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchStartRef.current.x;
+    const dy = t.clientY - touchStartRef.current.y;
+    touchStartRef.current = null;
+    if (urls.length <= 1) return;
+    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+    if (dx < 0) goNext();
+    else goPrev();
+  };
+
   return (
     <>
-      <div className="relative w-full h-[45vh] md:h-[65vh] rounded-2xl overflow-hidden group">
+      <div
+        className="relative w-full h-[45vh] md:h-[65vh] rounded-2xl overflow-hidden group"
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
         <img
           src={urls[current]}
           alt={`Property photo ${current + 1}`}
           className={`w-full h-full object-cover cursor-pointer transition-opacity duration-300 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
-          onClick={() => { setLightboxLoading(true); setLightboxOpen(true); }}
+          onClick={() => {
+            if (swipedRef.current) { swipedRef.current = false; return; }
+            setLightboxLoading(true);
+            setLightboxOpen(true);
+          }}
           onLoad={() => { setImageLoading(false); setDisplayIndex(current); }}
         />
         {/* Skeleton overlay while loading */}
@@ -224,7 +329,7 @@ function ImageCarousel({ urls }: { urls: string[] }) {
           <>
             <button
               onClick={goPrev}
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-[44px] h-[44px] bg-white/90 hover:bg-white shadow-lg text-[#0E3470] rounded-full flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+              className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 w-[44px] h-[44px] bg-white/90 hover:bg-white shadow-lg text-[#0E3470] rounded-full items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
               aria-label="Previous photo"
             >
               <svg
@@ -242,7 +347,7 @@ function ImageCarousel({ urls }: { urls: string[] }) {
             </button>
             <button
               onClick={goNext}
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-[44px] h-[44px] bg-white/90 hover:bg-white shadow-lg text-[#0E3470] rounded-full flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+              className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 w-[44px] h-[44px] bg-white/90 hover:bg-white shadow-lg text-[#0E3470] rounded-full items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
               aria-label="Next photo"
             >
               <svg
@@ -378,13 +483,19 @@ function MetricCard({
   borderColor,
   valueColor,
   note,
+  size = 'normal',
 }: {
   label: string;
   value: string | null;
   borderColor: string;
   valueColor?: string;
   note?: string;
+  size?: 'headline' | 'normal';
 }) {
+  const valueSize =
+    size === 'headline'
+      ? 'text-[26px] md:text-[34px]'
+      : 'text-[20px] md:text-[27px]';
   return (
     <div
       className="group relative h-full bg-white rounded-xl p-3 md:p-3.5 border border-[#EEF0F4] rp-card-shadow hover:shadow-[0_6px_24px_rgba(14,52,112,0.08)] hover:-translate-y-[1px] transition-all duration-200"
@@ -394,7 +505,7 @@ function MetricCard({
         {label}
       </div>
       <div
-        className="text-[20px] md:text-[27px] font-bold tabular-nums leading-none tracking-tight"
+        className={`${valueSize} font-bold tabular-nums leading-none tracking-tight`}
         style={{ color: valueColor ?? '#0E3470' }}
       >
         {value ?? '—'}
@@ -1681,6 +1792,8 @@ export default function DealDetailClient({
   tenants = [],
   capexItems = [],
   exitScenarios = [],
+  prevDeal = null,
+  nextDeal = null,
   previewMode = false,
 }: DealDetailClientProps) {
   const previewTitle = previewMode ? 'Preview mode — read-only' : undefined;
@@ -1697,34 +1810,7 @@ export default function DealDetailClient({
     ? (async () => {}) as typeof rawTrackActivity
     : rawTrackActivity;
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
-  const [highlightedTarget, setHighlightedTarget] = useState<'dealAnalysis' | 'returnsCalculator' | null>(null);
-  const dealAnalysisRef = useRef<HTMLDivElement | null>(null);
-  const returnsCalculatorRef = useRef<HTMLDivElement | null>(null);
   const tabBarRef = useRef<HTMLDivElement | null>(null);
-  const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const scrollToTarget = useCallback((target: 'dealAnalysis' | 'returnsCalculator') => {
-    const nextTab: TabKey = target === 'dealAnalysis' ? 'overview' : 'deal-structure';
-    setActiveTab(nextTab);
-    if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
-    setHighlightedTarget(target);
-    // Wait for tab content to become visible, then scroll smoothly.
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        const el = target === 'dealAnalysis' ? dealAnalysisRef.current : returnsCalculatorRef.current;
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          const offset = window.scrollY + rect.top - 80;
-          window.scrollTo({ top: offset, behavior: 'smooth' });
-        }
-      });
-    });
-    highlightTimerRef.current = setTimeout(() => setHighlightedTarget(null), 2200);
-  }, []);
-
-  useEffect(() => () => {
-    if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
-  }, []);
 
   const [viewerUrl, setViewerUrl] = useState<string | null>(null);
   const [viewerName, setViewerName] = useState<string>('');
@@ -2102,7 +2188,20 @@ export default function DealDetailClient({
         {/* DEAL HEADER BAR                                                    */}
         {/* ------------------------------------------------------------------ */}
         <div className="bg-white border-b border-[#EEF0F4] px-4 md:px-8 py-4 md:py-5">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-3 md:gap-0">
+            {/* Mobile-only previous-deal button (desktop shows it alongside the hero) */}
+            <div className="md:hidden shrink-0">
+              <DealNavArrow
+                direction="prev"
+                target={prevDeal}
+                locale={locale}
+                previewMode={previewMode}
+                activeTab={activeTab}
+                label={t('previousDeal')}
+                compact
+              />
+            </div>
+            <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="min-w-0">
               <h2 className="font-[family-name:var(--font-playfair)] text-[22px] md:text-[28px] font-semibold text-[#0E3470] leading-tight tracking-[-0.01em]">
                 {deal.name}
@@ -2124,13 +2223,38 @@ export default function DealDetailClient({
                 {tPt.has(deal.property_type) ? tPt(deal.property_type) : deal.property_type}
               </span>
             </div>
+            </div>
+            {/* Mobile-only next-deal button */}
+            <div className="md:hidden shrink-0">
+              <DealNavArrow
+                direction="next"
+                target={nextDeal}
+                locale={locale}
+                previewMode={previewMode}
+                activeTab={activeTab}
+                label={t('nextDeal')}
+                compact
+              />
+            </div>
           </div>
         </div>
 
         {/* ------------------------------------------------------------------ */}
         {/* 2. HERO SECTION                                                    */}
         {/* ------------------------------------------------------------------ */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1.7fr_1fr] gap-4 md:gap-6 p-4 md:p-8 items-stretch">
+        <div className="flex items-center gap-3 lg:gap-4 p-4 md:p-8">
+          {/* Previous-deal button — reserves its own column at the left edge */}
+          <div className="hidden md:flex shrink-0 self-center">
+            <DealNavArrow
+              direction="prev"
+              target={prevDeal}
+              locale={locale}
+              previewMode={previewMode}
+              activeTab={activeTab}
+              label={t('previousDeal')}
+            />
+          </div>
+        <div className="flex-1 min-w-0 grid grid-cols-1 lg:grid-cols-[1.7fr_1fr] gap-4 md:gap-6 items-stretch">
           {/* Left: Image Carousel + Countdown Rings (rings pinned to bottom to align w/ right col) */}
           <div className="flex flex-col gap-4 h-full">
             <ImageCarousel urls={photoUrls} />
@@ -2173,14 +2297,15 @@ export default function DealDetailClient({
                 const infReturn = fullyFinanced ? (hasPositiveCF ? '∞' : 'N/A') : null;
                 const irrNote = fullyFinanced ? undefined : buildIrrAssumptions(deal, computed);
                 return [
-                  { label: tc('purchasePrice'), value: formatPrice(deal.purchase_price), borderColor: '#0E3470', span: 'col-span-2' },
-                  { label: tc('noi'), value: formatPrice(deal.noi), borderColor: '#0E3470', span: 'col-span-2' },
+                  { label: tc('purchasePrice'), value: formatPrice(deal.purchase_price), borderColor: '#0E3470', span: 'col-span-2', size: 'headline' },
+                  { label: tc('equityRequired'), value: fullyFinanced ? '$0' : (computed.netEquity > 0 ? '$' + Math.round(computed.netEquity).toLocaleString() : formatPrice(deal.equity_required)), borderColor: '#BC9C45', valueColor: fullyFinanced ? '#0B8A4D' : undefined, span: 'col-span-2', size: 'headline' },
+                  { label: tc('noi'), value: formatPrice(deal.noi), borderColor: '#0E3470', span: 'col-span-1' },
+                  { label: t('occupancy'), value: deal.occupancy ? `${deal.occupancy}%` : '—', borderColor: '#0E3470', span: 'col-span-1' },
                   { label: tc('capRate'), value: computed.capRate > 0 ? computed.capRate.toFixed(2) + '%' : formatPercent(deal.cap_rate), borderColor: '#BC9C45', span: 'col-span-1' },
                   { label: tc('irr'), value: infReturn ?? (computed.irr !== null ? computed.irr.toFixed(2) + '%' : (deal.irr ? formatPercent(deal.irr) : '—')), borderColor: '#0B8A4D', valueColor: '#0B8A4D', span: 'col-span-1', note: irrNote },
                   { label: tc('coc'), value: infReturn ?? (computed.cocReturn !== null ? computed.cocReturn.toFixed(2) + '%' : (deal.coc ? formatPercent(deal.coc) : '—')), borderColor: '#0B8A4D', valueColor: '#0B8A4D', span: 'col-span-1' },
                   { label: tc('dscr'), value: computed.combinedDSCR > 0 ? computed.combinedDSCR.toFixed(2) + 'x' : formatDSCR(deal.dscr), borderColor: '#0E3470', span: 'col-span-1' },
-                  { label: tc('equityRequired'), value: fullyFinanced ? '$0' : (computed.netEquity > 0 ? '$' + Math.round(computed.netEquity).toLocaleString() : formatPrice(deal.equity_required)), borderColor: '#BC9C45', valueColor: fullyFinanced ? '#0B8A4D' : undefined, span: 'col-span-2' },
-                ] as { label: string; value: string; borderColor: string; valueColor?: string; span: string; note?: string }[];
+                ] as { label: string; value: string; borderColor: string; valueColor?: string; span: string; note?: string; size?: 'headline' | 'normal' }[];
               })().map((m, idx) => (
                 <FadeInOnScroll key={m.label} delay={idx * 0.05} className={m.span}>
                   <MetricCard
@@ -2189,6 +2314,7 @@ export default function DealDetailClient({
                     borderColor={m.borderColor}
                     valueColor={m.valueColor}
                     note={m.note}
+                    size={m.size}
                   />
                 </FadeInOnScroll>
               ))}
@@ -2255,18 +2381,6 @@ export default function DealDetailClient({
                       {t('costarReportPending')}
                     </span>
                   )}
-                  <button
-                    onClick={() => scrollToTarget('dealAnalysis')}
-                    className="px-4 py-2 border border-[#EEF0F4] hover:border-[#BC9C45] text-[#0E3470] text-[11px] font-semibold rounded-lg transition-colors"
-                  >
-                    {t('dealAnalysis')}
-                  </button>
-                  <button
-                    onClick={() => scrollToTarget('returnsCalculator')}
-                    className="px-4 py-2 border border-[#EEF0F4] hover:border-[#BC9C45] text-[#0E3470] text-[11px] font-semibold rounded-lg transition-colors"
-                  >
-                    {t('returnsCalculator')}
-                  </button>
                 </div>
               </div>
             )}
@@ -2376,6 +2490,18 @@ export default function DealDetailClient({
             </div>
           </div>
         </div>
+          {/* Next-deal button — reserves its own column at the right edge */}
+          <div className="hidden md:flex shrink-0 self-center">
+            <DealNavArrow
+              direction="next"
+              target={nextDeal}
+              locale={locale}
+              previewMode={previewMode}
+              activeTab={activeTab}
+              label={t('nextDeal')}
+            />
+          </div>
+        </div>
 
         {/* ------------------------------------------------------------------ */}
         {/* 5D2. DEPOSIT INFO                                                  */}
@@ -2457,14 +2583,7 @@ export default function DealDetailClient({
           className="transition-opacity duration-200"
           style={{ display: activeTab === 'overview' ? 'block' : 'none' }}
         >
-          <div
-            ref={dealAnalysisRef}
-            className={`grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 lg:gap-8 mt-6 md:mt-8 px-4 md:px-8 pb-8 md:pb-10 rounded-2xl transition-[box-shadow,background-color] duration-500 ${
-              highlightedTarget === 'dealAnalysis'
-                ? 'bg-[#FDF8ED]/60 shadow-[0_0_0_3px_rgba(188,156,69,0.55),0_0_28px_rgba(188,156,69,0.25)]'
-                : ''
-            }`}
-          >
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 lg:gap-8 mt-6 md:mt-8 px-4 md:px-8 pb-8 md:pb-10">
             {/* Left Column */}
             <div className="space-y-6">
               {/* Portfolio Address Cards — only for portfolios */}
@@ -2589,15 +2708,6 @@ export default function DealDetailClient({
                   <span className="text-[#BC9C45]">*</span> {t('betaDisclaimer')}
                 </p>
               </FadeInOnScroll>
-
-              {deal.special_terms && deal.special_terms !== 'None' && (
-                <FadeInOnScroll delay={0.25}>
-                  <div className="bg-[#FDF8ED] border-l-4 border-[#BC9C45] p-4 rounded-r-lg">
-                    <div className="text-[11px] font-semibold text-[#BC9C45] uppercase tracking-wider mb-1">{t('specialTerms')}</div>
-                    <p className="text-sm text-[#4B5563]">{deal.special_terms}</p>
-                  </div>
-                </FadeInOnScroll>
-              )}
 
               {/* Market Context - with emoji icons */}
               <FadeInOnScroll delay={0.3}>
@@ -3044,6 +3154,17 @@ export default function DealDetailClient({
             {/* Full Financial Detail — Capital Stack, Waterfall, Financing, Comparison, Fees */}
             <DealStructureFinancials {...financialProps} />
 
+            {deal.special_terms && deal.special_terms !== 'None' && (
+              <FadeInOnScroll delay={0.05}>
+                <div className="mt-8 bg-[#FDF8ED] border-l-4 border-[#BC9C45] p-4 rounded-r-lg">
+                  <div className="text-[11px] font-semibold text-[#BC9C45] uppercase tracking-wider mb-1">
+                    {t('specialTerms')}
+                  </div>
+                  <p className="text-sm text-[#4B5563]">{deal.special_terms}</p>
+                </div>
+              </FadeInOnScroll>
+            )}
+
             <div className="mt-8" />
 
             {/* Two option cards side by side */}
@@ -3154,14 +3275,7 @@ export default function DealDetailClient({
 
             {/* IRR Calculator Panel */}
             <FadeInOnScroll delay={0.2}>
-              <div
-                ref={returnsCalculatorRef}
-                className={`mt-6 rounded-2xl transition-[box-shadow,background-color] duration-500 ${
-                  highlightedTarget === 'returnsCalculator'
-                    ? 'bg-[#FDF8ED]/60 shadow-[0_0_0_3px_rgba(188,156,69,0.55),0_0_28px_rgba(188,156,69,0.25)]'
-                    : ''
-                }`}
-              >
+              <div className="mt-6">
                 <IRRCalculatorPanel
                   deal={deal}
                   baseIRR={feeAdjustedMetrics.irr ?? 0}

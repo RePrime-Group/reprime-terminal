@@ -45,7 +45,16 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect(`/${locale}/login`);
 
-  // Parallel batch 1: deal + photos + counts + pipeline + addresses + investor + NDA + tenants
+  // Prev/Next deal navigation — coming_soon deals are intentionally excluded
+  // from the nav list (they're still shown on the dashboard, but investors
+  // shouldn't auto-cycle into them via ◀/▶). Same sort as the browse page for
+  // the included statuses.
+  const INVESTOR_NAV_STATUSES = ['loi_signed', 'published', 'assigned', 'closed'] as const;
+  const STATUS_ORDER: Record<string, number> = {
+    loi_signed: 1, published: 2, assigned: 3, closed: 4,
+  };
+
+  // Parallel batch 1: deal + photos + counts + pipeline + addresses + investor + NDA + tenants + nav list
   const [
     { data: dealData },
     { data: photosData },
@@ -59,6 +68,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
     { data: tenantsData },
     { data: capexItemsData },
     { data: exitScenariosData },
+    { data: navDealsData },
   ] = await Promise.all([
     supabase
       .from('terminal_deals')
@@ -121,11 +131,35 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
       .select('*')
       .eq('deal_id', id)
       .order('sort_order', { ascending: true }),
+    supabase
+      .from('terminal_deals')
+      .select('id, name, status, dd_deadline')
+      .in('status', INVESTOR_NAV_STATUSES)
+      .order('created_at', { ascending: false }),
   ]);
 
   if (!dealData) redirect(`/${locale}/portal`);
 
   const deal = dealData as unknown as TerminalDeal;
+
+  const navDeals = (navDealsData ?? []).slice().sort((a, b) => {
+    const orderA = STATUS_ORDER[a.status] ?? 2;
+    const orderB = STATUS_ORDER[b.status] ?? 2;
+    if (orderA !== orderB) return orderA - orderB;
+    if (a.dd_deadline && b.dd_deadline) {
+      return new Date(a.dd_deadline).getTime() - new Date(b.dd_deadline).getTime();
+    }
+    if (a.dd_deadline) return -1;
+    if (b.dd_deadline) return 1;
+    return 0;
+  });
+  const currentIdx = navDeals.findIndex((d) => d.id === id);
+  const prevDeal = currentIdx > 0
+    ? { id: navDeals[currentIdx - 1].id, name: navDeals[currentIdx - 1].name }
+    : null;
+  const nextDeal = currentIdx >= 0 && currentIdx < navDeals.length - 1
+    ? { id: navDeals[currentIdx + 1].id, name: navDeals[currentIdx + 1].name }
+    : null;
 
   // Generate photo URLs (synchronous — no DB call)
   const photoUrls = (photosData ?? []).map((photo) => {
@@ -188,6 +222,8 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
       tenants={(tenantsData ?? []) as TerminalTenantLease[]}
       capexItems={(capexItemsData ?? []) as CapExItem[]}
       exitScenarios={(exitScenariosData ?? []) as ExitScenario[]}
+      prevDeal={prevDeal}
+      nextDeal={nextDeal}
     />
   );
 }
