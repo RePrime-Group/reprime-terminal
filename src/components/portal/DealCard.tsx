@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useCountdown, getUrgencyLevel } from '@/lib/hooks/useCountdown';
 import { Link } from '@/i18n/navigation';
-import { formatPriceCompact, formatPercent, formatDSCR, formatPrice } from '@/lib/utils/format';
+import { formatPercent, formatDSCR, formatPrice } from '@/lib/utils/format';
 import type { DealCardData } from '@/components/portal/PortalDashboardClient';
 import { friendlyFetchError } from '@/lib/utils/friendly-error';
 import DealNotepad from '@/components/portal/DealNotepad';
@@ -29,24 +29,26 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
     return () => clearTimeout(t);
   }, [watchError]);
 
-  const ddCountdown = useCountdown(deal.dd_deadline);
-  const closeCountdown = useCountdown(deal.close_deadline ?? null);
+  const countdown = useCountdown(deal.dd_deadline);
   const isAssignedStatus = deal.status === 'assigned';
   const isClosedStatus = deal.status === 'closed';
   const isAssigned = isAssignedStatus || isClosedStatus;
+  const isTBA = !deal.dd_deadline;
   const urgency = isAssigned
     ? 'assigned'
-    : !deal.dd_deadline
+    : isTBA
     ? 'tba'
     : getUrgencyLevel(deal.dd_deadline);
 
-  // Build the "Due Diligence: N days" / "Closing: N days" line. DD takes
-  // priority while it's still active; once it's past, show Closing.
-  const timelinePhase: 'dd' | 'closing' | null = (() => {
-    if (deal.dd_deadline && !ddCountdown.isExpired) return 'dd';
-    if (deal.close_deadline && !closeCountdown.isExpired) return 'closing';
-    return null;
-  })();
+  const urgencyMap: Record<string, { bg: string; color: string }> = {
+    green:    { bg: 'bg-[#ECFDF5]', color: '#0B8A4D' },
+    amber:    { bg: 'bg-[#FFFBEB]', color: '#D97706' },
+    red:      { bg: 'bg-[#FEF2F2]', color: '#DC2626' },
+    expired:  { bg: 'bg-[#EEF0F4]', color: '#9CA3AF' },
+    tba:      { bg: 'bg-[#EFF4FA]', color: '#0E3470' },
+    assigned: { bg: 'bg-[#FDF8ED]', color: '#BC9C45' },
+  };
+  const { bg: urgencyBg, color: urgencyTextColor } = urgencyMap[urgency] ?? urgencyMap.expired;
 
   const infReturn = deal.fully_financed
     ? (deal.has_positive_cash_flow ? '∞' : 'N/A')
@@ -71,8 +73,8 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
         ].join(' ')}
       >
         {/* ── Header: Name + Address ── */}
-        <div className="px-[22px] pt-[18px] pb-3">
-          <h3 className="text-[20px] font-semibold text-[#0E3470] font-[family-name:var(--font-playfair)] leading-tight tracking-[-0.01em] truncate">
+        <div className="px-[20px] pt-[14px] pb-2">
+          <h3 className="text-[22px] font-semibold text-[#0E3470] font-[family-name:var(--font-playfair)] leading-tight tracking-[-0.01em] truncate">
             {deal.name}
           </h3>
           {address && (
@@ -194,7 +196,7 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
         <div className="h-px bg-gradient-to-r from-transparent via-[#BC9C45]/40 to-transparent" />
 
         {/* ── Card Body ── */}
-        <div style={{ padding: '14px 22px 0' }}>
+        <div style={{ padding: '12px 20px 12px' }}>
           {/* Badges row */}
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="bg-[#0E3470] text-white text-[10px] font-semibold px-2.5 py-[5px] rounded-full">
@@ -223,27 +225,27 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
           </div>
 
           {/* Headline metrics: Purchase Price + Equity Required */}
-          <div className="grid grid-cols-2 gap-4 mt-4">
-            <div>
-              <div className="text-[9px] font-bold text-gray-400 uppercase tracking-[1.8px]">
+          <div className="grid grid-cols-2 gap-3 mt-3">
+            <div className="min-w-0">
+              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[1.8px]">
                 {t('purchasePrice')}
               </div>
-              <div className="text-[24px] font-bold text-[#0E3470] tabular-nums leading-tight tracking-tight mt-0.5">
-                {formatPriceCompact(deal.purchase_price)}
+              <div className="text-[22px] font-bold text-[#0E3470] tabular-nums leading-tight tracking-[-0.03em] mt-1 truncate">
+                {formatPrice(deal.purchase_price)}
               </div>
             </div>
-            <div>
-              <div className="text-[9px] font-bold text-gray-400 uppercase tracking-[1.8px]">
+            <div className="min-w-0">
+              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[1.8px]">
                 {t('equityRequired')}
               </div>
-              <div className={`text-[24px] font-bold tabular-nums leading-tight tracking-tight mt-0.5 ${deal.fully_financed ? 'text-[#0B8A4D]' : 'text-[#0E3470]'}`}>
-                {deal.fully_financed ? '$0' : formatPriceCompact(deal.equity_required)}
+              <div className={`text-[22px] font-bold tabular-nums leading-tight tracking-[-0.03em] mt-1 truncate ${deal.fully_financed ? 'text-[#0B8A4D]' : 'text-[#0E3470]'}`}>
+                {deal.fully_financed ? '$0' : formatPrice(deal.equity_required)}
               </div>
             </div>
           </div>
 
           {/* Secondary metrics: 2 rows × 3 */}
-          <div className="grid grid-cols-3 gap-x-4 gap-y-3 mt-4">
+          <div className="grid grid-cols-3 gap-x-3 gap-y-2 mt-3">
             <SecondaryMetric label={t('noi')} value={formatPrice(deal.noi)} />
             <SecondaryMetric label={t('capRate')} value={formatPercent(deal.cap_rate)} />
             <SecondaryMetric
@@ -265,37 +267,82 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
             />
           </div>
 
-          {/* ── Timeline line ── */}
-          {(timelinePhase || isAssigned || urgency === 'tba') && (
-            <div className="mt-4 -mx-[22px] px-[22px] py-3 border-t border-[#EEF0F4] flex items-center justify-between">
-              {isAssigned ? (
-                <span className="text-[13px] font-semibold text-[#BC9C45]">
-                  ★ {t('assigned')}
-                </span>
-              ) : timelinePhase === 'dd' ? (
-                <span className="text-[13px] font-medium text-[#0E3470]">
-                  {t('ddTimelineLabel')}:{' '}
-                  <span className="font-semibold tabular-nums">
-                    {t('daysCount', { count: ddCountdown.days })}
-                  </span>
-                </span>
-              ) : timelinePhase === 'closing' ? (
-                <span className="text-[13px] font-medium text-[#0E3470]">
-                  {t('closingTimelineLabel')}:{' '}
-                  <span className="font-semibold tabular-nums">
-                    {t('daysCount', { count: closeCountdown.days })}
-                  </span>
-                </span>
-              ) : (
-                <span className="text-[13px] font-medium text-[#6B7280]">
-                  {t('tba')}
-                </span>
+          {/* ── Countdown bar ── */}
+          <div
+            className={`mt-3 -mx-[20px] -mb-[12px] px-[20px] py-[12px] ${urgencyBg} flex items-center justify-between`}
+          >
+            <div className="flex items-center gap-1.5">
+              {urgency === 'red' && (
+                <span
+                  className="w-1.5 h-1.5 rounded-full animate-pulse"
+                  style={{ backgroundColor: urgencyTextColor }}
+                />
               )}
+              <span
+                className="text-[8px] font-bold uppercase tracking-[1.5px]"
+                style={{ color: urgencyTextColor }}
+              >
+                {t('ddDeadline')}
+              </span>
             </div>
-          )}
-          {!(timelinePhase || isAssigned || urgency === 'tba') && (
-            <div className="h-5" />
-          )}
+
+            {isAssigned ? (
+              <span
+                className="flex items-center gap-1.5 text-[18px] font-extrabold"
+                style={{ color: urgencyTextColor }}
+              >
+                &#9733; {t('assigned')}
+              </span>
+            ) : isTBA ? (
+              <span
+                className="text-[18px] font-extrabold"
+                style={{ color: urgencyTextColor }}
+              >
+                {t('tba')}
+              </span>
+            ) : countdown.isExpired ? (
+              <span
+                className="text-[18px] font-extrabold"
+                style={{ color: urgencyTextColor }}
+              >
+                {t('expired')}
+              </span>
+            ) : (
+              <div className="flex items-center gap-1.5">
+                {[
+                  { value: countdown.days, label: t('countdownDays') },
+                  { value: countdown.hours, label: t('countdownHrs') },
+                  { value: countdown.minutes, label: t('countdownMin') },
+                  { value: countdown.seconds, label: t('countdownSec') },
+                ].map((g, i) => (
+                  <div key={g.label} className="flex items-center gap-1.5">
+                    {i > 0 && (
+                      <span
+                        className="text-[14px] font-bold opacity-50 -mt-2.5"
+                        style={{ color: urgencyTextColor }}
+                      >
+                        :
+                      </span>
+                    )}
+                    <div className="flex flex-col items-center">
+                      <span
+                        className="inline-flex items-center justify-center w-[32px] h-[30px] rounded-md text-[15px] font-extrabold tabular-nums text-white"
+                        style={{ backgroundColor: urgencyTextColor }}
+                      >
+                        {String(g.value).padStart(2, '0')}
+                      </span>
+                      <span
+                        className="text-[7px] font-semibold uppercase tracking-wide mt-0.5"
+                        style={{ color: urgencyTextColor }}
+                      >
+                        {g.label}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* ── Closed full-card stamp overlay ── */}
@@ -343,12 +390,12 @@ function SecondaryMetric({
 }) {
   return (
     <div>
-      <div className="text-[8px] font-bold text-gray-400 uppercase tracking-[1.8px]">
+      <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[1.8px]">
         {label}
       </div>
       <div
-        className={`font-semibold tabular-nums leading-none mt-1 ${
-          isInfinity ? 'text-[17px] text-[#0B8A4D]' : highlight ? 'text-[14px] text-[#0B8A4D]' : 'text-[14px] text-[#0E3470]'
+        className={`font-semibold tabular-nums leading-none mt-1.5 ${
+          isInfinity ? 'text-[20px] text-[#0B8A4D]' : highlight ? 'text-[17px] text-[#0B8A4D]' : 'text-[17px] text-[#0E3470]'
         }`}
       >
         {value ?? '—'}
