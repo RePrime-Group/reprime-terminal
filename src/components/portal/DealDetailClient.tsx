@@ -556,6 +556,7 @@ function FileTypeBadge({ fileType }: { fileType: string | null }) {
 function CommitmentCard({ deal, previewMode = false }: { deal: DealWithDetails; previewMode?: boolean }) {
   const t = useTranslations('portal.dealDetail');
   const tcom = useTranslations('common');
+  const isAssigned = deal.status === 'assigned';
   const [showWire, setShowWire] = useState(false);
   const [committed, setCommitted] = useState(false);
   const [commitType, setCommitType] = useState<string | null>(null);
@@ -569,6 +570,7 @@ function CommitmentCard({ deal, previewMode = false }: { deal: DealWithDetails; 
 
   // Check for existing commitment on mount
   useEffect(() => {
+    if (isAssigned) return;
     fetch(`/api/deals/${deal.id}/commit`)
       .then((r) => r.json())
       .then((data) => {
@@ -595,7 +597,7 @@ function CommitmentCard({ deal, previewMode = false }: { deal: DealWithDetails; 
       .eq('deal_id', deal.id)
       .in('status', ['pending', 'wire_sent', 'confirmed'])
       .then(({ count }) => setTotalCommitments(count ?? 0));
-  }, [deal.id]);
+  }, [deal.id, isAssigned]);
 
   const handleCommit = async (type: 'primary' | 'backup', phone?: string) => {
     if (previewMode) return false;
@@ -653,6 +655,36 @@ function CommitmentCard({ deal, previewMode = false }: { deal: DealWithDetails; 
       setWithdrawing(false);
     }
   };
+
+  if (isAssigned) {
+    return (
+      <div className="mb-6">
+        <div className="relative overflow-hidden rounded-xl bg-[#FDF8ED] border border-[#BC9C45]/30 rp-card-shadow">
+          <div className="px-5 py-6 md:px-8 md:py-8 flex flex-col md:flex-row md:items-center gap-4">
+            <div className="flex items-start md:items-center gap-4 md:gap-5 min-w-0">
+              <div className="w-11 h-11 md:w-14 md:h-14 rounded-full bg-[#BC9C45]/15 border-2 border-[#BC9C45] flex items-center justify-center shrink-0">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#BC9C45" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="md:w-6 md:h-6">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <div className="text-[10px] font-semibold text-[#BC9C45] uppercase tracking-[2px] mb-1">
+                  {t('dealAssignedEyebrow')}
+                </div>
+                <h3 className="text-[18px] md:text-[22px] font-semibold text-[#0E3470] font-[family-name:var(--font-playfair)] leading-tight">
+                  {t('dealAssigned')}
+                </h3>
+                <p className="text-[13px] text-[#6B7280] mt-1">
+                  {t('dealAssignedDesc')}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="h-[2px] bg-gradient-to-r from-transparent via-[#BC9C45]/50 to-transparent" />
+        </div>
+      </div>
+    );
+  }
 
   if (committed) {
     return (
@@ -2150,8 +2182,14 @@ export default function DealDetailClient({
             </p>
           </div>
           <div className="flex items-center gap-2 md:gap-3 ml-2 md:ml-4 shrink-0">
-            {/* Express Interest button */}
-            {expressedInterest ? (
+            {/* Express Interest button — replaced by "Deal Assigned" for assigned deals */}
+            {deal.status === 'assigned' ? (
+              <span className="px-3 md:px-5 py-2 bg-[#FDF8ED] border border-[#BC9C45]/40 text-[#BC9C45] text-[11px] md:text-[12px] font-semibold rounded-lg flex items-center gap-1.5">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8l4 4 6-7"/></svg>
+                <span className="hidden sm:inline">{t('dealAssigned')}</span>
+                <span className="sm:hidden">✓</span>
+              </span>
+            ) : expressedInterest ? (
               <span className="px-3 md:px-5 py-2 bg-[#ECFDF5] text-[#0B8A4D] text-[11px] md:text-[12px] font-semibold rounded-lg flex items-center gap-1.5">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#0B8A4D" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8l4 4 6-7"/></svg>
                 <span className="hidden sm:inline">{t('interestExpressed')}</span>

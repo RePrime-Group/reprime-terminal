@@ -564,6 +564,16 @@ export default function EditDealPage() {
         updateData.assigned_to = selectedInvestor;
       }
 
+      // Clear assignee when a deal is moved out of "assigned" to anything
+      // except "closed" (closed deals retain their investor for the track record).
+      if (
+        deal.status === 'assigned' &&
+        statusToSave !== 'assigned' &&
+        statusToSave !== 'closed'
+      ) {
+        updateData.assigned_to = null;
+      }
+
       // Persist computed metrics from calculation engine
       const computedInputs = parseDealInputs(updateData as Record<string, unknown>);
       const computedMetrics = calculatePropertyMetrics(computedInputs);

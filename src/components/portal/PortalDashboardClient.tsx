@@ -235,9 +235,10 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
   // but we still guard rendering with previewMode so any stray draft in investor
   // data can never leak into the public dashboard.
   const draftDeals = previewMode ? visibleDeals.filter((d) => d.status === 'draft') : [];
-  const upcomingDeals = visibleDeals.filter((d) => d.status === 'coming_soon' || d.status === 'loi_signed');
-  const activeDeals = visibleDeals.filter((d) => d.status === 'published');
-  const closedDeals = visibleDeals.filter((d) => d.status === 'assigned' || d.status === 'closed');
+  const upcomingDeals = visibleDeals.filter((d) => d.status === 'coming_soon');
+  const activeDeals = visibleDeals.filter((d) => d.status === 'published' || d.status === 'loi_signed');
+  const assignedDeals = visibleDeals.filter((d) => d.status === 'assigned');
+  const closedDeals = visibleDeals.filter((d) => d.status === 'closed');
   const activeCount = activeDeals.length;
   const closedCount = closedDeals.length;
 
@@ -632,7 +633,7 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
               {/* ── Active Deals Section ── */}
               {activeDeals.length > 0 && (
                 <div>
-                  {upcomingDeals.length > 0 && (
+                  {(upcomingDeals.length > 0 || assignedDeals.length > 0 || closedDeals.length > 0) && (
                     <div className="flex items-center gap-3 mb-5">
                       <h2 className="font-[family-name:var(--font-playfair)] text-[20px] font-semibold text-[#0E3470] tracking-[-0.01em]">
                         {t('activeDeals')}
@@ -645,6 +646,26 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
                       <div key={deal.id} {...(index === 0 ? { 'data-tour': 'first-deal' } : {})}>
                         <DealCard deal={deal} locale={locale} index={index} previewMode={previewMode} />
                       </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── Assigned Deals Section ── */}
+              {assignedDeals.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-3 mb-1">
+                    <h2 className="font-[family-name:var(--font-playfair)] text-[20px] font-semibold text-[#0E3470] tracking-[-0.01em]">
+                      {t('assignedDeals')}
+                    </h2>
+                    <div className="flex-1 h-px bg-gradient-to-r from-[#BC9C45]/30 to-transparent" />
+                  </div>
+                  <p className="text-[12px] text-[#9CA3AF] mb-5">
+                    {t('assignedDealsSubtitle')}
+                  </p>
+                  <div ref={gridRefCallback} className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-5 md:gap-7">
+                    {assignedDeals.map((deal, index) => (
+                      <DealCard key={deal.id} deal={deal} locale={locale} index={index} previewMode={previewMode} />
                     ))}
                   </div>
                 </div>

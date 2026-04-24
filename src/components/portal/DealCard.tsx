@@ -30,7 +30,9 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
 
   const ddCountdown = useCountdown(deal.dd_deadline);
   const closeCountdown = useCountdown(deal.close_deadline ?? null);
-  const isAssigned = deal.status === 'assigned' || deal.status === 'closed';
+  const isAssignedStatus = deal.status === 'assigned';
+  const isClosedStatus = deal.status === 'closed';
+  const isAssigned = isAssignedStatus || isClosedStatus;
   const urgency = isAssigned
     ? 'assigned'
     : !deal.dd_deadline
@@ -156,6 +158,18 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
               </span>
             </div>
           )}
+
+          {/* ── Assigned photo-only overlay ── */}
+          {isAssignedStatus && (
+            <div className="absolute inset-0 z-[2] flex items-center justify-center bg-black/35 pointer-events-none">
+              <span
+                className="font-[family-name:var(--font-playfair)] font-extrabold text-[#BC9C45] text-[32px] tracking-[0.15em] uppercase -rotate-[15deg]"
+                style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.5)' }}
+              >
+                {t('assigned')}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Gold gradient line at photo-body boundary */}
@@ -266,8 +280,8 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
           )}
         </div>
 
-        {/* ── Assigned / Closed Overlay ── */}
-        {isAssigned && (
+        {/* ── Closed full-card stamp overlay ── */}
+        {isClosedStatus && (
           <div className="absolute inset-0 bg-[rgba(7,9,15,0.88)] rounded-[14px] z-10 flex items-center justify-center pointer-events-none">
             {/* Gold confetti particles */}
             <div className="absolute inset-0 overflow-hidden rounded-[16px]">

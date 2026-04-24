@@ -44,15 +44,27 @@ export const DEAL_STATUS_LABELS: Record<string, string> = {
   closed: 'Closed',
 };
 
-export const DEAL_STATUS_TRANSITIONS: Record<string, { roles: string[]; to: string[] }> = {
-  draft: { roles: ['owner', 'employee'], to: ['coming_soon', 'published'] },
-  coming_soon: { roles: ['owner', 'employee'], to: ['loi_signed', 'draft'] },
-  loi_signed: { roles: ['owner', 'employee'], to: ['published', 'coming_soon'] },
-  published: { roles: ['owner'], to: ['draft', 'under_review'] },
-  under_review: { roles: ['owner'], to: ['published', 'assigned'] },
-  assigned: { roles: ['owner'], to: ['closed'] },
-  closed: { roles: [], to: [] },
-};
+const ALL_DEAL_STATUSES = [
+  'draft',
+  'coming_soon',
+  'loi_signed',
+  'published',
+  'under_review',
+  'assigned',
+  'closed',
+] as const;
+
+// Admins can move a deal to any status regardless of the current status.
+export const DEAL_STATUS_TRANSITIONS: Record<string, { roles: string[]; to: string[] }> =
+  Object.fromEntries(
+    ALL_DEAL_STATUSES.map((from) => [
+      from,
+      {
+        roles: ['owner', 'employee'],
+        to: ALL_DEAL_STATUSES.filter((s) => s !== from),
+      },
+    ])
+  );
 
 export const ACCEPTED_IMAGE_TYPES = [
   'image/jpeg',
