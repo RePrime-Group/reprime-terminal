@@ -14,7 +14,37 @@ interface CommitmentRow {
   investor_email: string;
   deal_name: string;
   deal_location: string;
+  investment_structure: string | null;
+  terms_snapshot: Record<string, unknown> | null;
 }
+
+function formatStructure(structure: string | null, snapshot: Record<string, unknown> | null): string {
+  if (!structure) return '—';
+  const pct = (v: unknown): string => {
+    if (typeof v !== 'number' || !Number.isFinite(v)) return '?';
+    return Number.isInteger(v) ? `${v}%` : `${v.toFixed(2).replace(/\.?0+$/, '')}%`;
+  };
+  if (structure === 'assignment') {
+    const fee = snapshot?.assignmentFee;
+    return `Assignment (${pct(fee)})`;
+  }
+  if (structure === 'gplp') {
+    if (!snapshot) return 'GP/LP';
+    const parts: string[] = [];
+    if (snapshot.acqFee !== undefined) parts.push(`${pct(snapshot.acqFee)} acq`);
+    if (snapshot.assetMgmtFee !== undefined) parts.push(`${pct(snapshot.assetMgmtFee)} AMF`);
+    if (snapshot.gpCarry !== undefined && snapshot.prefReturn !== undefined) {
+      parts.push(`${snapshot.gpCarry}/${snapshot.prefReturn}`);
+    }
+    return parts.length ? `GP/LP (${parts.join(', ')})` : 'GP/LP';
+  }
+  return structure;
+}
+
+const structureStyles: Record<string, string> = {
+  assignment: 'bg-[#BC9C45]/10 text-[#BC9C45] border border-[#BC9C45]/20',
+  gplp: 'bg-[#0B8A4D]/10 text-[#0B8A4D] border border-[#0B8A4D]/20',
+};
 
 type StatusFilter = 'all' | 'pending' | 'wire_sent' | 'confirmed' | 'cancelled';
 
@@ -154,6 +184,7 @@ export default function CommitmentsListClient({
               <th className="text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-[1.5px] px-5 py-3">{t('investor')}</th>
               <th className="text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-[1.5px] px-5 py-3">{t('deal')}</th>
               <th className="text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-[1.5px] px-5 py-3">{t('type')}</th>
+              <th className="text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-[1.5px] px-5 py-3">{t('structure')}</th>
               <th className="text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-[1.5px] px-5 py-3">{t('status')}</th>
               <th className="text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-[1.5px] px-5 py-3">{t('date')}</th>
               <th className="text-right text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-[1.5px] px-5 py-3">{t('actions')}</th>
@@ -162,7 +193,7 @@ export default function CommitmentsListClient({
           <tbody>
             {commitments.length === 0 ? (
               <tr>
-                <td colSpan={6} className="text-center py-12 text-[#9CA3AF] text-sm">
+                <td colSpan={7} className="text-center py-12 text-[#9CA3AF] text-sm">
                   {t('noCommitmentsFound')}
                 </td>
               </tr>
@@ -184,6 +215,15 @@ export default function CommitmentsListClient({
                     <span className={`inline-block text-[10px] font-semibold px-2.5 py-1 rounded-full capitalize ${typeStyles[c.type] ?? 'bg-gray-50 text-gray-500'}`}>
                       {c.type}
                     </span>
+                  </td>
+                  <td className="px-5 py-4">
+                    {c.investment_structure ? (
+                      <span className={`inline-block text-[10px] font-semibold px-2.5 py-1 rounded-full ${structureStyles[c.investment_structure] ?? 'bg-gray-50 text-gray-500'}`}>
+                        {formatStructure(c.investment_structure, c.terms_snapshot)}
+                      </span>
+                    ) : (
+                      <span className="text-[11px] text-[#9CA3AF]">—</span>
+                    )}
                   </td>
                   <td className="px-5 py-4">
                     <span className={`inline-block text-[10px] font-semibold px-2.5 py-1 rounded-full ${statusStyles[c.status] ?? 'bg-gray-50 text-gray-500'}`}>

@@ -38,7 +38,19 @@ export async function POST(
   if (denied) return denied;
   const user = { id: authResult.user.userId };
 
-  const { type, notes, phone } = await request.json();
+  const { type, notes, phone, investment_structure, terms_snapshot } = await request.json();
+
+  const ALLOWED_STRUCTURES = ['assignment', 'gplp'] as const;
+  type InvestmentStructure = (typeof ALLOWED_STRUCTURES)[number];
+  const structure: InvestmentStructure | null =
+    typeof investment_structure === 'string' &&
+    (ALLOWED_STRUCTURES as readonly string[]).includes(investment_structure)
+      ? (investment_structure as InvestmentStructure)
+      : null;
+  const snapshot: Record<string, unknown> | null =
+    terms_snapshot && typeof terms_snapshot === 'object' && !Array.isArray(terms_snapshot)
+      ? (terms_snapshot as Record<string, unknown>)
+      : null;
 
   if ((type || 'primary') === 'primary') {
     if (typeof phone !== 'string' || !isValidE164(phone)) {
@@ -77,9 +89,15 @@ export async function POST(
     } else {
       committerName = 'You';
     }
+    const structureLabel =
+      structure === 'assignment'
+        ? ' under Assignment'
+        : structure === 'gplp'
+        ? ' under GP/LP Partnership'
+        : '';
     return NextResponse.json(
       {
-        error: `${committerName} already committed to this deal on behalf of your team. Refresh to see it.`,
+        error: `${committerName} already committed to this deal on behalf of your team${structureLabel ? `, and a new commitment${structureLabel} can’t be added alongside it` : ''}. Refresh to see it, or withdraw the existing commitment first.`,
       },
       { status: 409 },
     );
@@ -106,6 +124,8 @@ export async function POST(
       deposit_amount: deal?.deposit_amount ?? null,
       status: 'pending',
       notes: notes || null,
+      investment_structure: structure,
+      terms_snapshot: snapshot,
     })
     .select('id')
     .single();
@@ -128,7 +148,12 @@ export async function POST(
     user_id: user.id,
     deal_id: id,
     action: 'expressed_interest',
-    metadata: { commitment_id: commitment?.id, type },
+    metadata: {
+      commitment_id: commitment?.id,
+      type,
+      investment_structure: structure,
+      terms_snapshot: snapshot,
+    },
   });
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://reprimeterminal.com';

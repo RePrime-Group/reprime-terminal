@@ -54,6 +54,8 @@ export default async function CommitmentsPage({ params, searchParams }: Commitme
       type,
       status,
       created_at,
+      investment_structure,
+      terms_snapshot,
       terminal_users!user_id ( full_name, email ),
       terminal_deals!deal_id ( name, city, state )
     `)
@@ -78,6 +80,8 @@ export default async function CommitmentsPage({ params, searchParams }: Commitme
       investor_email: user?.email ?? '',
       deal_name: deal?.name ?? 'Unknown',
       deal_location: deal ? `${deal.city}, ${deal.state}` : '',
+      investment_structure: (c.investment_structure as string | null) ?? null,
+      terms_snapshot: (c.terms_snapshot as Record<string, unknown> | null) ?? null,
     };
   });
 

@@ -6,13 +6,14 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { formatPrice, formatPriceCompact, formatPercent, formatDSCR, formatSqFt, formatNumber } from '@/lib/utils/format';
 import { useCountdown } from '@/lib/hooks/useCountdown';
 import { useActivityTracker } from '@/lib/hooks/useActivityTracker';
-import { calculateCustomIRR } from '@/lib/utils/irr-calculator';
+import { REPRIME_STANDARD_FEES, type FeeDefaults } from '@/lib/utils/fee-resolver';
 import { createClient } from '@/lib/supabase/client';
 import { friendlyFetchError, readApiError } from '@/lib/utils/friendly-error';
 import FadeInOnScroll from '@/components/ui/FadeInOnScroll';
 import NDAModal from '@/components/portal/NDAModal';
 import DealNotepad from '@/components/portal/DealNotepad';
 import PhoneConfirmModal from '@/components/portal/PhoneConfirmModal';
+import StructureCommitModal, { type CommitStructure } from '@/components/portal/StructureCommitModal';
 import DataRoomTab from '@/components/portal/DataRoomTab';
 import RentRollTab from '@/components/portal/RentRollTab';
 import CapExTab from '@/components/portal/CapExTab';
@@ -65,6 +66,9 @@ interface DealDetailClientProps {
    * audit the investor experience without creating rows under their own id.
    */
   previewMode?: boolean;
+  globalFeeDefaults?: FeeDefaults;
+  resolvedDealFees?: FeeDefaults;
+  resolvedInvestorTerms?: FeeDefaults;
 }
 
 type TabKey =
@@ -1331,6 +1335,9 @@ function IRRCalculatorPanel({
   onSliderChange,
   fullyFinanced = false,
   hasPositiveCashFlow = true,
+  effectiveFees,
+  customStartingFees,
+  feeAdjustedInputs,
 }: {
   deal: DealWithDetails;
   baseIRR: number;
@@ -1340,17 +1347,45 @@ function IRRCalculatorPanel({
   onSliderChange: () => void;
   fullyFinanced?: boolean;
   hasPositiveCashFlow?: boolean;
+  effectiveFees: FeeDefaults;
+  customStartingFees: FeeDefaults;
+  feeAdjustedInputs: DealInputs;
 }) {
   const t = useTranslations('portal.dealDetail');
   const ts = useTranslations('portal.structure');
   const [mode, setMode] = useState<CalculatorMode>('assignment');
-  const [lpSplit, setLpSplit] = useState(80);
-  const [prefReturn, setPrefReturn] = useState(8);
-  const [acqFee, setAcqFee] = useState(1);
+  const fmtPct = (v: number): string =>
+    Number.isInteger(v) ? `${v}%` : `${v.toFixed(2).replace(/\.?0+$/, '')}%`;
 
-  const customIRR = useMemo(() => {
-    return calculateCustomIRR(baseIRRProp, { lpSplit, prefReturn, acqFee });
-  }, [baseIRRProp, lpSplit, prefReturn, acqFee]);
+  // Custom Terms sliders — initialize from investor's saved terms
+  // (or REPRIME globals if none), and re-run calculateDeal() on every change
+  // instead of using a linear IRR approximation.
+  const [customAssignmentFee, setCustomAssignmentFee] = useState(customStartingFees.assignmentFee);
+  const [customAcqFee, setCustomAcqFee] = useState(customStartingFees.acqFee);
+  const [customAssetMgmtFee, setCustomAssetMgmtFee] = useState(customStartingFees.assetMgmtFee);
+  const [customGpCarry, setCustomGpCarry] = useState(customStartingFees.gpCarry);
+  const [customPrefReturn, setCustomPrefReturn] = useState(customStartingFees.prefReturn);
+
+  const customMetrics = useMemo(
+    () =>
+      calculateDeal({
+        ...feeAdjustedInputs,
+        assignmentFee: customAssignmentFee,
+        acqFee: customAcqFee,
+        assetMgmtFee: customAssetMgmtFee,
+        gpCarry: customGpCarry,
+        prefReturn: customPrefReturn,
+      }),
+    [
+      feeAdjustedInputs,
+      customAssignmentFee,
+      customAcqFee,
+      customAssetMgmtFee,
+      customGpCarry,
+      customPrefReturn,
+    ],
+  );
+  const customIRR = customMetrics.irr ?? 0;
 
   const infReturn = fullyFinanced ? (hasPositiveCashFlow ? '∞' : 'N/A') : null;
 
@@ -1396,7 +1431,7 @@ function IRRCalculatorPanel({
         <div>
           <div className="mb-4">
             <div className="text-[#9CA3AF] text-xs mb-1">{t('assignmentFee')}</div>
-            <div className="text-xl font-bold text-[#0E3470]">{deal.assignment_fee}</div>
+            <div className="text-xl font-bold text-[#0E3470]">{fmtPct(effectiveFees.assignmentFee)}</div>
           </div>
           <div className="mb-4">
             <div className="text-[#9CA3AF] text-xs mb-1">{t('projectedIrr')}</div>
@@ -1415,9 +1450,9 @@ function IRRCalculatorPanel({
         <div>
           <div className="space-y-2 mb-4">
             {[
-              { label: t('acquisitionFee'), value: `${deal.acq_fee} ($${Math.round(acqFeeDollar).toLocaleString()})` },
-              { label: t('assetMgmtFee'), value: `${deal.asset_mgmt_fee} ($${Math.round(assetMgmtFeeDollar).toLocaleString()}/yr)` },
-              { label: t('gpCarry'), value: deal.gp_carry },
+              { label: t('acquisitionFee'), value: `${fmtPct(effectiveFees.acqFee)} ($${Math.round(acqFeeDollar).toLocaleString()})` },
+              { label: t('assetMgmtFee'), value: `${fmtPct(effectiveFees.assetMgmtFee)} ($${Math.round(assetMgmtFeeDollar).toLocaleString()}/yr)` },
+              { label: t('gpCarry'), value: `${fmtPct(effectiveFees.gpCarry)} above ${fmtPct(effectiveFees.prefReturn)} pref` },
               { label: t('equityRequired'), value: formatPrice(deal.equity_required) },
             ].map((row) => (
               <div
@@ -1442,77 +1477,59 @@ function IRRCalculatorPanel({
       {mode === 'custom' && (
         <div>
           <div className="space-y-5 mb-6">
-            {/* LP Split slider */}
-            <div>
-              <div className="flex justify-between text-xs mb-2">
-                <span className="text-[#6B7280]">{t('lpSplit')}</span>
-                <span className="font-semibold text-[#0E3470]">{lpSplit}%</span>
+            {([
+              {
+                label: t('assignmentFee'),
+                value: customAssignmentFee,
+                setValue: setCustomAssignmentFee,
+                min: 0, max: 6, step: 0.25,
+              },
+              {
+                label: t('acquisitionFee'),
+                value: customAcqFee,
+                setValue: setCustomAcqFee,
+                min: 0, max: 5, step: 0.25,
+              },
+              {
+                label: t('assetMgmtFee'),
+                value: customAssetMgmtFee,
+                setValue: setCustomAssetMgmtFee,
+                min: 0, max: 3, step: 0.25,
+              },
+              {
+                label: t('gpCarry'),
+                value: customGpCarry,
+                setValue: setCustomGpCarry,
+                min: 0, max: 35, step: 1,
+              },
+              {
+                label: t('preferredReturn'),
+                value: customPrefReturn,
+                setValue: setCustomPrefReturn,
+                min: 0, max: 12, step: 0.5,
+              },
+            ] as const).map((s) => (
+              <div key={s.label}>
+                <div className="flex justify-between text-xs mb-2">
+                  <span className="text-[#6B7280]">{s.label}</span>
+                  <span className="font-semibold text-[#0E3470]">{fmtPct(s.value)}</span>
+                </div>
+                <input
+                  type="range"
+                  min={s.min}
+                  max={s.max}
+                  step={s.step}
+                  value={s.value}
+                  onChange={(e) => handleSliderChange(s.setValue, Number(e.target.value))}
+                  className="w-full h-1.5"
+                  style={{ accentColor: '#BC9C45' }}
+                />
+                <div className="flex justify-between text-[10px] text-[#9CA3AF] mt-1">
+                  <span>{fmtPct(s.min)}</span>
+                  <span>{fmtPct(s.max)}</span>
+                </div>
               </div>
-              <input
-                type="range"
-                min={50}
-                max={95}
-                step={1}
-                value={lpSplit}
-                onChange={(e) =>
-                  handleSliderChange(setLpSplit, Number(e.target.value))
-                }
-                className="w-full h-1.5"
-                style={{ accentColor: '#BC9C45' }}
-              />
-              <div className="flex justify-between text-[10px] text-[#9CA3AF] mt-1">
-                <span>50%</span>
-                <span>95%</span>
-              </div>
-            </div>
-
-            {/* Preferred Return slider */}
-            <div>
-              <div className="flex justify-between text-xs mb-2">
-                <span className="text-[#6B7280]">{t('preferredReturn')}</span>
-                <span className="font-semibold text-[#0E3470]">{prefReturn}%</span>
-              </div>
-              <input
-                type="range"
-                min={5}
-                max={12}
-                step={0.5}
-                value={prefReturn}
-                onChange={(e) =>
-                  handleSliderChange(setPrefReturn, Number(e.target.value))
-                }
-                className="w-full h-1.5"
-                style={{ accentColor: '#BC9C45' }}
-              />
-              <div className="flex justify-between text-[10px] text-[#9CA3AF] mt-1">
-                <span>5%</span>
-                <span>12%</span>
-              </div>
-            </div>
-
-            {/* Acquisition Fee slider */}
-            <div>
-              <div className="flex justify-between text-xs mb-2">
-                <span className="text-[#6B7280]">{t('acquisitionFee')}</span>
-                <span className="font-semibold text-[#0E3470]">{acqFee}%</span>
-              </div>
-              <input
-                type="range"
-                min={0}
-                max={3}
-                step={0.25}
-                value={acqFee}
-                onChange={(e) =>
-                  handleSliderChange(setAcqFee, Number(e.target.value))
-                }
-                className="w-full h-1.5"
-                style={{ accentColor: '#BC9C45' }}
-              />
-              <div className="flex justify-between text-[10px] text-[#9CA3AF] mt-1">
-                <span>0%</span>
-                <span>3%</span>
-              </div>
-            </div>
+            ))}
           </div>
 
           <div>
@@ -1830,7 +1847,14 @@ export default function DealDetailClient({
   nextDeal = null,
   userNote = null,
   previewMode = false,
+  globalFeeDefaults = REPRIME_STANDARD_FEES,
+  resolvedDealFees,
+  resolvedInvestorTerms,
 }: DealDetailClientProps) {
+  const effectiveDealFees: FeeDefaults = resolvedDealFees ?? globalFeeDefaults;
+  const effectiveInvestorTerms: FeeDefaults = resolvedInvestorTerms ?? globalFeeDefaults;
+  const formatFeePct = (v: number): string =>
+    Number.isInteger(v) ? `${v}%` : `${v.toFixed(2).replace(/\.?0+$/, '')}%`;
   const previewTitle = previewMode ? 'Preview mode — read-only' : undefined;
   const t = useTranslations('portal.dealDetail');
   const tc = useTranslations('portal.dealCard');
@@ -1918,6 +1942,11 @@ export default function DealDetailClient({
     setViewerName(name);
   };
   const [selectedStructure, setSelectedStructure] = useState<'assignment' | 'gplp'>('assignment');
+  const [structureModal, setStructureModal] = useState<CommitStructure | null>(null);
+  const [structurePhoneOpen, setStructurePhoneOpen] = useState(false);
+  const [structureCommitting, setStructureCommitting] = useState(false);
+  const [structurePhoneError, setStructurePhoneError] = useState<string | null>(null);
+  const [structureExistingPhone, setStructureExistingPhone] = useState('');
   const [expressedInterest, setExpressedInterest] = useState(false);
   const [showExpressModal, setShowExpressModal] = useState(false);
   const [expressingInterest, setExpressingInterest] = useState(false);
@@ -2096,20 +2125,92 @@ export default function DealDetailClient({
     }
   };
 
+  // Load phone from profile so the structure-commit phone modal can pre-fill.
+  useEffect(() => {
+    if (previewMode) return;
+    fetch('/api/user/profile')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.profile?.phone) setStructureExistingPhone(data.profile.phone as string);
+      })
+      .catch(() => {});
+  }, [previewMode]);
+
+  const handleStructurePhoneConfirm = async (e164: string) => {
+    if (!structureModal) return;
+    setStructureCommitting(true);
+    setStructurePhoneError(null);
+    try {
+      const terms_snapshot =
+        structureModal === 'assignment'
+          ? { assignmentFee: effectiveDealFees.assignmentFee }
+          : {
+              acqFee: effectiveDealFees.acqFee,
+              assetMgmtFee: effectiveDealFees.assetMgmtFee,
+              gpCarry: effectiveDealFees.gpCarry,
+              prefReturn: effectiveDealFees.prefReturn,
+            };
+      const res = await fetch(`/api/deals/${deal.id}/commit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'primary',
+          phone: e164,
+          investment_structure: structureModal,
+          terms_snapshot,
+        }),
+      });
+      if (res.ok) {
+        setStructureExistingPhone(e164);
+        setStructurePhoneOpen(false);
+        setStructureModal(null);
+        return;
+      }
+      setStructurePhoneError(
+        await readApiError(
+          res,
+          "We couldn’t save your commitment. Please try again, or contact RePrime if this keeps happening.",
+        ),
+      );
+    } catch (err) {
+      console.error('structure commit failed:', err);
+      setStructurePhoneError(
+        friendlyFetchError(err, "We couldn’t save your commitment. Please try again."),
+      );
+    } finally {
+      setStructureCommitting(false);
+    }
+  };
+
   // Headline metrics — property-level (fees forced to 0) so admin-entered fees
   // never move cap rate / CoC / IRR / DSCR / equity. Fee impact is surfaced
   // only in the Fee Disclosure section and the Returns Calculator below.
   const dealInputs = useMemo(() => parseDealInputs(deal as unknown as Record<string, unknown>), [deal]);
   const computed = useMemo(() => calculatePropertyMetrics(dealInputs), [dealInputs]);
-  // Fee-adjusted metrics for the Returns Calculator (Option A, Option B).
-  const feeAdjustedMetrics = useMemo(() => calculateDeal(dealInputs), [dealInputs]);
+  // Fee-adjusted inputs overlay the resolved REPRIME terms onto the raw deal
+  // inputs. Used by the Returns Calculator and Option A/B cards to show
+  // fee-impacted IRRs. The headline metrics above still go through
+  // calculatePropertyMetrics (fees forced to 0) — that contract is unchanged.
+  const feeAdjustedInputs = useMemo<DealInputs>(
+    () => ({
+      ...dealInputs,
+      assignmentFee: effectiveDealFees.assignmentFee,
+      acqFee: effectiveDealFees.acqFee,
+      assetMgmtFee: effectiveDealFees.assetMgmtFee,
+      gpCarry: effectiveDealFees.gpCarry,
+      prefReturn: effectiveDealFees.prefReturn,
+    }),
+    [dealInputs, effectiveDealFees],
+  );
+  const feeAdjustedMetrics = useMemo(() => calculateDeal(feeAdjustedInputs), [feeAdjustedInputs]);
   const traditionalMetrics = useMemo(() => dealInputs.sellerFinancing ? calculateTraditionalClose(dealInputs) : null, [dealInputs]);
   const financialProps = useMemo(() => ({
     inputs: dealInputs,
     metrics: computed,
     traditional: traditionalMetrics,
     isEstimated: !(deal as unknown as Record<string, unknown>).debt_terms_quoted,
-  }), [dealInputs, computed, traditionalMetrics, deal]);
+    feeDisclosure: effectiveDealFees,
+  }), [dealInputs, computed, traditionalMetrics, deal, effectiveDealFees]);
 
   // DD progress calculation
   const ddProgress = (typeof pipelineProgress === 'number' && pipelineProgress >= 0) ? pipelineProgress : 0;
@@ -3222,8 +3323,12 @@ export default function DealDetailClient({
               {/* Option A: Assignment */}
               <FadeInOnScroll delay={0}>
                 <button
-                  onClick={() => setSelectedStructure('assignment')}
-                  className={`w-full bg-white rounded-xl border-2 p-6 text-left cursor-pointer transition-all relative ${
+                  onClick={() => {
+                    setSelectedStructure('assignment');
+                    setStructurePhoneError(null);
+                    setStructureModal('assignment');
+                  }}
+                  className={`w-full h-full bg-white rounded-xl border-2 p-6 text-left cursor-pointer transition-all relative flex flex-col ${
                     selectedStructure === 'assignment'
                       ? 'border-[#BC9C45] shadow-[0_0_0_3px_#FDF8ED,0_0_20px_rgba(188,156,69,0.15)]'
                       : 'border-[#EEF0F4] hover:border-[#D1D5DB]'
@@ -3235,7 +3340,7 @@ export default function DealDetailClient({
                     </span>
                     {/* Assignment fee large number top-right */}
                     <span className="text-[32px] font-[800] text-[#BC9C45] leading-none">
-                      {deal.assignment_fee ?? '3%'}
+                      {formatFeePct(effectiveDealFees.assignmentFee)}
                     </span>
                   </div>
                   <h3 className="font-[700] text-[#0E3470] text-[20px] mb-4">
@@ -3244,7 +3349,7 @@ export default function DealDetailClient({
                   <p className="text-sm text-[#6B7280] mb-4">
                     {t('assignmentDesc')}
                   </p>
-                  <div className="bg-[#ECFDF5] border border-[#A7F3D0] rounded-xl p-4">
+                  <div className="mt-auto bg-[#ECFDF5] border border-[#A7F3D0] rounded-xl p-4">
                     <div className="data-label !text-[#0B8A4D] mb-1">
                       {t('projectedIrr')}
                     </div>
@@ -3268,8 +3373,12 @@ export default function DealDetailClient({
               {/* Option B: GP/LP Partnership */}
               <FadeInOnScroll delay={0.1}>
                 <button
-                  onClick={() => setSelectedStructure('gplp')}
-                  className={`w-full bg-white rounded-xl border-2 p-6 text-left cursor-pointer transition-all ${
+                  onClick={() => {
+                    setSelectedStructure('gplp');
+                    setStructurePhoneError(null);
+                    setStructureModal('gplp');
+                  }}
+                  className={`w-full h-full bg-white rounded-xl border-2 p-6 text-left cursor-pointer transition-all flex flex-col ${
                     selectedStructure === 'gplp'
                       ? 'border-[#BC9C45] shadow-[0_0_0_3px_#FDF8ED,0_0_20px_rgba(188,156,69,0.15)]'
                       : 'border-[#EEF0F4] hover:border-[#D1D5DB]'
@@ -3283,9 +3392,9 @@ export default function DealDetailClient({
                   </h3>
                   <div className="space-y-2 mb-4">
                     {[
-                      { label: t('acquisitionFee'), value: `${deal.acq_fee} ($${Math.round(feeAdjustedMetrics.acqFeeDollar).toLocaleString()})` },
-                      { label: t('assetMgmtFee'), value: `${deal.asset_mgmt_fee} ($${Math.round(feeAdjustedMetrics.assetMgmtFeeDollar).toLocaleString()}/yr)` },
-                      { label: t('gpCarry'), value: deal.gp_carry },
+                      { label: t('acquisitionFee'), value: `${formatFeePct(effectiveDealFees.acqFee)} ($${Math.round(feeAdjustedMetrics.acqFeeDollar).toLocaleString()})` },
+                      { label: t('assetMgmtFee'), value: `${formatFeePct(effectiveDealFees.assetMgmtFee)} ($${Math.round(feeAdjustedMetrics.assetMgmtFeeDollar).toLocaleString()}/yr)` },
+                      { label: t('gpCarry'), value: `${formatFeePct(effectiveDealFees.gpCarry)} above ${formatFeePct(effectiveDealFees.prefReturn)} pref` },
                       { label: t('equityRequired'), value: formatPrice(deal.equity_required) },
                     ].map((row) => (
                       <div
@@ -3301,7 +3410,7 @@ export default function DealDetailClient({
                       </div>
                     ))}
                   </div>
-                  <div className="bg-[#ECFDF5] border border-[#A7F3D0] rounded-xl p-4">
+                  <div className="mt-auto bg-[#ECFDF5] border border-[#A7F3D0] rounded-xl p-4">
                     <div className="data-label !text-[#0B8A4D] mb-1">
                       {t('projectedIrr')}
                     </div>
@@ -3335,6 +3444,9 @@ export default function DealDetailClient({
                   onSliderChange={handleIRRSliderChange}
                   fullyFinanced={computed.netEquity <= 0}
                   hasPositiveCashFlow={computed.distributableCashFlow > 0}
+                  effectiveFees={effectiveDealFees}
+                  customStartingFees={effectiveInvestorTerms}
+                  feeAdjustedInputs={feeAdjustedInputs}
                 />
               </div>
             </FadeInOnScroll>
@@ -3714,6 +3826,44 @@ export default function DealDetailClient({
           </div>
         </div>
       )}
+
+      {/* Option A/B Commitment Modals (chain into PhoneConfirmModal). */}
+      <StructureCommitModal
+        open={structureModal !== null && !structurePhoneOpen}
+        structure={structureModal ?? 'assignment'}
+        fees={effectiveDealFees}
+        purchasePrice={feeAdjustedInputs.purchasePrice}
+        equityRequired={computed.netEquity}
+        projectedIRR={
+          structureModal === 'assignment'
+            ? feeAdjustedMetrics.assignmentIRR
+            : feeAdjustedMetrics.irr
+        }
+        projectedCoC={feeAdjustedMetrics.cocReturn}
+        acqFeeDollar={feeAdjustedMetrics.acqFeeDollar}
+        assetMgmtFeeDollarPerYear={feeAdjustedMetrics.assetMgmtFeeDollar}
+        fullyFinanced={computed.netEquity <= 0}
+        hasPositiveCashFlow={computed.distributableCashFlow > 0}
+        previewMode={previewMode}
+        onCancel={() => setStructureModal(null)}
+        onCommit={() => {
+          if (previewMode) return;
+          setStructurePhoneError(null);
+          setStructurePhoneOpen(true);
+        }}
+      />
+      <PhoneConfirmModal
+        open={structurePhoneOpen}
+        initialE164={structureExistingPhone}
+        submitting={structureCommitting}
+        error={structurePhoneError}
+        onCancel={() => {
+          if (structureCommitting) return;
+          setStructurePhoneOpen(false);
+          setStructurePhoneError(null);
+        }}
+        onConfirm={handleStructurePhoneConfirm}
+      />
     </div>
   );
 }

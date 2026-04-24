@@ -9,6 +9,10 @@ import Badge from '@/components/ui/Badge';
 import Modal from '@/components/ui/Modal';
 import DealSubNav from '@/components/admin/DealSubNav';
 import { parseDealInputs, calculatePropertyMetrics } from '@/lib/utils/deal-calculator';
+import {
+  REPRIME_STANDARD_FEES,
+  type FeeDefaults,
+} from '@/lib/utils/fee-resolver';
 import { createClient } from '@/lib/supabase/client';
 import {
   DEAL_STATUS_LABELS,
@@ -199,12 +203,12 @@ function dealToForm(deal: TerminalDeal): DealFormData {
     seller_financing: deal.seller_financing,
     note_sale: deal.note_sale ?? false,
     special_terms: deal.special_terms,
-    assignment_fee: deal.assignment_fee,
+    assignment_fee: deal.assignment_fee ?? '',
     assignment_irr: deal.assignment_irr ?? '',
     gplp_irr: deal.gplp_irr ?? '',
-    acq_fee: deal.acq_fee,
-    asset_mgmt_fee: deal.asset_mgmt_fee,
-    gp_carry: deal.gp_carry,
+    acq_fee: deal.acq_fee ?? '',
+    asset_mgmt_fee: deal.asset_mgmt_fee ?? '',
+    gp_carry: deal.gp_carry ?? '',
     loan_fee: deal.loan_fee,
     ltv: deal.ltv ?? '75',
     interest_rate: deal.interest_rate ?? '6.00',
@@ -215,7 +219,7 @@ function dealToForm(deal: TerminalDeal): DealFormData {
     mezz_rate: deal.mezz_rate ?? '5.00',
     mezz_term_months: deal.mezz_term_months ?? '60',
     seller_credit: deal.seller_credit ?? '0',
-    pref_return: deal.pref_return ?? '0',
+    pref_return: deal.pref_return ?? '',
     area_cap_rate: deal.area_cap_rate ?? '',
     asking_cap_rate: deal.asking_cap_rate ?? '',
     hold_period_years: deal.hold_period_years ?? '5',
@@ -262,6 +266,8 @@ export default function EditDealPage() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [globalFeeDefaults, setGlobalFeeDefaults] =
+    useState<FeeDefaults>(REPRIME_STANDARD_FEES);
   const [currentUser, setCurrentUser] = useState<Pick<
     TerminalUser,
     'role'
@@ -352,6 +358,32 @@ export default function EditDealPage() {
       const typedDeal = dealData as TerminalDeal;
       setDeal(typedDeal);
       setForm(dealToForm(typedDeal));
+
+      const { data: feeSettings } = await supabase
+        .from('terminal_settings')
+        .select('key, value')
+        .in('key', [
+          'default_assignment_fee',
+          'default_acq_fee',
+          'default_asset_mgmt_fee',
+          'default_gp_carry',
+          'default_pref_return',
+        ]);
+      if (feeSettings) {
+        const map = new Map(feeSettings.map((s) => [s.key, s.value as string]));
+        const pick = (k: string, fb: number) => {
+          const v = map.get(k);
+          const n = v ? parseFloat(v) : NaN;
+          return Number.isNaN(n) ? fb : n;
+        };
+        setGlobalFeeDefaults({
+          assignmentFee: pick('default_assignment_fee', REPRIME_STANDARD_FEES.assignmentFee),
+          acqFee: pick('default_acq_fee', REPRIME_STANDARD_FEES.acqFee),
+          assetMgmtFee: pick('default_asset_mgmt_fee', REPRIME_STANDARD_FEES.assetMgmtFee),
+          gpCarry: pick('default_gp_carry', REPRIME_STANDARD_FEES.gpCarry),
+          prefReturn: pick('default_pref_return', REPRIME_STANDARD_FEES.prefReturn),
+        });
+      }
       setNewStatus(typedDeal.status);
       setOmPath(typedDeal.om_storage_path ?? null);
       setDocPaths({
@@ -513,12 +545,12 @@ export default function EditDealPage() {
         seller_financing: form.seller_financing,
         note_sale: form.note_sale,
         special_terms: form.special_terms,
-        assignment_fee: form.assignment_fee,
+        assignment_fee: form.assignment_fee.trim() || null,
         assignment_irr: form.assignment_irr || null,
         gplp_irr: form.gplp_irr || null,
-        acq_fee: form.acq_fee,
-        asset_mgmt_fee: form.asset_mgmt_fee,
-        gp_carry: form.gp_carry,
+        acq_fee: form.acq_fee.trim() || null,
+        asset_mgmt_fee: form.asset_mgmt_fee.trim() || null,
+        gp_carry: form.gp_carry.trim() || null,
         loan_fee: form.loan_fee,
         ltv: form.ltv || '75',
         interest_rate: form.interest_rate || '6.00',
@@ -529,7 +561,7 @@ export default function EditDealPage() {
         mezz_rate: form.mezz_rate || '5.00',
         mezz_term_months: form.mezz_term_months || '60',
         seller_credit: form.seller_credit || '0',
-        pref_return: form.pref_return || '0',
+        pref_return: form.pref_return.trim() || null,
         area_cap_rate: form.area_cap_rate.trim() || null,
         asking_cap_rate: form.asking_cap_rate.trim() || null,
         hold_period_years: form.hold_period_years || '5',
@@ -1275,7 +1307,7 @@ export default function EditDealPage() {
               <Input label="CapEx / Capital Reserves ($)" value={form.capex} onChange={(e) => updateField('capex', e.target.value)} placeholder="e.g. 25000 (blank = $0)" />
               <Input label="Hold Period (yrs)" value={form.hold_period_years} onChange={(e) => updateField('hold_period_years', e.target.value)} placeholder="5" />
               <Input label="Exit Cap Rate %" value={form.exit_cap_rate} onChange={(e) => updateField('exit_cap_rate', e.target.value)} placeholder="e.g. 9.5 (blank = entry cap + 1%)" />
-              <Input label="Pref Return %" value={form.pref_return} onChange={(e) => updateField('pref_return', e.target.value)} placeholder="0 (blank = 0%)" />
+              <Input label="Pref Return %" value={form.pref_return} onChange={(e) => updateField('pref_return', e.target.value)} placeholder={`Default: ${globalFeeDefaults.prefReturn}%`} />
               <Input label="Annual Rent Growth %" value={form.rent_growth} onChange={(e) => updateField('rent_growth', e.target.value)} placeholder="e.g. 3.0 (blank = 0%)" />
               <Input label="Legal/Title Estimate ($)" value={form.legal_title_estimate} onChange={(e) => updateField('legal_title_estimate', e.target.value)} placeholder="e.g. 25000 (blank = $0)" />
               <Input label="Disposition Cost %" value={form.disposition_cost_pct} onChange={(e) => updateField('disposition_cost_pct', e.target.value)} placeholder="e.g. 2.0 (blank = 0%)" />
@@ -1372,10 +1404,10 @@ export default function EditDealPage() {
       <div className="bg-white rounded-2xl border border-rp-gray-200 p-6 mb-6">
         <h2 className="text-[16px] font-semibold text-rp-navy mb-5">Fee Structure</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Input label="Assignment Fee %" value={form.assignment_fee} onChange={(e) => updateField('assignment_fee', e.target.value)} placeholder="0 (blank = 0%)" />
-          <Input label="Acquisition Fee %" value={form.acq_fee} onChange={(e) => updateField('acq_fee', e.target.value)} placeholder="0 (blank = 0%)" />
-          <Input label="Asset Mgmt Fee %" value={form.asset_mgmt_fee} onChange={(e) => updateField('asset_mgmt_fee', e.target.value)} placeholder="0 (blank = 0%)" />
-          <Input label="GP Carry %" value={form.gp_carry} onChange={(e) => updateField('gp_carry', e.target.value)} placeholder="0 (blank = 0%)" />
+          <Input label="Assignment Fee %" value={form.assignment_fee} onChange={(e) => updateField('assignment_fee', e.target.value)} placeholder={`Default: ${globalFeeDefaults.assignmentFee}%`} />
+          <Input label="Acquisition Fee %" value={form.acq_fee} onChange={(e) => updateField('acq_fee', e.target.value)} placeholder={`Default: ${globalFeeDefaults.acqFee}%`} />
+          <Input label="Asset Mgmt Fee %" value={form.asset_mgmt_fee} onChange={(e) => updateField('asset_mgmt_fee', e.target.value)} placeholder={`Default: ${globalFeeDefaults.assetMgmtFee}%`} />
+          <Input label="GP Carry %" value={form.gp_carry} onChange={(e) => updateField('gp_carry', e.target.value)} placeholder={`Default: ${globalFeeDefaults.gpCarry}%`} />
         </div>
       </div>
 

@@ -2,6 +2,11 @@ import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
 import DealDetailClient from '@/components/portal/DealDetailClient';
+import {
+  getGlobalFeeDefaults,
+  resolveAllFees,
+  resolveInvestorTerms,
+} from '@/lib/utils/fee-resolver';
 import type {
   TerminalDeal,
   TerminalDealPhoto,
@@ -214,6 +219,14 @@ export default async function DealPreviewPage({ params }: DealPreviewPageProps) 
     meetings_count: meetingsCount ?? 0,
   };
 
+  // ---------- Resolve fees (admin preview shows REPRIME terms; no investor overrides)
+  const globalFeeDefaults = await getGlobalFeeDefaults(supabase);
+  const resolvedDealFees = resolveAllFees(
+    deal as unknown as Record<string, unknown>,
+    globalFeeDefaults,
+  );
+  const resolvedInvestorTerms = resolveInvestorTerms(null, globalFeeDefaults);
+
   return (
     <div className="min-h-screen bg-[#060D1B]">
       {/* Admin Preview Banner */}
@@ -251,6 +264,9 @@ export default async function DealPreviewPage({ params }: DealPreviewPageProps) 
         nextDeal={nextDeal}
         previewMode
         hasSignedNDA
+        globalFeeDefaults={globalFeeDefaults}
+        resolvedDealFees={resolvedDealFees}
+        resolvedInvestorTerms={resolvedInvestorTerms}
       />
     </div>
   );

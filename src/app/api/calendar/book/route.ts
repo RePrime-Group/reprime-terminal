@@ -59,9 +59,7 @@ export async function POST(request: NextRequest) {
     .eq('key', 'contact_email')
     .single();
 
-  const adminEmail = settingsData?.value
-    ? String(settingsData.value).replace(/"/g, '')
-    : '';
+  const adminEmail = settingsData?.value ? String(settingsData.value) : '';
 
   // Calculate end time (30 min meeting)
   const start = new Date(startTime);

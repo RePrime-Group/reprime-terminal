@@ -2,6 +2,12 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import DealDetailClient from '@/components/portal/DealDetailClient';
 import type { TerminalDeal, TerminalDealPhoto, TerminalTenantLease, CapExItem, ExitScenario } from '@/lib/types/database';
+import {
+  getGlobalFeeDefaults,
+  resolveAllFees,
+  resolveInvestorTerms,
+  type InvestorTerms,
+} from '@/lib/utils/fee-resolver';
 
 interface DealDetailPageProps {
   params: Promise<{ locale: string; id: string }>;
@@ -149,6 +155,21 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
 
   const deal = dealData as unknown as TerminalDeal;
 
+  const [globalFeeDefaults, investorTermsResult] = await Promise.all([
+    getGlobalFeeDefaults(supabase),
+    supabase
+      .from('user_investment_terms')
+      .select('assignment_fee, acq_fee, asset_mgmt_fee, gp_carry, pref_return')
+      .eq('user_id', user.id)
+      .maybeSingle(),
+  ]);
+  const resolvedDealFees = resolveAllFees(
+    deal as unknown as Record<string, unknown>,
+    globalFeeDefaults,
+  );
+  const investorTerms = (investorTermsResult.data ?? null) as InvestorTerms | null;
+  const resolvedInvestorTerms = resolveInvestorTerms(investorTerms, globalFeeDefaults);
+
   const navDeals = (navDealsData ?? []).slice().sort((a, b) => {
     const orderA = STATUS_ORDER[a.status] ?? 2;
     const orderB = STATUS_ORDER[b.status] ?? 2;
@@ -232,6 +253,9 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
       prevDeal={prevDeal}
       nextDeal={nextDeal}
       userNote={userNoteData ?? null}
+      globalFeeDefaults={globalFeeDefaults}
+      resolvedDealFees={resolvedDealFees}
+      resolvedInvestorTerms={resolvedInvestorTerms}
     />
   );
 }

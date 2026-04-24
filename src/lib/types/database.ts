@@ -94,12 +94,12 @@ export interface TerminalDeal {
   seller_financing: boolean;
   note_sale: boolean;
   special_terms: string;
-  assignment_fee: string;
+  assignment_fee: string | null;
   assignment_irr: string | null;
   gplp_irr: string | null;
-  acq_fee: string;
-  asset_mgmt_fee: string;
-  gp_carry: string;
+  acq_fee: string | null;
+  asset_mgmt_fee: string | null;
+  gp_carry: string | null;
   loan_fee: string;
   dd_deadline: string | null;
   close_deadline: string | null;
@@ -271,7 +271,7 @@ export interface TerminalAvailabilitySlot {
 
 export interface TerminalSetting {
   key: string;
-  value: unknown;
+  value: string;
   updated_at: string;
 }
 

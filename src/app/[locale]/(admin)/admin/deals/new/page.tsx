@@ -1,12 +1,16 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { createClient } from '@/lib/supabase/client';
 import { parseDealInputs, calculatePropertyMetrics } from '@/lib/utils/deal-calculator';
+import {
+  REPRIME_STANDARD_FEES,
+  type FeeDefaults,
+} from '@/lib/utils/fee-resolver';
 import type { DealStatus } from '@/lib/types/database';
 
 const PROPERTY_TYPES = [
@@ -111,12 +115,12 @@ const initialFormData: DealFormData = {
   seller_financing: false,
   note_sale: false,
   special_terms: '',
-  assignment_fee: '3%',
+  assignment_fee: '',
   assignment_irr: '',
   gplp_irr: '',
-  acq_fee: '1%',
-  asset_mgmt_fee: '2%',
-  gp_carry: '20% above 8% pref',
+  acq_fee: '',
+  asset_mgmt_fee: '',
+  gp_carry: '',
   loan_fee: '1 point',
   ltv: '75',
   interest_rate: '6.00',
@@ -127,7 +131,7 @@ const initialFormData: DealFormData = {
   mezz_rate: '5.00',
   mezz_term_months: '60',
   seller_credit: '0',
-  pref_return: '8',
+  pref_return: '',
   area_cap_rate: '',
   asking_cap_rate: '',
   hold_period_years: '5',
@@ -211,6 +215,8 @@ export default function NewDealPage() {
   const [form, setForm] = useState<DealFormData>(initialFormData);
   const [errors, setErrors] = useState<FormErrors>({});
   const [saving, setSaving] = useState(false);
+  const [globalFeeDefaults, setGlobalFeeDefaults] =
+    useState<FeeDefaults>(REPRIME_STANDARD_FEES);
   const [aiExtracting, setAiExtracting] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [aiNotes, setAiNotes] = useState<string | null>(null);
@@ -218,6 +224,36 @@ export default function NewDealPage() {
   const [isPortfolio, setIsPortfolio] = useState(false);
   const [portfolioAddresses, setPortfolioAddresses] = useState<{ label: string; address: string; city: string; state: string; sf: string; units: string }[]>([]);
   const [extractedTenants, setExtractedTenants] = useState<Record<string, unknown>[]>([]);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase
+      .from('terminal_settings')
+      .select('key, value')
+      .in('key', [
+        'default_assignment_fee',
+        'default_acq_fee',
+        'default_asset_mgmt_fee',
+        'default_gp_carry',
+        'default_pref_return',
+      ])
+      .then(({ data }) => {
+        if (!data) return;
+        const map = new Map(data.map((s) => [s.key, s.value as string]));
+        const pick = (k: string, fb: number) => {
+          const v = map.get(k);
+          const n = v ? parseFloat(v) : NaN;
+          return Number.isNaN(n) ? fb : n;
+        };
+        setGlobalFeeDefaults({
+          assignmentFee: pick('default_assignment_fee', REPRIME_STANDARD_FEES.assignmentFee),
+          acqFee: pick('default_acq_fee', REPRIME_STANDARD_FEES.acqFee),
+          assetMgmtFee: pick('default_asset_mgmt_fee', REPRIME_STANDARD_FEES.assetMgmtFee),
+          gpCarry: pick('default_gp_carry', REPRIME_STANDARD_FEES.gpCarry),
+          prefReturn: pick('default_pref_return', REPRIME_STANDARD_FEES.prefReturn),
+        });
+      });
+  }, []);
 
   const handleAIExtract = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -425,12 +461,12 @@ export default function NewDealPage() {
         seller_financing: form.seller_financing,
         note_sale: form.note_sale,
         special_terms: form.special_terms,
-        assignment_fee: form.assignment_fee,
+        assignment_fee: form.assignment_fee.trim() || null,
         assignment_irr: form.assignment_irr || null,
         gplp_irr: form.gplp_irr || null,
-        acq_fee: form.acq_fee,
-        asset_mgmt_fee: form.asset_mgmt_fee,
-        gp_carry: form.gp_carry,
+        acq_fee: form.acq_fee.trim() || null,
+        asset_mgmt_fee: form.asset_mgmt_fee.trim() || null,
+        gp_carry: form.gp_carry.trim() || null,
         loan_fee: form.loan_fee,
         dd_deadline: form.dd_deadline || null,
         close_deadline: form.close_deadline || null,
@@ -457,7 +493,7 @@ export default function NewDealPage() {
         mezz_rate: form.mezz_rate || '5.00',
         mezz_term_months: form.mezz_term_months || '60',
         seller_credit: form.seller_credit || '0',
-        pref_return: form.pref_return || '8',
+        pref_return: form.pref_return.trim() || null,
         area_cap_rate: form.area_cap_rate.trim() || null,
         asking_cap_rate: form.asking_cap_rate.trim() || null,
         hold_period_years: form.hold_period_years || '5',
@@ -957,7 +993,7 @@ export default function NewDealPage() {
               <Input label="Seller Credit $" value={form.seller_credit} onChange={(e) => updateField('seller_credit', e.target.value)} placeholder="0" />
               <Input label="Hold (yrs)" value={form.hold_period_years} onChange={(e) => updateField('hold_period_years', e.target.value)} placeholder="5" />
               <Input label="Exit Cap %" value={form.exit_cap_rate} onChange={(e) => updateField('exit_cap_rate', e.target.value)} placeholder="Same as entry" />
-              <Input label="Pref Return %" value={form.pref_return} onChange={(e) => updateField('pref_return', e.target.value)} placeholder="8" />
+              <Input label="Pref Return %" value={form.pref_return} onChange={(e) => updateField('pref_return', e.target.value)} placeholder={`Default: ${globalFeeDefaults.prefReturn}%`} />
             </div>
 
             <div className="mt-5 pt-5 border-t border-rp-gray-200">
@@ -1032,10 +1068,10 @@ export default function NewDealPage() {
       <div className="bg-white rounded-2xl border border-rp-gray-200 p-6 mb-6">
         <h2 className="text-[16px] font-semibold text-rp-navy mb-5">Fee Structure</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Input label="Assignment Fee %" value={form.assignment_fee} onChange={(e) => updateField('assignment_fee', e.target.value)} placeholder="3" />
-          <Input label="Acquisition Fee %" value={form.acq_fee} onChange={(e) => updateField('acq_fee', e.target.value)} placeholder="1" />
-          <Input label="Asset Mgmt Fee %" value={form.asset_mgmt_fee} onChange={(e) => updateField('asset_mgmt_fee', e.target.value)} placeholder="2" />
-          <Input label="GP Carry %" value={form.gp_carry} onChange={(e) => updateField('gp_carry', e.target.value)} placeholder="20" />
+          <Input label="Assignment Fee %" value={form.assignment_fee} onChange={(e) => updateField('assignment_fee', e.target.value)} placeholder={`Default: ${globalFeeDefaults.assignmentFee}%`} />
+          <Input label="Acquisition Fee %" value={form.acq_fee} onChange={(e) => updateField('acq_fee', e.target.value)} placeholder={`Default: ${globalFeeDefaults.acqFee}%`} />
+          <Input label="Asset Mgmt Fee %" value={form.asset_mgmt_fee} onChange={(e) => updateField('asset_mgmt_fee', e.target.value)} placeholder={`Default: ${globalFeeDefaults.assetMgmtFee}%`} />
+          <Input label="GP Carry %" value={form.gp_carry} onChange={(e) => updateField('gp_carry', e.target.value)} placeholder={`Default: ${globalFeeDefaults.gpCarry}%`} />
         </div>
       </div>
 

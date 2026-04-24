@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { type DealInputs, type DealMetrics } from '@/lib/utils/deal-calculator';
+import type { FeeDefaults } from '@/lib/utils/fee-resolver';
 
 // Shared formatting
 function fmtFull(n: number): string { return '$' + Math.round(n).toLocaleString(); }
@@ -12,6 +13,9 @@ interface FinancialProps {
   metrics: DealMetrics;
   traditional: DealMetrics | null;
   isEstimated: boolean;
+  /** Resolved REPRIME fee terms — used by the Fee Disclosure section only.
+   *  Falls back to `inputs.*Fee` when not provided, preserving pre-resolver behavior. */
+  feeDisclosure?: FeeDefaults;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -88,7 +92,7 @@ export function OverviewFinancials({ inputs, metrics, traditional }: FinancialPr
 // ═══════════════════════════════════════════════════════════
 // DEAL STRUCTURE TAB — Full Detail View
 // ═══════════════════════════════════════════════════════════
-export function DealStructureFinancials({ inputs, metrics, traditional, isEstimated }: FinancialProps) {
+export function DealStructureFinancials({ inputs, metrics, traditional, isEstimated, feeDisclosure }: FinancialProps) {
   const t = useTranslations('portal.financial');
   return (
     <div className="space-y-6">
@@ -232,19 +236,27 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
         <ReturnComparison inputs={inputs} metrics={metrics} traditional={traditional} />
       )}
 
-      {/* Fee Disclosure — reads real fee % from `inputs` (unzeroed) and
-          computes dollars inline. Metrics-dollar fields would read 0 here
-          because headline metrics use calculatePropertyMetrics. */}
+      {/* Fee Disclosure — prefers the resolved REPRIME fee terms
+          (per-deal override or global default); falls back to `inputs.*Fee`
+          for backward compatibility. Dollars computed inline, independent
+          of headline metrics (which zero fees). */}
       <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 rp-card-shadow">
         <h4 className="text-[14px] font-semibold text-[#0E3470] mb-3">{t('feeDisclosure')}</h4>
         <div className="grid grid-cols-2 gap-x-4 md:gap-x-6 gap-y-1">
-          {[
-            [`${t('assignmentFee')} (${pct(inputs.assignmentFee)})`, fmtFull(inputs.purchasePrice * inputs.assignmentFee / 100)],
-            [`${t('acquisitionFee')} (${pct(inputs.acqFee)})`, fmtFull(inputs.purchasePrice * inputs.acqFee / 100)],
-            [`${t('assetMgmtFee')} (${pct(inputs.assetMgmtFee)}${t('yr')})`, fmtFull(inputs.noi * inputs.assetMgmtFee / 100) + t('yr')],
-            [t('gpCarry'), `${pct(inputs.gpCarry, 0)} ${t('above')} ${pct(inputs.prefReturn, 0)} ${t('pref')}`],
-            [`${t('loanOrigination')} (${inputs.loanFeePoints} ${t('points')})`, fmtFull(metrics.loanAmount * inputs.loanFeePoints / 100)],
-          ].map(([l, v], i) => (
+          {(() => {
+            const assignment = feeDisclosure?.assignmentFee ?? inputs.assignmentFee;
+            const acq = feeDisclosure?.acqFee ?? inputs.acqFee;
+            const amf = feeDisclosure?.assetMgmtFee ?? inputs.assetMgmtFee;
+            const carry = feeDisclosure?.gpCarry ?? inputs.gpCarry;
+            const pref = feeDisclosure?.prefReturn ?? inputs.prefReturn;
+            return [
+              [`${t('assignmentFee')} (${pct(assignment)})`, fmtFull(inputs.purchasePrice * assignment / 100)],
+              [`${t('acquisitionFee')} (${pct(acq)})`, fmtFull(inputs.purchasePrice * acq / 100)],
+              [`${t('assetMgmtFee')} (${pct(amf)}${t('yr')})`, fmtFull(inputs.noi * amf / 100) + t('yr')],
+              [t('gpCarry'), `${pct(carry, 0)} ${t('above')} ${pct(pref, 0)} ${t('pref')}`],
+              [`${t('loanOrigination')} (${inputs.loanFeePoints} ${t('points')})`, fmtFull(metrics.loanAmount * inputs.loanFeePoints / 100)],
+            ];
+          })().map(([l, v], i) => (
             <div key={i} className="flex justify-between py-1.5 border-b border-[#EEF0F4] last:border-b-0">
               <span className="text-[11px] text-[#6B7280]">{l}</span>
               <span className="text-[11px] font-medium text-[#374151] tabular-nums">{v}</span>

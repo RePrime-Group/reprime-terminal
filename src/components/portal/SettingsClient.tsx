@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import type { NotifPreferences, NotifEventKey, NotifChannel } from '@/lib/notifications/types';
 import { friendlyAuthError, friendlyFetchError, readApiError } from '@/lib/utils/friendly-error';
 import TeamMembersSection from '@/components/portal/TeamMembersSection';
+import type { FeeDefaults } from '@/lib/utils/fee-resolver';
 
 interface Profile {
   full_name: string;
@@ -14,17 +15,27 @@ interface Profile {
   company_name: string;
 }
 
+interface InvestmentTermsForm {
+  assignment_fee: string;
+  acq_fee: string;
+  asset_mgmt_fee: string;
+  gp_carry: string;
+  pref_return: string;
+}
+
 interface SettingsClientProps {
   initialProfile: Profile;
   initialPrefs: NotifPreferences;
   isSubUser?: boolean;
   parentName?: string | null;
   locale: string;
+  initialInvestmentTerms: InvestmentTermsForm;
+  globalFeeDefaults: FeeDefaults;
 }
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 
-export default function SettingsClient({ initialProfile, initialPrefs, isSubUser, parentName, locale }: SettingsClientProps) {
+export default function SettingsClient({ initialProfile, initialPrefs, isSubUser, parentName, locale, initialInvestmentTerms, globalFeeDefaults }: SettingsClientProps) {
   const t = useTranslations('portal.settings');
   const td = useTranslations('portal.dealDetail');
 
@@ -167,6 +178,53 @@ export default function SettingsClient({ initialProfile, initialPrefs, isSubUser
       setPrefsError(friendlyFetchError(err, t('saveFailed')));
       setPrefsSave('error');
     }
+  }
+
+  // ---- Investment Terms ----
+  const [investmentTerms, setInvestmentTerms] = useState<InvestmentTermsForm>(initialInvestmentTerms);
+  const [investmentTermsSave, setInvestmentTermsSave] = useState<SaveState>('idle');
+  const [investmentTermsError, setInvestmentTermsError] = useState<string | null>(null);
+
+  const investmentTermsDirty =
+    investmentTerms.assignment_fee !== initialInvestmentTerms.assignment_fee ||
+    investmentTerms.acq_fee !== initialInvestmentTerms.acq_fee ||
+    investmentTerms.asset_mgmt_fee !== initialInvestmentTerms.asset_mgmt_fee ||
+    investmentTerms.gp_carry !== initialInvestmentTerms.gp_carry ||
+    investmentTerms.pref_return !== initialInvestmentTerms.pref_return;
+
+  async function saveInvestmentTerms() {
+    setInvestmentTermsError(null);
+    setInvestmentTermsSave('saving');
+    const supabase = createClient();
+    const { data: authUser } = await supabase.auth.getUser();
+    if (!authUser.user) {
+      setInvestmentTermsError(t('saveFailed'));
+      setInvestmentTermsSave('error');
+      return;
+    }
+    const nullIfBlank = (s: string): string | null => (s.trim() === '' ? null : s.trim());
+    const { error } = await supabase
+      .from('user_investment_terms')
+      .upsert(
+        {
+          user_id: authUser.user.id,
+          assignment_fee: nullIfBlank(investmentTerms.assignment_fee),
+          acq_fee: nullIfBlank(investmentTerms.acq_fee),
+          asset_mgmt_fee: nullIfBlank(investmentTerms.asset_mgmt_fee),
+          gp_carry: nullIfBlank(investmentTerms.gp_carry),
+          pref_return: nullIfBlank(investmentTerms.pref_return),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'user_id' },
+      );
+    if (error) {
+      console.error('investment terms save failed:', error);
+      setInvestmentTermsError(t('saveFailed'));
+      setInvestmentTermsSave('error');
+      return;
+    }
+    setInvestmentTermsSave('saved');
+    setTimeout(() => setInvestmentTermsSave('idle'), 1800);
   }
 
   const prefRows: { key: NotifEventKey; label: string; description: string }[] = [
@@ -382,6 +440,54 @@ export default function SettingsClient({ initialProfile, initialPrefs, isSubUser
           )}
           {prefsDirty && prefsSave === 'idle' && (
             <span className="text-[12px] text-[#BC9C45]">{t('unsavedChanges')}</span>
+          )}
+        </div>
+      </SectionCard>
+
+      {/* My Investment Terms */}
+      <SectionCard
+        title={t('investmentTermsTitle')}
+        description={t('investmentTermsSubtitle')}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {([
+            { key: 'assignment_fee', label: t('assignmentFeePct'), fallback: globalFeeDefaults.assignmentFee },
+            { key: 'acq_fee', label: t('acqFeePct'), fallback: globalFeeDefaults.acqFee },
+            { key: 'asset_mgmt_fee', label: t('assetMgmtFeePct'), fallback: globalFeeDefaults.assetMgmtFee },
+            { key: 'gp_carry', label: t('gpCarryPct'), fallback: globalFeeDefaults.gpCarry },
+            { key: 'pref_return', label: t('prefReturnPct'), fallback: globalFeeDefaults.prefReturn },
+          ] as const).map((f) => (
+            <Field key={f.key} label={f.label}>
+              <input
+                type="number"
+                step="0.01"
+                value={investmentTerms[f.key]}
+                onChange={(e) =>
+                  setInvestmentTerms({ ...investmentTerms, [f.key]: e.target.value })
+                }
+                placeholder={t('reprimeDefaultPlaceholder', { value: String(f.fallback) })}
+                className={inputStyle}
+              />
+            </Field>
+          ))}
+        </div>
+        <div className="flex items-center gap-3 mt-5">
+          <button
+            type="button"
+            onClick={saveInvestmentTerms}
+            disabled={!investmentTermsDirty || investmentTermsSave === 'saving'}
+            className="px-5 py-2 rounded-lg bg-[#0E3470] text-white text-[13px] font-semibold hover:bg-[#0a2856] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {investmentTermsSave === 'saving' ? t('saving') : t('saveMyTerms')}
+          </button>
+          {investmentTermsSave === 'saved' && (
+            <span className="text-[12px] text-[#0B8A4D] font-semibold">✓ {t('saved')}</span>
+          )}
+          {investmentTermsDirty && investmentTermsSave === 'idle' && (
+            <span className="text-[12px] text-[#BC9C45]">{t('unsavedChanges')}</span>
+          )}
+          {investmentTermsError && (
+            <span className="text-[12px] text-[#DC2626]">{investmentTermsError}</span>
           )}
         </div>
       </SectionCard>

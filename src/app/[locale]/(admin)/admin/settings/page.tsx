@@ -5,11 +5,20 @@ import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import { REPRIME_STANDARD_FEES } from '@/lib/utils/fee-resolver';
 
 interface ContactInfo {
   contact_name: string;
   contact_title: string;
   contact_email: string;
+}
+
+interface FeeDefaultsForm {
+  assignment_fee: string;
+  acq_fee: string;
+  asset_mgmt_fee: string;
+  gp_carry: string;
+  pref_return: string;
 }
 
 interface DaySlot {
@@ -91,16 +100,38 @@ export default function SettingsPage() {
   const [availSaving, setAvailSaving] = useState(false);
   const [availSaved, setAvailSaved] = useState(false);
 
+  // Fee defaults state
+  const [feeDefaults, setFeeDefaults] = useState<FeeDefaultsForm>({
+    assignment_fee: String(REPRIME_STANDARD_FEES.assignmentFee),
+    acq_fee: String(REPRIME_STANDARD_FEES.acqFee),
+    asset_mgmt_fee: String(REPRIME_STANDARD_FEES.assetMgmtFee),
+    gp_carry: String(REPRIME_STANDARD_FEES.gpCarry),
+    pref_return: String(REPRIME_STANDARD_FEES.prefReturn),
+  });
+  const [feeDefaultsSaving, setFeeDefaultsSaving] = useState(false);
+  const [feeDefaultsSaved, setFeeDefaultsSaved] = useState(false);
+
   const [loading, setLoading] = useState(true);
 
   const loadSettings = useCallback(async () => {
     setLoading(true);
 
-    // Load contact settings
+    // Load contact + meeting + fee-default settings
     const { data: settings } = await supabase
       .from('terminal_settings')
       .select('key, value')
-      .in('key', ['contact_name', 'contact_title', 'contact_email', 'meeting_duration', 'buffer_time']);
+      .in('key', [
+        'contact_name',
+        'contact_title',
+        'contact_email',
+        'meeting_duration',
+        'buffer_time',
+        'default_assignment_fee',
+        'default_acq_fee',
+        'default_asset_mgmt_fee',
+        'default_gp_carry',
+        'default_pref_return',
+      ]);
 
     if (settings) {
       const settingsMap = new Map(settings.map((s) => [s.key, s.value]));
@@ -110,11 +141,18 @@ export default function SettingsPage() {
         contact_email: (settingsMap.get('contact_email') as string) ?? '',
       });
       if (settingsMap.has('meeting_duration')) {
-        setMeetingDuration(settingsMap.get('meeting_duration') as number);
+        setMeetingDuration(Number(settingsMap.get('meeting_duration')));
       }
       if (settingsMap.has('buffer_time')) {
-        setBufferTime(settingsMap.get('buffer_time') as number);
+        setBufferTime(Number(settingsMap.get('buffer_time')));
       }
+      setFeeDefaults({
+        assignment_fee: (settingsMap.get('default_assignment_fee') as string) ?? String(REPRIME_STANDARD_FEES.assignmentFee),
+        acq_fee: (settingsMap.get('default_acq_fee') as string) ?? String(REPRIME_STANDARD_FEES.acqFee),
+        asset_mgmt_fee: (settingsMap.get('default_asset_mgmt_fee') as string) ?? String(REPRIME_STANDARD_FEES.assetMgmtFee),
+        gp_carry: (settingsMap.get('default_gp_carry') as string) ?? String(REPRIME_STANDARD_FEES.gpCarry),
+        pref_return: (settingsMap.get('default_pref_return') as string) ?? String(REPRIME_STANDARD_FEES.prefReturn),
+      });
     }
 
     // Load availability slots
@@ -207,6 +245,32 @@ export default function SettingsPage() {
     setTimeout(() => setAvailSaved(false), 2500);
   };
 
+  const handleSaveFeeDefaults = async () => {
+    setFeeDefaultsSaving(true);
+    setFeeDefaultsSaved(false);
+
+    const entries = [
+      { key: 'default_assignment_fee', value: feeDefaults.assignment_fee },
+      { key: 'default_acq_fee', value: feeDefaults.acq_fee },
+      { key: 'default_asset_mgmt_fee', value: feeDefaults.asset_mgmt_fee },
+      { key: 'default_gp_carry', value: feeDefaults.gp_carry },
+      { key: 'default_pref_return', value: feeDefaults.pref_return },
+    ];
+
+    for (const entry of entries) {
+      await supabase
+        .from('terminal_settings')
+        .upsert(
+          { key: entry.key, value: entry.value, updated_at: new Date().toISOString() },
+          { onConflict: 'key' },
+        );
+    }
+
+    setFeeDefaultsSaving(false);
+    setFeeDefaultsSaved(true);
+    setTimeout(() => setFeeDefaultsSaved(false), 2500);
+  };
+
   const updateSlot = (day: DayOfWeek, patch: Partial<DaySlot>) => {
     setSlots((prev) => ({
       ...prev,
@@ -266,7 +330,58 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Section 2: Meeting Availability */}
+      {/* Section 2: REPRIME Standard Fee Terms */}
+      <div className="bg-white rounded-2xl border border-rp-gray-200 p-6 mb-6">
+        <h2 className="text-[16px] font-semibold text-rp-navy mb-1.5">{t('feeDefaults')}</h2>
+        <p className="text-[13px] text-rp-gray-400 mb-5">{t('feeDefaultsDesc')}</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
+          <Input
+            label={t('assignmentFeePct')}
+            type="number"
+            step="0.01"
+            value={feeDefaults.assignment_fee}
+            onChange={(e) => setFeeDefaults((prev) => ({ ...prev, assignment_fee: e.target.value }))}
+          />
+          <Input
+            label={t('acqFeePct')}
+            type="number"
+            step="0.01"
+            value={feeDefaults.acq_fee}
+            onChange={(e) => setFeeDefaults((prev) => ({ ...prev, acq_fee: e.target.value }))}
+          />
+          <Input
+            label={t('assetMgmtFeePct')}
+            type="number"
+            step="0.01"
+            value={feeDefaults.asset_mgmt_fee}
+            onChange={(e) => setFeeDefaults((prev) => ({ ...prev, asset_mgmt_fee: e.target.value }))}
+          />
+          <Input
+            label={t('gpCarryPct')}
+            type="number"
+            step="0.01"
+            value={feeDefaults.gp_carry}
+            onChange={(e) => setFeeDefaults((prev) => ({ ...prev, gp_carry: e.target.value }))}
+          />
+          <Input
+            label={t('prefReturnPct')}
+            type="number"
+            step="0.01"
+            value={feeDefaults.pref_return}
+            onChange={(e) => setFeeDefaults((prev) => ({ ...prev, pref_return: e.target.value }))}
+          />
+        </div>
+        <div className="flex items-center gap-3 mt-5">
+          <Button variant="gold" loading={feeDefaultsSaving} onClick={handleSaveFeeDefaults}>
+            {t('saveDefaults')}
+          </Button>
+          {feeDefaultsSaved && (
+            <span className="text-sm text-green-600 font-medium">{tc('saved')}</span>
+          )}
+        </div>
+      </div>
+
+      {/* Section 3: Meeting Availability */}
       <div className="bg-white rounded-2xl border border-rp-gray-200 p-6">
         <h2 className="text-[16px] font-semibold text-rp-navy mb-5">{t('meetingAvailability')}</h2>
 
