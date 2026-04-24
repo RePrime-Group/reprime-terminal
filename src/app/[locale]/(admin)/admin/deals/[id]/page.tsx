@@ -288,11 +288,11 @@ export default function EditDealPage() {
   const [omUploading, setOmUploading] = useState(false);
   const omInputRef = useRef<HTMLInputElement>(null);
 
-  // Additional deal-level documents (signed LOI, PSA, full report, CoStar)
-  type DocKey = 'om' | 'loi' | 'psa' | 'full-report' | 'costar-report';
+  // Additional deal-level documents (signed LOI, PSA, full report, CoStar, Tenants)
+  type DocKey = 'om' | 'loi' | 'psa' | 'full-report' | 'costar-report' | 'tenants-report';
   const DOC_CONFIG: Record<DocKey, {
     label: string;
-    column: 'om_storage_path' | 'loi_signed_storage_path' | 'psa_storage_path' | 'full_report_storage_path' | 'costar_report_storage_path';
+    column: 'om_storage_path' | 'loi_signed_storage_path' | 'psa_storage_path' | 'full_report_storage_path' | 'costar_report_storage_path' | 'tenants_report_storage_path';
     pathSegment: string;
     tabLabel: string;
   }> = {
@@ -301,14 +301,15 @@ export default function EditDealPage() {
     'psa': { label: 'Purchase and Sale Agreement (PSA)', column: 'psa_storage_path', pathSegment: 'psa', tabLabel: 'PSA' },
     'full-report': { label: 'Full Report', column: 'full_report_storage_path', pathSegment: 'full-report', tabLabel: 'Full Report' },
     'costar-report': { label: 'CoStar Report', column: 'costar_report_storage_path', pathSegment: 'costar', tabLabel: 'CoStar Report' },
+    'tenants-report': { label: 'Tenants Report', column: 'tenants_report_storage_path', pathSegment: 'tenants', tabLabel: 'Tenants Report' },
   };
   const [docPaths, setDocPaths] = useState<Record<Exclude<DocKey, 'om'>, string | null>>({
-    'loi': null, 'psa': null, 'full-report': null, 'costar-report': null,
+    'loi': null, 'psa': null, 'full-report': null, 'costar-report': null, 'tenants-report': null,
   });
   const [activeDocTab, setActiveDocTab] = useState<DocKey>('om');
   const [docUploading, setDocUploading] = useState<DocKey | null>(null);
   const docInputRefs = useRef<Record<Exclude<DocKey, 'om'>, HTMLInputElement | null>>({
-    'loi': null, 'psa': null, 'full-report': null, 'costar-report': null,
+    'loi': null, 'psa': null, 'full-report': null, 'costar-report': null, 'tenants-report': null,
   });
 
   // Portfolio addresses
@@ -391,6 +392,7 @@ export default function EditDealPage() {
         'psa': typedDeal.psa_storage_path ?? null,
         'full-report': typedDeal.full_report_storage_path ?? null,
         'costar-report': typedDeal.costar_report_storage_path ?? null,
+        'tenants-report': typedDeal.tenants_report_storage_path ?? null,
       });
 
       const { data: photosData } = await supabase
@@ -1854,7 +1856,7 @@ export default function EditDealPage() {
           onChange={handleOmUpload}
           className="hidden"
         />
-        {(['loi', 'psa', 'full-report', 'costar-report'] as Exclude<DocKey, 'om'>[]).map((key) => (
+        {(['loi', 'psa', 'full-report', 'costar-report', 'tenants-report'] as Exclude<DocKey, 'om'>[]).map((key) => (
           <input
             key={key}
             ref={(el) => { docInputRefs.current[key] = el; }}

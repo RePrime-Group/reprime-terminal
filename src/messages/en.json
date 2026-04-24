@@ -421,6 +421,8 @@
       "pipeline": "Pipeline",
       "dataRoom": "Data Room",
       "previewAsInvestor": "Preview as Investor",
+      "copyShareLink": "Copy Share Link",
+      "linkCopied": "Deal link copied!",
       "allDeals": "All Deals"
     },
     "preview": {
@@ -718,6 +720,8 @@
       "registerAsBackup": "Register as Backup",
       "interestExpressed": "Interest Expressed",
       "expressInterest": "Express Interest",
+      "shareDeal": "Share Deal",
+      "dealLinkCopied": "Deal link copied!",
       "viewOm": "View OM",
       "omPending": "OM Pending",
       "timelineNoteLabel": "NOTE",
@@ -730,6 +734,8 @@
       "fullReportPending": "Full Report — Pending",
       "costarReport": "CoStar Report",
       "costarReportPending": "CoStar Report — Pending",
+      "tenantsReport": "Tenants Report",
+      "tenantsReportPending": "Tenants Report — Pending",
       "transactionDocuments": "TRANSACTION DOCUMENTS",
       "transactionDocumentsSubtitle": "Executed agreements and offering materials",
       "offeringMemorandum": "Offering Memorandum",

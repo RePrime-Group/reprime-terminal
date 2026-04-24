@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { createBrowserClient } from '@supabase/ssr';
 import { friendlyAuthError, friendlyFetchError } from '@/lib/utils/friendly-error';
@@ -9,8 +10,20 @@ interface LoginCardProps {
   locale: string;
 }
 
+function safeRedirectForRole(raw: string | null, role: string): string | null {
+  if (!raw) return null;
+  if (!raw.startsWith('/')) return null;
+  if (raw.startsWith('//')) return null;
+  if (/^\/[^/]*:/.test(raw)) return null;
+  const bare = raw.replace(/^\/(en|he)(?=\/|$)/, '') || '/';
+  if (role === 'investor' && bare.startsWith('/portal')) return raw;
+  if (role !== 'investor' && bare.startsWith('/admin')) return raw;
+  return null;
+}
+
 export default function LoginCard({ locale }: LoginCardProps) {
   const t = useTranslations('auth');
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -73,7 +86,9 @@ export default function LoginCard({ locale }: LoginCardProps) {
       }
 
       const loc = locale || 'en';
-      redirectTo = userData.role === 'investor' ? `/${loc}/portal` : `/${loc}/admin`;
+      const defaultDest = userData.role === 'investor' ? `/${loc}/portal` : `/${loc}/admin`;
+      const requested = safeRedirectForRole(searchParams.get('redirect'), userData.role);
+      redirectTo = requested ?? defaultDest;
     } catch (err) {
       console.error('login failed:', err);
       setError(friendlyFetchError(err, 'Something went wrong while signing in. Please try again.'));

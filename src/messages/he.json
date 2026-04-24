@@ -421,6 +421,8 @@
       "pipeline": "צנרת",
       "dataRoom": "חדר נתונים",
       "previewAsInvestor": "תצוגה מקדימה כמשקיע",
+      "copyShareLink": "העתק קישור שיתוף",
+      "linkCopied": "קישור העסקה הועתק!",
       "allDeals": "כל העסקאות"
     },
     "preview": {
@@ -718,6 +720,8 @@
       "registerAsBackup": "הירשם כגיבוי",
       "interestExpressed": "עניין הובע",
       "expressInterest": "הבע עניין",
+      "shareDeal": "שתף עסקה",
+      "dealLinkCopied": "קישור העסקה הועתק!",
       "viewOm": "צפה ב-OM",
       "omPending": "OM ממתין",
       "timelineNoteLabel": "הערה",
@@ -730,6 +734,8 @@
       "fullReportPending": "דוח מלא — ממתין",
       "costarReport": "דוח CoStar",
       "costarReportPending": "דוח CoStar — ממתין",
+      "tenantsReport": "דוח שוכרים",
+      "tenantsReportPending": "דוח שוכרים — ממתין",
       "transactionDocuments": "מסמכי עסקה",
       "transactionDocumentsSubtitle": "הסכמים חתומים וחומרי הצעה",
       "offeringMemorandum": "מסמך הצעה",

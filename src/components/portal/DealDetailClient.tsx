@@ -1870,6 +1870,17 @@ export default function DealDetailClient({
     : rawTrackActivity;
   const [activeTab, setActiveTab] = useState<TabKey>('overview');
   const tabBarRef = useRef<HTMLDivElement | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const handleShareDeal = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setLinkCopied(true);
+      window.setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      // Clipboard may be unavailable (insecure context, permissions). Silently ignore.
+    }
+  };
 
   const [viewerUrl, setViewerUrl] = useState<string | null>(null);
   const [viewerName, setViewerName] = useState<string>('');
@@ -2318,6 +2329,29 @@ export default function DealDetailClient({
                 {t('expressInterest')}
               </button>
             )}
+            <div className="relative">
+              <button
+                onClick={handleShareDeal}
+                className="px-3 md:px-5 py-2 bg-white hover:bg-[#F7F8FA] text-[#0E3470] border border-[#0E3470]/20 text-[11px] md:text-[12px] font-semibold rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="18" cy="5" r="3" />
+                  <circle cx="6" cy="12" r="3" />
+                  <circle cx="18" cy="19" r="3" />
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                </svg>
+                {t('shareDeal')}
+              </button>
+              {linkCopied && (
+                <div className="absolute top-full right-0 mt-2 z-50 px-3 py-2 bg-[#0E3470] text-white text-[11px] font-semibold rounded-lg shadow-[0_4px_12px_rgba(14,52,112,0.25)] flex items-center gap-1.5 whitespace-nowrap">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 12l5 5L21 7" />
+                  </svg>
+                  {t('dealLinkCopied')}
+                </div>
+              )}
+            </div>
             {/* Header download button removed — View OM and per-document buttons live in the Transaction Documents card below. */}
             <div className="hidden md:block h-4 w-px bg-[#EEF0F4]" />
             <span className="hidden md:inline text-[9px] font-semibold tracking-[2px] uppercase text-[#9CA3AF]">
@@ -2530,6 +2564,18 @@ export default function DealDetailClient({
                   ) : (
                     <span className="px-4 py-2 bg-[#F7F8FA] text-[#9CA3AF] text-[11px] font-semibold rounded-lg cursor-default">
                       {t('costarReportPending')}
+                    </span>
+                  )}
+                  {deal.tenants_report_storage_path ? (
+                    <button
+                      onClick={() => handleViewDocument(`/api/deals/${deal.id}/document/tenants-report?view=true`, `${deal.name} — ${t('tenantsReport')}`)}
+                      className="px-4 py-2 bg-[#0F766E] hover:bg-[#0C5E5B] text-white text-[11px] font-semibold rounded-lg transition-colors"
+                    >
+                      {t('tenantsReport')}
+                    </button>
+                  ) : (
+                    <span className="px-4 py-2 bg-[#F7F8FA] text-[#9CA3AF] text-[11px] font-semibold rounded-lg cursor-default">
+                      {t('tenantsReportPending')}
                     </span>
                   )}
                 </div>

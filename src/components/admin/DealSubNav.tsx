@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -13,6 +14,18 @@ interface DealSubNavProps {
 export default function DealSubNav({ dealId, dealName, locale }: DealSubNavProps) {
   const pathname = usePathname();
   const t = useTranslations('admin.dealSubNav');
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const handleCopyShareLink = async () => {
+    const shareUrl = `${window.location.origin}/${locale}/portal/deals/${dealId}`;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setLinkCopied(true);
+      window.setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      // Clipboard may be unavailable (insecure context, permissions). Silently ignore.
+    }
+  };
 
   const tabs = [
     {
@@ -107,7 +120,7 @@ export default function DealSubNav({ dealId, dealName, locale }: DealSubNavProps
 
   return (
     <div className="mb-6">
-      {/* Deal name + back link */}
+      {/* Deal name + back link + share action */}
       <div className="flex items-center gap-3 mb-4">
         <Link
           href={`/${locale}/admin/deals`}
@@ -122,6 +135,30 @@ export default function DealSubNav({ dealId, dealName, locale }: DealSubNavProps
         <h1 className="text-[22px] font-bold text-rp-navy font-[family-name:var(--font-playfair)]">
           {dealName}
         </h1>
+        <div className="relative ml-auto">
+          <button
+            type="button"
+            onClick={handleCopyShareLink}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold transition-colors text-[#0E3470] bg-white border border-[#0E3470]/20 hover:bg-[#F7F8FA] whitespace-nowrap"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="18" cy="5" r="3" />
+              <circle cx="6" cy="12" r="3" />
+              <circle cx="18" cy="19" r="3" />
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+            </svg>
+            {t('copyShareLink')}
+          </button>
+          {linkCopied && (
+            <div className="absolute top-full right-0 mt-2 z-50 px-3 py-2 bg-rp-navy text-white text-[12px] font-semibold rounded-lg shadow-[0_4px_12px_rgba(14,52,112,0.25)] flex items-center gap-1.5 whitespace-nowrap">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 12l5 5L21 7" />
+              </svg>
+              {t('linkCopied')}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Tab navigation */}

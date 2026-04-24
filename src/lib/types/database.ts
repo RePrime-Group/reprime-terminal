@@ -115,6 +115,7 @@ export interface TerminalDeal {
   psa_storage_path: string | null;
   full_report_storage_path: string | null;
   costar_report_storage_path: string | null;
+  tenants_report_storage_path: string | null;
   // Senior Debt
   ltv: string | null;
   interest_rate: string | null;

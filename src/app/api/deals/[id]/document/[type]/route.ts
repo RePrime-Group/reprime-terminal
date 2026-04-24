@@ -3,17 +3,18 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { getInvestorAuth, permissionDenied } from '@/lib/auth/requireInvestor';
 
-type DocType = 'loi' | 'psa' | 'full-report' | 'costar-report';
+type DocType = 'loi' | 'psa' | 'full-report' | 'costar-report' | 'tenants-report';
 
 const DOC_META: Record<DocType, { column: string; logAction: string; filenameSuffix: string; humanName: string }> = {
   'loi': { column: 'loi_signed_storage_path', logAction: 'loi_downloaded', filenameSuffix: 'Signed_LOI', humanName: 'Signed LOI' },
   'psa': { column: 'psa_storage_path', logAction: 'psa_downloaded', filenameSuffix: 'PSA', humanName: 'PSA' },
   'full-report': { column: 'full_report_storage_path', logAction: 'full_report_downloaded', filenameSuffix: 'Full_Report', humanName: 'Full Report' },
   'costar-report': { column: 'costar_report_storage_path', logAction: 'costar_report_downloaded', filenameSuffix: 'CoStar_Report', humanName: 'CoStar Report' },
+  'tenants-report': { column: 'tenants_report_storage_path', logAction: 'tenants_report_downloaded', filenameSuffix: 'Tenants_Report', humanName: 'Tenants Report' },
 };
 
 function isDocType(v: string): v is DocType {
-  return v === 'loi' || v === 'psa' || v === 'full-report' || v === 'costar-report';
+  return v === 'loi' || v === 'psa' || v === 'full-report' || v === 'costar-report' || v === 'tenants-report';
 }
 
 export async function GET(

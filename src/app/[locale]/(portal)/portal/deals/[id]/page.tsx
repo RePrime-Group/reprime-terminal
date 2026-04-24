@@ -30,7 +30,7 @@ const DEAL_COLUMNS = [
   'acq_fee', 'asset_mgmt_fee', 'gp_carry', 'loan_fee',
   'dd_deadline', 'close_deadline', 'extension_deadline', 'timeline_note',
   'deposit_amount', 'deposit_held_by', 'om_storage_path',
-  'loi_signed_storage_path', 'psa_storage_path', 'full_report_storage_path', 'costar_report_storage_path',
+  'loi_signed_storage_path', 'psa_storage_path', 'full_report_storage_path', 'costar_report_storage_path', 'tenants_report_storage_path',
   'neighborhood', 'metro_population', 'job_growth',
   'investment_highlights', 'acquisition_thesis',
   'ltv', 'interest_rate', 'amortization_years', 'loan_fee_points', 'io_period_months',
