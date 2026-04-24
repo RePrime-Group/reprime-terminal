@@ -51,7 +51,7 @@ interface ApiPayload {
 const PERMISSION_LABELS: Record<TeamPermissionKey, { label: string; description: string }> = {
   view_deals: { label: 'View deals', description: 'Always on. Sub-users can browse all deals.' },
   manage_watchlist: { label: 'Manage watchlist', description: 'Add deals to watchlist and set notification preferences.' },
-  commit_withdraw: { label: 'Commit to deals', description: 'Submit and withdraw commitments. Requires admin approval before enabling.' },
+  commit_withdraw: { label: 'Commit to deals', description: 'Submit and withdraw commitments on the parent investor’s behalf.' },
   download_documents: { label: 'Download documents', description: 'Download DD files and the Offering Memorandum.' },
   schedule_meetings: { label: 'Schedule meetings', description: 'Book meetings with the RePrime acquisitions team.' },
 };
@@ -296,9 +296,9 @@ function InviteTeamMemberModal({
   const [permissions, setPermissions] = useState<TeamPermissions>({
     view_deals: true,
     manage_watchlist: true,
-    commit_withdraw: false,
-    download_documents: false,
-    schedule_meetings: false,
+    commit_withdraw: true,
+    download_documents: true,
+    schedule_meetings: true,
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);

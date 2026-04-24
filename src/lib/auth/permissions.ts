@@ -9,24 +9,23 @@ export const PERMISSION_KEYS: TeamPermissionKey[] = [
 ];
 
 /**
- * Defaults applied to a new team-member invite. commit_withdraw stays off by
- * design — it requires a separate admin-approval request before the parent
- * investor can enable it.
+ * Defaults applied to a new team-member invite. All permissions are on by
+ * default; the inviting parent investor can uncheck any of them at invite time
+ * or later via Edit access.
  */
 export const DEFAULT_TEAM_PERMISSIONS: TeamPermissions = {
   view_deals: true,
   manage_watchlist: true,
-  commit_withdraw: false,
-  download_documents: false,
-  schedule_meetings: false,
+  commit_withdraw: true,
+  download_documents: true,
+  schedule_meetings: true,
 };
 
 /**
  * Keys that require admin approval before the parent investor can toggle them
- * on for a sub-user. Admin can revoke approval at any time (forcing the flag
- * back off and requiring re-request).
+ * on. Currently empty — parents control all permissions directly.
  */
-export const APPROVAL_REQUIRED_KEYS: TeamPermissionKey[] = ['commit_withdraw'];
+export const APPROVAL_REQUIRED_KEYS: TeamPermissionKey[] = [];
 
 export function normalizePermissions(value: unknown): TeamPermissions {
   if (!value || typeof value !== 'object') return {};
