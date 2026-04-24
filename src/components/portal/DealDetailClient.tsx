@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/client';
 import { friendlyFetchError, readApiError } from '@/lib/utils/friendly-error';
 import FadeInOnScroll from '@/components/ui/FadeInOnScroll';
 import NDAModal from '@/components/portal/NDAModal';
+import DealNotepad from '@/components/portal/DealNotepad';
 import PhoneConfirmModal from '@/components/portal/PhoneConfirmModal';
 import DataRoomTab from '@/components/portal/DataRoomTab';
 import RentRollTab from '@/components/portal/RentRollTab';
@@ -57,6 +58,7 @@ interface DealDetailClientProps {
   exitScenarios?: ExitScenario[];
   prevDeal?: { id: string; name: string } | null;
   nextDeal?: { id: string; name: string } | null;
+  userNote?: { content: string; updated_at: string } | null;
   /**
    * When true the view renders exactly as an investor sees it, but every write
    * action is short-circuited. Used by the /admin/preview routes so admins can
@@ -1826,6 +1828,7 @@ export default function DealDetailClient({
   exitScenarios = [],
   prevDeal = null,
   nextDeal = null,
+  userNote = null,
   previewMode = false,
 }: DealDetailClientProps) {
   const previewTitle = previewMode ? 'Preview mode — read-only' : undefined;
@@ -2182,6 +2185,15 @@ export default function DealDetailClient({
             </p>
           </div>
           <div className="flex items-center gap-2 md:gap-3 ml-2 md:ml-4 shrink-0">
+            {!previewMode && (
+              <DealNotepad
+                dealId={deal.id}
+                dealName={deal.name}
+                variant="detail"
+                initialContent={userNote?.content ?? ''}
+                initialUpdatedAt={userNote?.updated_at ?? undefined}
+              />
+            )}
             {/* Express Interest button — replaced by "Deal Assigned" for assigned deals */}
             {deal.status === 'assigned' ? (
               <span className="px-3 md:px-5 py-2 bg-[#FDF8ED] border border-[#BC9C45]/40 text-[#BC9C45] text-[11px] md:text-[12px] font-semibold rounded-lg flex items-center gap-1.5">

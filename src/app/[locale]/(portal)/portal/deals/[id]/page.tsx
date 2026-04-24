@@ -69,6 +69,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
     { data: capexItemsData },
     { data: exitScenariosData },
     { data: navDealsData },
+    { data: userNoteData },
   ] = await Promise.all([
     supabase
       .from('terminal_deals')
@@ -136,6 +137,12 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
       .select('id, name, status, dd_deadline')
       .in('status', INVESTOR_NAV_STATUSES)
       .order('created_at', { ascending: false }),
+    supabase
+      .from('user_deal_notes')
+      .select('content, updated_at')
+      .eq('user_id', user.id)
+      .eq('deal_id', id)
+      .maybeSingle(),
   ]);
 
   if (!dealData) redirect(`/${locale}/portal`);
@@ -224,6 +231,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
       exitScenarios={(exitScenariosData ?? []) as ExitScenario[]}
       prevDeal={prevDeal}
       nextDeal={nextDeal}
+      userNote={userNoteData ?? null}
     />
   );
 }

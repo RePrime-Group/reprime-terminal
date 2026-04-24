@@ -7,6 +7,7 @@ import { Link } from '@/i18n/navigation';
 import { formatPriceCompact, formatPercent, formatDSCR, formatPrice } from '@/lib/utils/format';
 import type { DealCardData } from '@/components/portal/PortalDashboardClient';
 import { friendlyFetchError } from '@/lib/utils/friendly-error';
+import DealNotepad from '@/components/portal/DealNotepad';
 
 interface DealCardProps {
   deal: DealCardData;
@@ -147,6 +148,23 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
                   {watchError}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Notepad icon — stacked below the watch icon */}
+          {!previewMode && (
+            <div
+              className="absolute top-12 right-1 z-[3] p-2 min-w-[44px] min-h-[44px] flex items-center justify-center"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              <DealNotepad
+                dealId={deal.id}
+                dealName={deal.name}
+                variant="card"
+                initialContent={deal.note_content ?? ''}
+                initialUpdatedAt={deal.note_updated_at ?? undefined}
+              />
             </div>
           )}
 

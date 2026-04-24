@@ -55,6 +55,7 @@ export default async function PortalDashboardPage({
     { data: allViewing },
     { data: allMeetings },
     { data: allCommitments },
+    { data: allNotes },
   ] = await Promise.all([
     admin
       .from('terminal_deal_photos')
@@ -77,6 +78,11 @@ export default async function PortalDashboardPage({
       .select('deal_id')
       .in('deal_id', dealIds)
       .in('status', ['pending', 'wire_sent', 'confirmed']),
+    supabase
+      .from('user_deal_notes')
+      .select('deal_id, content, updated_at')
+      .eq('user_id', user.id)
+      .in('deal_id', dealIds),
   ]);
 
   // Build lookup maps from batch results
@@ -101,6 +107,11 @@ export default async function PortalDashboardPage({
   const commitmentsByDeal = new Map<string, number>();
   for (const c of allCommitments ?? []) {
     commitmentsByDeal.set(c.deal_id, (commitmentsByDeal.get(c.deal_id) ?? 0) + 1);
+  }
+
+  const notesByDeal = new Map<string, { content: string; updated_at: string }>();
+  for (const n of allNotes ?? []) {
+    notesByDeal.set(n.deal_id, { content: n.content ?? '', updated_at: n.updated_at });
   }
 
   // Enrich deals using lookup maps (no additional queries)
@@ -160,6 +171,8 @@ export default async function PortalDashboardPage({
       teaser_description: deal.teaser_description ?? null,
       is_subscribed: subscribedDealIds.has(deal.id),
       commitment_count: commitmentsByDeal.get(deal.id) ?? 0,
+      note_content: notesByDeal.get(deal.id)?.content ?? null,
+      note_updated_at: notesByDeal.get(deal.id)?.updated_at ?? null,
     };
   });
 

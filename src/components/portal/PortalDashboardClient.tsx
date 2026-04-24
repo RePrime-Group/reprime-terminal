@@ -51,6 +51,8 @@ export interface DealCardData {
   fully_financed?: boolean;
   /** True when distributable cash flow > 0 (only show ∞ if positive). */
   has_positive_cash_flow?: boolean;
+  note_content?: string | null;
+  note_updated_at?: string | null;
 }
 
 interface PortalDashboardClientProps {
