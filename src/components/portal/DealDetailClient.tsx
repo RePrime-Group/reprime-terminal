@@ -1985,7 +1985,7 @@ export default function DealDetailClient({
       const supabase = createClient();
       const { data: folders } = await supabase
         .from('terminal_dd_folders')
-        .select('id, deal_id, name, icon, display_order, address_id')
+        .select('id, deal_id, name, icon, display_order, address_id, parent_id')
         .eq('deal_id', deal.id)
         .order('display_order', { ascending: true });
 
@@ -1999,10 +1999,10 @@ export default function DealDetailClient({
       const folderIds = folders.map((f) => f.id);
       const { data: allDocs } = await supabase
         .from('terminal_dd_documents')
-        .select('id, folder_id, deal_id, name, file_size, file_type, storage_path, is_downloadable, doc_status, uploaded_by, created_at')
+        .select('id, folder_id, deal_id, name, display_name, file_size, file_type, storage_path, is_downloadable, doc_status, uploaded_by, sort_order, created_at')
         .in('folder_id', folderIds)
         .filter('storage_path', 'not.is', 'null')
-        .order('created_at', { ascending: true });
+        .order('sort_order', { ascending: true });
 
       const docsByFolder = new Map<string, TerminalDDDocument[]>();
       for (const doc of (allDocs ?? []) as TerminalDDDocument[]) {
@@ -3100,7 +3100,7 @@ export default function DealDetailClient({
           className="transition-opacity duration-200"
           style={{ display: activeTab === 'due-diligence' ? 'block' : 'none' }}
         >
-          <div className="mt-3 px-4 md:px-8 pb-8 md:pb-10">
+          <div className="mt-3 px-4 md:px-8">
             {ddLoading ? (
               <div className="flex items-center justify-center py-16">
                 <div className="w-6 h-6 border-2 border-[#BC9C45] border-t-transparent rounded-full animate-spin" />

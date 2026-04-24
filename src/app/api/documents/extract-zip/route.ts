@@ -5,6 +5,13 @@ import JSZip from 'jszip';
 
 const MAX_ZIP_EXTRACT_SIZE = 200 * 1024 * 1024; // 200MB
 
+interface FolderRow {
+  id: string;
+  name: string;
+  parent_id: string | null;
+  display_order: number;
+}
+
 export async function POST(request: NextRequest) {
   const cookieStore = await cookies();
 
@@ -21,7 +28,6 @@ export async function POST(request: NextRequest) {
     }
   );
 
-  // Verify auth + admin role
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -38,13 +44,12 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { dealId, storagePath } = body;
+  const { dealId, storagePath, targetFolderId } = body;
 
   if (!dealId || !storagePath) {
     return NextResponse.json({ error: 'dealId and storagePath are required' }, { status: 400 });
   }
 
-  // Download ZIP from Supabase storage
   const { data: fileData, error: downloadError } = await supabase.storage
     .from('terminal-dd-documents')
     .download(storagePath);
@@ -53,9 +58,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `Failed to download ZIP: ${downloadError?.message}` }, { status: 500 });
   }
 
-  // Check size
   if (fileData.size > MAX_ZIP_EXTRACT_SIZE) {
-    return NextResponse.json({ error: `ZIP exceeds ${MAX_ZIP_EXTRACT_SIZE / 1024 / 1024}MB extraction limit` }, { status: 400 });
+    return NextResponse.json(
+      { error: `ZIP exceeds ${MAX_ZIP_EXTRACT_SIZE / 1024 / 1024}MB extraction limit` },
+      { status: 400 },
+    );
   }
 
   const errors: string[] = [];
@@ -66,57 +73,116 @@ export async function POST(request: NextRequest) {
     const zip = await JSZip.loadAsync(await fileData.arrayBuffer());
     const junkPatterns = ['__MACOSX', '.DS_Store', 'Thumbs.db', '._.'];
 
-    // Get existing folders for this deal
+    // Pull every folder in the deal up-front so we can match existing paths
+    // and avoid duplicate creation when a ZIP is re-imported.
     const { data: existingFolders } = await supabase
       .from('terminal_dd_folders')
-      .select('id, name, display_order')
-      .eq('deal_id', dealId)
-      .order('display_order', { ascending: true });
+      .select('id, name, parent_id, display_order')
+      .eq('deal_id', dealId);
 
-    const folderMap = new Map<string, string>(); // folderName -> folderId
-    let maxOrder = existingFolders?.reduce((max, f) => Math.max(max, f.display_order), 0) ?? 0;
+    const allFolders: FolderRow[] = (existingFolders ?? []) as FolderRow[];
+    const childrenByParent = new Map<string | null, FolderRow[]>();
+    for (const f of allFolders) {
+      const key = f.parent_id ?? null;
+      const list = childrenByParent.get(key) ?? [];
+      list.push(f);
+      childrenByParent.set(key, list);
+    }
 
-    // Map existing folders
-    existingFolders?.forEach((f) => {
-      folderMap.set(f.name.toLowerCase(), f.id);
-    });
+    // Cache: normalized path segments joined by "/" → folder id.
+    // "" → targetFolderId (or null for root).
+    const pathCache = new Map<string, string | null>();
+    pathCache.set('', targetFolderId ?? null);
 
-    // Process ZIP entries
-    for (const [relativePath, zipEntry] of Object.entries(zip.files)) {
-      // Skip junk files
-      if (junkPatterns.some((p) => relativePath.includes(p))) continue;
-      // Skip directories themselves
-      if (zipEntry.dir) continue;
+    // Resolve a folder path like "Leases/Tractor Supply", creating folders as
+    // needed. Returns the deepest folder id. Case-insensitive matching against
+    // existing folders under the same parent.
+    async function resolvePath(pathParts: string[]): Promise<string | null> {
+      const key = pathParts.join('/').toLowerCase();
+      if (pathCache.has(key)) return pathCache.get(key)!;
 
-      const parts = relativePath.split('/').filter(Boolean);
-      const fileName = parts[parts.length - 1];
-      const folderName = parts.length > 1 ? parts[parts.length - 2] : 'Extracted';
+      let parentId: string | null = targetFolderId ?? null;
+      for (let i = 0; i < pathParts.length; i++) {
+        const segment = pathParts[i];
+        const segKey = pathParts.slice(0, i + 1).join('/').toLowerCase();
 
-      // Get or create folder
-      let folderId = folderMap.get(folderName.toLowerCase());
-      if (!folderId) {
-        maxOrder++;
+        const cached = pathCache.get(segKey);
+        if (cached !== undefined) {
+          parentId = cached;
+          continue;
+        }
+
+        // Look for an existing child folder under parentId with matching name.
+        const siblings = childrenByParent.get(parentId) ?? [];
+        const match = siblings.find((f) => f.name.toLowerCase() === segment.toLowerCase());
+
+        if (match) {
+          parentId = match.id;
+          pathCache.set(segKey, match.id);
+          continue;
+        }
+
+        // Create it. display_order = max(siblings) + 1.
+        const nextOrder = siblings.reduce(
+          (max, s) => (s.display_order > max ? s.display_order : max),
+          -1,
+        ) + 1;
+
         const { data: newFolder, error: folderError } = await supabase
           .from('terminal_dd_folders')
           .insert({
             deal_id: dealId,
-            name: folderName,
+            name: segment,
             icon: '📁',
-            display_order: maxOrder,
+            parent_id: parentId,
+            display_order: nextOrder,
           })
-          .select('id')
+          .select('id, name, parent_id, display_order')
           .single();
 
         if (folderError || !newFolder) {
-          errors.push(`Failed to create folder "${folderName}": ${folderError?.message}`);
-          continue;
+          errors.push(`Failed to create folder "${segment}": ${folderError?.message}`);
+          return null;
         }
-        folderId = newFolder.id as string;
-        folderMap.set(folderName.toLowerCase(), folderId);
+
+        const row = newFolder as FolderRow;
+        // Update local indexes so subsequent files in this ZIP see it.
+        allFolders.push(row);
+        const list = childrenByParent.get(parentId) ?? [];
+        list.push(row);
+        childrenByParent.set(parentId, list);
+        pathCache.set(segKey, row.id);
         foldersCreated++;
+        parentId = row.id;
+      }
+      pathCache.set(key, parentId);
+      return parentId;
+    }
+
+    for (const [relativePath, zipEntry] of Object.entries(zip.files)) {
+      if (junkPatterns.some((p) => relativePath.includes(p))) continue;
+      if (zipEntry.dir) continue;
+
+      const parts = relativePath.split('/').filter(Boolean);
+      if (parts.length === 0) continue;
+
+      const fileName = parts[parts.length - 1];
+      const folderParts = parts.slice(0, -1); // every segment except the file itself
+
+      // If ZIP has no folders (files dumped at root) and no targetFolderId,
+      // put them into an "Extracted" folder.
+      let folderId: string | null;
+      if (folderParts.length === 0 && !targetFolderId) {
+        folderId = await resolvePath(['Extracted']);
+      } else {
+        folderId = await resolvePath(folderParts);
       }
 
-      // Extract file content
+      if (!folderId) {
+        errors.push(`${fileName}: could not resolve target folder`);
+        continue;
+      }
+
       try {
         const content = await zipEntry.async('arraybuffer');
         const uploadPath = `${dealId}/${folderId}/${Date.now()}-${fileName}`;
@@ -132,13 +198,13 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        // Create document record
         const { error: insertError } = await supabase
           .from('terminal_dd_documents')
           .insert({
             folder_id: folderId,
             deal_id: dealId,
             name: fileName,
+            display_name: fileName,
             file_size: String(content.byteLength),
             file_type: guessMimeType(fileName),
             storage_path: uploadPath,
@@ -151,11 +217,11 @@ export async function POST(request: NextRequest) {
         }
 
         filesExtracted++;
-      } catch (extractErr) {
+      } catch {
         errors.push(`${fileName}: extraction failed`);
       }
     }
-  } catch (zipErr) {
+  } catch {
     return NextResponse.json({ error: 'Failed to read ZIP file. It may be corrupted.' }, { status: 400 });
   }
 

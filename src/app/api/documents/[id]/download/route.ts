@@ -49,11 +49,15 @@ export async function GET(
     return NextResponse.json({ error: 'Download failed' }, { status: 500 });
   }
 
+  // display_name is what admins see after rename; falls back to storage name
+  // for legacy rows backfilled pre-rename feature.
+  const downloadName: string = doc.display_name ?? doc.name;
+
   await supabase.from('terminal_activity_log').insert({
     user_id: user.id,
     deal_id: doc.deal_id,
     action: 'document_downloaded',
-    metadata: { document_name: doc.name, document_id: id },
+    metadata: { document_name: downloadName, document_id: id },
   });
 
   let responseBytes: ArrayBuffer;
@@ -67,8 +71,23 @@ export async function GET(
     responseBytes = await fileData.arrayBuffer();
   }
 
+  // Content-Disposition needs two filename forms to work across browsers:
+  //   1. filename="..."     — ASCII-only fallback for old clients
+  //   2. filename*=UTF-8''… — RFC 5987, used by modern browsers for non-ASCII
+  // Without both, names with accents / ampersands / spaces sometimes downgrade
+  // to "download" (Chrome + Safari). We also always attach a filename — even
+  // for inline/view-mode — so that the browser's built-in PDF viewer has a
+  // name to use if the user then clicks "download" from it.
+  const asciiSafe = downloadName
+    .replace(/[\r\n"\\]/g, '_')          // header-breaking chars
+    .replace(/[^\x20-\x7E]/g, '_');       // fall back to "_" for non-ASCII
+  const rfc5987 = encodeURIComponent(downloadName)
+    .replace(/['()]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`)
+    .replace(/\*/g, '%2A');
+
   const viewMode = request.nextUrl.searchParams.get('view') === 'true';
-  const disposition = viewMode ? 'inline' : `attachment; filename="${doc.name}"`;
+  const dispositionType = viewMode ? 'inline' : 'attachment';
+  const disposition = `${dispositionType}; filename="${asciiSafe}"; filename*=UTF-8''${rfc5987}`;
 
   return new NextResponse(responseBytes, {
     headers: {

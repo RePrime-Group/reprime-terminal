@@ -3,6 +3,32 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import JSZip from 'jszip';
 
+interface FolderRow {
+  id: string;
+  name: string;
+  parent_id: string | null;
+}
+
+// Build the "Marketing/Leases/Tractor Supply" path for a folder by walking up parent_id.
+function buildFolderPath(folderId: string, folders: Map<string, FolderRow>): string {
+  const parts: string[] = [];
+  let cursor: string | null = folderId;
+  const seen = new Set<string>();
+  while (cursor && !seen.has(cursor)) {
+    seen.add(cursor);
+    const f = folders.get(cursor);
+    if (!f) break;
+    parts.unshift(sanitizePathSegment(f.name));
+    cursor = f.parent_id;
+  }
+  return parts.join('/');
+}
+
+// Strip characters that break ZIP path segments on Windows/macOS.
+function sanitizePathSegment(name: string): string {
+  return name.replace(/[\\/:*?"<>|]+/g, '_').trim() || 'Untitled';
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -23,13 +49,11 @@ export async function GET(
     }
   );
 
-  // Verify auth
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Fetch deal name
   const { data: deal, error: dealError } = await supabase
     .from('terminal_deals')
     .select('name')
@@ -40,36 +64,43 @@ export async function GET(
     return NextResponse.json({ error: 'Deal not found' }, { status: 404 });
   }
 
-  // Fetch ALL documents with files for this deal
-  const { data: docs } = await supabase
+  // Optional ?docs=id1,id2,id3 filter for "Download Selected". When absent,
+  // every document in the deal is included ("Download All").
+  const docsParam = request.nextUrl.searchParams.get('docs');
+  const selectedIds = docsParam
+    ? docsParam.split(',').map((s) => s.trim()).filter(Boolean)
+    : null;
+
+  let query = supabase
     .from('terminal_dd_documents')
-    .select('id, name, storage_path, file_type, folder_id')
+    .select('id, name, display_name, storage_path, file_type, folder_id')
     .eq('deal_id', id)
     .not('storage_path', 'is', null);
+
+  if (selectedIds && selectedIds.length > 0) {
+    query = query.in('id', selectedIds);
+  }
+
+  const { data: docs } = await query;
 
   if (!docs || docs.length === 0) {
     return NextResponse.json({ error: 'No files found' }, { status: 404 });
   }
 
-  // Fetch all folder names for the documents that have a folder_id
-  const folderIds = [...new Set(docs.filter((d) => d.folder_id).map((d) => d.folder_id))];
-  const folderMap: Record<string, string> = {};
+  // Fetch every folder in the deal so we can build full paths (cheap query
+  // even for deals with hundreds of folders).
+  const { data: folders } = await supabase
+    .from('terminal_dd_folders')
+    .select('id, name, parent_id')
+    .eq('deal_id', id);
 
-  if (folderIds.length > 0) {
-    const { data: folders } = await supabase
-      .from('terminal_dd_folders')
-      .select('id, name')
-      .in('id', folderIds);
-
-    if (folders) {
-      for (const folder of folders) {
-        folderMap[folder.id] = folder.name;
-      }
-    }
+  const folderMap = new Map<string, FolderRow>();
+  for (const f of folders ?? []) {
+    folderMap.set(f.id, f as FolderRow);
   }
 
-  // Build ZIP
   const zip = new JSZip();
+  const usedPaths = new Set<string>(); // de-dupe collisions from same-name files in same folder
 
   for (const doc of docs) {
     try {
@@ -83,12 +114,22 @@ export async function GET(
       }
 
       const buffer = new Uint8Array(await fileData.arrayBuffer());
-      const folderName = doc.folder_id && folderMap[doc.folder_id]
-        ? folderMap[doc.folder_id]
-        : 'Uncategorized';
-      const filePath = `${folderName}/${doc.name}`;
+      const folderPath = doc.folder_id ? buildFolderPath(doc.folder_id, folderMap) : 'Uncategorized';
+      const fileName = sanitizePathSegment(doc.display_name ?? doc.name);
+      let path = `${folderPath}/${fileName}`;
 
-      zip.file(filePath, buffer);
+      // Same-named file in the same folder: append (1), (2), ...
+      if (usedPaths.has(path)) {
+        const dot = fileName.lastIndexOf('.');
+        const base = dot > 0 ? fileName.slice(0, dot) : fileName;
+        const ext = dot > 0 ? fileName.slice(dot) : '';
+        let n = 1;
+        while (usedPaths.has(`${folderPath}/${base} (${n})${ext}`)) n++;
+        path = `${folderPath}/${base} (${n})${ext}`;
+      }
+      usedPaths.add(path);
+
+      zip.file(path, buffer);
     } catch (err) {
       console.error(`Error processing file ${doc.name}:`, err);
       continue;
@@ -97,25 +138,28 @@ export async function GET(
 
   const zipData = await zip.generateAsync({ type: 'arraybuffer' });
 
-  // Log activity
   try {
     await supabase.from('terminal_activity_log').insert({
       user_id: user.id,
       deal_id: id,
       action: 'document_downloaded',
-      metadata: { type: 'complete_package' },
+      metadata: {
+        type: selectedIds ? 'selected_package' : 'complete_package',
+        count: docs.length,
+      },
     });
   } catch (err) {
     console.error('Failed to log activity:', err);
   }
 
   const safeDealName = deal.name.replace(/[^a-zA-Z0-9_\-\s]/g, '').trim();
+  const suffix = selectedIds ? 'Selected Documents' : 'Due Diligence Package';
 
   return new NextResponse(zipData, {
     status: 200,
     headers: {
       'Content-Type': 'application/zip',
-      'Content-Disposition': `attachment; filename="${safeDealName} - Due Diligence Package.zip"`,
+      'Content-Disposition': `attachment; filename="${safeDealName} - ${suffix}.zip"`,
     },
   });
 }

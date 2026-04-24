@@ -214,6 +214,7 @@ export interface TerminalDDFolder {
   icon: string | null;
   display_order: number;
   address_id: string | null;
+  parent_id: string | null;
 }
 
 export interface TerminalDDDocument {
@@ -221,13 +222,22 @@ export interface TerminalDDDocument {
   folder_id: string;
   deal_id: string;
   name: string;
+  display_name: string | null;
   file_size: string | null;
   file_type: string | null;
   storage_path: string | null;
   is_downloadable: boolean;
   doc_status: 'verified' | 'uploaded' | 'pending' | 'requested' | 'notuploaded' | 'doesnotexist' | 'na' | 'notrequired';
   uploaded_by: string | null;
+  sort_order: number;
   created_at: string;
+}
+
+// Hierarchical tree node used by the data room renderer (admin + investor).
+// Built client-side from flat folder + document arrays via buildTree().
+export interface DataRoomFolderNode extends TerminalDDFolder {
+  children: DataRoomFolderNode[];
+  documents: TerminalDDDocument[];
 }
 
 export interface TerminalActivityLog {
