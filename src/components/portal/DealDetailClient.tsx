@@ -576,7 +576,6 @@ function CommitmentCard({ deal, previewMode = false }: { deal: DealWithDetails; 
 
   // Check for existing commitment on mount
   useEffect(() => {
-    if (isAssigned) return;
     fetch(`/api/deals/${deal.id}/commit`)
       .then((r) => r.json())
       .then((data) => {
@@ -603,7 +602,7 @@ function CommitmentCard({ deal, previewMode = false }: { deal: DealWithDetails; 
       .eq('deal_id', deal.id)
       .in('status', ['pending', 'wire_sent', 'confirmed'])
       .then(({ count }) => setTotalCommitments(count ?? 0));
-  }, [deal.id, isAssigned]);
+  }, [deal.id]);
 
   const handleCommit = async (type: 'primary' | 'backup', phone?: string) => {
     if (previewMode) return false;
@@ -662,9 +661,9 @@ function CommitmentCard({ deal, previewMode = false }: { deal: DealWithDetails; 
     }
   };
 
-  if (isAssigned) {
+  if (isAssigned && !committed) {
     return (
-      <div className="mb-6">
+      <div className="mb-6 space-y-4">
         <div className="relative overflow-hidden rounded-xl bg-[#FDF8ED] border border-[#BC9C45]/30 rp-card-shadow">
           <div className="px-5 py-6 md:px-8 md:py-8 flex flex-col md:flex-row md:items-center gap-4">
             <div className="flex items-start md:items-center gap-4 md:gap-5 min-w-0">
@@ -687,6 +686,25 @@ function CommitmentCard({ deal, previewMode = false }: { deal: DealWithDetails; 
             </div>
           </div>
           <div className="h-[2px] bg-gradient-to-r from-transparent via-[#BC9C45]/50 to-transparent" />
+        </div>
+
+        <div className="bg-white rounded-xl p-5 md:p-6 border border-[#EEF0F4] rp-card-shadow">
+          <div className="p-4 bg-[#F7F8FA] rounded-xl flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+            <div>
+              <div className="text-[12px] font-semibold text-[#0E3470]">{t('backupPositionAvailable')}</div>
+              <div className="text-[11px] text-[#6B7280] mt-1">
+                {t('backupDescription')}
+              </div>
+            </div>
+            <button
+              onClick={() => handleCommit('backup')}
+              disabled={committing || previewMode}
+              title={previewMode ? 'Preview mode — read-only' : undefined}
+              className="w-full sm:w-auto px-5 py-2.5 min-h-[44px] rounded-lg border border-[#EEF0F4] bg-white text-[#0E3470] text-[11px] font-semibold hover:border-[#BC9C45] transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {committing ? t('processing') : t('registerAsBackup')}
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -1907,6 +1925,10 @@ export default function DealDetailClient({
     if (!qTab) return;
     const valid: TabKey[] = ['overview', 'due-diligence', 'rent-roll', 'financial-modeling', 'deal-structure', 'capex', 'exit-strategy', 'schedule'];
     if (!valid.includes(qTab as TabKey)) return;
+    const rec = deal as unknown as Record<string, unknown>;
+    if (qTab === 'rent-roll' && rec.show_rent_roll === false) return;
+    if (qTab === 'capex' && rec.show_capex !== true) return;
+    if (qTab === 'exit-strategy' && rec.show_exit_strategy !== true) return;
     if (qTab === 'due-diligence' && !ndaSigned) {
       setShowNDAModal(true);
       return;
@@ -2578,6 +2600,18 @@ export default function DealDetailClient({
                       {t('tenantsReportPending')}
                     </span>
                   )}
+                  {deal.lease_summary_storage_path ? (
+                    <button
+                      onClick={() => handleViewDocument(`/api/deals/${deal.id}/document/lease-summary?view=true`, `${deal.name} — ${t('leaseSummary')}`)}
+                      className="px-4 py-2 bg-[#D97706] hover:bg-[#B45309] text-white text-[11px] font-semibold rounded-lg transition-colors"
+                    >
+                      {t('leaseSummary')}
+                    </button>
+                  ) : (
+                    <span className="px-4 py-2 bg-[#F7F8FA] text-[#9CA3AF] text-[11px] font-semibold rounded-lg cursor-default">
+                      {t('leaseSummaryPending')}
+                    </span>
+                  )}
                 </div>
               </div>
             )}
@@ -2732,7 +2766,7 @@ export default function DealDetailClient({
         {/* ------------------------------------------------------------------ */}
         <div ref={tabBarRef} className="px-4 md:px-8 mt-6 md:mt-8">
           <div className="flex border-b border-[#E5E7EB] overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
-            {tabs.map((tab) => {
+            {tabs.filter((tab) => tab.enabled).map((tab) => {
               const disabled = !tab.enabled;
               return (
                 <button

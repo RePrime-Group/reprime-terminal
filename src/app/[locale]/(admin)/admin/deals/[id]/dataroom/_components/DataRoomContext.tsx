@@ -20,6 +20,7 @@ interface DataRoomContextValue {
   onRequestMoveDocs: (ids: string[]) => void;
   onRequestNewSubfolder: (parentId: string) => void;
   onUploadFiles: (folderId: string, files: FileList | File[]) => void;
+  onViewDocument: (docId: string, displayName: string, storagePath: string | null) => void;
   onContextMenu: (
     x: number,
     y: number,

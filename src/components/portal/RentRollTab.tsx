@@ -87,7 +87,7 @@ export default function RentRollTab({
   if (tenants.length === 0) {
     return (
       <div className="rounded-xl border border-[#EEF0F4] bg-white p-10 text-center">
-        <p className="text-sm text-[#6B7280]">No rent roll data available for this deal yet.</p>
+        <p className="text-sm text-[#6B7280]">Full Rent Roll Analysis Coming Soon</p>
       </div>
     );
   }

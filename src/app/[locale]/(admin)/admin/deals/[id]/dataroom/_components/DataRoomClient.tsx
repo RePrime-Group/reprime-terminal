@@ -12,6 +12,7 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core';
 import DealSubNav from '@/components/admin/DealSubNav';
+import { createClient } from '@/lib/supabase/client';
 import { useDataRoom } from '../_hooks/useDataRoom';
 import { useSelection } from '../_hooks/useSelection';
 import { DataRoomProvider } from './DataRoomContext';
@@ -34,6 +35,12 @@ interface Props {
   locale: string;
 }
 
+// Microsoft Office Online and Google Docs viewer fallbacks for non-PDF formats
+// browsers can't render natively. PDFs go straight through the download
+// endpoint (which watermarks them server-side).
+const OFFICE_EXTENSIONS = ['.xlsx', '.xls', '.xlsm', '.xlsb', '.docx', '.doc', '.docm', '.pptx', '.ppt', '.pptm'];
+const GVIEW_EXTENSIONS = ['.tif', '.tiff', '.heic', '.heif'];
+
 export default function DataRoomClient({ dealId, dealName, locale }: Props) {
   const data = useDataRoom(dealId);
   const selection = useSelection();
@@ -51,6 +58,40 @@ export default function DataRoomClient({ dealId, dealName, locale }: Props) {
   const [deleteDocId, setDeleteDocId] = useState<string | null>(null);
   const [moveModal, setMoveModal] = useState<{ open: boolean; docIds: string[]; folderId?: string | null }>({ open: false, docIds: [] });
   const [zipModal, setZipModal] = useState<{ open: boolean; storagePath: string | null; targetFolderId: string | null }>({ open: false, storagePath: null, targetFolderId: null });
+
+  // Document preview viewer (mirrors investor-side behaviour: PDFs render in
+  // an iframe via the download endpoint; Office files go through Microsoft
+  // Office Online; TIFF/HEIC fall back to Google Docs viewer).
+  const [viewerUrl, setViewerUrl] = useState<string | null>(null);
+  const [viewerName, setViewerName] = useState<string>('');
+  const handleViewDocument = useCallback(
+    async (docId: string, displayName: string, storagePath: string | null) => {
+      const lower = displayName.toLowerCase();
+      const isOfficeFile = OFFICE_EXTENSIONS.some((ext) => lower.endsWith(ext));
+      const isGViewFile = GVIEW_EXTENSIONS.some((ext) => lower.endsWith(ext));
+      const fallback = `/api/documents/${docId}/download?view=true`;
+      if ((isOfficeFile || isGViewFile) && storagePath) {
+        const supabase = createClient();
+        const { data: signed } = await supabase.storage
+          .from('terminal-dd-documents')
+          .createSignedUrl(storagePath, 300);
+        if (signed?.signedUrl) {
+          const encoded = encodeURIComponent(signed.signedUrl);
+          setViewerUrl(
+            isOfficeFile
+              ? `https://view.officeapps.live.com/op/embed.aspx?src=${encoded}`
+              : `https://docs.google.com/gview?url=${encoded}&embedded=true`,
+          );
+        } else {
+          setViewerUrl(fallback);
+        }
+      } else {
+        setViewerUrl(fallback);
+      }
+      setViewerName(displayName);
+    },
+    [],
+  );
 
   // Context menu
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
@@ -256,11 +297,12 @@ export default function DataRoomClient({ dealId, dealName, locale }: Props) {
       onRequestNewSubfolder: (parentId: string) =>
         setCreateFolderParent({ open: true, parentId }),
       onUploadFiles: handleUpload,
+      onViewDocument: handleViewDocument,
       onContextMenu: handleContextMenu,
     }),
     [
       dealId, data, selection, expanded, toggleExpanded, expandFolder,
-      editingFolderId, editingDocId, handleUpload, handleContextMenu,
+      editingFolderId, editingDocId, handleUpload, handleViewDocument, handleContextMenu,
     ],
   );
 
@@ -479,6 +521,54 @@ export default function DataRoomClient({ dealId, dealName, locale }: Props) {
             setUploadTargetFolder(null);
           }}
         />
+
+        {/* ── Document Viewer Modal ── */}
+        {viewerUrl && (
+          <div
+            className="fixed inset-0 z-[100] flex items-stretch md:items-center justify-center bg-black/80 backdrop-blur-md md:p-4"
+            onClick={() => setViewerUrl(null)}
+          >
+            <div
+              className="relative bg-white md:rounded-2xl overflow-hidden flex flex-col w-full h-full md:w-[90vw] md:h-[92vh] md:max-w-[1200px]"
+              style={{ boxShadow: '0 40px 100px rgba(0,0,0,0.4)' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 shrink-0 gap-3"
+                style={{ background: 'linear-gradient(135deg, #0E3470, #0a2450)', borderBottom: '2px solid #BC9C45' }}
+              >
+                <div className="flex items-center gap-3 md:gap-4 min-w-0 flex-1">
+                  <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-[#BC9C45]/15 flex items-center justify-center shrink-0">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#BC9C45" strokeWidth="1.5">
+                      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                    </svg>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-white text-[13px] md:text-[14px] font-semibold truncate">{viewerName}</div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setViewerUrl(null)}
+                  className="w-9 h-9 rounded-lg flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-colors border border-white/10"
+                  aria-label="Close"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+              <div className="flex-1 relative bg-[#1a1a2e]">
+                <iframe
+                  src={viewerUrl}
+                  className="w-full h-full border-0"
+                  title={viewerName}
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </DataRoomProvider>
     </div>
   );

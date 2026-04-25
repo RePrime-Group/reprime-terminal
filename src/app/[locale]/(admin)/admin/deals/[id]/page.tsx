@@ -288,11 +288,11 @@ export default function EditDealPage() {
   const [omUploading, setOmUploading] = useState(false);
   const omInputRef = useRef<HTMLInputElement>(null);
 
-  // Additional deal-level documents (signed LOI, PSA, full report, CoStar, Tenants)
-  type DocKey = 'om' | 'loi' | 'psa' | 'full-report' | 'costar-report' | 'tenants-report';
+  // Additional deal-level documents (signed LOI, PSA, full report, CoStar, Tenant Intelligence, Lease Summary)
+  type DocKey = 'om' | 'loi' | 'psa' | 'full-report' | 'costar-report' | 'tenants-report' | 'lease-summary';
   const DOC_CONFIG: Record<DocKey, {
     label: string;
-    column: 'om_storage_path' | 'loi_signed_storage_path' | 'psa_storage_path' | 'full_report_storage_path' | 'costar_report_storage_path' | 'tenants_report_storage_path';
+    column: 'om_storage_path' | 'loi_signed_storage_path' | 'psa_storage_path' | 'full_report_storage_path' | 'costar_report_storage_path' | 'tenants_report_storage_path' | 'lease_summary_storage_path';
     pathSegment: string;
     tabLabel: string;
   }> = {
@@ -301,15 +301,16 @@ export default function EditDealPage() {
     'psa': { label: 'Purchase and Sale Agreement (PSA)', column: 'psa_storage_path', pathSegment: 'psa', tabLabel: 'PSA' },
     'full-report': { label: 'Full Report', column: 'full_report_storage_path', pathSegment: 'full-report', tabLabel: 'Full Report' },
     'costar-report': { label: 'CoStar Report', column: 'costar_report_storage_path', pathSegment: 'costar', tabLabel: 'CoStar Report' },
-    'tenants-report': { label: 'Tenants Report', column: 'tenants_report_storage_path', pathSegment: 'tenants', tabLabel: 'Tenants Report' },
+    'tenants-report': { label: 'Tenant Intelligence', column: 'tenants_report_storage_path', pathSegment: 'tenants', tabLabel: 'Tenant Intelligence' },
+    'lease-summary': { label: 'Lease Summary', column: 'lease_summary_storage_path', pathSegment: 'lease-summary', tabLabel: 'Lease Summary' },
   };
   const [docPaths, setDocPaths] = useState<Record<Exclude<DocKey, 'om'>, string | null>>({
-    'loi': null, 'psa': null, 'full-report': null, 'costar-report': null, 'tenants-report': null,
+    'loi': null, 'psa': null, 'full-report': null, 'costar-report': null, 'tenants-report': null, 'lease-summary': null,
   });
   const [activeDocTab, setActiveDocTab] = useState<DocKey>('om');
   const [docUploading, setDocUploading] = useState<DocKey | null>(null);
   const docInputRefs = useRef<Record<Exclude<DocKey, 'om'>, HTMLInputElement | null>>({
-    'loi': null, 'psa': null, 'full-report': null, 'costar-report': null, 'tenants-report': null,
+    'loi': null, 'psa': null, 'full-report': null, 'costar-report': null, 'tenants-report': null, 'lease-summary': null,
   });
 
   // Portfolio addresses
@@ -393,6 +394,7 @@ export default function EditDealPage() {
         'full-report': typedDeal.full_report_storage_path ?? null,
         'costar-report': typedDeal.costar_report_storage_path ?? null,
         'tenants-report': typedDeal.tenants_report_storage_path ?? null,
+        'lease-summary': typedDeal.lease_summary_storage_path ?? null,
       });
 
       const { data: photosData } = await supabase
@@ -878,6 +880,17 @@ export default function EditDealPage() {
       .update({ [DOC_CONFIG[docKey].column]: null })
       .eq('id', dealId);
     setDocPaths((prev) => ({ ...prev, [docKey]: null }));
+  };
+
+  const handleDocView = async (path: string) => {
+    const { data, error } = await supabase.storage
+      .from('terminal-dd-documents')
+      .createSignedUrl(path, 60);
+    if (error || !data?.signedUrl) {
+      alert(`Couldn't open document: ${error?.message ?? 'unknown error'}`);
+      return;
+    }
+    window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
   };
 
   // Address management
@@ -1813,6 +1826,12 @@ export default function EditDealPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <button
+                      onClick={() => handleDocView(currentPath)}
+                      className="text-[12px] font-medium text-rp-navy hover:underline"
+                    >
+                      View
+                    </button>
+                    <button
                       onClick={triggerClick}
                       className="text-[12px] font-medium text-rp-gold hover:underline"
                     >
@@ -1856,7 +1875,7 @@ export default function EditDealPage() {
           onChange={handleOmUpload}
           className="hidden"
         />
-        {(['loi', 'psa', 'full-report', 'costar-report', 'tenants-report'] as Exclude<DocKey, 'om'>[]).map((key) => (
+        {(['loi', 'psa', 'full-report', 'costar-report', 'tenants-report', 'lease-summary'] as Exclude<DocKey, 'om'>[]).map((key) => (
           <input
             key={key}
             ref={(el) => { docInputRefs.current[key] = el; }}
@@ -1962,7 +1981,7 @@ export default function EditDealPage() {
       <div className="bg-white rounded-2xl border border-rp-gray-200 p-6 mb-6">
         <h2 className="text-[16px] font-semibold text-rp-navy mb-1">Tab Visibility</h2>
         <p className="text-[12px] text-rp-gray-500 mb-4">
-          Controls which tabs investors see on the deal detail page. Disabled tabs appear greyed out.
+          Controls which tabs investors see on the deal detail page. Disabled tabs are hidden entirely.
         </p>
         <div className="space-y-2">
           <label className="flex items-center gap-2 cursor-not-allowed opacity-70">

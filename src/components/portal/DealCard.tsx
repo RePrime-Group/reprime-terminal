@@ -238,7 +238,7 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
               <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[1.8px]">
                 {t('equityRequired')}
               </div>
-              <div className={`text-[22px] font-bold tabular-nums leading-tight tracking-[-0.03em] mt-1 truncate ${deal.fully_financed ? 'text-[#0B8A4D]' : 'text-[#0E3470]'}`}>
+              <div className="text-[22px] font-bold text-[#0B8A4D] tabular-nums leading-tight tracking-[-0.03em] mt-1 truncate">
                 {deal.fully_financed ? '$0' : formatPrice(deal.equity_required)}
               </div>
             </div>
@@ -251,13 +251,13 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
             <SecondaryMetric
               label={t('irr')}
               value={infReturn ?? formatPercent(deal.irr)}
-              highlight={!!infReturn}
+              highlight
               isInfinity={infReturn === '∞'}
             />
             <SecondaryMetric
               label={t('coc')}
               value={infReturn ?? formatPercent(deal.coc)}
-              highlight={!!infReturn}
+              highlight
               isInfinity={infReturn === '∞'}
             />
             <SecondaryMetric label={t('dscr')} value={formatDSCR(deal.dscr)} />
@@ -278,12 +278,14 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
                   style={{ backgroundColor: urgencyTextColor }}
                 />
               )}
-              <span
-                className="text-[8px] font-bold uppercase tracking-[1.5px]"
-                style={{ color: urgencyTextColor }}
-              >
-                {t('ddDeadline')}
-              </span>
+              {!isAssigned && (
+                <span
+                  className="text-[8px] font-bold uppercase tracking-[1.5px]"
+                  style={{ color: urgencyTextColor }}
+                >
+                  {t('ddDeadline')}
+                </span>
+              )}
             </div>
 
             {isAssigned ? (

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useCountdown } from '@/lib/hooks/useCountdown';
-import { formatPriceCompact, formatPercent, formatDSCR, formatPrice } from '@/lib/utils/format';
+import { formatPercent, formatDSCR, formatPrice } from '@/lib/utils/format';
 import type { DealCardData } from '@/components/portal/PortalDashboardClient';
 import { friendlyFetchError, readApiError } from '@/lib/utils/friendly-error';
 
@@ -51,25 +51,39 @@ export default function ComingSoonCard({ deal, index, previewMode = false }: Com
         setSubscribed(!subscribed);
       } else {
         setActionError(await readApiError(res, subscribed
-          ? 'Couldn\u2019t turn off notifications. Please try again.'
-          : 'Couldn\u2019t save your notification preference. Please try again.'));
+          ? 'Couldn’t turn off notifications. Please try again.'
+          : 'Couldn’t save your notification preference. Please try again.'));
       }
     } catch (err) {
       console.error('subscribe toggle failed:', err);
-      setActionError(friendlyFetchError(err, 'Couldn\u2019t update notifications. Please try again.'));
+      setActionError(friendlyFetchError(err, 'Couldn’t update notifications. Please try again.'));
     } finally {
       setLoading(false);
     }
   };
+
+  const address = [deal.address, deal.city, deal.state].filter(Boolean).join(', ');
 
   return (
     <div
       className="group relative block opacity-0 animate-fade-up"
       style={{ animationDelay: `${(index || 0) * 120}ms` }}
     >
-      <div className="relative bg-white rounded-[14px] overflow-hidden rp-card-shadow transition-all duration-300 group-hover:-translate-y-1">
-        {/* Photo area with frosted overlay */}
-        <div className="h-[180px] relative overflow-hidden">
+      <div className="relative bg-white rounded-[14px] overflow-hidden border border-transparent rp-card-shadow group-hover:-translate-y-2 group-hover:rp-card-shadow-hover transition-all duration-300">
+        {/* Header: Name + Address */}
+        <div className="px-[20px] pt-[14px] pb-2">
+          <h3 className="text-[22px] font-semibold text-[#0E3470] font-[family-name:var(--font-playfair)] leading-tight tracking-[-0.01em] truncate">
+            {deal.name}
+          </h3>
+          {address && (
+            <p className="text-[12px] text-[#6B7280] mt-0.5 truncate">
+              {address}
+            </p>
+          )}
+        </div>
+
+        {/* Photo with frosted overlay + lock */}
+        <div className="h-[200px] relative overflow-hidden">
           {deal.photo_url ? (
             <img
               src={deal.photo_url}
@@ -110,44 +124,64 @@ export default function ComingSoonCard({ deal, index, previewMode = false }: Com
         {/* Gold gradient line */}
         <div className="h-px bg-gradient-to-r from-transparent via-[#BC9C45]/40 to-transparent" />
 
-        {/* Card body */}
-        <div className="px-5 py-4">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] font-semibold text-[#BC9C45] uppercase tracking-[2px]">
+        {/* Card Body */}
+        <div style={{ padding: '12px 20px 12px' }}>
+          {/* Badges row */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="bg-[#0E3470] text-white text-[10px] font-semibold px-2.5 py-[5px] rounded-full">
               {tPt.has(deal.property_type) ? tPt(deal.property_type) : deal.property_type}
             </span>
+            {deal.seller_financing && (
+              <span
+                className="text-white text-[10px] font-semibold px-2.5 py-[5px] rounded-full"
+                style={{
+                  background: 'linear-gradient(135deg, #BC9C45 0%, #D4B85A 50%, #BC9C45 100%)',
+                }}
+              >
+                {t('sellerFinancing')}
+              </span>
+            )}
+            {deal.note_sale && (
+              <span
+                className="text-white text-[10px] font-semibold px-2.5 py-[5px] rounded-full"
+                style={{
+                  background: 'linear-gradient(135deg, #7C1D3F 0%, #A33B5C 50%, #7C1D3F 100%)',
+                }}
+              >
+                {t('noteSale')}
+              </span>
+            )}
           </div>
-          <h3 className="text-[20px] font-semibold text-[#0E3470] font-[family-name:var(--font-playfair)] leading-tight tracking-[-0.01em]">
-            {deal.name}
-          </h3>
-          <p className="text-[12px] text-[#6B7280] mt-1">
-            {deal.city}, {deal.state}
-          </p>
 
+          {/* Headline metric: Purchase Price */}
+          <div className="mt-3 min-w-0">
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[1.8px]">
+              {t('purchasePrice')}
+            </div>
+            <div className="text-[22px] font-bold text-[#0E3470] tabular-nums leading-tight tracking-[-0.03em] mt-1 truncate">
+              {formatPrice(deal.purchase_price)}
+            </div>
+          </div>
+
+          {/* Secondary metrics: 2 rows x 3 */}
+          <div className="grid grid-cols-3 gap-x-3 gap-y-2 mt-3">
+            <SecondaryMetric label={t('noi')} value={formatPrice(deal.noi)} />
+            <SecondaryMetric label={t('capRate')} value={formatPercent(deal.cap_rate)} />
+            <SecondaryMetric label={t('irr')} value={formatPercent(deal.irr)} highlight />
+            <SecondaryMetric label={t('coc')} value={formatPercent(deal.coc)} highlight />
+            <SecondaryMetric label={t('dscr')} value={formatDSCR(deal.dscr)} />
+            <SecondaryMetric
+              label={t('occupancy')}
+              value={deal.occupancy ? `${deal.occupancy}%` : '—'}
+            />
+          </div>
+
+          {/* Teaser description */}
           {deal.teaser_description && (
             <p className="text-[12px] text-[#4B5563] mt-3 leading-relaxed line-clamp-3">
               {deal.teaser_description}
             </p>
           )}
-
-          {/* Financial metrics */}
-          <div className="mt-4 grid grid-cols-3 gap-x-3 gap-y-2.5">
-            {[
-              { label: t('purchase'), value: formatPriceCompact(deal.purchase_price) },
-              { label: t('noi'), value: formatPrice(deal.noi) },
-              { label: t('capRate'), value: formatPercent(deal.cap_rate) },
-              { label: t('irr'), value: formatPercent(deal.irr), highlight: true },
-              { label: t('coc'), value: formatPercent(deal.coc), highlight: true },
-              { label: t('dscr'), value: formatDSCR(deal.dscr) },
-            ].map((m) => (
-              <div key={m.label}>
-                <div className="text-[8px] font-bold text-[#9CA3AF] uppercase tracking-[2px]">{m.label}</div>
-                <div className={`text-[14px] font-semibold tabular-nums ${m.highlight ? 'text-[#0B8A4D]' : 'text-[#0E3470]'}`}>
-                  {m.value}
-                </div>
-              </div>
-            ))}
-          </div>
 
           {/* Disclaimer */}
           <p className="mt-3 text-[10px] text-[#9CA3AF] italic leading-relaxed">
@@ -231,10 +265,10 @@ export default function ComingSoonCard({ deal, index, previewMode = false }: Com
                         body: JSON.stringify({ type: 'primary' }),
                       });
                       if (res.ok) setCommitted(true);
-                      else setActionError(await readApiError(res, 'We couldn\u2019t save your commitment. Please try again.'));
+                      else setActionError(await readApiError(res, 'We couldn’t save your commitment. Please try again.'));
                     } catch (err) {
                       console.error('early commit failed:', err);
-                      setActionError(friendlyFetchError(err, 'We couldn\u2019t save your commitment. Please try again.'));
+                      setActionError(friendlyFetchError(err, 'We couldn’t save your commitment. Please try again.'));
                     } finally {
                       setCommitting(false);
                     }
@@ -255,3 +289,27 @@ export default function ComingSoonCard({ deal, index, previewMode = false }: Com
   );
 }
 
+function SecondaryMetric({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: string | null;
+  highlight?: boolean;
+}) {
+  return (
+    <div>
+      <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[1.8px]">
+        {label}
+      </div>
+      <div
+        className={`font-semibold tabular-nums leading-none mt-1.5 text-[17px] ${
+          highlight ? 'text-[#0B8A4D]' : 'text-[#0E3470]'
+        }`}
+      >
+        {value ?? '—'}
+      </div>
+    </div>
+  );
+}

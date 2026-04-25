@@ -255,10 +255,25 @@ export function FileRow({
             }}
             onCancel={() => ctx.setEditingDocId(null)}
           />
+        ) : hasFile ? (
+          // Single-click name → preview. Double-click → rename. Listeners block
+          // dnd-kit drag activation so a click doesn't get swallowed as a drag.
+          <button
+            type="button"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              ctx.onViewDocument(doc.id, displayName, doc.storage_path ?? null);
+            }}
+            onDoubleClick={(e) => { e.stopPropagation(); ctx.setEditingDocId(doc.id); }}
+            className="block w-full text-left truncate hover:text-rp-gold hover:underline cursor-pointer"
+          >
+            {displayName}
+          </button>
         ) : (
           <span onDoubleClick={(e) => { e.stopPropagation(); ctx.setEditingDocId(doc.id); }}>
             {displayName}
-            {!hasFile && <span className="ml-2 text-[10px] text-rp-gray-400">(placeholder)</span>}
+            <span className="ml-2 text-[10px] text-rp-gray-400">(placeholder)</span>
           </span>
         )}
       </div>

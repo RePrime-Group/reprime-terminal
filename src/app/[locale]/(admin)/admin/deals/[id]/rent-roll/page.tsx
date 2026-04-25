@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Modal from '@/components/ui/Modal';
 import DealSubNav from '@/components/admin/DealSubNav';
+import { sanitizeStorageName } from '../dataroom/_lib/uploadToFolder';
 import {
   computeWALT,
   computeOccupancy,
@@ -201,6 +202,16 @@ export default function RentRollAdminPage() {
   const [deleting, setDeleting] = useState(false);
   const [extractingFor, setExtractingFor] = useState<string | null>(null); // addressId or 'deal'
   const [extractMessage, setExtractMessage] = useState<string | null>(null);
+
+  // "Extract from File" — admin-uploaded rent roll (PDF / CSV / Excel).
+  // The browser uploads the file directly to Supabase storage at a temp path,
+  // then the API downloads it, parses, and deletes it. A nightly pg_cron job
+  // sweeps any temp objects that survive a closed-tab abort.
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  // Tracks which "Extract from File" button the admin clicked. 'deal' for the
+  // single-property toolbar, the address id for a portfolio building. Set
+  // before opening the file picker so the change handler knows the target.
+  const pendingUploadTargetRef = useRef<string | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -401,7 +412,10 @@ export default function RentRollAdminPage() {
     // Serialize: only one extraction at a time (buttons are also disabled
     // client-side, but this guards against stale clicks slipping through).
     if (extractingFor !== null) return;
-    const key = addressId ?? 'deal';
+    // Key prefix `om:` distinguishes OM extraction from upload extraction so
+    // each button only shows its own loading spinner; the other button still
+    // gets disabled because any non-null extractingFor blocks new starts.
+    const key = `om:${addressId ?? 'deal'}`;
     setExtractingFor(key);
     setExtractMessage(null);
     try {
@@ -420,6 +434,85 @@ export default function RentRollAdminPage() {
         );
         await fetchData();
       }
+    } catch (err) {
+      setExtractMessage(`Extraction failed: ${err instanceof Error ? err.message : 'unknown error'}`);
+    } finally {
+      setExtractingFor(null);
+    }
+  }
+
+  // Open the hidden file picker for the given target ('deal' for single-
+  // property, an addressId for a portfolio building). Stash the target so the
+  // change handler knows where to attach the extracted tenants.
+  function openExtractFilePicker(target: string) {
+    if (extractingFor !== null) return;
+    pendingUploadTargetRef.current = target;
+    if (fileInputRef.current) {
+      // Reset value so the same file can be re-picked back-to-back.
+      fileInputRef.current.value = '';
+      fileInputRef.current.click();
+    }
+  }
+
+  async function handleExtractFromUpload(file: File) {
+    const target = pendingUploadTargetRef.current;
+    pendingUploadTargetRef.current = null;
+    if (!target) return;
+
+    // Client-side sanity checks before we burn the upload + AI call.
+    const MAX_BYTES = 21 * 1024 * 1024;
+    if (file.size > MAX_BYTES) {
+      setExtractMessage(`File is ${(file.size / 1024 / 1024).toFixed(1)}MB — max 21MB.`);
+      return;
+    }
+    const lower = file.name.toLowerCase();
+    const isAccepted =
+      lower.endsWith('.pdf') ||
+      lower.endsWith('.csv') ||
+      lower.endsWith('.xlsx') ||
+      lower.endsWith('.xls') ||
+      lower.endsWith('.xlsm');
+    if (!isAccepted) {
+      setExtractMessage('Unsupported file type. Upload a PDF, CSV, or Excel (.xlsx/.xls) file.');
+      return;
+    }
+
+    const addressId = target === 'deal' ? null : target;
+    // Key prefix `upload:` mirrors `om:` above — see handleExtractFromOM.
+    setExtractingFor(`upload:${target}`);
+    setExtractMessage(null);
+
+    const safeName = sanitizeStorageName(file.name);
+    const tempPath = `_temp/extract-tenants/${dealId}/${Date.now()}-${safeName}`;
+
+    try {
+      const { error: uploadError } = await supabase.storage
+        .from('terminal-dd-documents')
+        .upload(tempPath, file, { upsert: false });
+      if (uploadError) {
+        setExtractMessage(`Upload failed: ${uploadError.message}`);
+        return;
+      }
+
+      const res = await fetch(`/api/admin/deals/${dealId}/extract-tenants-from-upload`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tempPath, addressId }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        // The API removes the temp object on its own error paths. If the
+        // request never reached the API (e.g. network failure between upload
+        // and POST), the pg_cron sweep collects it within 24h.
+        setExtractMessage(`Extraction failed: ${json.error ?? 'unknown error'}`);
+        return;
+      }
+
+      const label = addresses.find((a) => a.id === addressId)?.label;
+      setExtractMessage(
+        `Extracted ${json.inserted ?? 0} tenant record(s) from ${file.name}${label ? ` for ${label}` : ''}. Please review each row before publishing.`,
+      );
+      await fetchData();
     } catch (err) {
       setExtractMessage(`Extraction failed: ${err instanceof Error ? err.message : 'unknown error'}`);
     } finally {
@@ -487,15 +580,26 @@ export default function RentRollAdminPage() {
           </div>
           <div className="flex items-center gap-2">
             {!isPortfolio && (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => handleExtractFromOM()}
-                loading={extractingFor === 'deal'}
-                disabled={extractingFor !== null && extractingFor !== 'deal'}
-              >
-                Auto-extract from OM
-              </Button>
+              <>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => handleExtractFromOM()}
+                  loading={extractingFor === 'om:deal'}
+                  disabled={extractingFor !== null && extractingFor !== 'om:deal'}
+                >
+                  Auto-extract from OM
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => openExtractFilePicker('deal')}
+                  loading={extractingFor === 'upload:deal'}
+                  disabled={extractingFor !== null && extractingFor !== 'upload:deal'}
+                >
+                  Extract from File
+                </Button>
+              </>
             )}
             <Button variant="secondary" size="sm" onClick={() => openAdd(true)}>
               + Vacant Space
@@ -505,6 +609,20 @@ export default function RentRollAdminPage() {
             </Button>
           </div>
         </div>
+
+        {/* Hidden file input shared by every "Extract from File" button.
+            pendingUploadTargetRef tells the change handler whether to attach
+            extracted tenants to the deal or to a specific portfolio building. */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".pdf,.csv,.xlsx,.xls,.xlsm,application/pdf,text/csv"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleExtractFromUpload(file);
+          }}
+        />
 
         {extractMessage && (
           <div className="mb-4 p-3 rounded-lg bg-rp-gold/10 border border-rp-gold/30 text-[12px] text-rp-navy">
@@ -533,7 +651,10 @@ export default function RentRollAdminPage() {
                 return Number.isFinite(n) && n > 0 ? n : null;
               })();
               const bucketOcc = computeOccupancy(bucket.tenantsInBucket, bucketSfDenominator);
-              const isExtracting = extractingFor === (bucket.addressId ?? 'deal');
+              const omKey = `om:${bucket.addressId ?? 'deal'}`;
+              const uploadKey = `upload:${bucket.addressId ?? 'deal'}`;
+              const isOmExtracting = extractingFor === omKey;
+              const isUploadExtracting = extractingFor === uploadKey;
 
               return (
                 <div key={bucket.key}>
@@ -560,10 +681,21 @@ export default function RentRollAdminPage() {
                             variant="secondary"
                             size="sm"
                             onClick={() => handleExtractFromOM(bucket.addressId as string)}
-                            loading={isExtracting}
-                            disabled={extractingFor !== null && !isExtracting}
+                            loading={isOmExtracting}
+                            disabled={extractingFor !== null && !isOmExtracting}
                           >
                             Auto-extract from this property&apos;s OM
+                          </Button>
+                        )}
+                        {bucket.addressId && (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => openExtractFilePicker(bucket.addressId as string)}
+                            loading={isUploadExtracting}
+                            disabled={extractingFor !== null && !isUploadExtracting}
+                          >
+                            Extract from File
                           </Button>
                         )}
                         {bucket.addressId && (
