@@ -2530,7 +2530,7 @@ export default function DealDetailClient({
             {/* ------------------------------------------------------------------ */}
             {/* 5C. TERMINAL INTELLIGENCE PANEL                                    */}
             {/* ------------------------------------------------------------------ */}
-            {deal.acquisition_thesis && (
+            
               <div className="bg-white rounded-xl p-5 border border-[#EEF0F4] rp-card-shadow">
                 {/* Header */}
                 <div className="flex items-center gap-3 mb-3">
@@ -2551,7 +2551,7 @@ export default function DealDetailClient({
                   ref={thesisRef}
                   className={`text-[13px] text-[#4B5563] leading-[1.7] ${thesisExpanded ? '' : 'line-clamp-4'}`}
                 >
-                  {deal.acquisition_thesis}
+                  {deal.acquisition_thesis ? deal.acquisition_thesis : ""}
                 </p>
                 {(thesisOverflows || thesisExpanded) && (
                   <button
@@ -2563,17 +2563,17 @@ export default function DealDetailClient({
                   </button>
                 )}
                 {/* Footer buttons */}
-                <div className="flex items-center gap-3 mt-4 flex-wrap">
+                <div className="flex items-center justify-evenly gap-3 mt-4 flex-wrap">
                   {deal.full_report_storage_path ? (
                     <button
                       onClick={() => handleViewDocument(`/api/deals/${deal.id}/document/full-report?view=true`, `${deal.name} — ${t('fullReport')}`)}
-                      className="px-4 py-2 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[11px] font-semibold rounded-lg transition-colors"
+                      className="px-3 py-1.5 bg-[#BC9C45] hover:bg-[#A88A3D] text-white text-[11px] font-semibold rounded-lg transition-colors"
                     >
                       {t('fullReport')}
                     </button>
                   ) : (
                     <span className="px-4 py-2 bg-[#F7F8FA] text-[#9CA3AF] text-[11px] font-semibold rounded-lg cursor-default">
-                      {t('fullReportPending')}
+                      {t('fullReport')}
                     </span>
                   )}
                   {deal.costar_report_storage_path ? (
@@ -2585,7 +2585,7 @@ export default function DealDetailClient({
                     </button>
                   ) : (
                     <span className="px-4 py-2 bg-[#F7F8FA] text-[#9CA3AF] text-[11px] font-semibold rounded-lg cursor-default">
-                      {t('costarReportPending')}
+                      {t('costarReport')}
                     </span>
                   )}
                   {deal.tenants_report_storage_path ? (
@@ -2597,7 +2597,7 @@ export default function DealDetailClient({
                     </button>
                   ) : (
                     <span className="px-4 py-2 bg-[#F7F8FA] text-[#9CA3AF] text-[11px] font-semibold rounded-lg cursor-default">
-                      {t('tenantsReportPending')}
+                      {t('tenantsReport')}
                     </span>
                   )}
                   {deal.lease_summary_storage_path ? (
@@ -2609,12 +2609,12 @@ export default function DealDetailClient({
                     </button>
                   ) : (
                     <span className="px-4 py-2 bg-[#F7F8FA] text-[#9CA3AF] text-[11px] font-semibold rounded-lg cursor-default">
-                      {t('leaseSummaryPending')}
+                      {t('leaseSummary')}
                     </span>
                   )}
                 </div>
               </div>
-            )}
+            
 
             {/* ------------------------------------------------------------------ */}
             {/* 5D. TRANSACTION DOCUMENTS (OM + Signed LOI + PSA)                  */}
