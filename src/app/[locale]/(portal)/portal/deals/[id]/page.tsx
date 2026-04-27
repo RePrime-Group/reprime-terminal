@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import DealDetailClient from '@/components/portal/DealDetailClient';
 import type { TerminalDeal, TerminalDealPhoto, TerminalTenantLease, CapExItem, ExitScenario } from '@/lib/types/database';
 import {
@@ -81,7 +82,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
       .from('terminal_deals')
       .select(DEAL_COLUMNS)
       .eq('id', id)
-      .in('status', ['coming_soon', 'loi_signed', 'published', 'assigned', 'closed'])
+      .in('status', ['coming_soon', 'marketplace', 'loi_signed', 'published', 'assigned', 'closed'])
       .single(),
     supabase
       .from('terminal_deal_photos')
@@ -115,11 +116,13 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
     supabase
       .from('terminal_nda_signatures')
       .select('id')
+      .eq('user_id', user.id)
       .eq('nda_type', 'blanket')
       .limit(1),
     supabase
       .from('terminal_nda_signatures')
       .select('id')
+      .eq('user_id', user.id)
       .eq('nda_type', 'deal')
       .eq('deal_id', id)
       .limit(1),
@@ -223,6 +226,35 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
 
   const hasSignedNDA = (blanketNDA?.length ?? 0) > 0 || (dealNDA?.length ?? 0) > 0;
 
+  // Marketplace-specific data: total interest count + this user's existing
+  // interest row (so the form can pre-fill on revisit).
+  let marketplaceInterestCount = 0;
+  let myMarketplaceInterest: {
+    interest_type: 'at_asking' | 'custom_price';
+    target_price: number | null;
+    notes: string | null;
+  } | null = null;
+  if (deal.status === 'marketplace') {
+    const admin = createAdminClient();
+    const [{ data: countRows }, { data: myRow }] = await Promise.all([
+      admin.from('marketplace_interest').select('id').eq('deal_id', id),
+      supabase
+        .from('marketplace_interest')
+        .select('interest_type, target_price, notes')
+        .eq('deal_id', id)
+        .eq('user_id', user.id)
+        .maybeSingle(),
+    ]);
+    marketplaceInterestCount = countRows?.length ?? 0;
+    if (myRow) {
+      myMarketplaceInterest = {
+        interest_type: myRow.interest_type as 'at_asking' | 'custom_price',
+        target_price: myRow.target_price,
+        notes: myRow.notes,
+      };
+    }
+  }
+
   return (
     <DealDetailClient
       deal={{
@@ -256,6 +288,8 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
       globalFeeDefaults={globalFeeDefaults}
       resolvedDealFees={resolvedDealFees}
       resolvedInvestorTerms={resolvedInvestorTerms}
+      marketplaceInterestCount={marketplaceInterestCount}
+      myMarketplaceInterest={myMarketplaceInterest}
     />
   );
 }

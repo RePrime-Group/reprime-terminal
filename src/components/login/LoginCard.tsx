@@ -74,7 +74,7 @@ export default function LoginCard({ locale }: LoginCardProps) {
 
       const { data: userData, error: userError } = await supabase
         .from('terminal_users')
-        .select('role')
+        .select('role, access_tier')
         .eq('id', data.session.user.id)
         .single();
 
@@ -86,9 +86,24 @@ export default function LoginCard({ locale }: LoginCardProps) {
       }
 
       const loc = locale || 'en';
-      const defaultDest = userData.role === 'investor' ? `/${loc}/portal` : `/${loc}/admin`;
       const requested = safeRedirectForRole(searchParams.get('redirect'), userData.role);
-      redirectTo = requested ?? defaultDest;
+
+      if (userData.role !== 'investor') {
+        // Owners / employees \u2192 admin (or honored admin redirect).
+        redirectTo = requested ?? `/${loc}/admin`;
+      } else if (userData.access_tier === 'marketplace_only') {
+        // Marketplace-only investors always land on the marketplace page \u2014
+        // the proxy would bounce them back here from anywhere else anyway.
+        redirectTo = `/${loc}/portal/marketplace`;
+      } else {
+        // Full investors land on the Dashboard by default. Honor only deep
+        // links to a specific deal (share-links) so those keep working;
+        // ignore generic tab redirects like /portal/marketplace or
+        // /portal/portfolio so a stale ?redirect doesn't deflect us off the
+        // dashboard.
+        const isDealLink = !!requested && /\/portal\/deals\/[^/]+/.test(requested);
+        redirectTo = isDealLink ? requested! : `/${loc}/portal`;
+      }
     } catch (err) {
       console.error('login failed:', err);
       setError(friendlyFetchError(err, 'Something went wrong while signing in. Please try again.'));

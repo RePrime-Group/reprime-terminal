@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
   // Verify the invite token is valid
   const { data: invite } = await supabase
     .from('terminal_invite_tokens')
-    .select('email, role, accepted_at, parent_investor_id, permissions')
+    .select('email, role, accepted_at, parent_investor_id, permissions, access_tier')
     .eq('token', token)
     .single();
 
@@ -38,6 +38,27 @@ export async function POST(request: NextRequest) {
   const isTeamInvite = invite.role === 'team_member' || !!invite.parent_investor_id;
   const resolvedRole = isTeamInvite ? 'investor' : invite.role;
 
+  // access_tier: required (NOT NULL via CHECK) when role='investor', forbidden
+  // for owner/employee.
+  //  - Primary investor invites: tier is set on the invite token.
+  //  - Team-invited sub-users: inherit tier from the parent investor so a
+  //    marketplace-only parent's team also stays marketplace-only. If the
+  //    parent lookup fails (parent deleted, etc.) fall back to 'investor'.
+  let resolvedAccessTier: 'investor' | 'marketplace_only' | null = null;
+  if (resolvedRole === 'investor') {
+    if (isTeamInvite && invite.parent_investor_id) {
+      const { data: parent } = await supabase
+        .from('terminal_users')
+        .select('access_tier')
+        .eq('id', invite.parent_investor_id)
+        .maybeSingle();
+      const parentTier = parent?.access_tier as 'investor' | 'marketplace_only' | null | undefined;
+      resolvedAccessTier = parentTier === 'marketplace_only' ? 'marketplace_only' : 'investor';
+    } else {
+      resolvedAccessTier = (invite.access_tier as 'investor' | 'marketplace_only' | null) ?? 'investor';
+    }
+  }
+
   // Create the terminal_users profile (bypasses RLS with service role)
   const { error: insertError } = await supabase
     .from('terminal_users')
@@ -49,6 +70,7 @@ export async function POST(request: NextRequest) {
       company_name: companyName || null,
       parent_investor_id: invite.parent_investor_id ?? null,
       permissions: invite.permissions ?? {},
+      access_tier: resolvedAccessTier,
     });
 
   if (insertError) {

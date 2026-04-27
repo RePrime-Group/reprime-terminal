@@ -32,21 +32,25 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
   const countdown = useCountdown(deal.dd_deadline);
   const isAssignedStatus = deal.status === 'assigned';
   const isClosedStatus = deal.status === 'closed';
+  const isMarketplace = deal.status === 'marketplace';
   const isAssigned = isAssignedStatus || isClosedStatus;
   const isTBA = !deal.dd_deadline;
-  const urgency = isAssigned
+  const urgency = isMarketplace
+    ? 'marketplace'
+    : isAssigned
     ? 'assigned'
     : isTBA
     ? 'tba'
     : getUrgencyLevel(deal.dd_deadline);
 
   const urgencyMap: Record<string, { bg: string; color: string }> = {
-    green:    { bg: 'bg-[#ECFDF5]', color: '#0B8A4D' },
-    amber:    { bg: 'bg-[#FFFBEB]', color: '#D97706' },
-    red:      { bg: 'bg-[#FEF2F2]', color: '#DC2626' },
-    expired:  { bg: 'bg-[#EEF0F4]', color: '#9CA3AF' },
-    tba:      { bg: 'bg-[#EFF4FA]', color: '#0E3470' },
-    assigned: { bg: 'bg-[#FDF8ED]', color: '#BC9C45' },
+    green:       { bg: 'bg-[#ECFDF5]', color: '#0B8A4D' },
+    amber:       { bg: 'bg-[#FFFBEB]', color: '#D97706' },
+    red:         { bg: 'bg-[#FEF2F2]', color: '#DC2626' },
+    expired:     { bg: 'bg-[#EEF0F4]', color: '#9CA3AF' },
+    tba:         { bg: 'bg-[#EFF4FA]', color: '#0E3470' },
+    assigned:    { bg: 'bg-[#FDF8ED]', color: '#BC9C45' },
+    marketplace: { bg: 'bg-[#ECFDFD]', color: '#0E7490' },
   };
   const { bg: urgencyBg, color: urgencyTextColor } = urgencyMap[urgency] ?? urgencyMap.expired;
 
@@ -202,6 +206,14 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
             <span className="bg-[#0E3470] text-white text-[10px] font-semibold px-2.5 py-[5px] rounded-full">
               {tPt.has(deal.property_type) ? tPt(deal.property_type) : deal.property_type}
             </span>
+            {isMarketplace && (
+              <span
+                className="text-white text-[10px] font-semibold px-2.5 py-[5px] rounded-full"
+                style={{ background: 'linear-gradient(135deg, #0E7490 0%, #14B8A6 100%)' }}
+              >
+                {t('marketplaceBadge')}
+              </span>
+            )}
             {deal.seller_financing && (
               <span
                 className="text-white text-[10px] font-semibold px-2.5 py-[5px] rounded-full"
@@ -278,7 +290,7 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
                   style={{ backgroundColor: urgencyTextColor }}
                 />
               )}
-              {!isAssigned && (
+              {!isAssigned && !isMarketplace && (
                 <span
                   className="text-[8px] font-bold uppercase tracking-[1.5px]"
                   style={{ color: urgencyTextColor }}
@@ -286,9 +298,32 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
                   {t('ddDeadline')}
                 </span>
               )}
+              {isMarketplace && (
+                <span
+                  className="text-[8px] font-bold uppercase tracking-[1.5px]"
+                  style={{ color: urgencyTextColor }}
+                >
+                  {t('pricingNegotiable')}
+                </span>
+              )}
             </div>
 
-            {isAssigned ? (
+            {isMarketplace ? (
+              <span
+                className="flex items-center gap-1.5 text-[14px] font-extrabold"
+                style={{ color: urgencyTextColor }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+                {(deal.interest_count ?? 0) > 0
+                  ? t('interested', { count: deal.interest_count ?? 0 })
+                  : t('beTheFirstInterested')}
+              </span>
+            ) : isAssigned ? (
               <span
                 className="flex items-center gap-1.5 text-[18px] font-extrabold"
                 style={{ color: urgencyTextColor }}

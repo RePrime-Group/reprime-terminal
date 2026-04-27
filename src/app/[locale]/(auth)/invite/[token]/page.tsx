@@ -142,15 +142,15 @@ export default function InviteRegistrationPage() {
         return;
       }
 
-      // Redirect: employees to admin, team members straight into the portal
-      // (the "founding member" welcome page is only for primary investors),
-      // and primary investors to the welcome page.
+      // Redirect: employees to admin, investors (primary or team members)
+      // straight into the NDA/KYC onboarding flow. The portal layout gate
+      // also enforces this, but routing here directly skips a needless hop.
+      // The /welcome (founding member) page is no longer auto-shown — the
+      // existing OnboardingOverlay walkthrough fires once they reach /portal.
       if (validation.role === 'employee') {
         window.location.href = `/${locale}/admin`;
-      } else if (validation.parent_investor_id) {
-        window.location.href = `/${locale}/portal`;
       } else {
-        window.location.href = `/${locale}/welcome`;
+        window.location.href = `/${locale}/onboarding/nda`;
       }
     } catch (err) {
       console.error('invite submit failed:', err);

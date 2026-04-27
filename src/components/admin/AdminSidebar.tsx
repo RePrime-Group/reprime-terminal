@@ -63,6 +63,19 @@ const navItems = [
     ),
   },
   {
+    labelKey: 'sidebar.marketplaceInterest' as const,
+    href: '/admin/marketplace-interest',
+    ownerOnly: true,
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M14 17v-1.5a3 3 0 00-3-3H4.5a3 3 0 00-3 3V17" stroke="#0E3470" strokeWidth="1.5" strokeLinecap="round" />
+        <circle cx="7.75" cy="6" r="3" stroke="#0E3470" strokeWidth="1.5" />
+        <path d="M18.5 17v-1.5a3 3 0 00-2.25-2.9" stroke="#0E3470" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M13.25 3.1a3 3 0 010 5.8" stroke="#0E3470" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
     labelKey: 'sidebar.teamRequests' as const,
     href: '/admin/team-requests',
     ownerOnly: true,

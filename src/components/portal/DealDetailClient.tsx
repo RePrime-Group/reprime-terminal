@@ -14,6 +14,7 @@ import NDAModal from '@/components/portal/NDAModal';
 import DealNotepad from '@/components/portal/DealNotepad';
 import PhoneConfirmModal from '@/components/portal/PhoneConfirmModal';
 import StructureCommitModal, { type CommitStructure } from '@/components/portal/StructureCommitModal';
+import MarketplaceInterestForm from '@/components/portal/MarketplaceInterestForm';
 import DataRoomTab from '@/components/portal/DataRoomTab';
 import RentRollTab from '@/components/portal/RentRollTab';
 import CapExTab from '@/components/portal/CapExTab';
@@ -69,6 +70,14 @@ interface DealDetailClientProps {
   globalFeeDefaults?: FeeDefaults;
   resolvedDealFees?: FeeDefaults;
   resolvedInvestorTerms?: FeeDefaults;
+  /** Marketplace deals only — count of investors who have expressed interest. */
+  marketplaceInterestCount?: number;
+  /** Current investor's existing marketplace interest row, if any. */
+  myMarketplaceInterest?: {
+    interest_type: 'at_asking' | 'custom_price';
+    target_price: number | null;
+    notes: string | null;
+  } | null;
 }
 
 type TabKey =
@@ -1837,6 +1846,37 @@ function MeetingScheduler({
   );
 }
 
+/* ---------- Marketplace Banner ---------- */
+
+function MarketplaceBanner({ interestCount }: { interestCount: number }) {
+  const t = useTranslations('portal.marketplace');
+  return (
+    <div className="bg-gradient-to-r from-[#0E7490] via-[#0F8FA8] to-[#0E7490] text-white">
+      <div className="max-w-[1600px] mx-auto px-4 md:px-8 py-3 md:py-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5">
+        <div className="flex items-center gap-3">
+          <span className="bg-white/15 backdrop-blur-sm text-white text-[10px] font-bold tracking-[2px] uppercase px-2.5 py-1 rounded">
+            {t('marketplaceBannerTitle')}
+          </span>
+          <span className="text-[12px] md:text-[13px] font-medium text-white/90">
+            {t('marketplaceBannerDesc')}
+          </span>
+        </div>
+        <div className="text-[12px] font-semibold text-white/80 flex items-center gap-1.5">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+          {interestCount > 0
+            ? `${interestCount} ${interestCount === 1 ? 'investor' : 'investors'} interested`
+            : 'No interest yet — be the first'}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Main Component
 // ---------------------------------------------------------------------------
@@ -1868,7 +1908,10 @@ export default function DealDetailClient({
   globalFeeDefaults = REPRIME_STANDARD_FEES,
   resolvedDealFees,
   resolvedInvestorTerms,
+  marketplaceInterestCount = 0,
+  myMarketplaceInterest = null,
 }: DealDetailClientProps) {
+  const isMarketplaceDeal = deal.status === 'marketplace';
   const effectiveDealFees: FeeDefaults = resolvedDealFees ?? globalFeeDefaults;
   const effectiveInvestorTerms: FeeDefaults = resolvedInvestorTerms ?? globalFeeDefaults;
   const formatFeePct = (v: number): string =>
@@ -2328,8 +2371,9 @@ export default function DealDetailClient({
                 initialUpdatedAt={userNote?.updated_at ?? undefined}
               />
             )}
-            {/* Express Interest button — replaced by "Deal Assigned" for assigned deals */}
-            {deal.status === 'assigned' ? (
+            {/* Express Interest button — replaced by "Deal Assigned" for assigned deals.
+                Marketplace deals use the MarketplaceInterestForm card instead. */}
+            {isMarketplaceDeal ? null : deal.status === 'assigned' ? (
               <span className="px-3 md:px-5 py-2 bg-[#FDF8ED] border border-[#BC9C45]/40 text-[#BC9C45] text-[11px] md:text-[12px] font-semibold rounded-lg flex items-center gap-1.5">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8l4 4 6-7"/></svg>
                 <span className="hidden sm:inline">{t('dealAssigned')}</span>
@@ -2386,6 +2430,11 @@ export default function DealDetailClient({
           </div>
         </div>
       </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* MARKETPLACE BANNER — only on marketplace deals                     */}
+      {/* ------------------------------------------------------------------ */}
+      {isMarketplaceDeal && <MarketplaceBanner interestCount={marketplaceInterestCount} />}
 
       {/* ------------------------------------------------------------------ */}
       {/* PAGE TEXTURE CONTENT AREA                                          */}
@@ -2978,8 +3027,8 @@ export default function DealDetailClient({
                 </div>
               </FadeInOnScroll>
 
-              {/* Pipeline Progress Tracker */}
-              {stageProgress && currentStage && (
+              {/* Pipeline Progress Tracker — hidden for marketplace deals (no LOI yet). */}
+              {!isMarketplaceDeal && stageProgress && currentStage && (
                 <FadeInOnScroll delay={0.3}>
                   <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 mt-3 rp-card-shadow">
                     <div className="flex items-center justify-between mb-3">
@@ -3069,6 +3118,15 @@ export default function DealDetailClient({
 
             {/* Right Column (Sidebar) */}
             <div className="space-y-3">
+              {/* Marketplace interest form — only on marketplace deals */}
+              {isMarketplaceDeal && !previewMode && (
+                <MarketplaceInterestForm
+                  dealId={deal.id}
+                  askingPrice={deal.purchase_price}
+                  initialInterest={myMarketplaceInterest}
+                />
+              )}
+
               {/* Property Details */}
               <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 rp-card-shadow">
                 <h3 className="text-[15px] font-semibold text-[#0E3470] mb-3">

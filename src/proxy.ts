@@ -84,10 +84,10 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Fetch user role
+  // Fetch user role + tier
   const { data: terminalUser } = await supabase
     .from('terminal_users')
-    .select('role')
+    .select('role, access_tier')
     .eq('id', user.id)
     .single();
 
@@ -97,6 +97,7 @@ export async function proxy(request: NextRequest) {
   }
 
   const role = terminalUser.role;
+  const accessTier = terminalUser.access_tier as 'investor' | 'marketplace_only' | null;
   const locale = getLocale(pathname);
 
   // Admin route protection
@@ -114,6 +115,26 @@ export async function proxy(request: NextRequest) {
   if (pathWithoutLocale.startsWith('/portal')) {
     if (role !== 'investor') {
       return NextResponse.redirect(new URL(`/${locale}/admin`, request.url));
+    }
+
+    // Marketplace-only investors: lock down everything except Marketplace,
+    // Settings, Profile, and individual marketplace deal detail pages.
+    if (accessTier === 'marketplace_only') {
+      const allowedPrefixes = ['/portal/marketplace', '/portal/settings', '/portal/profile'];
+      const dealMatch = pathWithoutLocale.match(/^\/portal\/deals\/([^/]+)/);
+      if (dealMatch) {
+        const dealId = dealMatch[1];
+        const { data: deal } = await supabase
+          .from('terminal_deals')
+          .select('status')
+          .eq('id', dealId)
+          .maybeSingle();
+        if (!deal || deal.status !== 'marketplace') {
+          return NextResponse.redirect(new URL(`/${locale}/portal/marketplace`, request.url));
+        }
+      } else if (!allowedPrefixes.some((p) => pathWithoutLocale.startsWith(p))) {
+        return NextResponse.redirect(new URL(`/${locale}/portal/marketplace`, request.url));
+      }
     }
   }
 

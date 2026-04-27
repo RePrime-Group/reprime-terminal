@@ -19,7 +19,18 @@ interface InvestorRow {
   parent_investor_id: string | null;
   parent_name: string | null;
   parent_inactive: boolean;
+  nda_signed: boolean;
+  kyc_status: 'none' | 'partial' | 'pending' | 'approved' | 'rejected';
+  access_tier: 'investor' | 'marketplace_only';
 }
+
+const KYC_BADGE: Record<InvestorRow['kyc_status'], { label: string; cls: string }> = {
+  none: { label: '—', cls: 'text-rp-gray-500 bg-rp-gray-100' },
+  partial: { label: 'Partial', cls: 'text-[#92400E] bg-[#FEF3C7] border border-[#FDE68A]' },
+  pending: { label: 'Pending', cls: 'text-[#9F580B] bg-[#FFF7ED] border border-[#FED7AA]' },
+  approved: { label: 'Approved', cls: 'text-[#166534] bg-[#DCFCE7] border border-[#BBF7D0]' },
+  rejected: { label: 'Rejected', cls: 'text-[#991B1B] bg-[#FEE2E2] border border-[#FECACA]' },
+};
 
 interface EmployeeRow {
   id: string;
@@ -46,6 +57,8 @@ type Tab = 'investors' | 'employees' | 'invitations';
 type InviteFilter = 'all' | 'pending' | 'accepted' | 'expired';
 type Role = 'owner' | 'employee' | 'investor';
 
+type TierFilter = 'all' | 'investor' | 'marketplace_only';
+
 interface InvestorListClientProps {
   investors: InvestorRow[];
   investorTotal: number;
@@ -63,6 +76,7 @@ interface InvestorListClientProps {
   pageSize: number;
   currentUserRole: Role | null;
   currentUserId: string | null;
+  tierFilter: TierFilter;
 }
 
 function formatDate(dateStr: string): string {
@@ -149,6 +163,7 @@ export default function InvestorListClient({
   pageSize,
   currentUserRole,
   currentUserId,
+  tierFilter,
 }: InvestorListClientProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -159,6 +174,9 @@ export default function InvestorListClient({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [bulkSelected, setBulkSelected] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [tierBusy, setTierBusy] = useState<string | null>(null);
 
   const filterLabels: Record<InviteFilter, string> = {
     all: t('allInvitations'),
@@ -196,6 +214,78 @@ export default function InvestorListClient({
 
   const handleEmployeePage = (p: number) => {
     updateParams({ ep: String(p) });
+  };
+
+  const handleTierFilter = (value: TierFilter) => {
+    // Reset to first page on filter change so the new filter doesn't land on
+    // a page that no longer exists.
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', 'investors');
+    params.set('ip', '1');
+    if (value === 'all') params.delete('tier');
+    else params.set('tier', value);
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const handleTierChange = async (investorId: string, newTier: 'investor' | 'marketplace_only') => {
+    setTierBusy(investorId);
+    try {
+      const res = await fetch(`/api/admin/investors/${investorId}/set-tier`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ access_tier: newTier }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        alert(body?.error ?? 'Failed to change tier.');
+        return;
+      }
+      router.refresh();
+    } finally {
+      setTierBusy(null);
+    }
+  };
+
+  const toggleBulk = (id: string) => {
+    setBulkSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleBulkAll = () => {
+    if (bulkSelected.size === investors.length && investors.length > 0) {
+      setBulkSelected(new Set());
+    } else {
+      setBulkSelected(new Set(investors.map((i) => i.id)));
+    }
+  };
+
+  const handleBulkTier = async (newTier: 'investor' | 'marketplace_only') => {
+    if (bulkSelected.size === 0 || bulkBusy) return;
+    const ids = Array.from(bulkSelected);
+    if (!confirm(`Change tier to "${newTier === 'investor' ? 'Full Investor' : 'Marketplace Only'}" for ${ids.length} investor(s)?`)) {
+      return;
+    }
+    setBulkBusy(true);
+    try {
+      const res = await fetch('/api/admin/investors/bulk-tier', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids, access_tier: newTier }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        alert(body?.error ?? 'Failed to update tier.');
+        return;
+      }
+      setBulkSelected(new Set());
+      router.refresh();
+    } finally {
+      setBulkBusy(false);
+    }
   };
 
   const handleInvitationPage = (p: number) => {
@@ -275,15 +365,67 @@ export default function InvestorListClient({
             <p className="text-rp-gray-400 text-xs">{t('inviteFirst')}</p>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl border border-rp-gray-200 overflow-hidden">
+          <div className="space-y-3">
+            {/* Tier filter + bulk actions */}
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-semibold text-rp-gray-500 uppercase tracking-wider">Tier</span>
+                <select
+                  value={tierFilter}
+                  onChange={(e) => handleTierFilter(e.target.value as TierFilter)}
+                  className="text-[12px] font-medium border border-rp-gray-200 rounded-md px-2 py-1.5 text-rp-navy bg-white"
+                >
+                  <option value="all">All investors</option>
+                  <option value="investor">Full investors</option>
+                  <option value="marketplace_only">Marketplace only</option>
+                </select>
+              </div>
+              {bulkSelected.size > 0 && (
+                <div className="flex items-center gap-2 ml-auto">
+                  <span className="text-[12px] text-rp-gray-500">
+                    {bulkSelected.size} selected
+                  </span>
+                  <button
+                    onClick={() => handleBulkTier('investor')}
+                    disabled={bulkBusy}
+                    className="px-3 py-1.5 rounded-md text-[12px] font-semibold text-white bg-[#0E3470] hover:bg-[#0B2A5C] disabled:opacity-50"
+                  >
+                    {bulkBusy ? 'Updating…' : 'Make Full Investor'}
+                  </button>
+                  <button
+                    onClick={() => handleBulkTier('marketplace_only')}
+                    disabled={bulkBusy}
+                    className="px-3 py-1.5 rounded-md text-[12px] font-semibold text-[#0E7490] border border-[#0E7490]/40 hover:bg-[#ECFDFD] disabled:opacity-50"
+                  >
+                    {bulkBusy ? 'Updating…' : 'Make Marketplace Only'}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="bg-white rounded-2xl border border-rp-gray-200 overflow-hidden">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-rp-gray-200">
+                  <th className="px-3 py-3 w-8">
+                    <input
+                      type="checkbox"
+                      checked={bulkSelected.size === investors.length && investors.length > 0}
+                      ref={(el) => {
+                        if (el) el.indeterminate = bulkSelected.size > 0 && bulkSelected.size < investors.length;
+                      }}
+                      onChange={toggleBulkAll}
+                      aria-label="Select all investors on this page"
+                    />
+                  </th>
                   <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('name')}</th>
                   <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('email')}</th>
+                  <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">Tier</th>
                   <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('company')}</th>
                   <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('joined')}</th>
                   <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('lastActive')}</th>
+                  <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">NDA</th>
+                  <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">KYC</th>
                   <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('dealsViewed')}</th>
                   <th className="text-right text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{tc('actions')}</th>
                 </tr>
@@ -297,6 +439,14 @@ export default function InvestorListClient({
                       investor.id === selectedId ? 'bg-rp-gold/5' : 'hover:bg-rp-gray-100'
                     } ${!investor.is_active ? 'bg-rp-gray-50' : ''}`}
                   >
+                    <td className="px-3 py-3.5 w-8" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={bulkSelected.has(investor.id)}
+                        onChange={() => toggleBulk(investor.id)}
+                        aria-label={`Select ${investor.full_name}`}
+                      />
+                    </td>
                     <td className="px-5 py-3.5 text-sm font-medium text-rp-navy">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className={!investor.is_active ? 'line-through text-rp-gray-400' : ''}>
@@ -323,12 +473,49 @@ export default function InvestorListClient({
                       </div>
                     </td>
                     <td className="px-5 py-3.5 text-sm text-rp-gray-600">{investor.email}</td>
+                    <td className="px-5 py-3.5 text-sm" onClick={(e) => e.stopPropagation()}>
+                      <select
+                        value={investor.access_tier}
+                        onChange={(e) => handleTierChange(investor.id, e.target.value as 'investor' | 'marketplace_only')}
+                        disabled={tierBusy === investor.id || currentUserRole === null}
+                        className="text-[12px] font-medium border border-rp-gray-200 rounded-md px-2 py-1 text-rp-navy bg-white disabled:opacity-50"
+                      >
+                        <option value="investor">Full Investor</option>
+                        <option value="marketplace_only">Marketplace Only</option>
+                      </select>
+                    </td>
                     <td className="px-5 py-3.5 text-sm text-rp-gray-600">{investor.company_name ?? '\u2014'}</td>
                     <td className="px-5 py-3.5 text-sm text-rp-gray-600">{formatDate(investor.created_at)}</td>
                     <td className="px-5 py-3.5 text-sm text-rp-gray-600">{formatRelativeTime(investor.last_active_at, t)}</td>
+                    <td className="px-5 py-3.5 text-sm">
+                      {investor.nda_signed ? (
+                        <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#166534] bg-[#DCFCE7] border border-[#BBF7D0] rounded px-1.5 py-0.5">
+                          Signed
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-rp-gray-500 bg-rp-gray-100 rounded px-1.5 py-0.5">
+                          —
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-5 py-3.5 text-sm">
+                      <span
+                        className={`text-[10px] font-bold uppercase tracking-[0.1em] rounded px-1.5 py-0.5 ${KYC_BADGE[investor.kyc_status].cls}`}
+                      >
+                        {KYC_BADGE[investor.kyc_status].label}
+                      </span>
+                    </td>
                     <td className="px-5 py-3.5 text-sm text-rp-gray-600">{investor.deals_viewed}</td>
                     <td className="px-5 py-3.5 text-right text-sm" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-3">
+                        {investor.kyc_status !== 'none' && (
+                          <Link
+                            href={`/${locale}/admin/investors/${investor.id}/kyc`}
+                            className="text-xs font-semibold text-[#0E3470] hover:underline"
+                          >
+                            Review KYC
+                          </Link>
+                        )}
                         {currentUserRole === 'owner' && investor.id !== currentUserId && (
                           <ChangeRoleButton
                             userId={investor.id}
@@ -354,6 +541,7 @@ export default function InvestorListClient({
               </tbody>
             </table>
             <Pagination page={investorPage} totalPages={investorTotalPages} onPageChange={handleInvestorPage} labels={{ page: tc('page'), of: tc('of'), previous: tc('previous'), next: tc('next') }} />
+          </div>
           </div>
         )
       )}
