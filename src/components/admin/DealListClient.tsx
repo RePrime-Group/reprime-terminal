@@ -16,6 +16,7 @@ interface DealListClientProps {
 const STATUS_PILL_STYLES: Record<DealStatus, string> = {
   draft: 'bg-[#F7F8FA] text-[#4B5563] border border-[#EEF0F4]',
   coming_soon: 'bg-[#0E3470]/[0.06] text-[#0E3470] border border-[#0E3470]/[0.12]',
+  marketplace: 'bg-[#ECFDFD] text-[#0E7490] border border-[#0E7490]/20',
   loi_signed: 'bg-[#BC9C45]/10 text-[#BC9C45] border border-[#BC9C45]/20',
   published: 'bg-[#ECFDF5] text-[#0B8A4D] border border-[#A7F3D0]',
   under_review: 'bg-[#FFFBEB] text-[#D97706] border border-[#FDE68A]',
