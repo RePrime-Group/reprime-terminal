@@ -45,10 +45,18 @@ export default async function AdminMarketplaceInterestPage({ params, searchParam
     .from('marketplace_interest')
     .select('deal_id, terminal_deals!deal_id(name, city, state)')
     .order('created_at', { ascending: false });
-  const dealOptionsMap = new Map<string, { name: string; city: string; state: string }>();
-  for (const row of dealsWithInterest ?? []) {
-    const did = row.deal_id as string;
-    const d = (row as { terminal_deals?: { name: string; city: string; state: string } | null }).terminal_deals;
+
+  // supabase-js's generated types treat embedded selects as arrays even for
+  // many-to-one joins; coerce through `unknown` and tolerate either shape.
+  type DealJoin = { name: string; city: string; state: string };
+  const dealOptionsMap = new Map<string, DealJoin>();
+  for (const row of (dealsWithInterest ?? []) as unknown as Array<{
+    deal_id: string;
+    terminal_deals: DealJoin | DealJoin[] | null;
+  }>) {
+    const did = row.deal_id;
+    const raw = row.terminal_deals;
+    const d: DealJoin | null = Array.isArray(raw) ? raw[0] ?? null : raw;
     if (did && d && !dealOptionsMap.has(did)) dealOptionsMap.set(did, d);
   }
   const dealOptions = Array.from(dealOptionsMap.entries()).map(([id, d]) => ({
@@ -78,6 +86,8 @@ export default async function AdminMarketplaceInterestPage({ params, searchParam
 
   const { data: rows, count: filteredTotal } = await query.range(from, to);
 
+  type UserJoin = { full_name: string; email: string; company_name: string | null };
+  type DealJoinFull = { name: string; city: string; state: string; purchase_price: string | null; status: string };
   type Row = {
     id: string;
     deal_id: string;
@@ -86,27 +96,31 @@ export default async function AdminMarketplaceInterestPage({ params, searchParam
     target_price: number | null;
     notes: string | null;
     created_at: string;
-    terminal_users: { full_name: string; email: string; company_name: string | null } | null;
-    terminal_deals: { name: string; city: string; state: string; purchase_price: string | null; status: string } | null;
+    terminal_users: UserJoin | UserJoin[] | null;
+    terminal_deals: DealJoinFull | DealJoinFull[] | null;
   };
+  const pick = <T,>(v: T | T[] | null | undefined): T | null =>
+    v == null ? null : Array.isArray(v) ? v[0] ?? null : v;
 
-  const flat = ((rows ?? []) as unknown as Row[]).map((r) => ({
+  const flat = ((rows ?? []) as unknown as Row[]).map((r) => {
+    const u = pick(r.terminal_users);
+    const d = pick(r.terminal_deals);
+    return {
     id: r.id,
     deal_id: r.deal_id,
-    deal_name: r.terminal_deals?.name ?? 'Unknown',
-    deal_location: r.terminal_deals
-      ? `${r.terminal_deals.city}, ${r.terminal_deals.state}`
-      : '',
-    deal_status: r.terminal_deals?.status ?? null,
-    asking_price: r.terminal_deals?.purchase_price ?? null,
-    investor_name: r.terminal_users?.full_name ?? 'Unknown',
-    investor_email: r.terminal_users?.email ?? '',
-    investor_company: r.terminal_users?.company_name ?? null,
+    deal_name: d?.name ?? 'Unknown',
+    deal_location: d ? `${d.city}, ${d.state}` : '',
+    deal_status: d?.status ?? null,
+    asking_price: d?.purchase_price ?? null,
+    investor_name: u?.full_name ?? 'Unknown',
+    investor_email: u?.email ?? '',
+    investor_company: u?.company_name ?? null,
     interest_type: r.interest_type as 'at_asking' | 'custom_price',
     target_price: r.target_price,
     notes: r.notes,
     created_at: r.created_at,
-  }));
+    };
+  });
 
   return (
     <MarketplaceInterestListClient
