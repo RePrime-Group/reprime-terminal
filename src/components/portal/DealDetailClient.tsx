@@ -968,11 +968,11 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-5">
       {/* Assumptions Panel */}
-      <div className="bg-white rounded-xl border border-[#EEF0F4] p-6 rp-card-shadow">
-        <div className="flex items-center justify-between mb-5 gap-3">
-          <h3 className="font-[family-name:var(--font-playfair)] text-[16px] font-semibold text-[#0E3470]">
+      <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 rp-card-shadow">
+        <div className="flex items-center justify-between mb-4 gap-3">
+          <h3 className="font-[family-name:var(--font-playfair)] text-[17px] font-semibold text-[#0E3470]">
             {t('assumptions')}
           </h3>
           <button
@@ -992,10 +992,10 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
         {sliders.map((inp, i) => {
           const pct = ((parseFloat(inp.val) - parseFloat(inp.min)) / (parseFloat(inp.max) - parseFloat(inp.min))) * 100;
           return (
-            <div key={i} className="mb-5">
+            <div key={i} className="mb-4">
               <div className="flex justify-between mb-1.5">
-                <span className="text-[11px] font-medium text-[#4B5563]">{inp.label}</span>
-                <span className="text-[13px] font-semibold text-[#0E3470] tabular-nums">
+                <span className="text-[13px] font-medium text-[#4B5563]">{inp.label}</span>
+                <span className="text-[14px] font-semibold text-[#0E3470] tabular-nums">
                   {inp.val}{inp.label.includes('years') ? '' : '%'}
                 </span>
               </div>
@@ -1014,33 +1014,33 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
             </div>
           );
         })}
-        <div className="mt-4 p-3.5 bg-[#FDF8ED] rounded-lg border border-[#ECD9A0]/30">
-          <div className="text-[9px] font-semibold text-[#BC9C45] uppercase tracking-[2px] mb-1">{t('basis')}</div>
-          <div className="text-[11px] text-[#4B5563]">
+        <div className="mt-3 p-3 bg-[#FDF8ED] rounded-lg border border-[#ECD9A0]/30">
+          <div className="text-[10px] font-semibold text-[#BC9C45] uppercase tracking-[2px] mb-1">{t('basis')}</div>
+          <div className="text-[12px] text-[#4B5563]">
             {t('purchase')} {fmt(mm.netBasis)} · {t('cap')} {mm.capRate.toFixed(2)}% · {t('noi')} {formatPrice(deal.noi)}
           </div>
         </div>
       </div>
 
       {/* Results Panel */}
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
         {/* Metric cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {results.map((m, i) => (
             <div
               key={i}
-              className="bg-white rounded-xl p-4 border border-[#EEF0F4] rp-card-shadow"
+              className="bg-white rounded-xl p-3.5 border border-[#EEF0F4] rp-card-shadow"
               style={{ borderLeft: `3px solid ${m.c}` }}
             >
-              <div className="text-[8px] font-bold text-[#9CA3AF] uppercase tracking-[2px]">{m.l}</div>
-              <div className="text-[20px] font-bold tabular-nums mt-1.5" style={{ color: m.c }}>{m.v}</div>
+              <div className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-[2px]">{m.l}</div>
+              <div className="text-[22px] font-bold tabular-nums mt-1.5" style={{ color: m.c }}>{m.v}</div>
             </div>
           ))}
         </div>
 
         {/* Cash flow chart */}
-        <div className="bg-white rounded-xl p-4 md:p-6 border border-[#EEF0F4] rp-card-shadow overflow-hidden">
-          <h4 className="text-[13px] font-semibold text-[#0E3470] mb-4">{t('projectedAnnualCashFlow')}</h4>
+        <div className="bg-white rounded-xl p-4 md:p-5 border border-[#EEF0F4] rp-card-shadow overflow-hidden">
+          <h4 className="text-[14px] font-semibold text-[#0E3470] mb-3">{t('projectedAnnualCashFlow')}</h4>
           {(() => {
             const chartH = 180;
             const cashFlows = mm.annualCashFlows;
@@ -1122,8 +1122,8 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
         </div>
 
         {/* Cap rate sensitivity */}
-        <div className="bg-white rounded-xl p-6 border border-[#EEF0F4] rp-card-shadow">
-          <h4 className="text-[13px] font-semibold text-[#0E3470] mb-3">{t('capRateSensitivity')}</h4>
+        <div className="bg-white rounded-xl p-5 border border-[#EEF0F4] rp-card-shadow">
+          <h4 className="text-[14px] font-semibold text-[#0E3470] mb-3">{t('capRateSensitivity')}</h4>
           <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
             {[6.0, 6.5, 7.0, 7.5, 8.0].map((cr) => {
               const ev = exitNOI / (cr / 100);
@@ -1135,8 +1135,8 @@ function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
                   className="text-center py-2.5 px-1 rounded-lg transition-all cursor-pointer hover:ring-2 hover:ring-[#BC9C45]/30"
                   style={{ background: isSel ? '#0E3470' : '#F7F8FA' }}
                 >
-                  <div className="text-[10px] font-bold" style={{ color: isSel ? '#D4A843' : '#9CA3AF' }}>{cr}%</div>
-                  <div className="text-[12px] font-bold mt-1 tabular-nums" style={{ color: isSel ? '#FFFFFF' : '#0E3470' }}>{fmt(ev)}</div>
+                  <div className="text-[11px] font-bold" style={{ color: isSel ? '#D4A843' : '#9CA3AF' }}>{cr}%</div>
+                  <div className="text-[13px] font-bold mt-1 tabular-nums" style={{ color: isSel ? '#FFFFFF' : '#0E3470' }}>{fmt(ev)}</div>
                 </button>
               );
             })}
@@ -2780,7 +2780,7 @@ export default function DealDetailClient({
                     }
                     setActiveTab(tab.key);
                   }}
-                  className={`relative px-5 py-3 text-[13px] font-medium transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
+                  className={`relative px-5 py-2.5 text-[18px] font-medium transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
                     disabled
                       ? 'text-[#9CA3AF] opacity-40 cursor-not-allowed'
                       : activeTab === tab.key
@@ -2814,14 +2814,14 @@ export default function DealDetailClient({
           className="transition-opacity duration-200"
           style={{ display: activeTab === 'overview' ? 'block' : 'none' }}
         >
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 lg:gap-8 mt-6 md:mt-8 px-4 md:px-8 pb-8 md:pb-10">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-5 lg:gap-6 mt-4 md:mt-5 px-4 md:px-8 pb-6 md:pb-8">
             {/* Left Column */}
-            <div className="space-y-6">
+            <div className="space-y-5">
               {/* Portfolio Address Cards — only for portfolios */}
               {deal.is_portfolio && addresses.length > 0 && (
                 <FadeInOnScroll delay={0}>
                   <div>
-                    <h3 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#0E3470] mb-4">
+                    <h3 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#0E3470] mb-3">
                       {t('portfolioProperties')}
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -2861,7 +2861,7 @@ export default function DealDetailClient({
                 deal.investment_highlights.length > 0 && (
                   <FadeInOnScroll delay={0}>
                     <div>
-                      <h3 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#0E3470] mb-4">
+                      <h3 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#0E3470] mb-3">
                         {t('investmentHighlights')}
                       </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -2886,7 +2886,7 @@ export default function DealDetailClient({
                                   <path d="M3 8l4 4 6-7" />
                                 </svg>
                               </div>
-                              <span className="text-sm text-[#374151] leading-relaxed">
+                              <span className="text-[15px] text-[#374151] leading-relaxed">
                                 {highlight}
                               </span>
                             </div>
@@ -2904,7 +2904,7 @@ export default function DealDetailClient({
                     <h3 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#0E3470] mb-3">
                       {t('acquisitionThesis')}
                     </h3>
-                    <p className="text-sm text-[#4B5563] leading-[1.8]">
+                    <p className="text-[15px] text-[#4B5563] leading-[1.7]">
                       {deal.acquisition_thesis}
                     </p>
                   </div>
@@ -2943,7 +2943,7 @@ export default function DealDetailClient({
               {/* Market Context - with emoji icons */}
               <FadeInOnScroll delay={0.3}>
                 <div>
-                  <h3 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#0E3470] mb-4">
+                  <h3 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#0E3470] mb-3">
                     {t('marketContext')}
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 md:gap-4">
@@ -2981,9 +2981,9 @@ export default function DealDetailClient({
               {/* Pipeline Progress Tracker */}
               {stageProgress && currentStage && (
                 <FadeInOnScroll delay={0.3}>
-                  <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 mt-4 rp-card-shadow">
+                  <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 mt-3 rp-card-shadow">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-semibold text-[#0E3470]">
+                      <h3 className="text-[15px] font-semibold text-[#0E3470]">
                         {t('dealProgress')}
                       </h3>
                       <span className="text-[12px] font-semibold text-[#0B8A4D] tabular-nums">
@@ -3068,10 +3068,10 @@ export default function DealDetailClient({
             </div>
 
             {/* Right Column (Sidebar) */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               {/* Property Details */}
-              <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 rp-card-shadow">
-                <h3 className="text-sm font-semibold text-[#0E3470] mb-4">
+              <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 rp-card-shadow">
+                <h3 className="text-[15px] font-semibold text-[#0E3470] mb-3">
                   {t('propertyDetails')}
                 </h3>
                 <div className="space-y-0">
@@ -3127,14 +3127,14 @@ export default function DealDetailClient({
                     return rows.map((row, idx) => (
                       <div
                         key={row.key}
-                        className={`flex justify-between gap-3 py-2.5 ${
+                        className={`flex justify-between gap-3 py-2 ${
                           idx % 2 === 0 ? 'bg-[#F7F8FA]' : ''
                         } px-2 rounded`}
                       >
                         <span className="data-label shrink-0">
                           {row.label}
                         </span>
-                        <span className="text-sm font-semibold text-[#0E3470] text-right break-words min-w-0">
+                        <span className="text-[14px] font-semibold text-[#0E3470] text-right break-words min-w-0">
                           {row.value ?? '--'}
                         </span>
                       </div>
@@ -3163,9 +3163,9 @@ export default function DealDetailClient({
                   bps >= 0 ? { color: '#0B8A4D', bg: 'rgba(11,138,77,0.08)' } : { color: '#C0392B', bg: 'rgba(192,57,43,0.08)' };
 
                 return (
-                  <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 rp-card-shadow">
-                    <h3 className="text-sm font-semibold text-[#0E3470] mb-4 flex items-center gap-2">
-                      <span className="text-[10px] font-bold tracking-[2px] uppercase text-[#BC9C45]">★</span>
+                  <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 rp-card-shadow">
+                    <h3 className="text-[15px] font-semibold text-[#0E3470] mb-3 flex items-center gap-2">
+                      <span className="text-[11px] font-bold tracking-[2px] uppercase text-[#BC9C45]">★</span>
                       {t('negotiationSummary')}
                     </h3>
                     <div className="space-y-1.5 mb-4">
@@ -3228,7 +3228,7 @@ export default function DealDetailClient({
 
               {/* Cap Rate Sparkline */}
               <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 rp-card-shadow">
-                <h4 className="text-sm font-semibold text-[#0E3470] mb-3">
+                <h4 className="text-[15px] font-semibold text-[#0E3470] mb-3">
                   {t('capRateTrend')}
                 </h4>
                 <svg viewBox="0 0 200 60" className="w-full h-14">
@@ -3371,7 +3371,7 @@ export default function DealDetailClient({
           className="transition-opacity duration-200"
           style={{ display: activeTab === 'financial-modeling' ? 'block' : 'none' }}
         >
-          <div className="mt-6 md:mt-8 px-4 md:px-8 pb-8 md:pb-10">
+          <div className="mt-4 md:mt-5 px-4 md:px-8 pb-6 md:pb-8">
             <FinancialModelingTab deal={deal} />
           </div>
         </div>
@@ -3381,25 +3381,25 @@ export default function DealDetailClient({
           className="transition-opacity duration-200"
           style={{ display: activeTab === 'deal-structure' ? 'block' : 'none' }}
         >
-          <div className="mt-6 md:mt-8 px-4 md:px-8 pb-8 md:pb-10">
+          <div className="mt-4 md:mt-5 px-4 md:px-8 pb-6 md:pb-8">
             {/* Full Financial Detail — Capital Stack, Waterfall, Financing, Comparison, Fees */}
             <DealStructureFinancials {...financialProps} />
 
             {deal.special_terms && deal.special_terms !== 'None' && (
               <FadeInOnScroll delay={0.05}>
-                <div className="mt-8 bg-[#FDF8ED] border-l-4 border-[#BC9C45] p-4 rounded-r-lg">
-                  <div className="text-[11px] font-semibold text-[#BC9C45] uppercase tracking-wider mb-1">
+                <div className="mt-6 bg-[#FDF8ED] border-l-4 border-[#BC9C45] p-4 rounded-r-lg">
+                  <div className="text-[12px] font-semibold text-[#BC9C45] uppercase tracking-wider mb-1">
                     {t('specialTerms')}
                   </div>
-                  <p className="text-sm text-[#4B5563]">{deal.special_terms}</p>
+                  <p className="text-[15px] text-[#4B5563]">{deal.special_terms}</p>
                 </div>
               </FadeInOnScroll>
             )}
 
-            <div className="mt-8" />
+            <div className="mt-6" />
 
             {/* Two option cards side by side */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {/* Option A: Assignment */}
               <FadeInOnScroll delay={0}>
                 <button
@@ -3408,14 +3408,14 @@ export default function DealDetailClient({
                     setStructurePhoneError(null);
                     setStructureModal('assignment');
                   }}
-                  className={`w-full h-full bg-white rounded-xl border-2 p-6 text-left cursor-pointer transition-all relative flex flex-col ${
+                  className={`w-full h-full bg-white rounded-xl border-2 p-5 text-left cursor-pointer transition-all relative flex flex-col ${
                     selectedStructure === 'assignment'
                       ? 'border-[#BC9C45] shadow-[0_0_0_3px_#FDF8ED,0_0_20px_rgba(188,156,69,0.15)]'
                       : 'border-[#EEF0F4] hover:border-[#D1D5DB]'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] font-[700] uppercase tracking-[2px] text-[#BC9C45]">
+                    <span className="text-[11px] font-[700] uppercase tracking-[2px] text-[#BC9C45]">
                       {t('optionA')}
                     </span>
                     {/* Assignment fee large number top-right */}
@@ -3423,10 +3423,10 @@ export default function DealDetailClient({
                       {formatFeePct(effectiveDealFees.assignmentFee)}
                     </span>
                   </div>
-                  <h3 className="font-[700] text-[#0E3470] text-[20px] mb-4">
+                  <h3 className="font-[700] text-[#0E3470] text-[20px] mb-3">
                     {t('assignment')}
                   </h3>
-                  <p className="text-sm text-[#6B7280] mb-4">
+                  <p className="text-[15px] text-[#6B7280] mb-3">
                     {t('assignmentDesc')}
                   </p>
                   <div className="mt-auto bg-[#ECFDF5] border border-[#A7F3D0] rounded-xl p-4">
@@ -3458,19 +3458,19 @@ export default function DealDetailClient({
                     setStructurePhoneError(null);
                     setStructureModal('gplp');
                   }}
-                  className={`w-full h-full bg-white rounded-xl border-2 p-6 text-left cursor-pointer transition-all flex flex-col ${
+                  className={`w-full h-full bg-white rounded-xl border-2 p-5 text-left cursor-pointer transition-all flex flex-col ${
                     selectedStructure === 'gplp'
                       ? 'border-[#BC9C45] shadow-[0_0_0_3px_#FDF8ED,0_0_20px_rgba(188,156,69,0.15)]'
                       : 'border-[#EEF0F4] hover:border-[#D1D5DB]'
                   }`}
                 >
-                  <span className="text-[10px] font-[700] uppercase tracking-[2px] text-[#BC9C45] block mb-2">
+                  <span className="text-[11px] font-[700] uppercase tracking-[2px] text-[#BC9C45] block mb-2">
                     {t('optionB')}
                   </span>
-                  <h3 className="font-[700] text-[#0E3470] text-[20px] mb-4">
+                  <h3 className="font-[700] text-[#0E3470] text-[20px] mb-3">
                     {t('gpLpPartnership')}
                   </h3>
-                  <div className="space-y-2 mb-4">
+                  <div className="space-y-1.5 mb-3">
                     {[
                       { label: t('acquisitionFee'), value: `${formatFeePct(effectiveDealFees.acqFee)} ($${Math.round(feeAdjustedMetrics.acqFeeDollar).toLocaleString()})` },
                       { label: t('assetMgmtFee'), value: `${formatFeePct(effectiveDealFees.assetMgmtFee)} ($${Math.round(feeAdjustedMetrics.assetMgmtFeeDollar).toLocaleString()}/yr)` },
@@ -3484,7 +3484,7 @@ export default function DealDetailClient({
                         <span className="data-label">
                           {row.label}
                         </span>
-                        <span className="text-sm font-semibold text-[#0E3470]">
+                        <span className="text-[15px] font-semibold text-[#0E3470]">
                           {row.value ?? '--'}
                         </span>
                       </div>

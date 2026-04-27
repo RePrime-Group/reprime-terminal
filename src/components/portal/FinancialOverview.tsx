@@ -24,7 +24,7 @@ interface FinancialProps {
 export function OverviewFinancials({ inputs, metrics, traditional }: FinancialProps) {
   const t = useTranslations('portal.financial');
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* Capital Stack */}
       <CapitalStackVisual inputs={inputs} metrics={metrics} isEstimated={false} />
 
@@ -34,42 +34,42 @@ export function OverviewFinancials({ inputs, metrics, traditional }: FinancialPr
       )}
 
       {/* Quick Cash Flow Summary — every deduction visible */}
-      <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 rp-card-shadow">
-        <h4 className="text-[13px] font-semibold text-[#0E3470] mb-3">{t('cashFlowSummary')}</h4>
+      <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 rp-card-shadow">
+        <h4 className="text-[14px] font-semibold text-[#0E3470] mb-2">{t('cashFlowSummary')}</h4>
         <div className="space-y-0">
-          <div className="flex justify-between py-2 border-b border-[#EEF0F4]">
-            <span className="text-[13px] text-[#374151]">{t('noi')}</span>
-            <span className="text-[14px] font-bold text-[#0E3470] tabular-nums">{fmtFull(inputs.noi)}</span>
+          <div className="flex justify-between py-1.5 border-b border-[#EEF0F4]">
+            <span className="text-[14px] text-[#374151]">{t('noi')}</span>
+            <span className="text-[15px] font-bold text-[#0E3470] tabular-nums">{fmtFull(inputs.noi)}</span>
           </div>
-          <div className="flex justify-between py-2 border-b border-[#EEF0F4]">
-            <span className="text-[13px] text-[#6B7280]">− {t('capexReserves')}</span>
+          <div className="flex justify-between py-1.5 border-b border-[#EEF0F4]">
+            <span className="text-[14px] text-[#6B7280]">− {t('capexReserves')}</span>
             {metrics.capex > 0 ? (
-              <span className="text-[14px] font-semibold text-[#DC2626]/80 tabular-nums">{fmtFull(metrics.capex)}</span>
+              <span className="text-[15px] font-semibold text-[#DC2626]/80 tabular-nums">{fmtFull(metrics.capex)}</span>
             ) : (
-              <span className="text-[12px] font-medium text-[#6B7280] italic">Calculated at Closing*</span>
+              <span className="text-[13px] font-medium text-[#6B7280] italic">Calculated at Closing*</span>
             )}
           </div>
-          <div className="flex justify-between py-2 border-b border-[#EEF0F4]">
-            <span className="text-[13px] text-[#6B7280]">
+          <div className="flex justify-between py-1.5 border-b border-[#EEF0F4]">
+            <span className="text-[14px] text-[#6B7280]">
               − {metrics.ioPeriodMonths > 0 ? t('seniorDebtServiceIO') + '*' : t('seniorDebtService')}
             </span>
-            <span className="text-[14px] font-semibold text-[#DC2626]/80 tabular-nums">{fmtFull(metrics.headlineSeniorDS)}</span>
+            <span className="text-[15px] font-semibold text-[#DC2626]/80 tabular-nums">{fmtFull(metrics.headlineSeniorDS)}</span>
           </div>
           {metrics.mezzAmount > 0 && (
-            <div className="flex justify-between py-2 border-b border-[#EEF0F4]">
-              <span className="text-[13px] text-[#6B7280]">− {t('mezzIoPayment')}</span>
-              <span className="text-[14px] font-semibold text-[#DC2626]/80 tabular-nums">{fmtFull(metrics.annualMezzPayment)}</span>
+            <div className="flex justify-between py-1.5 border-b border-[#EEF0F4]">
+              <span className="text-[14px] text-[#6B7280]">− {t('mezzIoPayment')}</span>
+              <span className="text-[15px] font-semibold text-[#DC2626]/80 tabular-nums">{fmtFull(metrics.annualMezzPayment)}</span>
             </div>
           )}
           {inputs.assetMgmtFee > 0 && (
-            <div className="flex justify-between py-2 border-b border-[#EEF0F4]">
-              <span className="text-[13px] text-[#6B7280]">− {t('assetManagementFee')} ({pct(inputs.assetMgmtFee)})</span>
-              <span className="text-[14px] font-semibold text-[#DC2626]/80 tabular-nums">{fmtFull(metrics.assetMgmtFeeDollar)}</span>
+            <div className="flex justify-between py-1.5 border-b border-[#EEF0F4]">
+              <span className="text-[14px] text-[#6B7280]">− {t('assetManagementFee')} ({pct(inputs.assetMgmtFee)})</span>
+              <span className="text-[15px] font-semibold text-[#DC2626]/80 tabular-nums">{fmtFull(metrics.assetMgmtFeeDollar)}</span>
             </div>
           )}
-          <div className="flex justify-between py-3 border-t-2 border-[#0E3470] mt-1">
-            <span className="text-[13px] font-bold text-[#374151]">{t('distributableCashFlow')}</span>
-            <span className="text-[15px] font-bold tabular-nums" style={{ color: metrics.distributableCashFlow >= 0 ? '#0B8A4D' : '#DC2626' }}>
+          <div className="flex justify-between py-2.5 border-t-2 border-[#0E3470] mt-1">
+            <span className="text-[14px] font-bold text-[#374151]">{t('distributableCashFlow')}</span>
+            <span className="text-[16px] font-bold tabular-nums" style={{ color: metrics.distributableCashFlow >= 0 ? '#0B8A4D' : '#DC2626' }}>
               {fmtFull(metrics.distributableCashFlow)}
             </span>
           </div>
@@ -95,13 +95,13 @@ export function OverviewFinancials({ inputs, metrics, traditional }: FinancialPr
 export function DealStructureFinancials({ inputs, metrics, traditional, isEstimated, feeDisclosure }: FinancialProps) {
   const t = useTranslations('portal.financial');
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Capital Stack */}
       <CapitalStackVisual inputs={inputs} metrics={metrics} isEstimated={isEstimated} />
 
       {/* Cash Flow Waterfall — Full Detail */}
-      <div className="bg-white rounded-xl border border-[#EEF0F4] p-6 rp-card-shadow">
-        <h3 className="text-[15px] font-semibold text-[#0E3470] mb-4">{t('annualWaterfall')}</h3>
+      <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 rp-card-shadow">
+        <h3 className="text-[16px] font-semibold text-[#0E3470] mb-3">{t('annualWaterfall')}</h3>
         {([
           { label: t('noi'), value: inputs.noi, positive: true },
           // CapEx is always shown; when unset (=0), we display "Calculated at
@@ -117,22 +117,22 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
           ...(metrics.mezzAmount > 0 ? [{ label: t('mezzIoPayment'), value: -metrics.annualMezzPayment }] : []),
           ...(inputs.assetMgmtFee > 0 ? [{ label: t('assetManagementFee'), value: -metrics.assetMgmtFeeDollar }] : []),
         ] as Array<{ label: string; value: number; positive?: boolean; displayText?: string }>).map((row, i) => (
-          <div key={i} className={`flex justify-between items-center py-2.5 px-3 ${i % 2 === 0 ? 'bg-[#F7F8FA]' : 'bg-white'} rounded`}>
-            <span className={`text-[13px] ${row.positive ? 'text-[#374151] font-medium' : 'text-[#6B7280]'}`}>
+          <div key={i} className={`flex justify-between items-center py-2 px-3 ${i % 2 === 0 ? 'bg-[#F7F8FA]' : 'bg-white'} rounded`}>
+            <span className={`text-[14px] ${row.positive ? 'text-[#374151] font-medium' : 'text-[#6B7280]'}`}>
               {!row.positive && '−  '}{row.label}
             </span>
             {row.displayText ? (
-              <span className="text-[12px] font-medium text-[#6B7280] italic">{row.displayText}</span>
+              <span className="text-[13px] font-medium text-[#6B7280] italic">{row.displayText}</span>
             ) : (
-              <span className={`text-[14px] font-semibold tabular-nums text-right ${row.positive ? 'text-[#0E3470]' : 'text-[#DC2626]/80'}`}>
+              <span className={`text-[15px] font-semibold tabular-nums text-right ${row.positive ? 'text-[#0E3470]' : 'text-[#DC2626]/80'}`}>
                 {fmtFull(Math.abs(row.value))}
               </span>
             )}
           </div>
         ))}
-        <div className="flex justify-between items-center py-3 px-3 mt-1 border-t-2 border-[#0E3470] bg-[#F7F8FA] rounded-b">
-          <span className="text-[13px] font-bold text-[#374151]">{t('distributableCashFlow')}</span>
-          <span className={`text-[15px] font-bold tabular-nums ${metrics.distributableCashFlow >= 0 ? 'text-[#0B8A4D]' : 'text-[#DC2626]'}`}>
+        <div className="flex justify-between items-center py-2.5 px-3 mt-1 border-t-2 border-[#0E3470] bg-[#F7F8FA] rounded-b">
+          <span className="text-[14px] font-bold text-[#374151]">{t('distributableCashFlow')}</span>
+          <span className={`text-[16px] font-bold tabular-nums ${metrics.distributableCashFlow >= 0 ? 'text-[#0B8A4D]' : 'text-[#DC2626]'}`}>
             {fmtFull(metrics.distributableCashFlow)}
           </span>
         </div>
@@ -149,13 +149,13 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
       </div>
 
       {/* Financing Detail — 3 Blocks */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         {/* Block 1: Senior Debt */}
-        <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 rp-card-shadow">
-          <div className="flex items-center gap-2 mb-4">
+        <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 rp-card-shadow">
+          <div className="flex items-center gap-2 mb-3">
             <div className="w-3 h-3 rounded-sm bg-[#0E3470]" />
-            <h4 className="text-[14px] font-semibold text-[#0E3470]">{t('seniorDebt')}</h4>
-            {isEstimated && <span className="text-[13px] font-medium text-[#BC9C45]">— {t('estimated')}</span>}
+            <h4 className="text-[15px] font-semibold text-[#0E3470]">{t('seniorDebt')}</h4>
+            {isEstimated && <span className="text-[14px] font-medium text-[#BC9C45]">— {t('estimated')}</span>}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 md:gap-x-8 gap-y-1">
             {([
@@ -178,9 +178,9 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
                 metrics.lenderDSCR.toFixed(2) + 'x',
               ],
             ] as Array<[string, string]>).map(([l, v], i) => (
-              <div key={i} className="flex justify-between items-baseline gap-3 py-2 border-b border-[#EEF0F4] last:border-b-0">
-                <span className="text-[12px] text-[#6B7280]">{l}</span>
-                <span className="text-[12px] font-semibold text-[#0E3470] tabular-nums">{v}</span>
+              <div key={i} className="flex justify-between items-baseline gap-3 py-1.5 border-b border-[#EEF0F4] last:border-b-0">
+                <span className="text-[13px] text-[#6B7280]">{l}</span>
+                <span className="text-[13px] font-semibold text-[#0E3470] tabular-nums">{v}</span>
               </div>
             ))}
           </div>
@@ -188,10 +188,10 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
 
         {/* Block 2: Seller Mezzanine */}
         {metrics.mezzAmount > 0 && (
-          <div className="bg-white rounded-xl border border-[#BC9C45]/20 p-5 rp-card-shadow">
-            <div className="flex items-center gap-2 mb-4">
+          <div className="bg-white rounded-xl border border-[#BC9C45]/20 p-4 rp-card-shadow">
+            <div className="flex items-center gap-2 mb-3">
               <div className="w-3 h-3 rounded-sm bg-[#BC9C45]" />
-              <h4 className="text-[14px] font-semibold text-[#BC9C45]">{t('sellerMezzanine')}</h4>
+              <h4 className="text-[15px] font-semibold text-[#BC9C45]">{t('sellerMezzanine')}</h4>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 md:gap-x-8 gap-y-1">
               {[
@@ -202,9 +202,9 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
                 [t('annualPayment'), fmtFull(metrics.annualMezzPayment)],
                 [t('balloonAtMaturity'), fmtFull(metrics.mezzBalloon)],
               ].map(([l, v], i) => (
-                <div key={i} className="flex justify-between items-baseline gap-3 py-2 border-b border-[#EEF0F4] last:border-b-0">
-                  <span className="text-[12px] text-[#6B7280]">{l}</span>
-                  <span className="text-[12px] font-semibold text-[#BC9C45] tabular-nums">{v}</span>
+                <div key={i} className="flex justify-between items-baseline gap-3 py-1.5 border-b border-[#EEF0F4] last:border-b-0">
+                  <span className="text-[13px] text-[#6B7280]">{l}</span>
+                  <span className="text-[13px] font-semibold text-[#BC9C45] tabular-nums">{v}</span>
                 </div>
               ))}
             </div>
@@ -212,9 +212,9 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
         )}
 
         {/* Block 3: Combined Metrics */}
-        <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 rp-card-shadow">
-          <div className="flex items-center gap-2 mb-4">
-            <h4 className="text-[14px] font-semibold text-[#374151]">{t('combinedMetrics')}</h4>
+        <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 rp-card-shadow">
+          <div className="flex items-center gap-2 mb-3">
+            <h4 className="text-[15px] font-semibold text-[#374151]">{t('combinedMetrics')}</h4>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 md:gap-x-8 gap-y-1">
             {[
@@ -222,9 +222,9 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
               [t('totalLeverage'), pct(metrics.totalLeverage)],
               [t('totalAnnualDebtObligations'), fmtFull(metrics.headlineSeniorDS + metrics.annualMezzPayment)],
             ].map(([l, v], i) => (
-              <div key={i} className="flex justify-between items-baseline gap-3 py-2 border-b border-[#EEF0F4] last:border-b-0">
-                <span className="text-[12px] text-[#6B7280]">{l}</span>
-                <span className="text-[12px] font-bold text-[#0E3470] tabular-nums">{v}</span>
+              <div key={i} className="flex justify-between items-baseline gap-3 py-1.5 border-b border-[#EEF0F4] last:border-b-0">
+                <span className="text-[13px] text-[#6B7280]">{l}</span>
+                <span className="text-[13px] font-bold text-[#0E3470] tabular-nums">{v}</span>
               </div>
             ))}
           </div>
@@ -240,8 +240,8 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
           (per-deal override or global default); falls back to `inputs.*Fee`
           for backward compatibility. Dollars computed inline, independent
           of headline metrics (which zero fees). */}
-      <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 rp-card-shadow">
-        <h4 className="text-[14px] font-semibold text-[#0E3470] mb-3">{t('feeDisclosure')}</h4>
+      <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 rp-card-shadow">
+        <h4 className="text-[15px] font-semibold text-[#0E3470] mb-2">{t('feeDisclosure')}</h4>
         <div className="grid grid-cols-2 gap-x-4 md:gap-x-6 gap-y-1">
           {(() => {
             const assignment = feeDisclosure?.assignmentFee ?? inputs.assignmentFee;
@@ -257,9 +257,9 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
               [`${t('loanOrigination')} (${inputs.loanFeePoints} ${t('points')})`, fmtFull(metrics.loanAmount * inputs.loanFeePoints / 100)],
             ];
           })().map(([l, v], i) => (
-            <div key={i} className="flex justify-between py-1.5 border-b border-[#EEF0F4] last:border-b-0">
-              <span className="text-[11px] text-[#6B7280]">{l}</span>
-              <span className="text-[11px] font-medium text-[#374151] tabular-nums">{v}</span>
+            <div key={i} className="flex justify-between py-1 border-b border-[#EEF0F4] last:border-b-0">
+              <span className="text-[12px] text-[#6B7280]">{l}</span>
+              <span className="text-[12px] font-medium text-[#374151] tabular-nums">{v}</span>
             </div>
           ))}
         </div>
@@ -291,8 +291,8 @@ function CapitalStackVisual({ inputs, metrics, isEstimated }: { inputs: DealInpu
     : metrics.loanAmount + metrics.mezzAmount + metrics.netEquity;
 
   return (
-    <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 rp-card-shadow">
-      <h4 className="text-[14px] font-semibold text-[#0E3470] mb-4">{t('capitalStack')}</h4>
+    <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 rp-card-shadow">
+      <h4 className="text-[15px] font-semibold text-[#0E3470] mb-3">{t('capitalStack')}</h4>
       {/* Bar segments based on Net Basis (LTV structure) */}
       <div className="h-9 rounded-lg overflow-hidden flex mb-3">
         {seniorWidth > 0 && (
@@ -321,51 +321,51 @@ function CapitalStackVisual({ inputs, metrics, isEstimated }: { inputs: DealInpu
         <div className="flex justify-between items-center py-1.5 border-b border-[#EEF0F4]">
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-sm bg-[#0E3470]" />
-            <span className="text-[12px] text-[#374151]">{t('seniorDebt')}</span>
+            <span className="text-[13px] text-[#374151]">{t('seniorDebt')}</span>
             {isEstimated && <span className="text-[8px] text-[#D97706] bg-[#FFFBEB] px-1.5 py-0.5 rounded-full font-semibold">{t('est')}</span>}
           </div>
-          <span className="text-[13px] font-bold text-[#0E3470] tabular-nums">{fmtFull(metrics.loanAmount)}</span>
+          <span className="text-[14px] font-bold text-[#0E3470] tabular-nums">{fmtFull(metrics.loanAmount)}</span>
         </div>
         {metrics.mezzAmount > 0 && (
           <div className="flex justify-between items-center py-1.5 border-b border-[#EEF0F4]">
             <div className="flex items-center gap-2">
               <div className="w-2.5 h-2.5 rounded-sm bg-[#BC9C45]" />
-              <span className="text-[12px] text-[#374151]">{t('sellerMezzanine')}</span>
+              <span className="text-[13px] text-[#374151]">{t('sellerMezzanine')}</span>
             </div>
-            <span className="text-[13px] font-bold text-[#BC9C45] tabular-nums">{fmtFull(metrics.mezzAmount)}</span>
+            <span className="text-[14px] font-bold text-[#BC9C45] tabular-nums">{fmtFull(metrics.mezzAmount)}</span>
           </div>
         )}
         <div className="flex justify-between items-center py-1.5 border-b border-[#EEF0F4]">
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-sm bg-[#0B8A4D]" />
-            <span className="text-[12px] text-[#374151]">{t('investorEquity')}</span>
+            <span className="text-[13px] text-[#374151]">{t('investorEquity')}</span>
           </div>
-          <span className="text-[13px] font-bold text-[#0B8A4D] tabular-nums">{fullyFinanced ? '$0' : fmtFull(metrics.netEquity)}</span>
+          <span className="text-[14px] font-bold text-[#0B8A4D] tabular-nums">{fullyFinanced ? '$0' : fmtFull(metrics.netEquity)}</span>
         </div>
       </div>
       {/* Summary lines */}
       <div className="mt-3 pt-3 border-t border-[#EEF0F4] space-y-1">
-        <div className="flex justify-between items-center text-[12px]">
+        <div className="flex justify-between items-center text-[13px]">
           <span className="text-[#6B7280]">{tp('purchasePrice')}</span>
           <span className="font-semibold text-[#0E3470] tabular-nums">{fmtFull(pp)}</span>
         </div>
         {inputs.sellerCredit > 0 && (
           <>
-            <div className="flex justify-between items-center text-[12px]">
+            <div className="flex justify-between items-center text-[13px]">
               <span className="text-[#6B7280]">{'\u2212'} {t('sellerCreditAtClosing')}</span>
               <span className="font-semibold text-[#DC2626]/80 tabular-nums">({fmtFull(inputs.sellerCredit)})</span>
             </div>
-            <div className="flex justify-between items-center text-[12px]">
+            <div className="flex justify-between items-center text-[13px]">
               <span className="text-[#6B7280]">{t('netBasis')}</span>
               <span className="font-semibold text-[#0E3470] tabular-nums">{fmtFull(nb)}</span>
             </div>
           </>
         )}
-        <div className="flex justify-between items-center text-[12px]">
+        <div className="flex justify-between items-center text-[13px]">
           <span className="text-[#6B7280]">+ {metrics.closingCosts === 0 ? t('estClosingCosts') : t('closingCosts')}</span>
           <span className="font-semibold text-[#0E3470] tabular-nums">{metrics.closingCosts === 0 ? 'TBD*' : fmtFull(metrics.closingCosts)}</span>
         </div>
-        <div className="flex justify-between items-center text-[12px]">
+        <div className="flex justify-between items-center text-[13px]">
           <span className="text-[#6B7280]">{t('totalCapitalRequired')}</span>
           <span className="font-bold text-[#0E3470] tabular-nums">{fmtFull(totalCapital)}{metrics.closingCosts === 0 ? '+' : ''}</span>
         </div>
@@ -380,21 +380,21 @@ function CapitalStackVisual({ inputs, metrics, isEstimated }: { inputs: DealInpu
             <div className="text-[10px] font-bold text-[#6B7280] uppercase tracking-[1.5px]">
               {t('fundedBy')}
             </div>
-            <div className="flex justify-between items-center text-[12px]">
+            <div className="flex justify-between items-center text-[13px]">
               <span className="text-[#6B7280]">{t('seniorDebt')} ({Math.round(rawSeniorPct)}%)</span>
               <span className="font-semibold text-[#0E3470] tabular-nums">{fmtFull(metrics.loanAmount)}</span>
             </div>
             {metrics.mezzAmount > 0 && (
-              <div className="flex justify-between items-center text-[12px]">
+              <div className="flex justify-between items-center text-[13px]">
                 <span className="text-[#6B7280]">{t('sellerMezzanine')} ({Math.round(rawMezzPct)}%)</span>
                 <span className="font-semibold text-[#BC9C45] tabular-nums">{fmtFull(metrics.mezzAmount)}</span>
               </div>
             )}
-            <div className="flex justify-between items-center text-[12px]">
+            <div className="flex justify-between items-center text-[13px]">
               <span className="text-[#6B7280]">{t('totalFinancing')}</span>
               <span className="font-semibold text-[#0E3470] tabular-nums">{fmtFull(metrics.loanAmount + metrics.mezzAmount)}</span>
             </div>
-            <div className="flex justify-between items-center text-[12px]">
+            <div className="flex justify-between items-center text-[13px]">
               <span className="text-[#6B7280]">{t('investorEquity')}</span>
               <span className="font-bold text-[#0B8A4D] tabular-nums">$0</span>
             </div>
@@ -428,26 +428,26 @@ function ReturnComparison({ inputs, metrics, traditional }: { inputs: DealInputs
   ];
 
   return (
-    <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 rp-card-shadow">
-      <h4 className="text-[14px] font-semibold text-[#0E3470] mb-4">{t('returnComparison')}</h4>
+    <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 rp-card-shadow">
+      <h4 className="text-[15px] font-semibold text-[#0E3470] mb-3">{t('returnComparison')}</h4>
       <div className="grid grid-cols-3 gap-0 rounded-lg overflow-hidden border border-[#EEF0F4]">
-        <div className="p-3 bg-[#F7F8FA]" />
-        <div className="p-3 bg-[#F7F8FA] text-center border-l border-[#EEF0F4]">
-          <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-[1.5px]">{t('traditionalClose')}</span>
+        <div className="p-2.5 bg-[#F7F8FA]" />
+        <div className="p-2.5 bg-[#F7F8FA] text-center border-l border-[#EEF0F4]">
+          <span className="text-[11px] font-bold text-[#6B7280] uppercase tracking-[1.5px]">{t('traditionalClose')}</span>
         </div>
-        <div className="p-3 text-center border-l border-[#EEF0F4]" style={{ backgroundColor: 'rgba(188,156,69,0.08)' }}>
-          <span className="text-[10px] font-bold text-[#BC9C45] uppercase tracking-[1.5px]">{t('withSellerMezz')}</span>
+        <div className="p-2.5 text-center border-l border-[#EEF0F4]" style={{ backgroundColor: 'rgba(188,156,69,0.08)' }}>
+          <span className="text-[11px] font-bold text-[#BC9C45] uppercase tracking-[1.5px]">{t('withSellerMezz')}</span>
         </div>
         {rows.map((row, i) => (
           <div key={i} className="contents">
-            <div className="p-3 border-t border-[#EEF0F4] flex items-center bg-[#F7F8FA]">
-              <span className="text-[12px] font-medium text-[#6B7280]">{row.label}</span>
+            <div className="p-2.5 border-t border-[#EEF0F4] flex items-center bg-[#F7F8FA]">
+              <span className="text-[13px] font-medium text-[#6B7280]">{row.label}</span>
             </div>
-            <div className="p-3 border-t border-l border-[#EEF0F4] text-center">
-              <span className="text-[12px] text-[#374151] tabular-nums">{row.t}</span>
+            <div className="p-2.5 border-t border-l border-[#EEF0F4] text-center">
+              <span className="text-[13px] text-[#374151] tabular-nums">{row.t}</span>
             </div>
-            <div className={`p-3 border-t border-l border-[#EEF0F4] text-center ${row.greenIfBetter ? 'bg-[#ECFDF5]' : ''}`} style={{ backgroundColor: row.greenIfBetter ? undefined : 'rgba(188,156,69,0.04)' }}>
-              <span className={`text-[12px] tabular-nums ${row.bold ? 'font-bold' : 'font-semibold'} ${row.greenIfBetter ? 'text-[#0B8A4D]' : 'text-[#0E3470]'}`}>{row.m}</span>
+            <div className={`p-2.5 border-t border-l border-[#EEF0F4] text-center ${row.greenIfBetter ? 'bg-[#ECFDF5]' : ''}`} style={{ backgroundColor: row.greenIfBetter ? undefined : 'rgba(188,156,69,0.04)' }}>
+              <span className={`text-[13px] tabular-nums ${row.bold ? 'font-bold' : 'font-semibold'} ${row.greenIfBetter ? 'text-[#0B8A4D]' : 'text-[#0E3470]'}`}>{row.m}</span>
             </div>
           </div>
         ))}
