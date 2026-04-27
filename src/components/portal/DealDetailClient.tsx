@@ -3170,14 +3170,24 @@ export default function DealDetailClient({
                     </h3>
                     <div className="space-y-1.5 mb-4">
                       {hasArea && (
-                        <div className="flex justify-between items-center py-2 px-2 bg-[#F7F8FA] rounded">
-                          <span className="data-label">{t('areaCapRate')}</span>
-                          <span className="text-sm font-semibold text-[#0E3470] tabular-nums">{areaCap.toFixed(2)}%</span>
+                        <div className="flex justify-between items-center gap-3 py-2 px-2 bg-[#F7F8FA] rounded">
+                          <div className="flex flex-col min-w-0">
+                            <span className="data-label">{t('areaCapRate')}</span>
+                            <span className="text-[11px] font-medium text-[#6B7280] mt-0.5">
+                              {t('areaCapRateSource')}
+                            </span>
+                          </div>
+                          <span className="text-sm font-semibold text-[#0E3470] tabular-nums shrink-0">{areaCap.toFixed(2)}%</span>
                         </div>
                       )}
-                      <div className="flex justify-between items-center py-2 px-2 rounded">
-                        <span className="data-label">{t('askingCapRate')}</span>
-                        <span className="text-sm font-semibold text-[#0E3470] tabular-nums">{askingCap.toFixed(2)}%</span>
+                      <div className="flex justify-between items-center gap-3 py-2 px-2 rounded">
+                        <div className="flex flex-col min-w-0">
+                          <span className="data-label">{t('askingCapRate')}</span>
+                          <span className="text-[11px] font-medium text-[#6B7280] mt-0.5">
+                            {t('askingCapRateSource')}
+                          </span>
+                        </div>
+                        <span className="text-sm font-semibold text-[#0E3470] tabular-nums shrink-0">{askingCap.toFixed(2)}%</span>
                       </div>
                       <div className="flex justify-between items-center py-2 px-2 bg-[#FDF8ED] rounded border-l-[3px] border-[#BC9C45]">
                         <span className="text-[11px] font-semibold uppercase tracking-[1.5px] text-[#BC9C45]">{t('negotiatedCapRate')}</span>
