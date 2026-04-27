@@ -37,6 +37,7 @@ export const CRE_TERMS = [
 export const DEAL_STATUS_LABELS: Record<string, string> = {
   draft: 'Draft',
   coming_soon: 'Coming Soon',
+  marketplace: 'Marketplace',
   loi_signed: 'LOI Signed',
   published: 'Published',
   under_review: 'Under Review',
@@ -47,6 +48,7 @@ export const DEAL_STATUS_LABELS: Record<string, string> = {
 const ALL_DEAL_STATUSES = [
   'draft',
   'coming_soon',
+  'marketplace',
   'loi_signed',
   'published',
   'under_review',

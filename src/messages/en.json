@@ -110,6 +110,7 @@
       "users": "Users",
       "applications": "Applications",
       "commitments": "Commitments",
+      "marketplaceInterest": "Marketplace Interest",
       "teamRequests": "Team Requests",
       "activity": "Activity",
       "previewAsInvestor": "Preview as Investor",
@@ -553,6 +554,7 @@
     },
     "navbar": {
       "portfolio": "Portfolio",
+      "marketplace": "Marketplace",
       "compare": "Compare",
       "notifications": "Notifications",
       "markAllRead": "Mark all read",
@@ -651,7 +653,11 @@
       "countdownMin": "Min",
       "countdownSec": "Sec",
       "groupsCommitted": "{count} Groups Committed",
-      "groupCommitted": "{count} Group Committed"
+      "groupCommitted": "{count} Group Committed",
+      "marketplaceBadge": "MARKETPLACE",
+      "interested": "{count, plural, one {# Interested} other {# Interested}}",
+      "beTheFirstInterested": "Be the first to express interest",
+      "pricingNegotiable": "Pricing & terms under negotiation"
     },
     "dealDetail": {
       "overview": "Overview",
@@ -1080,6 +1086,9 @@
       "agreeText": "I have read and agree to the terms of this Non-Disclosure Agreement",
       "signing": "Signing...",
       "signAndAccess": "Sign & Access Data Room",
+      "signAndContinue": "Sign & Continue",
+      "onboardingTitle": "Sign Confidentiality Agreement",
+      "onboardingSubtitle": "Before accessing the Terminal, please review and sign the agreement below. This blanket agreement covers all current and future deals on the platform.",
       "fullNameRequired": "Full name is required.",
       "mustAgreeTerms": "You must agree to the NDA terms.",
       "ndaIntro": "This Non-Disclosure Agreement (\"Agreement\") is entered into as of {date} by and between RePrime Group, LLC (\"Disclosing Party\") and the undersigned recipient (\"Receiving Party\").",
@@ -1140,6 +1149,23 @@
       "underRenovation": "Under Renovation",
       "stabilized": "Stabilized",
       "closed": "Closed"
+    },
+    "marketplace": {
+      "title": "Marketplace",
+      "subtitle": "Early-stage opportunities — pricing and terms under negotiation",
+      "noDealsYet": "No marketplace deals are currently active. Check back soon for new opportunities.",
+      "interestSectionTitle": "MARKETPLACE INTEREST",
+      "iAmInterested": "I'm interested in this deal",
+      "atAskingPrice": "At asking price ({price})",
+      "atDifferentPrice": "At a different price",
+      "myTargetPrice": "My target price",
+      "notesOptional": "Notes (optional)",
+      "submitInterest": "Submit Interest",
+      "submitting": "Submitting…",
+      "interestSubmitted": "✓ Interest expressed",
+      "updateInterest": "Update Interest",
+      "marketplaceBannerTitle": "MARKETPLACE",
+      "marketplaceBannerDesc": "Pricing & terms under negotiation. Express your interest and pricing guidance below."
     },
     "marketIntel": {
       "marketCycle": "MARKET CYCLE",

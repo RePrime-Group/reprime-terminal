@@ -53,6 +53,8 @@ export interface DealCardData {
   has_positive_cash_flow?: boolean;
   note_content?: string | null;
   note_updated_at?: string | null;
+  /** Marketplace deals only — count of investors who have expressed interest. */
+  interest_count?: number;
 }
 
 interface PortalDashboardClientProps {

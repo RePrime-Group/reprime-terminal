@@ -12,9 +12,11 @@ interface PortalNavbarProps {
   fullName?: string;
   email?: string;
   locale: string;
+  /** Investor's access tier — drives which top-level tabs are visible. */
+  accessTier?: 'investor' | 'marketplace_only' | null;
 }
 
-export default function PortalNavbar({ firstName, fullName, email, locale }: PortalNavbarProps) {
+export default function PortalNavbar({ firstName, fullName, email, locale, accessTier = 'investor' }: PortalNavbarProps) {
   const t = useTranslations('portal');
   const tn = useTranslations('portal.navbar');
   const tc = useTranslations('common');
@@ -22,9 +24,11 @@ export default function PortalNavbar({ firstName, fullName, email, locale }: Por
   const pathname = usePathname();
   const activeTab = pathname.startsWith('/portal/portfolio')
     ? 'portfolio'
-    : pathname.startsWith('/portal/compare')
-      ? 'compare'
-      : 'dashboard';
+    : pathname.startsWith('/portal/marketplace')
+      ? 'marketplace'
+      : pathname.startsWith('/portal/compare')
+        ? 'compare'
+        : 'dashboard';
   const supabase = createClient();
   const [showNotifications, setShowNotifications] = useState(false);
   // Voice modal removed for v1 launch
@@ -86,11 +90,17 @@ export default function PortalNavbar({ firstName, fullName, email, locale }: Por
 
   const initials = firstName ? firstName[0].toUpperCase() : 'U';
 
-  const navTabs = [
-    { key: 'dashboard', label: t('dashboardTitle'), href: '/portal' },
-    { key: 'portfolio', label: tn('portfolio'), href: '/portal/portfolio' },
-    { key: 'compare', label: tn('compare'), href: '/portal/compare' },
-  ];
+  // Marketplace-only investors see only the Marketplace tab. Full investors
+  // see everything. Owners/employees never reach the portal navbar.
+  const isMarketplaceOnly = accessTier === 'marketplace_only';
+  const navTabs = isMarketplaceOnly
+    ? [{ key: 'marketplace', label: tn('marketplace'), href: '/portal/marketplace' }]
+    : [
+        { key: 'dashboard', label: t('dashboardTitle'), href: '/portal' },
+        { key: 'portfolio', label: tn('portfolio'), href: '/portal/portfolio' },
+        { key: 'marketplace', label: tn('marketplace'), href: '/portal/marketplace' },
+        { key: 'compare', label: tn('compare'), href: '/portal/compare' },
+      ];
 
   return (
     <>
@@ -100,7 +110,7 @@ export default function PortalNavbar({ firstName, fullName, email, locale }: Por
       <nav className="h-[64px] bg-[#07090F]/95 backdrop-blur-xl px-4 md:px-8 flex items-center justify-between sticky top-0 z-50 border-b border-white/[0.06]">
         {/* Left: Logo + Nav tabs */}
         <div className="flex items-center gap-3 md:gap-5">
-          <Link href="/portal" className="flex items-center gap-3 select-none group">
+          <Link href={isMarketplaceOnly ? '/portal/marketplace' : '/portal'} className="flex items-center gap-3 select-none group">
             <div className="w-9 h-9 bg-gradient-to-br from-[#BC9C45] to-[#A88A3D] rounded-lg flex items-center justify-center group-hover:shadow-[0_0_16px_rgba(188,156,69,0.35)] transition-shadow duration-300 shadow-[0_2px_6px_rgba(188,156,69,0.2)]">
               <span className="text-white font-bold text-lg leading-none font-[family-name:var(--font-playfair)] italic">R</span>
             </div>

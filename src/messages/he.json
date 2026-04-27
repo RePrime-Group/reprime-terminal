@@ -110,6 +110,7 @@
       "users": "משתמשים",
       "applications": "בקשות",
       "commitments": "התחייבויות",
+      "marketplaceInterest": "עניין במרקטפלייס",
       "teamRequests": "בקשות צוות",
       "activity": "פעילות",
       "previewAsInvestor": "תצוגת משקיע",
@@ -553,6 +554,7 @@
     },
     "navbar": {
       "portfolio": "תיק השקעות",
+      "marketplace": "מרקטפלייס",
       "compare": "השוואה",
       "notifications": "התראות",
       "markAllRead": "סמן הכל כנקרא",
@@ -651,7 +653,11 @@
       "countdownMin": "דקות",
       "countdownSec": "שניות",
       "groupsCommitted": "{count} קבוצות התחייבו",
-      "groupCommitted": "{count} קבוצה התחייבה"
+      "groupCommitted": "{count} קבוצה התחייבה",
+      "marketplaceBadge": "מרקטפלייס",
+      "interested": "{count, plural, one {# מתעניין} other {# מתעניינים}}",
+      "beTheFirstInterested": "היו הראשונים להביע עניין",
+      "pricingNegotiable": "המחיר והתנאים בדיון"
     },
     "dealDetail": {
       "overview": "סקירה כללית",
@@ -1080,6 +1086,9 @@
       "agreeText": "קראתי ואני מסכים לתנאי הסכם הסודיות",
       "signing": "חותם...",
       "signAndAccess": "חתום וגש לחדר הנתונים",
+      "signAndContinue": "חתום והמשך",
+      "onboardingTitle": "חתימה על הסכם סודיות",
+      "onboardingSubtitle": "לפני הגישה לטרמינל, אנא קרא וחתום על ההסכם להלן. הסכם כולל זה מכסה את כל העסקאות הנוכחיות והעתידיות בפלטפורמה.",
       "fullNameRequired": "שם מלא הוא שדה חובה.",
       "mustAgreeTerms": "עליך להסכים לתנאי הסכם הסודיות.",
       "ndaIntro": "הסכם סודיות זה (\"ההסכם\") נכנס לתוקף מתאריך {date} בין RePrime Group, LLC (\"הצד החושף\") לבין הנמען החתום מטה (\"הצד המקבל\").",
@@ -1140,6 +1149,23 @@
       "underRenovation": "בשיפוץ",
       "stabilized": "יציב",
       "closed": "נסגר"
+    },
+    "marketplace": {
+      "title": "מרקטפלייס",
+      "subtitle": "הזדמנויות בשלב מוקדם — המחיר והתנאים בדיון",
+      "noDealsYet": "אין כרגע עסקאות במרקטפלייס. חזרו בקרוב לראות הזדמנויות חדשות.",
+      "interestSectionTitle": "עניין במרקטפלייס",
+      "iAmInterested": "אני מעוניין בעסקה זו",
+      "atAskingPrice": "במחיר המבוקש ({price})",
+      "atDifferentPrice": "במחיר אחר",
+      "myTargetPrice": "מחיר היעד שלי",
+      "notesOptional": "הערות (אופציונלי)",
+      "submitInterest": "שלח עניין",
+      "submitting": "שולח…",
+      "interestSubmitted": "✓ העניין הוגש",
+      "updateInterest": "עדכן עניין",
+      "marketplaceBannerTitle": "מרקטפלייס",
+      "marketplaceBannerDesc": "המחיר והתנאים בדיון. הביעו עניין והנחיות תמחור להלן."
     },
     "marketIntel": {
       "marketCycle": "מחזור שוק",

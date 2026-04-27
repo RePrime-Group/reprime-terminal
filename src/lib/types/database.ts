@@ -1,5 +1,5 @@
 export type UserRole = 'owner' | 'employee' | 'investor';
-export type DealStatus = 'draft' | 'coming_soon' | 'loi_signed' | 'published' | 'under_review' | 'assigned' | 'closed';
+export type DealStatus = 'draft' | 'coming_soon' | 'marketplace' | 'loi_signed' | 'published' | 'under_review' | 'assigned' | 'closed';
 export type MeetingStatus = 'scheduled' | 'completed' | 'cancelled' | 'no_show';
 export type Locale = 'en' | 'he';
 export type ActivityAction =

@@ -7,6 +7,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 
 type InviteRole = 'investor' | 'employee';
+type InviteTier = 'investor' | 'marketplace_only';
 
 interface InviteResult {
   token: string;
@@ -23,6 +24,7 @@ export default function InviteInvestorPage() {
 
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<InviteRole>('investor');
+  const [tier, setTier] = useState<InviteTier>('investor');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<InviteResult | null>(null);
@@ -42,7 +44,11 @@ export default function InviteInvestorPage() {
     const createRes = await fetch('/api/admin/invites', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email.trim().toLowerCase(), role }),
+      body: JSON.stringify({
+        email: email.trim().toLowerCase(),
+        role,
+        access_tier: role === 'investor' ? tier : null,
+      }),
     });
 
     const createBody = await createRes.json().catch(() => ({}));
@@ -146,6 +152,7 @@ export default function InviteInvestorPage() {
                 setResult(null);
                 setEmail('');
                 setRole('investor');
+                setTier('investor');
                 setEmailSent(false);
                 setEmailError(null);
                 setCopied(false);
@@ -183,6 +190,48 @@ export default function InviteInvestorPage() {
                 <option value="employee">{t('employee')}</option>
               </select>
             </div>
+
+            {role === 'investor' && (
+              <div>
+                <label className="block text-[13px] font-medium text-rp-gray-700 mb-1.5">
+                  Access Tier
+                </label>
+                <div className="space-y-2">
+                  <label
+                    onClick={() => setTier('investor')}
+                    className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                      tier === 'investor' ? 'border-rp-gold bg-[#FDF8ED]' : 'border-rp-gray-200 hover:border-rp-gray-300'
+                    }`}
+                  >
+                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mt-0.5 shrink-0 ${
+                      tier === 'investor' ? 'border-rp-gold' : 'border-rp-gray-300'
+                    }`}>
+                      {tier === 'investor' && <div className="w-2 h-2 rounded-full bg-rp-gold" />}
+                    </div>
+                    <div>
+                      <div className="text-[13px] font-semibold text-rp-navy">Full Investor</div>
+                      <div className="text-[11px] text-rp-gray-500">Access to all deals, dashboard, portfolio, and marketplace.</div>
+                    </div>
+                  </label>
+                  <label
+                    onClick={() => setTier('marketplace_only')}
+                    className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                      tier === 'marketplace_only' ? 'border-rp-gold bg-[#FDF8ED]' : 'border-rp-gray-200 hover:border-rp-gray-300'
+                    }`}
+                  >
+                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mt-0.5 shrink-0 ${
+                      tier === 'marketplace_only' ? 'border-rp-gold' : 'border-rp-gray-300'
+                    }`}>
+                      {tier === 'marketplace_only' && <div className="w-2 h-2 rounded-full bg-rp-gold" />}
+                    </div>
+                    <div>
+                      <div className="text-[13px] font-semibold text-rp-navy">Marketplace Only</div>
+                      <div className="text-[11px] text-rp-gray-500">Marketplace deals only — no Dashboard, Portfolio, or Compare.</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            )}
 
             {error && (
               <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>

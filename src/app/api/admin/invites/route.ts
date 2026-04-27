@@ -12,6 +12,7 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   const emailRaw: unknown = body?.email;
   const roleRaw: unknown = body?.role;
+  const accessTierRaw: unknown = body?.access_tier;
 
   if (typeof emailRaw !== 'string' || !emailRaw.includes('@')) {
     return NextResponse.json({ error: 'A valid email is required.' }, { status: 400 });
@@ -22,6 +23,13 @@ export async function POST(request: NextRequest) {
 
   const email = emailRaw.trim().toLowerCase();
   const role = roleRaw as InviteRole;
+
+  // access_tier is required for investor invites and forbidden otherwise
+  // (mirrors the DB cross-column CHECK on terminal_invite_tokens).
+  const accessTier =
+    role === 'investor'
+      ? (accessTierRaw === 'marketplace_only' ? 'marketplace_only' : 'investor')
+      : null;
 
   const admin = createAdminClient();
 
@@ -61,6 +69,7 @@ export async function POST(request: NextRequest) {
       email,
       role,
       invited_by: authResult.user.userId,
+      access_tier: accessTier,
     })
     .select('token, expires_at')
     .single();

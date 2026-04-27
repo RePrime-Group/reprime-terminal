@@ -26,6 +26,9 @@ export default async function InvestorsPage({ params, searchParams }: InvestorsP
   const inviteFilter = (['all', 'pending', 'accepted', 'expired'].includes(sp.status || '')
     ? sp.status!
     : 'all') as 'all' | 'pending' | 'accepted' | 'expired';
+  const tierFilter = (['all', 'investor', 'marketplace_only'].includes(sp.tier || '')
+    ? sp.tier!
+    : 'all') as 'all' | 'investor' | 'marketplace_only';
 
   // Current user's role (to gate role-change UI)
   const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -42,21 +45,25 @@ export default async function InvestorsPage({ params, searchParams }: InvestorsP
   }
 
   // ── Investors (server-paginated) ──
-  const { count: investorTotalCount } = await supabase
+  const investorCountQuery = supabase
     .from('terminal_users')
     .select('*', { count: 'exact', head: true })
     .eq('role', 'investor');
+  if (tierFilter !== 'all') investorCountQuery.eq('access_tier', tierFilter);
+  const { count: investorTotalCount } = await investorCountQuery;
 
   const investorTotal = investorTotalCount ?? 0;
   const investorFrom = (investorPage - 1) * PAGE_SIZE;
   const investorTo = investorFrom + PAGE_SIZE - 1;
 
-  const { data: investors } = await supabase
+  let investorListQuery = supabase
     .from('terminal_users')
-    .select('id, full_name, email, company_name, created_at, last_active_at, is_active, parent_investor_id')
+    .select('id, full_name, email, company_name, created_at, last_active_at, is_active, parent_investor_id, access_tier')
     .eq('role', 'investor')
     .order('created_at', { ascending: false })
     .range(investorFrom, investorTo);
+  if (tierFilter !== 'all') investorListQuery = investorListQuery.eq('access_tier', tierFilter);
+  const { data: investors } = await investorListQuery;
 
   // Resolve parent names for team members and look up parent is_active state so
   // we can flag "Parent Inactive" in the UI.
@@ -74,6 +81,37 @@ export default async function InvestorsPage({ params, searchParams }: InvestorsP
     }
   }
 
+  // Batch fetch NDA + KYC status for the visible investors so we can render
+  // onboarding status columns without an N+1 round trip per row.
+  const investorIds = (investors ?? []).map((i) => i.id);
+  const ndaSignedSet = new Set<string>();
+  const kycStatusByUser = new Map<
+    string,
+    { completed_at: string | null; approved: boolean; rejected_at: string | null; has_data: boolean }
+  >();
+  if (investorIds.length > 0) {
+    const [{ data: ndaRows }, { data: kycRows }] = await Promise.all([
+      supabase
+        .from('terminal_nda_signatures')
+        .select('user_id')
+        .eq('nda_type', 'blanket')
+        .in('user_id', investorIds),
+      supabase
+        .from('terminal_user_kyc')
+        .select('user_id, completed_at, approved, rejected_at, data')
+        .in('user_id', investorIds),
+    ]);
+    for (const row of ndaRows ?? []) ndaSignedSet.add(row.user_id);
+    for (const row of kycRows ?? []) {
+      kycStatusByUser.set(row.user_id, {
+        completed_at: row.completed_at,
+        approved: row.approved,
+        rejected_at: row.rejected_at,
+        has_data: !!row.data,
+      });
+    }
+  }
+
   const investorRows = await Promise.all(
     (investors ?? []).map(async (investor) => {
       const { count } = await supabase
@@ -83,6 +121,17 @@ export default async function InvestorsPage({ params, searchParams }: InvestorsP
         .eq('action', 'deal_viewed');
 
       const parent = investor.parent_investor_id ? parentMap.get(investor.parent_investor_id) : null;
+
+      const kyc = kycStatusByUser.get(investor.id);
+      const kyc_status: 'none' | 'partial' | 'pending' | 'approved' | 'rejected' = kyc?.rejected_at
+        ? 'rejected'
+        : kyc?.approved
+        ? 'approved'
+        : kyc?.completed_at
+        ? 'pending'
+        : kyc?.has_data
+        ? 'partial'
+        : 'none';
 
       return {
         id: investor.id,
@@ -96,6 +145,9 @@ export default async function InvestorsPage({ params, searchParams }: InvestorsP
         parent_name: parent?.full_name ?? null,
         parent_inactive: !!(investor.parent_investor_id && parent && !parent.is_active),
         deals_viewed: count ?? 0,
+        nda_signed: ndaSignedSet.has(investor.id),
+        kyc_status,
+        access_tier: (investor.access_tier as 'investor' | 'marketplace_only' | null) ?? 'investor',
       };
     })
   );
@@ -184,6 +236,7 @@ export default async function InvestorsPage({ params, searchParams }: InvestorsP
       pageSize={PAGE_SIZE}
       currentUserRole={currentUserRole}
       currentUserId={currentUserId}
+      tierFilter={tierFilter}
     />
   );
 }
