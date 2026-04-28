@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/meeting",
+      "destination": "https://scheduler.zoom.us/gideon-gratsiani/schedule-with-gideon-czf4njv8",
+      "permanent": true
+    }
+  ]
+}
