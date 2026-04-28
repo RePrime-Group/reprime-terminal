@@ -631,6 +631,15 @@ export default function NewDealPage() {
         }
       }
 
+      if (status !== 'draft' && user?.id) {
+        await supabase.from('terminal_activity_log').insert({
+          user_id: user.id,
+          deal_id: newDeal.id,
+          action: 'deal_created',
+          metadata: { deal_name: form.name.trim(), status },
+        });
+      }
+
       router.push(`/${locale}/admin/deals/${newDeal.id}`);
     } finally {
       setSaving(false);

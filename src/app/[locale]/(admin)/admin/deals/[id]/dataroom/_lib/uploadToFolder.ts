@@ -78,5 +78,27 @@ export async function uploadFileToFolder(
     return { error: `Failed to save record: ${insertError?.message ?? 'unknown'}` };
   }
 
+  try {
+    const { data: dealMeta } = await supabase
+      .from('terminal_deals')
+      .select('name, status')
+      .eq('id', dealId)
+      .single();
+    if (dealMeta && dealMeta.status !== 'draft' && uploadedBy) {
+      await supabase.from('terminal_activity_log').insert({
+        user_id: uploadedBy,
+        deal_id: dealId,
+        action: 'deal_document_uploaded',
+        metadata: {
+          deal_name: dealMeta.name,
+          document_category: 'dataroom',
+          document_name: file.name,
+        },
+      });
+    }
+  } catch {
+    // Activity logging is best-effort; never block the upload flow.
+  }
+
   return { document: inserted as TerminalDDDocument };
 }

@@ -11,8 +11,13 @@ export type ActivityAction =
   | 'meeting_requested'
   | 'page_time'
   | 'expressed_interest'
+  | 'commitment_withdrawn'
   | 'om_downloaded'
-  | 'portal_viewed';
+  | 'portal_viewed'
+  | 'deal_created'
+  | 'deal_published'
+  | 'deal_updated'
+  | 'deal_document_uploaded';
 
 export type TeamPermissionKey =
   | 'view_deals'

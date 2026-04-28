@@ -22,32 +22,77 @@ function timeAgo(dateStr: string): string {
   return `${days}d ago`;
 }
 
+interface ActivityRow {
+  action: string;
+  created_at: string;
+  metadata: Record<string, unknown> | null;
+}
+
+const ADMIN_ACTIONS = [
+  'deal_created',
+  'deal_published',
+  'deal_updated',
+  'deal_document_uploaded',
+] as const;
+
+const ACTION_COLOR: Record<string, string> = {
+  deal_created: 'bg-[#0B8A4D]',
+  deal_published: 'bg-[#BC9C45]',
+  deal_updated: 'bg-[#1D5FB8]',
+  deal_document_uploaded: 'bg-[#0E3470]',
+};
+
 export default function MarketIntelSidebar() {
   const t = useTranslations('portal.marketIntel');
   const ta = useTranslations('admin.activity');
 
-  const actionLabels: Record<string, { text: string; color: string }> = {
-    deal_viewed: { text: ta('viewedDeal'), color: 'bg-[#6B7280]' },
-    document_downloaded: { text: ta('downloadedDocument'), color: 'bg-[#1D5FB8]' },
-    om_downloaded: { text: ta('downloadedDocument'), color: 'bg-[#BC9C45]' },
-    dataroom_viewed: { text: ta('viewedDataRoom'), color: 'bg-[#0E3470]' },
-    meeting_requested: { text: ta('requestedMeeting'), color: 'bg-[#BC9C45]' },
-    expressed_interest: { text: ta('expressedInterest'), color: 'bg-[#0B8A4D]' },
-    irr_calculator_used: { text: ta('usedIrrCalc'), color: 'bg-[#1D5FB8]' },
-    portal_viewed: { text: ta('timeOnPage'), color: 'bg-[#9CA3AF]' },
+  const actionTitles: Record<string, string> = {
+    deal_created: ta('dealCreated'),
+    deal_published: ta('dealPublished'),
+    deal_updated: ta('dealUpdated'),
+    deal_document_uploaded: ta('dealDocumentUploaded'),
   };
 
-  const [activities, setActivities] = useState<{ action: string; created_at: string }[]>([]);
+  const docCategoryLabel = (cat: unknown): string | null => {
+    switch (cat) {
+      case 'om': return ta('docCategoryOm');
+      case 'loi': return ta('docCategoryLoi');
+      case 'psa': return ta('docCategoryPsa');
+      case 'full_report': return ta('docCategoryFullReport');
+      case 'costar_report': return ta('docCategoryCostarReport');
+      case 'tenants_report': return ta('docCategoryTenantsReport');
+      case 'lease_summary': return ta('docCategoryLeaseSummary');
+      case 'dataroom': return ta('docCategoryDataroom');
+      default: return null;
+    }
+  };
+
+  const getDetail = (item: ActivityRow): string | null => {
+    const meta = item.metadata ?? {};
+    if (item.action === 'deal_document_uploaded') {
+      return docCategoryLabel((meta as { document_category?: unknown }).document_category);
+    }
+    if (item.action === 'deal_updated' || item.action === 'deal_published') {
+      const fields = (meta as { changed_fields?: unknown }).changed_fields;
+      if (Array.isArray(fields) && fields.length > 0) {
+        return ta('fieldsUpdated', { count: fields.length });
+      }
+    }
+    return null;
+  };
+
+  const [activities, setActivities] = useState<ActivityRow[]>([]);
 
   useEffect(() => {
     const supabase = createClient();
     supabase
       .from('terminal_activity_log')
-      .select('action, created_at')
+      .select('action, created_at, metadata')
+      .in('action', ADMIN_ACTIONS as unknown as string[])
       .order('created_at', { ascending: false })
       .limit(5)
       .then(({ data }) => {
-        setActivities(data ?? []);
+        setActivities((data as ActivityRow[] | null) ?? []);
       });
   }, []);
 
@@ -167,7 +212,10 @@ export default function MarketIntelSidebar() {
             <p style={{ fontSize: '11px', color: '#94A3B8' }}>{t('noRecentActivity')}</p>
           ) : (
             activities.map((item, idx) => {
-              const info = actionLabels[item.action] ?? { text: item.action, color: 'bg-[#9CA3AF]' };
+              const title = actionTitles[item.action] ?? item.action;
+              const color = ACTION_COLOR[item.action] ?? 'bg-[#9CA3AF]';
+              const dealName = (item.metadata as { deal_name?: unknown } | null)?.deal_name;
+              const detail = getDetail(item);
               return (
                 <div
                   key={idx}
@@ -175,15 +223,25 @@ export default function MarketIntelSidebar() {
                   style={{ animationDelay: `${idx * 0.06}s` }}
                 >
                   <span
-                    className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${info.color}`}
+                    className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${color}`}
                   />
                   <div className="min-w-0">
                     <p
-                      className="font-[500] leading-tight"
+                      className="font-[500] leading-tight truncate"
                       style={{ fontSize: '11px', color: '#0E3470' }}
                     >
-                      {info.text}
+                      {typeof dealName === 'string' && dealName
+                        ? `${title}: ${dealName}`
+                        : title}
                     </p>
+                    {detail && (
+                      <p
+                        className="mt-0.5 truncate"
+                        style={{ fontSize: '10px', color: '#0E3470', opacity: 0.65 }}
+                      >
+                        {detail}
+                      </p>
+                    )}
                     <p
                       className="mt-0.5"
                       style={{ fontSize: '10px', color: '#94A3B8' }}

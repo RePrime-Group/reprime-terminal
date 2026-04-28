@@ -686,6 +686,69 @@ export default function EditDealPage() {
         console.error('Failed to dispatch deal notifications:', err);
       }
 
+      try {
+        const wasDraft = deal.status === 'draft';
+        const isDraftAfter = statusToSave === 'draft';
+        if (!isDraftAfter) {
+          const {
+            data: { user: actingUser },
+          } = await supabase.auth.getUser();
+          if (actingUser?.id) {
+            const DATE_FIELDS = new Set<string>([
+              'dd_deadline',
+              'close_deadline',
+              'extension_deadline',
+              'psa_draft_start',
+              'loi_signed_at',
+            ]);
+            const normalize = (field: string, v: unknown): string => {
+              if (v === undefined || v === null || v === '') return '';
+              if (DATE_FIELDS.has(field)) {
+                const t = new Date(String(v)).getTime();
+                return isNaN(t) ? '' : String(t);
+              }
+              if (Array.isArray(v)) return JSON.stringify(v);
+              return String(v).trim();
+            };
+            const changedFields: string[] = [];
+            for (const key of Object.keys(updateData)) {
+              if (key === 'status' || key === 'assigned_to') continue;
+              const next = updateData[key];
+              if (next === undefined) continue;
+              const before = (deal as unknown as Record<string, unknown>)[key];
+              if (normalize(key, before) !== normalize(key, next)) {
+                changedFields.push(key);
+              }
+            }
+
+            if (wasDraft) {
+              await supabase.from('terminal_activity_log').insert({
+                user_id: actingUser.id,
+                deal_id: dealId,
+                action: 'deal_published',
+                metadata: {
+                  deal_name: form.name.trim(),
+                  new_status: statusToSave,
+                  changed_fields: changedFields,
+                },
+              });
+            } else if (changedFields.length > 0) {
+              await supabase.from('terminal_activity_log').insert({
+                user_id: actingUser.id,
+                deal_id: dealId,
+                action: 'deal_updated',
+                metadata: {
+                  deal_name: form.name.trim(),
+                  changed_fields: changedFields,
+                },
+              });
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to log deal activity:', err);
+      }
+
       router.push(`/${locale}/admin/deals`);
     } finally {
       setSaving(false);
@@ -797,6 +860,31 @@ export default function EditDealPage() {
     return data.publicUrl;
   };
 
+  const logDocumentUploadActivity = async (
+    category: 'om' | 'loi' | 'psa' | 'full_report' | 'costar_report' | 'tenants_report' | 'lease_summary',
+    documentName: string,
+  ) => {
+    if (!deal || deal.status === 'draft') return;
+    try {
+      const {
+        data: { user: actingUser },
+      } = await supabase.auth.getUser();
+      if (!actingUser?.id) return;
+      await supabase.from('terminal_activity_log').insert({
+        user_id: actingUser.id,
+        deal_id: dealId,
+        action: 'deal_document_uploaded',
+        metadata: {
+          deal_name: deal.name,
+          document_category: category,
+          document_name: documentName,
+        },
+      });
+    } catch {
+      // Activity logging is best-effort; never block the upload flow.
+    }
+  };
+
   const handleOmUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -825,6 +913,7 @@ export default function EditDealPage() {
         .eq('id', dealId);
 
       setOmPath(path);
+      await logDocumentUploadActivity('om', file.name);
     } finally {
       setOmUploading(false);
       if (omInputRef.current) omInputRef.current.value = '';
@@ -864,6 +953,19 @@ export default function EditDealPage() {
         .update({ [DOC_CONFIG[docKey].column]: path })
         .eq('id', dealId);
       setDocPaths((prev) => ({ ...prev, [docKey]: path }));
+
+      const docKeyToCategory: Record<
+        Exclude<DocKey, 'om'>,
+        'loi' | 'psa' | 'full_report' | 'costar_report' | 'tenants_report' | 'lease_summary'
+      > = {
+        'loi': 'loi',
+        'psa': 'psa',
+        'full-report': 'full_report',
+        'costar-report': 'costar_report',
+        'tenants-report': 'tenants_report',
+        'lease-summary': 'lease_summary',
+      };
+      await logDocumentUploadActivity(docKeyToCategory[docKey], file.name);
     } finally {
       setDocUploading(null);
       const input = docInputRefs.current[docKey];
@@ -1004,6 +1106,7 @@ export default function EditDealPage() {
       setAddresses((prev) =>
         prev.map((a) => a.id === addressId ? { ...a, om_storage_path: path } : a)
       );
+      await logDocumentUploadActivity('om', file.name);
     }
   };
 

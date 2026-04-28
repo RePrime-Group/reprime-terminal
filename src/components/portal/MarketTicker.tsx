@@ -16,10 +16,7 @@ function TickerItem({ label, value, change, direction }: MarketDataPoint) {
 
   return (
     <span className="inline-flex items-center gap-2 whitespace-nowrap">
-      <span
-        className="text-[9px] font-semibold uppercase tracking-[1.2px]"
-        style={{ color: 'rgba(255,255,255,0.6)' }}
-      >
+      <span className="text-[13px] font-semibold uppercase tracking-[1.2px] text-white">
         {label}
       </span>
       <span className="text-[13px] font-bold text-white tabular-nums leading-none">{value}</span>
