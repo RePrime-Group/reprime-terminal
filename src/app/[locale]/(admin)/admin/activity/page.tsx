@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import ActivityLogClient from '@/components/admin/ActivityLogClient';
-import type { ActivityAction } from '@/lib/types/database';
+import type { ActivityAction, UserRole } from '@/lib/types/database';
 
 export const metadata = { title: 'Activity — RePrime Terminal Beta Admin' };
 
@@ -13,7 +13,7 @@ interface ActivityJoinRow {
   created_at: string;
   action: ActivityAction;
   metadata: Record<string, unknown>;
-  terminal_users: { full_name: string } | null;
+  terminal_users: { full_name: string; role: UserRole } | null;
   terminal_deals: { name: string } | null;
 }
 
@@ -23,7 +23,7 @@ export default async function ActivityPage({ params }: ActivityPageProps) {
 
   const { data: activityRaw } = await supabase
     .from('terminal_activity_log')
-    .select('id, created_at, action, metadata, terminal_users(full_name), terminal_deals(name)')
+    .select('id, created_at, action, metadata, terminal_users(full_name, role), terminal_deals(name)')
     .order('created_at', { ascending: false })
     .limit(1000);
 
@@ -32,23 +32,14 @@ export default async function ActivityPage({ params }: ActivityPageProps) {
     created_at: row.created_at,
     action: row.action,
     metadata: row.metadata,
-    investor_name: row.terminal_users?.full_name ?? null,
+    user_name: row.terminal_users?.full_name ?? null,
+    user_role: row.terminal_users?.role ?? null,
     deal_name: row.terminal_deals?.name ?? null,
   }));
 
-  // Build filter options from the data
-  const investorMap = new Map<string, string>();
-  const dealMap = new Map<string, string>();
-
-  for (const a of activities) {
-    if (a.investor_name) investorMap.set(a.investor_name, a.investor_name);
-    if (a.deal_name) dealMap.set(a.deal_name, a.deal_name);
-  }
-
-  const { data: investors } = await supabase
+  const { data: users } = await supabase
     .from('terminal_users')
-    .select('id, full_name')
-    .eq('role', 'investor')
+    .select('id, full_name, role')
     .order('full_name');
 
   const { data: deals } = await supabase
@@ -57,7 +48,11 @@ export default async function ActivityPage({ params }: ActivityPageProps) {
     .order('name');
 
   const filterOptions = {
-    investors: (investors ?? []).map((i) => ({ id: i.id, name: i.full_name })),
+    users: (users ?? []).map((u) => ({
+      id: u.id,
+      name: u.full_name,
+      role: u.role as UserRole,
+    })),
     deals: (deals ?? []).map((d) => ({ id: d.id, name: d.name })),
   };
 
