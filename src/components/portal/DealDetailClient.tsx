@@ -1935,7 +1935,8 @@ export default function DealDetailClient({
 
   const handleShareDeal = async () => {
     try {
-      await navigator.clipboard.writeText(window.location.href);
+      const shareUrl = `${window.location.origin}/${locale}/deal/${deal.id}`;
+      await navigator.clipboard.writeText(shareUrl);
       setLinkCopied(true);
       window.setTimeout(() => setLinkCopied(false), 2000);
     } catch {

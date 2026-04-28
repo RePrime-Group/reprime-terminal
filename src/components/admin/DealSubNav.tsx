@@ -17,7 +17,7 @@ export default function DealSubNav({ dealId, dealName, locale }: DealSubNavProps
   const [linkCopied, setLinkCopied] = useState(false);
 
   const handleCopyShareLink = async () => {
-    const shareUrl = `${window.location.origin}/${locale}/portal/deals/${dealId}`;
+    const shareUrl = `${window.location.origin}/${locale}/deal/${dealId}`;
     try {
       await navigator.clipboard.writeText(shareUrl);
       setLinkCopied(true);
