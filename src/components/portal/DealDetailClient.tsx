@@ -2334,7 +2334,7 @@ export default function DealDetailClient({
       <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-[#EEF0F4] shadow-[0_1px_3px_rgba(14,52,112,0.04),0_4px_12px_rgba(14,52,112,0.02)]">
         <div className="h-[64px] flex items-center px-4 md:px-8">
           <button
-            onClick={() => router.push(`/${locale}/portal`)}
+            onClick={() => router.back()}
             className="hover:bg-[#F7F8FA] rounded-full p-2 transition mr-3 group"
             aria-label="Back to portal"
           >

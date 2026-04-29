@@ -294,12 +294,32 @@ export function calculateDeal(inputs: DealInputs): DealMetrics {
 
   const irr = solveIRR(irrCashFlows);
 
-  // Assignment IRR: same deal but assignment fee deducted from Year 0 equity
+  // Assignment IRR: investor buys property at PP+assignmentFee, operates it
+  // directly (no AMF), and keeps full sale proceeds (no GP carry).
+  // Compute property-level cash flows fresh — do NOT reuse the GP/LP
+  // `annualCashFlows` (AMF-deducted) or `netSaleProceeds` (carry-deducted).
   const assignmentFeeDollarCalc = purchasePrice * (assignmentFee / 100);
-  const assignmentEquity = netEquity + assignmentFeeDollarCalc; // fee increases investor outlay
-  const assignmentCashFlows = [-assignmentEquity, ...annualCashFlows.slice(0, -1)];
-  if (annualCashFlows.length > 0) {
-    assignmentCashFlows.push(annualCashFlows[annualCashFlows.length - 1] + netSaleProceeds);
+
+  // Year 0: base equity (no acq fee) + assignment fee
+  const assignmentBaseEquity = grossEquity + loanFeeDollar + legalTitleEstimate;
+  const assignmentEquity = assignmentBaseEquity + assignmentFeeDollarCalc;
+
+  // Annual CF: NOI − DS − mezz, NO AMF
+  const assignmentAnnualCF: number[] = [];
+  for (let yr = 0; yr < holdPeriodYears; yr++) {
+    const growthFactor = Math.pow(1 + (rentGrowth / 100), yr);
+    const yearNOI = noi * growthFactor;
+    const yearAdjustedNOI = yearNOI - capex;
+    const yearSeniorDS = yr < ioYears ? annualIODS : annualSeniorDS;
+    assignmentAnnualCF.push(yearAdjustedNOI - yearSeniorDS - annualMezzPayment);
+  }
+
+  // Exit: gross sale proceeds (no GP carry)
+  const assignmentExit = grossSaleProceeds;
+
+  const assignmentCashFlows = [-assignmentEquity, ...assignmentAnnualCF.slice(0, -1)];
+  if (assignmentAnnualCF.length > 0) {
+    assignmentCashFlows.push(assignmentAnnualCF[assignmentAnnualCF.length - 1] + assignmentExit);
   }
   const assignmentIRR = solveIRR(assignmentCashFlows);
 
