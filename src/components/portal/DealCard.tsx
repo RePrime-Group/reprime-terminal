@@ -29,19 +29,24 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
     return () => clearTimeout(t);
   }, [watchError]);
 
-  const countdown = useCountdown(deal.dd_deadline);
+  const ddCountdown = useCountdown(deal.dd_deadline);
+  const closeCountdown = useCountdown(deal.close_deadline ?? null);
   const isAssignedStatus = deal.status === 'assigned';
   const isClosedStatus = deal.status === 'closed';
   const isMarketplace = deal.status === 'marketplace';
   const isAssigned = isAssignedStatus || isClosedStatus;
   const isTBA = !deal.dd_deadline;
+  // Once DD deadline has passed, fall back to the closing timeline (if set).
+  const showClosing = !!deal.dd_deadline && ddCountdown.isExpired && !!deal.close_deadline;
+  const countdown = showClosing ? closeCountdown : ddCountdown;
+  const activeDeadline = showClosing ? (deal.close_deadline ?? null) : deal.dd_deadline;
   const urgency = isMarketplace
     ? 'marketplace'
     : isAssigned
     ? 'assigned'
     : isTBA
     ? 'tba'
-    : getUrgencyLevel(deal.dd_deadline);
+    : getUrgencyLevel(activeDeadline);
 
   const urgencyMap: Record<string, { bg: string; color: string }> = {
     green:       { bg: 'bg-[#ECFDF5]', color: '#0B8A4D' },
@@ -295,7 +300,7 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
                   className="text-[8px] font-bold uppercase tracking-[1.5px]"
                   style={{ color: urgencyTextColor }}
                 >
-                  {t('ddDeadline')}
+                  {showClosing ? t('closingTimelineLabel') : t('ddDeadline')}
                 </span>
               )}
               {isMarketplace && (
