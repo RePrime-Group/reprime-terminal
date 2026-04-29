@@ -214,7 +214,7 @@ JSON only:`,
   try {
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 25000,
+      max_tokens: 16000,
       messages: [{ role: 'user', content: contentBlocks }],
     });
 
@@ -250,6 +250,7 @@ JSON only:`,
       tokensUsed: response.usage?.input_tokens + response.usage?.output_tokens,
     });
   } catch (err: unknown) {
+    console.error("err", err);
     const message = err instanceof Error ? err.message : 'Unknown error';
     return NextResponse.json({ error: `AI extraction failed: ${message}` }, { status: 500 });
   }

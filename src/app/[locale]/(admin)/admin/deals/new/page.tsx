@@ -26,6 +26,17 @@ const PROPERTY_TYPES = [
 
 const CLASS_TYPES = ['A', 'B', 'C'] as const;
 
+const STATUS_OPTIONS: { value: DealStatus; label: string }[] = [
+  { value: 'draft', label: 'Draft' },
+  { value: 'coming_soon', label: 'Coming Soon' },
+  { value: 'marketplace', label: 'Marketplace' },
+  { value: 'loi_signed', label: 'LOI Signed' },
+  { value: 'published', label: 'Published' },
+  { value: 'under_review', label: 'Under Review' },
+  { value: 'assigned', label: 'Assigned' },
+  { value: 'closed', label: 'Closed' },
+];
+
 interface DealFormData {
   name: string;
   property_type: string;
@@ -224,6 +235,19 @@ export default function NewDealPage() {
   const [isPortfolio, setIsPortfolio] = useState(false);
   const [portfolioAddresses, setPortfolioAddresses] = useState<{ label: string; address: string; city: string; state: string; sf: string; units: string }[]>([]);
   const [extractedTenants, setExtractedTenants] = useState<Record<string, unknown>[]>([]);
+  const [saveMenuOpen, setSaveMenuOpen] = useState(false);
+  const saveMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!saveMenuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (saveMenuRef.current && !saveMenuRef.current.contains(e.target as Node)) {
+        setSaveMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [saveMenuOpen]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -1305,20 +1329,42 @@ export default function NewDealPage() {
 
       {/* Bottom buttons */}
       <div className="flex items-center justify-end gap-3 pb-8">
-        <Button
-          variant="secondary"
-          onClick={() => handleSubmit('draft')}
-          loading={saving}
-        >
-          Save as Draft
-        </Button>
-        <Button
-          variant="subscribe"
-          onClick={() => handleSubmit('coming_soon')}
-          loading={saving}
-        >
-          Save as Coming Soon
-        </Button>
+        <div className="relative" ref={saveMenuRef}>
+          <Button
+            variant="secondary"
+            onClick={() => setSaveMenuOpen((v) => !v)}
+            loading={saving}
+          >
+            Save As
+            <svg
+              className="ml-2 w-4 h-4"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </Button>
+          {saveMenuOpen && (
+            <div className="absolute bottom-full right-0 mb-2 w-56 bg-white border border-rp-gray-200 rounded-lg shadow-lg overflow-hidden z-10">
+              {STATUS_OPTIONS.map(({ value, label }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => {
+                    setSaveMenuOpen(false);
+                    handleSubmit(value);
+                  }}
+                  className="block w-full text-left px-4 py-2 text-sm text-rp-gray-700 hover:bg-rp-gray-100 transition-colors"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <Button
           variant="gold"
           onClick={() => handleSubmit('published')}
