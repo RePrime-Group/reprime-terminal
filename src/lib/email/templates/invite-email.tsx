@@ -12,7 +12,7 @@ interface InviteEmailProps {
 export default function InviteEmail({ inviteUrl, recipientEmail, inviteCode, expiresAt }: InviteEmailProps) {
   const expiryDisplay = expiresAt
     ? new Date(expiresAt).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
-    : '7 days from now';
+    : '30 days from now';
 
   return (
     <BaseLayout preview="You've been selected for exclusive access to RePrime Terminal Beta">

@@ -51,8 +51,8 @@ export async function POST(
     .eq('id', user.id)
     .single();
 
-  // Extend expiry by 7 more days on each resend
-  const newExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  // Extend expiry by 30 more days on each resend
+  const newExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
   await admin
     .from('terminal_invite_tokens')
     .update({ expires_at: newExpiry })

@@ -19,7 +19,7 @@ export default function TeamInviteEmail({
 }: TeamInviteEmailProps) {
   const expiryDisplay = expiresAt
     ? new Date(expiresAt).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
-    : '7 days from now';
+    : '30 days from now';
 
   return (
     <BaseLayout preview={`${parentName} invited you to join their RePrime team`}>

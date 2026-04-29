@@ -87,6 +87,17 @@ function formatDate(dateStr: string): string {
   });
 }
 
+function formatDateTime(dateStr: string): string {
+  return new Date(dateStr).toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
+
 function formatRelativeTime(dateStr: string | null, t: (key: string, values?: Record<string, string | number>) => string): string {
   if (!dateStr) return t('never');
 
@@ -675,6 +686,7 @@ export default function InvestorListClient({
                     <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('status')}</th>
                     <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('sent')}</th>
                     <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('expires')}</th>
+                    <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('accepted')}</th>
                     <th className="text-right text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{tc('actions')}</th>
                   </tr>
                 </thead>
@@ -692,9 +704,10 @@ export default function InvestorListClient({
                         </td>
                         <td className="px-5 py-3.5 text-sm text-rp-gray-600">{formatDate(inv.created_at)}</td>
                         <td className="px-5 py-3.5 text-sm text-rp-gray-600">
-                          {status === 'accepted'
-                            ? formatDate(inv.accepted_at!)
-                            : formatDate(inv.expires_at)}
+                          {inv.accepted_at ? '—' : formatDate(inv.expires_at)}
+                        </td>
+                        <td className="px-5 py-3.5 text-sm text-rp-gray-600">
+                          {inv.accepted_at ? formatDateTime(inv.accepted_at) : '—'}
                         </td>
                         <td className="px-5 py-3.5 text-right">
                           <button
