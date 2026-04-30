@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { extractTenantsWithClaude, insertExtractedTenants } from '@/lib/ai/extract-tenants';
 
-export const maxDuration = 60;
+export const maxDuration = 800;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Admin-only: extract tenant roster from an admin-uploaded document (PDF / CSV
