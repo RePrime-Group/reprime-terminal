@@ -42,7 +42,7 @@ const DEAL_COLUMNS = [
   'legal_title_estimate', 'disposition_cost_pct', 'capex',
   'debt_terms_quoted',
   'show_rent_roll', 'show_capex', 'show_exit_strategy', 'computed_walt',
-  'status',
+  'status', 'cancellation_reason',
 ].join(', ');
 
 export default async function DealDetailPage({ params }: DealDetailPageProps) {
@@ -56,9 +56,9 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
   // from the nav list (they're still shown on the dashboard, but investors
   // shouldn't auto-cycle into them via ◀/▶). Same sort as the browse page for
   // the included statuses.
-  const INVESTOR_NAV_STATUSES = ['loi_signed', 'published', 'assigned', 'closed'] as const;
+  const INVESTOR_NAV_STATUSES = ['loi_signed', 'published', 'assigned', 'closed', 'cancelled'] as const;
   const STATUS_ORDER: Record<string, number> = {
-    loi_signed: 1, published: 2, assigned: 3, closed: 4,
+    loi_signed: 1, published: 2, assigned: 3, closed: 4, cancelled: 5,
   };
 
   // Parallel batch 1: deal + photos + counts + pipeline + addresses + investor + NDA + tenants + nav list
@@ -82,7 +82,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
       .from('terminal_deals')
       .select(DEAL_COLUMNS)
       .eq('id', id)
-      .in('status', ['coming_soon', 'marketplace', 'loi_signed', 'published', 'assigned', 'closed'])
+      .in('status', ['coming_soon', 'marketplace', 'loi_signed', 'published', 'assigned', 'closed', 'cancelled'])
       .single(),
     supabase
       .from('terminal_deal_photos')

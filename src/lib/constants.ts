@@ -43,6 +43,7 @@ export const DEAL_STATUS_LABELS: Record<string, string> = {
   under_review: 'Under Review',
   assigned: 'Assigned',
   closed: 'Closed',
+  cancelled: 'Cancelled',
 };
 
 const ALL_DEAL_STATUSES = [
@@ -54,6 +55,7 @@ const ALL_DEAL_STATUSES = [
   'under_review',
   'assigned',
   'closed',
+  'cancelled',
 ] as const;
 
 // Admins can move a deal to any status regardless of the current status.

@@ -115,6 +115,7 @@ interface DealFormData {
   show_rent_roll: boolean;
   show_capex: boolean;
   show_exit_strategy: boolean;
+  cancellation_reason: string;
 }
 
 interface FormErrors {
@@ -250,6 +251,7 @@ function dealToForm(deal: TerminalDeal): DealFormData {
     show_rent_roll: deal.show_rent_roll !== false,
     show_capex: deal.show_capex === true,
     show_exit_strategy: deal.show_exit_strategy === true,
+    cancellation_reason: (deal as unknown as { cancellation_reason?: string | null }).cancellation_reason ?? '',
   };
 }
 
@@ -594,6 +596,7 @@ export default function EditDealPage() {
         show_capex: !!form.show_capex,
         show_exit_strategy: !!form.show_exit_strategy,
         status: statusToSave,
+        cancellation_reason: statusToSave === 'cancelled' ? (form.cancellation_reason.trim() || null) : null,
       };
 
       if (statusToSave === 'assigned' && selectedInvestor) {
@@ -1259,6 +1262,28 @@ export default function EditDealPage() {
             </div>
           )}
         </div>
+
+        {newStatus === 'cancelled' && (
+          <div className="mt-4">
+            <label
+              htmlFor="cancellation-reason"
+              className="block text-[13px] font-medium text-rp-gray-700 mb-1.5"
+            >
+              Cancellation reason <span className="text-rp-gray-400">(optional)</span>
+            </label>
+            <textarea
+              id="cancellation-reason"
+              value={form.cancellation_reason}
+              onChange={(e) => updateField('cancellation_reason', e.target.value)}
+              placeholder="e.g. Seller withdrew, financing fell through, due diligence revealed material issues..."
+              rows={3}
+              className="w-full px-3.5 py-2.5 border border-rp-gray-300 rounded-lg text-sm text-rp-gray-700 focus:outline-none focus:ring-2 focus:ring-rp-red/20 focus:border-rp-red placeholder:text-rp-gray-400 transition-colors bg-white resize-y"
+            />
+            <p className="text-[11px] text-rp-gray-500 mt-1">
+              Shown to investors on the deal detail page. Leave blank to omit.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Section 1: Basic Information */}

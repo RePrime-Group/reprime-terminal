@@ -183,12 +183,12 @@ export default async function DealPreviewPage({ params }: DealPreviewPageProps) 
 
   // ---------- Prev/Next deal navigation (admin preview includes drafts) ----------
   const ADMIN_STATUS_ORDER: Record<string, number> = {
-    draft: -1, coming_soon: 0, loi_signed: 1, published: 2, assigned: 3, closed: 4,
+    draft: -1, coming_soon: 0, loi_signed: 1, published: 2, assigned: 3, closed: 4, cancelled: 5,
   };
   const { data: navDealsData } = await supabase
     .from('terminal_deals')
     .select('id, name, status, dd_deadline')
-    .in('status', ['draft', 'coming_soon', 'loi_signed', 'published', 'assigned', 'closed'])
+    .in('status', ['draft', 'coming_soon', 'loi_signed', 'published', 'assigned', 'closed', 'cancelled'])
     .order('created_at', { ascending: false });
 
   const navDeals = (navDealsData ?? []).slice().sort((a, b) => {

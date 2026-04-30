@@ -2374,7 +2374,13 @@ export default function DealDetailClient({
             )}
             {/* Express Interest button — replaced by "Deal Assigned" for assigned deals.
                 Marketplace deals use the MarketplaceInterestForm card instead. */}
-            {isMarketplaceDeal ? null : deal.status === 'assigned' ? (
+            {isMarketplaceDeal ? null : deal.status === 'cancelled' ? (
+              <span className="px-3 md:px-5 py-2 bg-[#FEF2F2] border border-[#DC2626]/40 text-[#DC2626] text-[11px] md:text-[12px] font-semibold rounded-lg flex items-center gap-1.5">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="8" r="7"/><line x1="10" y1="6" x2="6" y2="10"/><line x1="6" y1="6" x2="10" y2="10"/></svg>
+                <span className="hidden sm:inline">{t('dealCancelled')}</span>
+                <span className="sm:hidden">✕</span>
+              </span>
+            ) : deal.status === 'assigned' ? (
               <span className="px-3 md:px-5 py-2 bg-[#FDF8ED] border border-[#BC9C45]/40 text-[#BC9C45] text-[11px] md:text-[12px] font-semibold rounded-lg flex items-center gap-1.5">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8l4 4 6-7"/></svg>
                 <span className="hidden sm:inline">{t('dealAssigned')}</span>
@@ -2495,6 +2501,33 @@ export default function DealDetailClient({
             </div>
           </div>
         </div>
+
+        {/* ------------------------------------------------------------------ */}
+        {/* CANCELLED-DEAL BANNER                                              */}
+        {/* ------------------------------------------------------------------ */}
+        {deal.status === 'cancelled' && (
+          <div className="px-4 md:px-8 pt-4">
+            <div className="bg-[#FEF2F2] border-l-4 border-[#DC2626] rounded-r-lg p-4 md:p-5 flex items-start gap-3">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="15" y1="9" x2="9" y2="15" />
+                <line x1="9" y1="9" x2="15" y2="15" />
+              </svg>
+              <div className="min-w-0">
+                <div className="text-[12px] font-semibold text-[#DC2626] uppercase tracking-wider mb-1">
+                  {t('dealCancelled')}
+                </div>
+                {(deal as unknown as { cancellation_reason?: string | null }).cancellation_reason ? (
+                  <p className="text-[14px] text-[#7F1D1D] leading-relaxed">
+                    {(deal as unknown as { cancellation_reason: string }).cancellation_reason}
+                  </p>
+                ) : (
+                  <p className="text-[13px] text-[#9F1239]">{t('dealCancelledNoReason')}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ------------------------------------------------------------------ */}
         {/* 2. HERO SECTION                                                    */}

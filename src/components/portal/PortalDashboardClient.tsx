@@ -224,9 +224,11 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
   useEffect(() => {
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
+    // Pre-fetch the next page well before the user reaches the bottom so cards
+    // render as they scroll, not after they hit the footer.
     const observer = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) loadMore(); },
-      { rootMargin: '200px' }
+      { rootMargin: '0px 0px 1500px 0px' }
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
@@ -242,6 +244,7 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
   const upcomingDeals = visibleDeals.filter((d) => d.status === 'coming_soon');
   const activeDeals = visibleDeals.filter((d) => d.status === 'published' || d.status === 'loi_signed');
   const assignedDeals = visibleDeals.filter((d) => d.status === 'assigned');
+  const cancelledDeals = visibleDeals.filter((d) => d.status === 'cancelled');
   const closedDeals = visibleDeals.filter((d) => d.status === 'closed');
   const activeCount = activeDeals.length;
   const closedCount = closedDeals.length;
@@ -637,7 +640,7 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
               {/* ── Active Deals Section ── */}
               {activeDeals.length > 0 && (
                 <div>
-                  {(upcomingDeals.length > 0 || assignedDeals.length > 0 || closedDeals.length > 0) && (
+                  {(upcomingDeals.length > 0 || assignedDeals.length > 0 || cancelledDeals.length > 0 || closedDeals.length > 0) && (
                     <div className="flex items-center gap-3 mb-5">
                       <h2 className="font-[family-name:var(--font-playfair)] text-[20px] font-semibold text-[#0E3470] tracking-[-0.01em]">
                         {t('activeDeals')}
@@ -669,6 +672,26 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
                   </p>
                   <div ref={gridRefCallback} className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-5 md:gap-7">
                     {assignedDeals.map((deal, index) => (
+                      <DealCard key={deal.id} deal={deal} locale={locale} index={index} previewMode={previewMode} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── Cancelled Deals Section ── */}
+              {cancelledDeals.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-3 mb-1">
+                    <h2 className="font-[family-name:var(--font-playfair)] text-[20px] font-semibold text-[#0E3470] tracking-[-0.01em]">
+                      {t('cancelledDeals')}
+                    </h2>
+                    <div className="flex-1 h-px bg-gradient-to-r from-[#DC2626]/30 to-transparent" />
+                  </div>
+                  <p className="text-[12px] text-[#9CA3AF] mb-5">
+                    {t('cancelledDealsSubtitle')}
+                  </p>
+                  <div ref={gridRefCallback} className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-5 md:gap-7">
+                    {cancelledDeals.map((deal, index) => (
                       <DealCard key={deal.id} deal={deal} locale={locale} index={index} previewMode={previewMode} />
                     ))}
                   </div>

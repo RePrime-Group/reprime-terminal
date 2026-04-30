@@ -22,6 +22,7 @@ const STATUS_PILL_STYLES: Record<DealStatus, string> = {
   under_review: 'bg-[#FFFBEB] text-[#D97706] border border-[#FDE68A]',
   assigned: 'bg-[#FDF8ED] text-[#BC9C45] border border-[#ECD9A0]',
   closed: 'bg-[#0E3470] text-white',
+  cancelled: 'bg-[#FEF2F2] text-[#DC2626] border border-[#DC2626]/20',
 };
 
 function formatDate(dateStr: string | null): string {
@@ -53,6 +54,7 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
     { value: 'under_review', label: t('statusUnderReview') },
     { value: 'assigned', label: t('statusAssigned') },
     { value: 'closed', label: t('statusClosed') },
+    { value: 'cancelled', label: t('statusCancelled') },
   ];
 
   const filteredDeals = useMemo(() => {
@@ -233,7 +235,7 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
                           <line x1="7" y1="14" x2="17" y2="14" />
                         </svg>
                       </Link>
-                      {['published', 'assigned', 'closed'].includes(deal.status) && (
+                      {['published', 'assigned', 'closed', 'cancelled'].includes(deal.status) && (
                         <a
                           href={`/${locale}/admin/deals/${deal.id}/preview`}
                           target="_blank"

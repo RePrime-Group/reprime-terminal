@@ -33,8 +33,9 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
   const closeCountdown = useCountdown(deal.close_deadline ?? null);
   const isAssignedStatus = deal.status === 'assigned';
   const isClosedStatus = deal.status === 'closed';
+  const isCancelledStatus = deal.status === 'cancelled';
   const isMarketplace = deal.status === 'marketplace';
-  const isAssigned = isAssignedStatus || isClosedStatus;
+  const isAssigned = isAssignedStatus || isClosedStatus || isCancelledStatus;
   const isTBA = !deal.dd_deadline;
   // Once DD deadline has passed, fall back to the closing timeline (if set).
   const showClosing = !!deal.dd_deadline && ddCountdown.isExpired && !!deal.close_deadline;
@@ -42,6 +43,8 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
   const activeDeadline = showClosing ? (deal.close_deadline ?? null) : deal.dd_deadline;
   const urgency = isMarketplace
     ? 'marketplace'
+    : isCancelledStatus
+    ? 'cancelled'
     : isAssigned
     ? 'assigned'
     : isTBA
@@ -55,6 +58,7 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
     expired:     { bg: 'bg-[#EEF0F4]', color: '#9CA3AF' },
     tba:         { bg: 'bg-[#EFF4FA]', color: '#0E3470' },
     assigned:    { bg: 'bg-[#FDF8ED]', color: '#BC9C45' },
+    cancelled:   { bg: 'bg-[#FEF2F2]', color: '#DC2626' },
     marketplace: { bg: 'bg-[#ECFDFD]', color: '#0E7490' },
   };
   const { bg: urgencyBg, color: urgencyTextColor } = urgencyMap[urgency] ?? urgencyMap.expired;
@@ -199,6 +203,18 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
               </span>
             </div>
           )}
+
+          {/* ── Cancelled photo-only overlay ── */}
+          {isCancelledStatus && (
+            <div className="absolute inset-0 z-[2] flex items-center justify-center bg-[rgba(127,29,29,0.45)] pointer-events-none">
+              <span
+                className="font-[family-name:var(--font-playfair)] font-extrabold text-[#FCA5A5] text-[32px] tracking-[0.15em] uppercase -rotate-[15deg]"
+                style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.6)' }}
+              >
+                {t('cancelled')}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Gold gradient line at photo-body boundary */}
@@ -284,7 +300,8 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
             />
           </div>
 
-          {/* ── Countdown bar ── */}
+          {/* ── Countdown bar ── (hidden for cancelled deals — overlay handles the messaging) */}
+          {!isCancelledStatus && (
           <div
             className={`mt-3 -mx-[20px] -mb-[12px] px-[20px] py-[12px] ${urgencyBg} flex items-center justify-between`}
           >
@@ -385,6 +402,7 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
               </div>
             )}
           </div>
+          )}
         </div>
 
         {/* ── Closed full-card stamp overlay ── */}
