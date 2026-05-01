@@ -14,6 +14,7 @@ import {
   type FeeDefaults,
 } from '@/lib/utils/fee-resolver';
 import { createClient } from '@/lib/supabase/client';
+import { maybeCompressImage } from '@/lib/utils/imageCompression';
 import {
   DEAL_STATUS_LABELS,
   DEAL_STATUS_TRANSITIONS,
@@ -798,13 +799,20 @@ export default function EditDealPage() {
           continue;
         }
 
+        // Re-encode large images client-side before they hit Supabase storage
+        // so the hero carousel loads quickly and we stay under the image-
+        // render endpoint's 25 MB ceiling.
+        const toUpload = await maybeCompressImage(file);
+
         const ext = file.name.split('.').pop() ?? 'jpg';
         const path = `${dealId}/${Date.now()}-${i}.${ext}`;
 
         try {
           const { error: uploadError } = await supabase.storage
             .from('terminal-deal-photos')
-            .upload(path, file);
+            .upload(path, toUpload, {
+              contentType: toUpload.type || file.type || 'application/octet-stream',
+            });
 
           if (uploadError) {
             errors.push(`${file.name}: ${uploadError.message}`);
@@ -2100,7 +2108,7 @@ export default function EditDealPage() {
             {uploading ? 'Uploading...' : 'Click to upload photos'}
           </p>
           <p className="text-xs text-rp-gray-400 mt-1">
-            JPG, PNG, or WebP up to 10MB
+            JPG, PNG, or WebP up to 100MB
           </p>
         </div>
       </div>

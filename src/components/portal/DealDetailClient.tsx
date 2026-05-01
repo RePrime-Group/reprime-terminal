@@ -83,6 +83,7 @@ interface DealDetailClientProps {
 type TabKey =
   | 'overview'
   | 'due-diligence'
+  | 'photos'
   | 'rent-roll'
   | 'financial-modeling'
   | 'deal-structure'
@@ -1967,13 +1968,13 @@ export default function DealDetailClient({
   useEffect(() => {
     const qTab = searchParams?.get('tab');
     if (!qTab) return;
-    const valid: TabKey[] = ['overview', 'due-diligence', 'rent-roll', 'financial-modeling', 'deal-structure', 'capex', 'exit-strategy', 'schedule'];
+    const valid: TabKey[] = ['overview', 'due-diligence', 'photos', 'rent-roll', 'financial-modeling', 'deal-structure', 'capex', 'exit-strategy', 'schedule'];
     if (!valid.includes(qTab as TabKey)) return;
     const rec = deal as unknown as Record<string, unknown>;
     if (qTab === 'rent-roll' && rec.show_rent_roll === false) return;
     if (qTab === 'capex' && rec.show_capex !== true) return;
     if (qTab === 'exit-strategy' && rec.show_exit_strategy !== true) return;
-    if (qTab === 'due-diligence' && !ndaSigned) {
+    if ((qTab === 'due-diligence' || qTab === 'photos') && !ndaSigned) {
       setShowNDAModal(true);
       return;
     }
@@ -2083,9 +2084,9 @@ export default function DealDetailClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, deal.id]);
 
-  // Lazy-fetch DD folders + documents when due-diligence tab is first opened
+  // Lazy-fetch DD folders + documents when due-diligence or photos tab is first opened
   useEffect(() => {
-    if (activeTab !== 'due-diligence' || lazyDDFolders !== null || ddLoading) return;
+    if ((activeTab !== 'due-diligence' && activeTab !== 'photos') || lazyDDFolders !== null || ddLoading) return;
     setDDLoading(true);
     (async () => {
       const supabase = createClient();
@@ -2125,6 +2126,67 @@ export default function DealDetailClient({
       setDDLoading(false);
     })();
   }, [activeTab, deal.id, lazyDDFolders, ddLoading]);
+
+  // Photos = image documents inside the dataroom. Derived from the same lazy
+  // DD load so opening the Photos tab does not double-fetch.
+  const PHOTO_EXT_RE = /\.(jpe?g|png|webp|gif|bmp|tiff?|heic|heif|avif|svg)$/i;
+  const photoDocs = useMemo<TerminalDDDocument[]>(() => {
+    if (!lazyDDFolders) return [];
+    const out: TerminalDDDocument[] = [];
+    for (const f of lazyDDFolders) {
+      for (const d of f.documents) {
+        const isImage =
+          (d.file_type ?? '').toLowerCase().startsWith('image/') ||
+          PHOTO_EXT_RE.test(d.name ?? '');
+        if (isImage) out.push(d);
+      }
+    }
+    return out;
+  }, [lazyDDFolders]);
+
+  // Photos tab pagination + lightbox. Loading every photo at once was making
+  // the browser stutter on deals with 100+ images; we now render PHOTOS_PER_PAGE
+  // tiles per page. The lightbox lets investors page through the full set
+  // (across page boundaries) without leaving the modal.
+  const PHOTOS_PER_PAGE = 16;
+  const [photoPage, setPhotoPage] = useState(0);
+  const [photoLightboxIndex, setPhotoLightboxIndex] = useState<number | null>(null);
+  const [photoLightboxLoading, setPhotoLightboxLoading] = useState(false);
+
+  const totalPhotoPages = Math.max(1, Math.ceil(photoDocs.length / PHOTOS_PER_PAGE));
+  const safePhotoPage = Math.min(photoPage, totalPhotoPages - 1);
+  const visiblePhotos = useMemo(
+    () => photoDocs.slice(safePhotoPage * PHOTOS_PER_PAGE, (safePhotoPage + 1) * PHOTOS_PER_PAGE),
+    [photoDocs, safePhotoPage],
+  );
+
+  // Reset to page 0 when the photo list itself changes (e.g. tab opened on a
+  // different deal). Keeping a stale page on a smaller list would render empty.
+  useEffect(() => {
+    setPhotoPage(0);
+  }, [photoDocs.length]);
+
+  // Keyboard nav for the lightbox: ESC to close, ←/→ to step.
+  useEffect(() => {
+    if (photoLightboxIndex === null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setPhotoLightboxIndex(null);
+      } else if (e.key === 'ArrowLeft') {
+        setPhotoLightboxLoading(true);
+        setPhotoLightboxIndex((i) =>
+          i === null ? null : (i - 1 + photoDocs.length) % photoDocs.length,
+        );
+      } else if (e.key === 'ArrowRight') {
+        setPhotoLightboxLoading(true);
+        setPhotoLightboxIndex((i) =>
+          i === null ? null : (i + 1) % photoDocs.length,
+        );
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [photoLightboxIndex, photoDocs.length]);
 
   // Lazy-fetch schedule & contact data when schedule tab is first opened
   useEffect(() => {
@@ -2310,6 +2372,7 @@ export default function DealDetailClient({
   const tabs: { key: TabKey; label: string; enabled: boolean }[] = [
     { key: 'overview', label: t('overview'), enabled: true },
     { key: 'due-diligence', label: t('dueDiligence'), enabled: true },
+    { key: 'photos', label: t('photos'), enabled: true },
     { key: 'rent-roll', label: 'Rent Roll', enabled: showRentRoll },
     { key: 'financial-modeling', label: t('financialModeling'), enabled: true },
     { key: 'deal-structure', label: t('dealStructure'), enabled: true },
@@ -2857,7 +2920,7 @@ export default function DealDetailClient({
                   disabled={disabled}
                   onClick={() => {
                     if (disabled) return;
-                    if (tab.key === 'due-diligence' && !ndaSigned) {
+                    if ((tab.key === 'due-diligence' || tab.key === 'photos') && !ndaSigned) {
                       setShowNDAModal(true);
                       return;
                     }
@@ -2873,7 +2936,7 @@ export default function DealDetailClient({
                   title={disabled ? 'Coming soon' : undefined}
                 >
                   {tab.label}
-                  {tab.key === 'due-diligence' && !ndaSigned && (
+                  {(tab.key === 'due-diligence' || tab.key === 'photos') && !ndaSigned && (
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="opacity-50">
                       <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                       <path d="M7 11V7a5 5 0 0110 0v4" />
@@ -3406,6 +3469,92 @@ export default function DealDetailClient({
           </div>
         </div>
 
+        {/* ========== 5G0. PHOTOS TAB ========== */}
+        <div
+          className="transition-opacity duration-200"
+          style={{ display: activeTab === 'photos' ? 'block' : 'none' }}
+        >
+          <div className="mt-4 md:mt-6 px-4 md:px-8 pb-8 md:pb-10">
+            {ddLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="w-6 h-6 border-2 border-[#BC9C45] border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : photoDocs.length === 0 ? (
+              <div className="bg-white rounded-xl border border-[#EEF0F4] p-10 text-center text-sm text-[#9CA3AF] rp-card-shadow">
+                <span className="text-2xl block mb-2">{'📷'}</span>
+                {t('photosEmpty')}
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-1.5 md:gap-2">
+                  {visiblePhotos.map((doc, i) => {
+                    const fullUrl = `/api/documents/${doc.id}/download?view=true`;
+                    const caption = doc.display_name ?? doc.name;
+                    const absoluteIndex = safePhotoPage * PHOTOS_PER_PAGE + i;
+                    return (
+                      <button
+                        key={doc.id}
+                        type="button"
+                        title={caption}
+                        onClick={() => {
+                          handleDocumentDownload(doc.id);
+                          setPhotoLightboxLoading(true);
+                          setPhotoLightboxIndex(absoluteIndex);
+                        }}
+                        className="group relative aspect-square bg-[#F7F8FA] rounded-md overflow-hidden border border-[#EEF0F4] hover:border-[#BC9C45]/50 transition-colors"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={fullUrl}
+                          alt={caption}
+                          loading="lazy"
+                          decoding="async"
+                          className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-200"
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {totalPhotoPages > 1 && (
+                  <div className="mt-5 flex items-center justify-between gap-3">
+                    <div className="text-[12px] text-[#9CA3AF]">
+                      {`${safePhotoPage * PHOTOS_PER_PAGE + 1}–${Math.min((safePhotoPage + 1) * PHOTOS_PER_PAGE, photoDocs.length)} of ${photoDocs.length}`}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        disabled={safePhotoPage === 0}
+                        onClick={() => setPhotoPage((p) => Math.max(0, p - 1))}
+                        className="w-9 h-9 rounded-lg border border-[#EEF0F4] bg-white text-[#0E3470] flex items-center justify-center transition-colors hover:border-[#BC9C45]/50 hover:text-[#BC9C45] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-[#EEF0F4] disabled:hover:text-[#0E3470]"
+                        aria-label="Previous page"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M15 18l-6-6 6-6" />
+                        </svg>
+                      </button>
+                      <div className="text-[12px] text-[#0E3470] font-medium tabular-nums px-1">
+                        {`${safePhotoPage + 1} / ${totalPhotoPages}`}
+                      </div>
+                      <button
+                        type="button"
+                        disabled={safePhotoPage >= totalPhotoPages - 1}
+                        onClick={() => setPhotoPage((p) => Math.min(totalPhotoPages - 1, p + 1))}
+                        className="w-9 h-9 rounded-lg border border-[#EEF0F4] bg-white text-[#0E3470] flex items-center justify-center transition-colors hover:border-[#BC9C45]/50 hover:text-[#BC9C45] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-[#EEF0F4] disabled:hover:text-[#0E3470]"
+                        aria-label="Next page"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M9 18l6-6-6-6" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+
         {/* ========== 5G1. RENT ROLL TAB ========== */}
         <div
           className="transition-opacity duration-200"
@@ -3925,6 +4074,93 @@ export default function DealDetailClient({
           }}
         />
       )}
+
+      {/* ── Photos Lightbox ── full-screen image viewer with prev/next nav ── */}
+      {photoLightboxIndex !== null && photoDocs[photoLightboxIndex] && (() => {
+        const doc = photoDocs[photoLightboxIndex];
+        const url = `/api/documents/${doc.id}/download?view=true`;
+        const caption = doc.display_name ?? doc.name;
+        const goPrev = (e?: React.MouseEvent) => {
+          e?.stopPropagation();
+          setPhotoLightboxLoading(true);
+          setPhotoLightboxIndex((i) => (i === null ? null : (i - 1 + photoDocs.length) % photoDocs.length));
+        };
+        const goNext = (e?: React.MouseEvent) => {
+          e?.stopPropagation();
+          setPhotoLightboxLoading(true);
+          setPhotoLightboxIndex((i) => (i === null ? null : (i + 1) % photoDocs.length));
+        };
+        return (
+          <div
+            className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center"
+            onClick={() => setPhotoLightboxIndex(null)}
+          >
+            <button
+              type="button"
+              onClick={() => setPhotoLightboxIndex(null)}
+              className="absolute top-5 right-5 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors"
+              aria-label="Close lightbox"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 6L6 18" />
+                <path d="M6 6l12 12" />
+              </svg>
+            </button>
+
+            {photoDocs.length > 1 && (
+              <div className="absolute top-5 left-1/2 -translate-x-1/2 bg-white/10 backdrop-blur-sm text-white text-sm font-semibold px-4 py-1.5 rounded-full">
+                {photoLightboxIndex + 1} / {photoDocs.length}
+              </div>
+            )}
+
+            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 max-w-[80vw] bg-white/10 backdrop-blur-sm text-white text-[12px] px-4 py-1.5 rounded-full truncate">
+              {caption}
+            </div>
+
+            {photoDocs.length > 1 && (
+              <button
+                type="button"
+                onClick={goPrev}
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors"
+                aria-label="Previous photo"
+              >
+                <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10 12L6 8l4-4" />
+                </svg>
+              </button>
+            )}
+
+            <div className="relative max-h-[85vh] max-w-[90vw] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+              {photoLightboxLoading && (
+                <div className="absolute inset-0 flex items-center justify-center" style={{ minWidth: '300px', minHeight: '200px' }}>
+                  <div className="w-8 h-8 border-2 border-white/20 border-t-[#BC9C45] rounded-full animate-spin" />
+                </div>
+              )}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                key={doc.id}
+                src={url}
+                alt={caption}
+                className={`max-h-[85vh] max-w-[90vw] object-contain rounded-lg transition-opacity duration-200 ${photoLightboxLoading ? 'opacity-0' : 'opacity-100'}`}
+                onLoad={() => setPhotoLightboxLoading(false)}
+              />
+            </div>
+
+            {photoDocs.length > 1 && (
+              <button
+                type="button"
+                onClick={goNext}
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors"
+                aria-label="Next photo"
+              >
+                <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 4l4 4-4 4" />
+                </svg>
+              </button>
+            )}
+          </div>
+        );
+      })()}
 
       {/* ── Enhanced Document Viewer Modal ── */}
       {viewerUrl && (

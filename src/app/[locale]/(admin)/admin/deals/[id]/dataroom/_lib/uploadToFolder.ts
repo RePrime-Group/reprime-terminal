@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { TerminalDDDocument } from '@/lib/types/database';
+import { maybeCompressImage } from '@/lib/utils/imageCompression';
 
 // Supabase storage keys reject non-ASCII characters (e.g. "×", emoji, accented
 // letters). Replace anything outside [A-Za-z0-9._-] with "_" and collapse runs,
@@ -38,9 +39,17 @@ export async function uploadFileToFolder(
   const safeName = sanitizeStorageName(file.name);
   const storagePath = `${dealId}/${folderId}/${Date.now()}-${safeName}`;
 
+  // Re-encode large images client-side so the stored object is small enough
+  // for Supabase's image-render endpoint and so investor page loads aren't
+  // hauling 25-MB originals.
+  const toUpload = await maybeCompressImage(file);
+
   const { error: storageError } = await supabase.storage
     .from('terminal-dd-documents')
-    .upload(storagePath, file, { upsert: false });
+    .upload(storagePath, toUpload, {
+      upsert: false,
+      contentType: toUpload.type || file.type || 'application/octet-stream',
+    });
 
   if (storageError) {
     return { error: `Upload failed: ${storageError.message}` };
@@ -63,8 +72,8 @@ export async function uploadFileToFolder(
       folder_id: folderId,
       name: file.name,
       display_name: file.name,
-      file_size: String(file.size),
-      file_type: file.type,
+      file_size: String(toUpload.size),
+      file_type: toUpload.type || file.type,
       storage_path: storagePath,
       uploaded_by: uploadedBy,
       sort_order: nextOrder,

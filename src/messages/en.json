@@ -685,6 +685,8 @@
     "dealDetail": {
       "overview": "Overview",
       "dueDiligence": "Due Diligence",
+      "photos": "Photos",
+      "photosEmpty": "No photos uploaded yet",
       "dealStructure": "Deal Structure",
       "scheduleContact": "Schedule & Contact",
       "financialModeling": "Financial Modeling",

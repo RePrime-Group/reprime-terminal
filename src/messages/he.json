@@ -685,6 +685,8 @@
     "dealDetail": {
       "overview": "סקירה כללית",
       "dueDiligence": "בדיקת נאותות",
+      "photos": "תמונות",
+      "photosEmpty": "עדיין לא הועלו תמונות",
       "dealStructure": "מבנה העסקה",
       "scheduleContact": "תיאום פגישה ויצירת קשר",
       "previousDeal": "העסקה הקודמת",

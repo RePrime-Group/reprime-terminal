@@ -126,6 +126,6 @@ export const ACCEPTED_VIDEO_TYPES = [
   'video/x-matroska',
   'video/x-m4v',
 ];
-export const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
+export const MAX_IMAGE_SIZE = 100 * 1024 * 1024; // 100MB
 export const MAX_DOC_SIZE = 1024 * 1024 * 1024; // 1GB — no limit for DD uploads
 export const MAX_IMAGE_WIDTH = 1600;
