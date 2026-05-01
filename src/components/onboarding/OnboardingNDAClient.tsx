@@ -50,7 +50,7 @@ export default function OnboardingNDAClient({ locale }: { locale: string }) {
         setSubmitting(false);
         return;
       }
-      router.replace(`/${locale}/onboarding/kyc`);
+      router.replace(`/${locale}/portal`);
       router.refresh();
     } catch {
       setError('Network error. Please try again.');

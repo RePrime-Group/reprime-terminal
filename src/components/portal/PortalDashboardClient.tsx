@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useInView } from 'react-intersection-observer';
 import DealCard from '@/components/portal/DealCard';
 import ComingSoonCard from '@/components/portal/ComingSoonCard';
 import MarketIntelSidebar from '@/components/portal/MarketIntelSidebar';
@@ -203,7 +204,9 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
 
   // ── Infinite scroll ──
   const [visibleCount, setVisibleCount] = useState(INITIAL_PAGE_SIZE);
-  const sentinelRef = useRef<HTMLDivElement>(null);
+  const { ref: sentinelRef, inView } = useInView({
+    rootMargin: '0px 0px 1500px 0px',
+  });
 
   // Reset visible count when filters change
   useEffect(() => {
@@ -217,25 +220,17 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
     setVisibleCount((prev) => Math.max(pageSize, Math.ceil(prev / pageSize) * pageSize));
   }, [pageSize]);
 
-  const loadMore = useCallback(() => {
-    setVisibleCount((c) => Math.min(c + pageSize, filteredDeals.length));
-  }, [pageSize, filteredDeals.length]);
-
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
-    // Pre-fetch the next page well before the user reaches the bottom so cards
-    // render as they scroll, not after they hit the footer.
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) loadMore(); },
-      { rootMargin: '0px 0px 1500px 0px' }
-    );
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [loadMore]);
-
   const visibleDeals = filteredDeals.slice(0, visibleCount);
   const hasMore = visibleCount < filteredDeals.length;
+
+  // Keep loading while the sentinel stays in view. Re-runs after each load so a
+  // page that doesn't push the sentinel out of the 1500px zone still advances —
+  // a plain IntersectionObserver only fires on intersection-state transitions.
+  useEffect(() => {
+    if (inView && hasMore) {
+      setVisibleCount((c) => Math.min(c + pageSize, filteredDeals.length));
+    }
+  }, [inView, hasMore, visibleCount, pageSize, filteredDeals.length]);
 
   // Drafts are only fetched on /admin/preview (investor queries filter them out),
   // but we still guard rendering with previewMode so any stray draft in investor

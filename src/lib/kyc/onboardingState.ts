@@ -58,10 +58,12 @@ export const getOnboardingState = cache(async (): Promise<OnboardingState | null
 /**
  * Where should this investor be sent right now? Returns null if they are
  * fully onboarded and may proceed to their home page.
+ *
+ * KYC was removed as a Terminal access requirement (per client direction).
+ * The DB table and grandfathered records are preserved, but the gate now
+ * only enforces the blanket NDA signature.
  */
 export function nextOnboardingPath(state: OnboardingState, locale: string): string | null {
   if (!state.hasBlanketNDA) return `/${locale}/onboarding/nda`;
-  if (!state.kyc?.completedAt) return `/${locale}/onboarding/kyc`;
-  if (!state.kyc.approved) return `/${locale}/onboarding/pending`;
   return null;
 }

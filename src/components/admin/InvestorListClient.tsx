@@ -20,17 +20,8 @@ interface InvestorRow {
   parent_name: string | null;
   parent_inactive: boolean;
   nda_signed: boolean;
-  kyc_status: 'none' | 'partial' | 'pending' | 'approved' | 'rejected';
   access_tier: 'investor' | 'marketplace_only';
 }
-
-const KYC_BADGE: Record<InvestorRow['kyc_status'], { label: string; cls: string }> = {
-  none: { label: '—', cls: 'text-rp-gray-500 bg-rp-gray-100' },
-  partial: { label: 'Partial', cls: 'text-[#92400E] bg-[#FEF3C7] border border-[#FDE68A]' },
-  pending: { label: 'Pending', cls: 'text-[#9F580B] bg-[#FFF7ED] border border-[#FED7AA]' },
-  approved: { label: 'Approved', cls: 'text-[#166534] bg-[#DCFCE7] border border-[#BBF7D0]' },
-  rejected: { label: 'Rejected', cls: 'text-[#991B1B] bg-[#FEE2E2] border border-[#FECACA]' },
-};
 
 interface EmployeeRow {
   id: string;
@@ -436,7 +427,6 @@ export default function InvestorListClient({
                   <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('joined')}</th>
                   <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('lastActive')}</th>
                   <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">NDA</th>
-                  <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">KYC</th>
                   <th className="text-left text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{t('dealsViewed')}</th>
                   <th className="text-right text-[12px] font-semibold text-rp-gray-500 uppercase tracking-wider px-5 py-3">{tc('actions')}</th>
                 </tr>
@@ -509,24 +499,9 @@ export default function InvestorListClient({
                         </span>
                       )}
                     </td>
-                    <td className="px-5 py-3.5 text-sm">
-                      <span
-                        className={`text-[10px] font-bold uppercase tracking-[0.1em] rounded px-1.5 py-0.5 ${KYC_BADGE[investor.kyc_status].cls}`}
-                      >
-                        {KYC_BADGE[investor.kyc_status].label}
-                      </span>
-                    </td>
                     <td className="px-5 py-3.5 text-sm text-rp-gray-600">{investor.deals_viewed}</td>
                     <td className="px-5 py-3.5 text-right text-sm" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-3">
-                        {investor.kyc_status !== 'none' && (
-                          <Link
-                            href={`/${locale}/admin/investors/${investor.id}/kyc`}
-                            className="text-xs font-semibold text-[#0E3470] hover:underline"
-                          >
-                            Review KYC
-                          </Link>
-                        )}
                         {currentUserRole === 'owner' && investor.id !== currentUserId && (
                           <ChangeRoleButton
                             userId={investor.id}

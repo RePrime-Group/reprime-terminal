@@ -81,35 +81,18 @@ export default async function InvestorsPage({ params, searchParams }: InvestorsP
     }
   }
 
-  // Batch fetch NDA + KYC status for the visible investors so we can render
-  // onboarding status columns without an N+1 round trip per row.
+  // Batch fetch blanket-NDA signatures for the visible investors so we can
+  // render the NDA status column without an N+1 round trip per row.
+  // (KYC was removed as a Terminal access requirement — column dropped.)
   const investorIds = (investors ?? []).map((i) => i.id);
   const ndaSignedSet = new Set<string>();
-  const kycStatusByUser = new Map<
-    string,
-    { completed_at: string | null; approved: boolean; rejected_at: string | null; has_data: boolean }
-  >();
   if (investorIds.length > 0) {
-    const [{ data: ndaRows }, { data: kycRows }] = await Promise.all([
-      supabase
-        .from('terminal_nda_signatures')
-        .select('user_id')
-        .eq('nda_type', 'blanket')
-        .in('user_id', investorIds),
-      supabase
-        .from('terminal_user_kyc')
-        .select('user_id, completed_at, approved, rejected_at, data')
-        .in('user_id', investorIds),
-    ]);
+    const { data: ndaRows } = await supabase
+      .from('terminal_nda_signatures')
+      .select('user_id')
+      .eq('nda_type', 'blanket')
+      .in('user_id', investorIds);
     for (const row of ndaRows ?? []) ndaSignedSet.add(row.user_id);
-    for (const row of kycRows ?? []) {
-      kycStatusByUser.set(row.user_id, {
-        completed_at: row.completed_at,
-        approved: row.approved,
-        rejected_at: row.rejected_at,
-        has_data: !!row.data,
-      });
-    }
   }
 
   const investorRows = await Promise.all(
@@ -121,17 +104,6 @@ export default async function InvestorsPage({ params, searchParams }: InvestorsP
         .eq('action', 'deal_viewed');
 
       const parent = investor.parent_investor_id ? parentMap.get(investor.parent_investor_id) : null;
-
-      const kyc = kycStatusByUser.get(investor.id);
-      const kyc_status: 'none' | 'partial' | 'pending' | 'approved' | 'rejected' = kyc?.rejected_at
-        ? 'rejected'
-        : kyc?.approved
-        ? 'approved'
-        : kyc?.completed_at
-        ? 'pending'
-        : kyc?.has_data
-        ? 'partial'
-        : 'none';
 
       return {
         id: investor.id,
@@ -146,7 +118,6 @@ export default async function InvestorsPage({ params, searchParams }: InvestorsP
         parent_inactive: !!(investor.parent_investor_id && parent && !parent.is_active),
         deals_viewed: count ?? 0,
         nda_signed: ndaSignedSet.has(investor.id),
-        kyc_status,
         access_tier: (investor.access_tier as 'investor' | 'marketplace_only' | null) ?? 'investor',
       };
     })
