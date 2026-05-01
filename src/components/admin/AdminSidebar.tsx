@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 import type { TerminalUser } from '@/lib/types/database';
+import RePrimeLogo from '@/components/RePrimeLogo';
 
 interface AdminSidebarProps {
   user: Pick<TerminalUser, 'full_name' | 'role' | 'email'>;
@@ -135,25 +136,11 @@ export default function AdminSidebar({ user, locale }: AdminSidebarProps) {
     <aside className="fixed left-0 top-0 h-screen w-[260px] bg-gradient-to-b from-white to-[#F7F8FA] border-r border-rp-gray-200 flex flex-col font-[var(--font-poppins)] z-40">
       {/* Logo */}
       <div className="pt-8 px-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-rp-gold flex items-center justify-center">
-            <span className="font-[var(--font-playfair)] text-white text-xl italic font-bold leading-none">
-              R
+        <div className="flex items-center gap-2">
+          <RePrimeLogo width={160} variant="navy" />
+          <span className="px-1.5 py-[2px] rounded bg-[#0E3470] text-[#FFFFFF] text-[8px] font-bold uppercase tracking-[1.5px] leading-none self-center">
+              Beta
             </span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-rp-navy text-[15px] font-semibold tracking-[3px] leading-tight">
-              REPRIME
-            </span>
-            <div className="flex items-center gap-1.5">
-              <span className="font-[family-name:var(--font-playfair)] text-[#BC9C45] text-[13px] italic leading-tight">
-                Terminal
-              </span>
-              <span className="px-1.5 py-[1px] rounded bg-[#BC9C45] text-white text-[8px] font-bold uppercase tracking-[1.5px] leading-[1.3]">
-                Beta
-              </span>
-            </div>
-          </div>
         </div>
       </div>
 

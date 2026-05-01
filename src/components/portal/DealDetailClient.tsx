@@ -23,6 +23,7 @@ import { parseHoldPeriod } from '@/lib/utils/capex';
 import { OverviewFinancials, DealStructureFinancials } from '@/components/portal/FinancialOverview';
 import { parseDealInputs, calculateDeal, calculatePropertyMetrics, calculateTraditionalClose, type DealInputs, type DealMetrics } from '@/lib/utils/deal-calculator';
 import { exportDealToExcel } from '@/lib/utils/excel-export';
+import RePrimeLogo from '@/components/RePrimeLogo';
 import type {
   DealWithDetails,
   TerminalDDFolder,
@@ -159,6 +160,81 @@ function DealNavArrow({
         <path d={iconPath} />
       </svg>
     </a>
+  );
+}
+
+/* ---------- Stacked Prev/Next Deal Buttons (header bar) ---------- */
+
+function DealPager({
+  prevDeal,
+  nextDeal,
+  locale,
+  previewMode,
+  activeTab,
+  prevLabel,
+  nextLabel,
+}: {
+  prevDeal: { id: string; name: string } | null;
+  nextDeal: { id: string; name: string } | null;
+  locale: string;
+  previewMode: boolean;
+  activeTab: string;
+  prevLabel: string;
+  nextLabel: string;
+}) {
+  const basePath = previewMode
+    ? `/${locale}/admin/deals`
+    : `/${locale}/portal/deals`;
+  const tabQuery = activeTab && activeTab !== 'overview' ? `?tab=${activeTab}` : '';
+
+  function hrefFor(target: { id: string; name: string } | null): string | null {
+    if (!target) return null;
+    return previewMode
+      ? `${basePath}/${target.id}/preview${tabQuery}`
+      : `${basePath}/${target.id}${tabQuery}`;
+  }
+
+  const prevHref = hrefFor(prevDeal);
+  const nextHref = hrefFor(nextDeal);
+
+  const buttonBase =
+    'inline-flex items-center justify-center px-5 py-2.5 rounded-lg text-[12px] font-bold uppercase tracking-[1.5px] transition-all whitespace-nowrap min-w-[140px]';
+  const buttonEnabled =
+    'bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-white shadow-[0_3px_10px_rgba(188,156,69,0.3)] hover:from-[#A88A3D] hover:to-[#BC9C45] hover:shadow-[0_5px_16px_rgba(188,156,69,0.45)] hover:-translate-y-0.5';
+  const buttonDisabled = 'bg-[#EEF0F4] text-[#9CA3AF] cursor-not-allowed';
+
+  return (
+    <div className="flex flex-col gap-2 shrink-0 self-start ml-auto">
+      {prevHref ? (
+        <a
+          href={prevHref}
+          title={prevDeal ? `${prevLabel}: ${prevDeal.name}` : prevLabel}
+          aria-label={prevDeal ? `${prevLabel}: ${prevDeal.name}` : prevLabel}
+          className={`${buttonBase} ${buttonEnabled}`}
+        >
+          {prevLabel}
+        </a>
+      ) : (
+        <span aria-disabled="true" className={`${buttonBase} ${buttonDisabled}`}>
+          {prevLabel}
+        </span>
+      )}
+
+      {nextHref ? (
+        <a
+          href={nextHref}
+          title={nextDeal ? `${nextLabel}: ${nextDeal.name}` : nextLabel}
+          aria-label={nextDeal ? `${nextLabel}: ${nextDeal.name}` : nextLabel}
+          className={`${buttonBase} ${buttonEnabled}`}
+        >
+          {nextLabel}
+        </a>
+      ) : (
+        <span aria-disabled="true" className={`${buttonBase} ${buttonDisabled}`}>
+          {nextLabel}
+        </span>
+      )}
+    </div>
   );
 }
 
@@ -2514,54 +2590,40 @@ export default function DealDetailClient({
         {/* DEAL HEADER BAR                                                    */}
         {/* ------------------------------------------------------------------ */}
         <div className="bg-white border-b border-[#EEF0F4] px-4 md:px-8 py-4 md:py-5">
-          <div className="flex items-center gap-3 md:gap-0">
-            {/* Mobile-only previous-deal button (desktop shows it alongside the hero) */}
-            <div className="md:hidden shrink-0">
-              <DealNavArrow
-                direction="prev"
-                target={prevDeal}
-                locale={locale}
-                previewMode={previewMode}
-                activeTab={activeTab}
-                label={t('previousDeal')}
-                compact
-              />
-            </div>
-            <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="min-w-0">
+          <div className="flex items-center gap-3 md:gap-4">
+            <div className="flex-1 min-w-0">
               <h2 className="font-[family-name:var(--font-playfair)] text-[22px] md:text-[28px] font-semibold text-[#0E3470] leading-tight tracking-[-0.01em]">
                 {deal.name}
               </h2>
               <p className="text-[12px] text-[#9CA3AF] mt-1">
-                {deal.city}, {deal.state} &middot; {tPt.has(deal.property_type) ? tPt(deal.property_type) : deal.property_type}
+                {deal.city}, {deal.state}
                 {deal.square_footage ? ` \u00B7 ${deal.square_footage} SF` : ''}
                 {deal.units ? ` \u00B7 ${tc('units', { count: deal.units })}` : ''}
                 {deal.class_type ? ` \u00B7 ${tc('classType', { type: deal.class_type })}` : ''}
               </p>
-            </div>
-            <div className="flex items-center gap-2 flex-wrap shrink-0">
-              {deal.seller_financing && (
-                <span className="bg-[#BC9C45] text-white text-[10px] font-semibold px-3 py-1.5 rounded-full whitespace-nowrap">
-                  {t('sellerFinancing')}
+              <div className="flex items-center gap-2 flex-wrap mt-2.5">
+                {deal.seller_financing && (
+                  <span className="inline-flex items-center gap-1 bg-[#BC9C45] text-white text-[10px] font-semibold uppercase tracking-[1px] px-2.5 py-1 rounded-md whitespace-nowrap shadow-[0_1px_3px_rgba(188,156,69,0.3)]">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    {t('sellerFinancing')}
+                  </span>
+                )}
+                <span className="inline-flex items-center bg-white border border-[#EEF0F4] text-[#0E3470] text-[10px] font-semibold uppercase tracking-[1px] px-2.5 py-1 rounded-md whitespace-nowrap">
+                  {tPt.has(deal.property_type) ? tPt(deal.property_type) : deal.property_type}
                 </span>
-              )}
-              <span className="bg-[#F7F8FA] border border-[#EEF0F4] text-[#6B7280] text-[10px] font-semibold px-3 py-1.5 rounded-full whitespace-nowrap">
-                {tPt.has(deal.property_type) ? tPt(deal.property_type) : deal.property_type}
-              </span>
+              </div>
             </div>
-            </div>
-            {/* Mobile-only next-deal button */}
-            <div className="md:hidden shrink-0">
-              <DealNavArrow
-                direction="next"
-                target={nextDeal}
-                locale={locale}
-                previewMode={previewMode}
-                activeTab={activeTab}
-                label={t('nextDeal')}
-                compact
-              />
-            </div>
+            <DealPager
+              prevDeal={prevDeal}
+              nextDeal={nextDeal}
+              locale={locale}
+              previewMode={previewMode}
+              activeTab={activeTab}
+              prevLabel={t('previousDeal')}
+              nextLabel={t('nextDeal')}
+            />
           </div>
         </div>
 
@@ -2596,17 +2658,7 @@ export default function DealDetailClient({
         {/* 2. HERO SECTION                                                    */}
         {/* ------------------------------------------------------------------ */}
         <div className="flex items-center gap-3 lg:gap-4 p-4 md:p-8">
-          {/* Previous-deal button — reserves its own column at the left edge */}
-          <div className="hidden md:flex shrink-0 self-center">
-            <DealNavArrow
-              direction="prev"
-              target={prevDeal}
-              locale={locale}
-              previewMode={previewMode}
-              activeTab={activeTab}
-              label={t('previousDeal')}
-            />
-          </div>
+          
         <div className="flex-1 min-w-0 grid grid-cols-1 lg:grid-cols-[1.7fr_1fr] gap-4 md:gap-6 items-stretch">
           {/* Left: Image Carousel + Countdown Rings (rings pinned to bottom to align w/ right col) */}
           <div className="flex flex-col gap-4 h-full">
@@ -2867,17 +2919,7 @@ export default function DealDetailClient({
             </div>
           </div>
         </div>
-          {/* Next-deal button — reserves its own column at the right edge */}
-          <div className="hidden md:flex shrink-0 self-center">
-            <DealNavArrow
-              direction="next"
-              target={nextDeal}
-              locale={locale}
-              previewMode={previewMode}
-              activeTab={activeTab}
-              label={t('nextDeal')}
-            />
-          </div>
+          
         </div>
 
         {/* ------------------------------------------------------------------ */}
@@ -2911,39 +2953,32 @@ export default function DealDetailClient({
         {/* 5E. TAB BAR                                                        */}
         {/* ------------------------------------------------------------------ */}
         <div ref={tabBarRef} className="px-4 md:px-8 mt-6 md:mt-8">
-          <div className="flex border-b border-[#E5E7EB] overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+          <div className="flex flex-wrap justify-center gap-2 md:gap-2.5 pb-2">
             {tabs.filter((tab) => tab.enabled).map((tab) => {
-              const disabled = !tab.enabled;
+              const isActive = activeTab === tab.key;
+              const isLocked = (tab.key === 'due-diligence' || tab.key === 'photos') && !ndaSigned;
               return (
                 <button
                   key={tab.key}
-                  disabled={disabled}
                   onClick={() => {
-                    if (disabled) return;
-                    if ((tab.key === 'due-diligence' || tab.key === 'photos') && !ndaSigned) {
+                    if (isLocked) {
                       setShowNDAModal(true);
                       return;
                     }
                     setActiveTab(tab.key);
                   }}
-                  className={`relative px-5 py-2.5 text-[18px] font-medium transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
-                    disabled
-                      ? 'text-[#9CA3AF] opacity-40 cursor-not-allowed'
-                      : activeTab === tab.key
-                        ? 'text-[#0F1B2D] font-semibold'
-                        : 'text-[#9CA3AF] hover:text-[#6B7280]'
+                  className={`relative px-5 md:px-6 py-3 rounded-lg text-[16px] md:text-[17px] font-semibold transition-all inline-flex items-center gap-2 whitespace-nowrap border-2 ${
+                    isActive
+                      ? 'border-[#BC9C45] bg-[#FDF8ED] text-[#0E3470] shadow-[0_2px_8px_rgba(188,156,69,0.18)]'
+                      : 'border-[#EEF0F4] bg-white text-[#6B7280] hover:border-[#BC9C45]/60 hover:text-[#0E3470] hover:bg-[#FDF8ED]/50'
                   }`}
-                  title={disabled ? 'Coming soon' : undefined}
                 >
                   {tab.label}
-                  {(tab.key === 'due-diligence' || tab.key === 'photos') && !ndaSigned && (
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="opacity-50">
+                  {isLocked && (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="opacity-60">
                       <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                       <path d="M7 11V7a5 5 0 0110 0v4" />
                     </svg>
-                  )}
-                  {!disabled && activeTab === tab.key && (
-                    <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#C8A951] rounded-t-full" />
                   )}
                 </button>
               );
@@ -3998,13 +4033,12 @@ export default function DealDetailClient({
         {/* -- Confidentiality Footer -- */}
         <div className="px-4 md:px-8 pb-8 md:pb-10 pt-4">
           <div className="border-t border-[#EEF0F4] pt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-0">
-            <div className="flex items-center gap-3">
-              <div className="w-5 h-5 bg-gradient-to-br from-[#BC9C45] to-[#A88A3D] rounded flex items-center justify-center">
-                <span className="text-white text-[8px] font-bold font-[family-name:var(--font-playfair)] italic">R</span>
-              </div>
-              <span className="text-[10px] text-[#9CA3AF] tracking-wide">
-                {t('reprimeterminal')}
-              </span>
+            <div className="flex items-center gap-2">
+            
+              <RePrimeLogo width={150} variant="navy" />
+              <span className="px-1.5 py-[2px] rounded bg-[#0E3470] text-[#FFFFFF] text-[8px] font-bold uppercase tracking-[1.5px] leading-none self-center">
+              Beta
+            </span>
             </div>
             <p className="text-[10px] text-[#9CA3AF] max-w-[600px] text-right leading-relaxed">
               {t('footerConfidential')}

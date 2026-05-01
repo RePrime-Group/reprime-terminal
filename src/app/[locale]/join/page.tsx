@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Link } from '@/i18n/navigation';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import RePrimeLogo from '@/components/RePrimeLogo';
 
 const tiers = [
   {
@@ -98,12 +99,11 @@ export default function JoinPage() {
     <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #07090F 0%, #0A1628 40%, #0F1A2E 70%, #07090F 100%)' }}>
       {/* Nav */}
       <nav className="flex items-center justify-between px-5 md:px-10 py-4 md:py-6 gap-3">
-        <div className="flex items-center gap-2 md:gap-3 min-w-0">
-          <div className="w-9 h-9 shrink-0 bg-gradient-to-br from-[#BC9C45] to-[#A88A3D] rounded-lg flex items-center justify-center shadow-[0_2px_8px_rgba(188,156,69,0.3)]">
-            <span className="text-white font-bold text-lg font-[family-name:var(--font-playfair)] italic">R</span>
-          </div>
-          <span className="text-white font-medium text-[13px] md:text-[14px] tracking-[3px] md:tracking-[4px] uppercase">REPRIME</span>
-          <span className="font-[family-name:var(--font-playfair)] text-[#D4A843] italic text-[11px] hidden sm:inline">Terminal</span>
+        <div className="flex items-center min-w-0">
+          <RePrimeLogo width={180} />
+          <span className="px-1.5 py-[2px] rounded bg-[#BC9C45] text-[#07090F] text-[8px] font-bold uppercase tracking-[1.5px] leading-none self-center">
+              Beta
+            </span>
         </div>
         <Link
           href="/login"
@@ -295,11 +295,11 @@ export default function JoinPage() {
 
       {/* Footer */}
       <div className="border-t border-white/[0.06] px-5 md:px-10 py-5 md:py-6 flex flex-col sm:flex-row items-center sm:justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <div className="w-5 h-5 bg-gradient-to-br from-[#BC9C45] to-[#A88A3D] rounded flex items-center justify-center">
-            <span className="text-white text-[8px] font-bold font-[family-name:var(--font-playfair)] italic">R</span>
-          </div>
-          <span className="text-[10px] text-white/20 tracking-wide">REPRIME TERMINAL BETA</span>
+        <div className="flex items-center gap-2 opacity-60">
+          <RePrimeLogo width={150} />
+          <span className="px-1.5 py-[2px] rounded bg-[#BC9C45] text-[#07090F] text-[8px] font-bold uppercase tracking-[1.5px] leading-none self-center">
+              Beta
+            </span>
         </div>
         <p className="text-[10px] text-white/20 text-center">
           {t('copyright', { year: new Date().getFullYear().toString() })}

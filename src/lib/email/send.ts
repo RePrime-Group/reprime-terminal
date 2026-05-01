@@ -1,4 +1,4 @@
-import { getResend, FROM_EMAIL, FROM_NAME } from './resend';
+import { getResend, getLogoAttachment, FROM_EMAIL, FROM_NAME } from './resend';
 import InviteEmail from './templates/invite-email';
 import WelcomeEmail from './templates/welcome-email';
 import DealNotificationEmail from './templates/deal-notification';
@@ -27,6 +27,7 @@ export async function sendInviteEmail(
   console.error("from", from)
   return getResend().emails.send({
     from,
+    attachments: [getLogoAttachment()],
     to: recipientEmail,
     subject: 'You\'ve been invited to RePrime Terminal Beta',
     react: InviteEmail({ inviteUrl, recipientEmail, inviteCode, expiresAt }),
@@ -40,6 +41,7 @@ export async function sendPasswordResetEmail(
 ) {
   return getResend().emails.send({
     from,
+    attachments: [getLogoAttachment()],
     to: recipientEmail,
     subject: 'Reset your RePrime Terminal password',
     react: PasswordResetEmail({ resetUrl, recipientEmail, expiresInMinutes }),
@@ -49,6 +51,7 @@ export async function sendPasswordResetEmail(
 export async function sendWelcomeEmail(recipientEmail: string, firstName: string, portalUrl: string) {
   return getResend().emails.send({
     from,
+    attachments: [getLogoAttachment()],
     to: recipientEmail,
     subject: `Welcome to RePrime Terminal Beta, ${firstName}`,
     react: WelcomeEmail({ firstName, portalUrl }),
@@ -66,6 +69,7 @@ export async function sendDealNotificationEmail(
 
   return getResend().emails.send({
     from,
+    attachments: [getLogoAttachment()],
     to: recipientEmail,
     subject,
     react: DealNotificationEmail({
@@ -93,6 +97,7 @@ export async function sendMeetingConfirmation(
 ) {
   return getResend().emails.send({
     from,
+    attachments: [getLogoAttachment()],
     to: recipientEmail,
     subject: `Meeting Confirmed: ${data.dealName} — ${new Date(data.dateTime).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}`,
     react: MeetingConfirmation(data),
@@ -102,6 +107,7 @@ export async function sendMeetingConfirmation(
 export async function sendApplicationAckEmail(recipientEmail: string, applicantName: string) {
   return getResend().emails.send({
     from,
+    attachments: [getLogoAttachment()],
     to: recipientEmail,
     subject: 'Application Received — RePrime Terminal Beta',
     react: ApplicationAckEmail({ applicantName }),
@@ -115,6 +121,7 @@ export async function sendApplicationNotifyEmail(
   const adminUrl = `${origin}/en/admin/applications`;
   return getResend().emails.send({
     from,
+    attachments: [getLogoAttachment()],
     to: 'g@reprime.com',
     cc: ['steve@reprime.com', 'shirel@reprime.com'],
     subject: `New Membership Application: ${applicant.full_name}`,
@@ -131,6 +138,7 @@ export async function sendApplicationNotifyEmail(
 export async function sendApplicationRejectionEmail(recipientEmail: string, applicantName: string) {
   return getResend().emails.send({
     from,
+    attachments: [getLogoAttachment()],
     to: recipientEmail,
     subject: 'Update on Your Application — RePrime Terminal Beta',
     react: ApplicationRejectionEmail({ applicantName }),
@@ -155,6 +163,7 @@ export async function sendCommitmentConfirmation(
   const type = data.commitType === 'primary' ? 'Committed' : 'Backup Position';
   return getResend().emails.send({
     from,
+    attachments: [getLogoAttachment()],
     to: recipientEmail,
     ...(cc && cc.length > 0 ? { cc } : {}),
     subject: `${type}: ${data.dealName} — ${data.city}, ${data.state}`,
@@ -175,6 +184,7 @@ export async function sendDocumentUploadEmail(
 ) {
   return getResend().emails.send({
     from,
+    attachments: [getLogoAttachment()],
     to: recipientEmail,
     subject: `New Documents: ${data.dealName} — ${data.city}, ${data.state}`,
     react: DocumentUploadEmail(data),
@@ -193,6 +203,7 @@ export async function sendDealActivityEmail(
 ) {
   return getResend().emails.send({
     from,
+    attachments: [getLogoAttachment()],
     to: recipientEmail,
     subject: `Deal Update: ${data.dealName} — ${data.city}, ${data.state}`,
     react: DealActivityEmail(data),
@@ -211,6 +222,7 @@ export async function sendTeamInviteEmail(
 ) {
   return getResend().emails.send({
     from,
+    attachments: [getLogoAttachment()],
     to: recipientEmail,
     subject: `${data.parentName} invited you to their RePrime team`,
     react: TeamInviteEmail(data),
@@ -241,6 +253,7 @@ export async function sendTeamRequestAdminNotification(data: {
 
   return getResend().emails.send({
     from,
+    attachments: [getLogoAttachment()],
     to: 'g@reprime.com',
     cc: ['steve@reprime.com', 'shirel@reprime.com'],
     subject,
@@ -264,6 +277,7 @@ export async function sendCommitmentWithdrawal(
 ) {
   return getResend().emails.send({
     from,
+    attachments: [getLogoAttachment()],
     to: recipientEmail,
     ...(cc && cc.length > 0 ? { cc } : {}),
     subject: `Commitment Withdrawn: ${data.dealName} — ${data.city}, ${data.state}`,

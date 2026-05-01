@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useInView } from 'react-intersection-observer';
 import DealCard from '@/components/portal/DealCard';
+import RePrimeLogo from '@/components/RePrimeLogo';
 import ComingSoonCard from '@/components/portal/ComingSoonCard';
 import MarketIntelSidebar from '@/components/portal/MarketIntelSidebar';
 import { formatPrice, formatPriceCompact } from '@/lib/utils/format';
@@ -598,14 +599,16 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
               {/* ── Drafts Section (admin preview only) ── */}
               {previewMode && draftDeals.length > 0 && (
                 <div>
-                  <div className="flex items-center gap-3 mb-5">
-                    <h2 className="font-[family-name:var(--font-playfair)] text-[20px] font-semibold text-[#0E3470] tracking-[-0.01em]">
-                      Drafts
-                    </h2>
-                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-[1.5px] bg-[#0E3470]/10 text-[#0E3470]">
-                      Admin only
-                    </span>
-                    <div className="flex-1 h-px bg-gradient-to-r from-[#BC9C45]/30 to-transparent" />
+                  <div className="h-[2px] w-full bg-gradient-to-r from-[#BC9C45] via-[#D4B96A] to-[#BC9C45]" />
+                  <div className="mt-5 mb-5">
+                    <div className="flex items-center gap-3">
+                      <h2 className="font-[family-name:var(--font-playfair)] text-[24px] md:text-[28px] font-semibold text-[#0E3470] tracking-[-0.01em]">
+                        Drafts
+                      </h2>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-[1.5px] bg-[#0E3470]/10 text-[#0E3470]">
+                        Admin only
+                      </span>
+                    </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-5 md:gap-7">
                     {draftDeals.map((deal, index) => (
@@ -615,33 +618,18 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
                 </div>
               )}
 
-              {/* ── Upcoming Opportunities Section ── */}
-              {upcomingDeals.length > 0 && (
-                <div>
-                  <div className="flex items-center gap-3 mb-5">
-                    <h2 className="font-[family-name:var(--font-playfair)] text-[20px] font-semibold text-[#0E3470] tracking-[-0.01em]">
-                      {t('upcomingOpportunities')}
-                    </h2>
-                    <div className="flex-1 h-px bg-gradient-to-r from-[#BC9C45]/30 to-transparent" />
-                  </div>
-                  <div ref={gridRefCallback} className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-5 md:gap-6">
-                    {upcomingDeals.map((deal, index) => (
-                      <ComingSoonCard key={deal.id} deal={deal} index={index} previewMode={previewMode} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* ── Active Deals Section ── */}
+              {/* ── 1. Active Deals Section ── */}
               {activeDeals.length > 0 && (
                 <div>
                   {(upcomingDeals.length > 0 || assignedDeals.length > 0 || cancelledDeals.length > 0 || closedDeals.length > 0) && (
-                    <div className="flex items-center gap-3 mb-5">
-                      <h2 className="font-[family-name:var(--font-playfair)] text-[20px] font-semibold text-[#0E3470] tracking-[-0.01em]">
-                        {t('activeDeals')}
-                      </h2>
-                      <div className="flex-1 h-px bg-gradient-to-r from-[#BC9C45]/30 to-transparent" />
-                    </div>
+                    <>
+                      
+                      <div className="mt-5 mb-5">
+                        <h2 className="font-[family-name:var(--font-playfair)] text-[24px] md:text-[28px] font-semibold text-[#0E3470] tracking-[-0.01em]">
+                          {t('activeDeals')}
+                        </h2>
+                      </div>
+                    </>
                   )}
                   <div ref={gridRefCallback} className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-5 md:gap-7">
                     {activeDeals.map((deal, index) => (
@@ -653,18 +641,18 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
                 </div>
               )}
 
-              {/* ── Assigned Deals Section ── */}
+              {/* ── 2. Assigned Deals Section ── */}
               {assignedDeals.length > 0 && (
                 <div>
-                  <div className="flex items-center gap-3 mb-1">
-                    <h2 className="font-[family-name:var(--font-playfair)] text-[20px] font-semibold text-[#0E3470] tracking-[-0.01em]">
+                  <div className="h-[2px] w-full bg-gradient-to-r from-[#BC9C45] via-[#D4B96A] to-[#BC9C45]" />
+                  <div className="mt-5 mb-5">
+                    <h2 className="font-[family-name:var(--font-playfair)] text-[24px] md:text-[28px] font-semibold text-[#0E3470] tracking-[-0.01em]">
                       {t('assignedDeals')}
                     </h2>
-                    <div className="flex-1 h-px bg-gradient-to-r from-[#BC9C45]/30 to-transparent" />
+                    <p className="text-[13px] text-[#6B7280] mt-1.5">
+                      {t('assignedDealsSubtitle')}
+                    </p>
                   </div>
-                  <p className="text-[12px] text-[#9CA3AF] mb-5">
-                    {t('assignedDealsSubtitle')}
-                  </p>
                   <div ref={gridRefCallback} className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-5 md:gap-7">
                     {assignedDeals.map((deal, index) => (
                       <DealCard key={deal.id} deal={deal} locale={locale} index={index} previewMode={previewMode} />
@@ -673,37 +661,54 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
                 </div>
               )}
 
-              {/* ── Cancelled Deals Section ── */}
-              {cancelledDeals.length > 0 && (
+              {/* ── 3. Coming Soon Section ── */}
+              {upcomingDeals.length > 0 && (
                 <div>
-                  <div className="flex items-center gap-3 mb-1">
-                    <h2 className="font-[family-name:var(--font-playfair)] text-[20px] font-semibold text-[#0E3470] tracking-[-0.01em]">
-                      {t('cancelledDeals')}
+                  <div className="h-[2px] w-full bg-gradient-to-r from-[#BC9C45] via-[#D4B96A] to-[#BC9C45]" />
+                  <div className="mt-5 mb-5">
+                    <h2 className="font-[family-name:var(--font-playfair)] text-[24px] md:text-[28px] font-semibold text-[#0E3470] tracking-[-0.01em]">
+                      {t('upcomingOpportunities')}
                     </h2>
-                    <div className="flex-1 h-px bg-gradient-to-r from-[#DC2626]/30 to-transparent" />
                   </div>
-                  <p className="text-[12px] text-[#9CA3AF] mb-5">
-                    {t('cancelledDealsSubtitle')}
-                  </p>
+                  <div ref={gridRefCallback} className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-5 md:gap-6">
+                    {upcomingDeals.map((deal, index) => (
+                      <ComingSoonCard key={deal.id} deal={deal} index={index} previewMode={previewMode} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── 4. Closed Deals Section ── */}
+              {closedDeals.length > 0 && (
+                <div>
+                  <div className="h-[2px] w-full bg-gradient-to-r from-[#BC9C45] via-[#D4B96A] to-[#BC9C45]" />
+                  <div className="mt-5 mb-5">
+                    <h2 className="font-[family-name:var(--font-playfair)] text-[24px] md:text-[28px] font-semibold text-[#0E3470] tracking-[-0.01em]">
+                      {t('closedDeals')}
+                    </h2>
+                  </div>
                   <div ref={gridRefCallback} className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-5 md:gap-7">
-                    {cancelledDeals.map((deal, index) => (
+                    {closedDeals.map((deal, index) => (
                       <DealCard key={deal.id} deal={deal} locale={locale} index={index} previewMode={previewMode} />
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* ── Closed Deals Section ── */}
-              {closedDeals.length > 0 && (
+              {/* ── 5. Cancelled Deals Section ── */}
+              {cancelledDeals.length > 0 && (
                 <div>
-                  <div className="flex items-center gap-3 mb-5">
-                    <h2 className="font-[family-name:var(--font-playfair)] text-[20px] font-semibold text-[#0E3470] tracking-[-0.01em]">
-                      {t('closedDeals')}
+                  <div className="h-[2px] w-full bg-gradient-to-r from-[#BC9C45] via-[#D4B96A] to-[#BC9C45]" />
+                  <div className="mt-5 mb-5">
+                    <h2 className="font-[family-name:var(--font-playfair)] text-[24px] md:text-[28px] font-semibold text-[#0E3470] tracking-[-0.01em]">
+                      {t('cancelledDeals')}
                     </h2>
-                    <div className="flex-1 h-px bg-gradient-to-r from-[#9CA3AF]/30 to-transparent" />
+                    <p className="text-[13px] text-[#6B7280] mt-1.5">
+                      {t('cancelledDealsSubtitle')}
+                    </p>
                   </div>
                   <div ref={gridRefCallback} className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-5 md:gap-7">
-                    {closedDeals.map((deal, index) => (
+                    {cancelledDeals.map((deal, index) => (
                       <DealCard key={deal.id} deal={deal} locale={locale} index={index} previewMode={previewMode} />
                     ))}
                   </div>
@@ -741,12 +746,10 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
       {/* ── Confidentiality Footer ── */}
       <div className="px-4 pb-6 md:px-10 md:pb-10">
         <div className="border-t border-[#EEF0F4] pt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-0">
-          <div className="flex items-center gap-3">
-            <div className="w-5 h-5 bg-gradient-to-br from-[#BC9C45] to-[#A88A3D] rounded flex items-center justify-center">
-              <span className="text-white text-[8px] font-bold font-[family-name:var(--font-playfair)] italic">R</span>
-            </div>
-            <span className="text-[10px] text-[#9CA3AF] tracking-wide">
-              REPRIME TERMINAL BETA
+          <div className="flex items-center gap-2">
+            <RePrimeLogo width={150} variant="navy" />
+            <span className="px-1.5 py-[2px] rounded bg-[#0E3470] text-[#FFFFFF] text-[8px] font-bold uppercase tracking-[1.5px] leading-none self-center">
+              Beta
             </span>
           </div>
           <p className="text-[10px] text-[#9CA3AF] max-w-[600px] text-left md:text-right leading-relaxed">

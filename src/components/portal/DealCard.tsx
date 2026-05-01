@@ -194,13 +194,22 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
 
           {/* ── Assigned photo-only overlay ── */}
           {isAssignedStatus && (
-            <div className="absolute inset-0 z-[2] flex items-center justify-center bg-black/35 pointer-events-none">
-              <span
-                className="font-[family-name:var(--font-playfair)] font-extrabold text-[#BC9C45] text-[32px] tracking-[0.15em] uppercase -rotate-[15deg]"
-                style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.5)' }}
-              >
-                {t('assigned')}
-              </span>
+            <div
+              className="absolute inset-0 z-[2] flex items-center justify-center bg-black/60 backdrop-blur-[2px] pointer-events-none"
+              style={{ background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.7) 100%)' }}
+            >
+              <div className="flex flex-col items-center gap-2 -rotate-[12deg]">
+                <div className="h-[3px] w-40 md:w-48 bg-gradient-to-r from-transparent via-[#D4B96A] to-transparent" />
+                <span
+                  className="font-[family-name:var(--font-playfair)] font-black text-[#F0CC6E] text-[42px] md:text-[48px] tracking-[0.2em] uppercase leading-none"
+                  style={{
+                    textShadow: '0 0 24px rgba(240, 204, 110, 0.7), 0 0 48px rgba(188, 156, 69, 0.4), 0 2px 10px rgba(0, 0, 0, 0.85)',
+                  }}
+                >
+                  {t('assigned')}
+                </span>
+                <div className="h-[3px] w-40 md:w-48 bg-gradient-to-r from-transparent via-[#D4B96A] to-transparent" />
+              </div>
             </div>
           )}
 

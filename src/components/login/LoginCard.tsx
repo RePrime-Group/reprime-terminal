@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { createBrowserClient } from '@supabase/ssr';
 import { friendlyAuthError, friendlyFetchError } from '@/lib/utils/friendly-error';
+import RePrimeLogo from '@/components/RePrimeLogo';
 
 interface LoginCardProps {
   locale: string;
@@ -128,22 +129,8 @@ export default function LoginCard({ locale }: LoginCardProps) {
         boxShadow: '0 32px 64px rgba(0,0,0,0.5)',
       }}
     >
-      <div
-        className="w-14 h-14 rounded-xl flex items-center justify-center mx-auto animate-glow"
-        style={{ background: 'linear-gradient(135deg, #BC9C45 0%, #D4B96A 100%)' }}
-      >
-        <span className="text-2xl font-extrabold text-white font-[family-name:var(--font-playfair)]">
-          R
-        </span>
-      </div>
-
-      <h1 className="text-[28px] font-bold text-white tracking-[4px] text-center mt-4">
-        REPRIME
-      </h1>
-      <div className="flex items-center justify-center gap-2 mt-1">
-        <p className="text-xs font-[family-name:var(--font-playfair)] italic text-rp-gold">
-          Terminal
-        </p>
+      <div className="flex flex-col items-center gap-2 mt-2">
+        <RePrimeLogo width={280} />
         <span className="px-1.5 py-[2px] rounded bg-[#BC9C45] text-[#07090F] text-[8px] font-bold uppercase tracking-[1.5px] leading-none">
           Beta
         </span>

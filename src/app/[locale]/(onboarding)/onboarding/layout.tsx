@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getCurrentAuthUser, getCurrentProfile } from '@/lib/supabase/currentUser';
 import OnboardingSignOutButton from '@/components/onboarding/OnboardingSignOutButton';
+import RePrimeLogo from '@/components/RePrimeLogo';
 
 export default async function OnboardingLayout({
   children,
@@ -29,11 +30,8 @@ export default async function OnboardingLayout({
       {/* Minimal top bar — logo + sign out only */}
       <header className="shrink-0 border-b border-[#EEF0F4] bg-white">
         <div className="max-w-[1200px] mx-auto px-6 h-[56px] flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-md bg-gradient-to-br from-[#BC9C45] to-[#D4B96A] flex items-center justify-center">
-              <span className="text-white text-[14px] font-bold font-[family-name:var(--font-playfair)] italic">R</span>
-            </div>
-            <span className="text-[13px] font-semibold text-[#0E3470] tracking-[0.5px]">REPRIME TERMINAL</span>
+          <div className="flex items-center">
+            <RePrimeLogo width={140} variant="navy" />
           </div>
           <OnboardingSignOutButton locale={locale} />
         </div>

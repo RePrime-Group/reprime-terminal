@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 import { Link, usePathname } from '@/i18n/navigation';
 import Image from 'next/image';
+import RePrimeLogo from '@/components/RePrimeLogo';
 
 interface PortalNavbarProps {
   firstName: string;
@@ -110,21 +111,11 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
       <nav className="h-[64px] bg-[#07090F]/95 backdrop-blur-xl px-4 md:px-8 flex items-center justify-between sticky top-0 z-50 border-b border-white/[0.06]">
         {/* Left: Logo + Nav tabs */}
         <div className="flex items-center gap-3 md:gap-5">
-          <Link href={isMarketplaceOnly ? '/portal/marketplace' : '/portal'} className="flex items-center gap-3 select-none group">
-            <div className="w-9 h-9 bg-gradient-to-br from-[#BC9C45] to-[#A88A3D] rounded-lg flex items-center justify-center group-hover:shadow-[0_0_16px_rgba(188,156,69,0.35)] transition-shadow duration-300 shadow-[0_2px_6px_rgba(188,156,69,0.2)]">
-              <span className="text-white font-bold text-lg leading-none font-[family-name:var(--font-playfair)] italic">R</span>
-            </div>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-white font-medium text-[14px] tracking-[4px] uppercase">
-                REPRIME
-              </span>
-              <span className="font-[family-name:var(--font-playfair)] text-[#D4A843] italic text-[11px] font-normal">
-                Terminal
-              </span>
-              <span className="px-1.5 py-[2px] rounded bg-[#BC9C45] text-[#07090F] text-[8px] font-bold uppercase tracking-[1.5px] leading-none self-center">
-                Beta
-              </span>
-            </div>
+          <Link href={isMarketplaceOnly ? '/portal/marketplace' : '/portal'} className="flex items-center gap-2.5 select-none group">
+            <RePrimeLogo width={180} className="transition-opacity duration-300 group-hover:opacity-90" />
+            <span className="px-1.5 py-[2px] rounded bg-[#BC9C45] text-[#07090F] text-[8px] font-bold uppercase tracking-[1.5px] leading-none self-center">
+              Beta
+            </span>
           </Link>
 
           <div className="hidden md:block h-5 w-px bg-white/10 ml-1" />

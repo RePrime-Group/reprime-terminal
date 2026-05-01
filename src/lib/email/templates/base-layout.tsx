@@ -16,6 +16,10 @@ interface BaseLayoutProps {
 }
 
 export default function BaseLayout({ children, preview }: BaseLayoutProps) {
+  // The logo is sent as an inline attachment (see getLogoAttachment in resend.ts).
+  // Referencing it via cid: avoids any external fetch from the recipient's mail client.
+  const logoUrl = 'cid:logo';
+
   return (
     <Html>
       <Head>
@@ -32,57 +36,14 @@ export default function BaseLayout({ children, preview }: BaseLayoutProps) {
           <Section style={headerStyle}>
             <table cellPadding="0" cellSpacing="0" width="100%" style={{ borderCollapse: 'collapse' }}>
               <tr>
-                <td style={{ padding: '32px 40px' }}>
-                  <table cellPadding="0" cellSpacing="0" style={{ borderCollapse: 'collapse' }}>
-                    <tr>
-                      <td
-                        style={{
-                          width: '36px',
-                          height: '36px',
-                          backgroundColor: '#BC9C45',
-                          borderRadius: '10px',
-                          textAlign: 'center' as const,
-                          verticalAlign: 'middle' as const,
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: '#FFFFFF',
-                            fontSize: '18px',
-                            fontWeight: 700,
-                            fontStyle: 'italic',
-                            fontFamily: 'Georgia, serif',
-                          }}
-                        >
-                          R
-                        </span>
-                      </td>
-                      <td style={{ paddingLeft: '14px' }}>
-                        <span
-                          style={{
-                            color: '#FFFFFF',
-                            fontSize: '15px',
-                            fontWeight: 500,
-                            letterSpacing: '4px',
-                            fontFamily: 'Arial, sans-serif',
-                          }}
-                        >
-                          REPRIME
-                        </span>
-                        <span
-                          style={{
-                            color: '#D4A843',
-                            fontSize: '12px',
-                            fontStyle: 'italic',
-                            marginLeft: '8px',
-                            fontFamily: 'Georgia, serif',
-                          }}
-                        >
-                          Terminal
-                        </span>
-                      </td>
-                    </tr>
-                  </table>
+                <td align="center" style={{ padding: '40px 40px', textAlign: 'center' as const }}>
+                  <Img
+                    src={logoUrl}
+                    alt="RePrime Terminal"
+                    width={260}
+                    height={Math.round((260 * 120) / 360)}
+                    style={{ display: 'inline-block', border: 0, outline: 'none', textDecoration: 'none', margin: '0 auto' }}
+                  />
                 </td>
               </tr>
             </table>
@@ -139,7 +100,7 @@ const containerStyle: React.CSSProperties = {
 };
 
 const headerStyle: React.CSSProperties = {
-  background: 'linear-gradient(135deg, #07090F 0%, #0A1628 40%, #0E3470 100%)',
+  backgroundColor: '#000000',
 };
 
 const contentStyle: React.CSSProperties = {

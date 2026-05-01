@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import RePrimeLogo from '../RePrimeLogo';
 
 // Official launch: 90 days from April 19, 2026 = July 18, 2026 (00:00 UTC).
 const LAUNCH_DATE_ISO = '2026-07-18T00:00:00Z';
@@ -78,21 +79,13 @@ export default function LaunchCountdownSplash({ locale }: LaunchCountdownSplashP
       {/* Content */}
       <div className="relative z-10 min-h-dvh flex flex-col items-center justify-between py-8 sm:py-12 md:py-16 px-6 sm:px-10 text-center">
         {/* Logo lockup */}
-        <div className="flex items-center gap-3 sm:gap-4">
-          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-[#BC9C45] to-[#A88A3D] flex items-center justify-center shadow-[0_4px_14px_rgba(188,156,69,0.35)]">
-            <span className="font-[family-name:var(--font-playfair)] italic text-white text-[22px] sm:text-[24px] font-semibold leading-none">R</span>
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-white font-semibold text-[20px] sm:text-[24px] tracking-[4px] uppercase">
-              REPRIME
-            </span>
-            <span className="font-[family-name:var(--font-playfair)] italic text-[#D4A843] text-[14px] sm:text-[16px]">
-              Terminal
-            </span>
-            <span className="px-1.5 py-[3px] rounded bg-[#BC9C45] text-[#07090F] text-[9px] font-bold uppercase tracking-[1.8px] leading-none">
+        <div className="flex flex-col items-center sm:gap-4">
+          
+            <RePrimeLogo width={300} className="transition-opacity duration-300 group-hover:opacity-90" />
+            <span className="px-1.5 py-[3px] rounded bg-[#BC9C45] text-[#07090F] text-[15px] font-bold uppercase tracking-[1.8px] leading-none">
               Beta
             </span>
-          </div>
+         
         </div>
 
         {/* Headline + countdown + CTA */}

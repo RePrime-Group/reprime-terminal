@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { formatPrice, formatPercent, formatDSCR, formatSqFt } from '@/lib/utils/format';
+import RePrimeLogo from '@/components/RePrimeLogo';
 
 interface PreviewDeal {
   id: string;
@@ -76,14 +77,13 @@ export default function DealPreviewClient({
       {/* ─── Header ─── */}
       <header className="bg-white border-b border-[#EEF0F4]">
         <div className="max-w-[1200px] mx-auto px-5 md:px-8 py-4 flex items-center justify-between">
-          <Link href="/" locale={locale} className="flex items-center gap-2 md:gap-3 min-w-0">
-            <div className="w-9 h-9 shrink-0 bg-gradient-to-br from-[#BC9C45] to-[#A88A3D] rounded-lg flex items-center justify-center shadow-[0_2px_8px_rgba(188,156,69,0.3)]">
-              <span className="text-white font-bold text-lg font-[family-name:var(--font-playfair)] italic">R</span>
-            </div>
-            <span className="text-[#0E3470] font-medium text-[13px] md:text-[14px] tracking-[3px] md:tracking-[4px] uppercase">
-              REPRIME TERMINAL
+          <Link href="/" locale={locale} className="flex items-center min-w-0">
+            <RePrimeLogo width={140} variant="navy" />
+            <span className="px-1.5 py-[2px] rounded bg-[#0E3470] text-[#FFFFFF] text-[8px] font-bold uppercase tracking-[1.5px] leading-none self-center">
+              Beta
             </span>
           </Link>
+          
           <div className="flex items-center gap-2">
             <Link
               href="/login"
@@ -303,11 +303,11 @@ export default function DealPreviewClient({
       {/* ─── Footer ─── */}
       <footer className="border-t border-[#EEF0F4] bg-white">
         <div className="max-w-[1200px] mx-auto px-5 md:px-8 py-6 flex flex-col sm:flex-row items-center sm:justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-5 bg-gradient-to-br from-[#BC9C45] to-[#A88A3D] rounded flex items-center justify-center">
-              <span className="text-white text-[8px] font-bold font-[family-name:var(--font-playfair)] italic">R</span>
-            </div>
-            <span className="text-[10px] text-[#6B7280] tracking-wide">REPRIME TERMINAL</span>
+          <div className="flex items-center">
+            <RePrimeLogo width={150} variant="navy" />
+            <span className="px-1.5 py-[2px] rounded bg-[#0E3470] text-[#FFFFFF] text-[8px] font-bold uppercase tracking-[1.5px] leading-none self-center">
+              Beta
+            </span>
           </div>
           <p className="text-[10px] text-[#9CA3AF] text-center">
             {t('copyright', { year: new Date().getFullYear().toString() })}
