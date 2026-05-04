@@ -36,9 +36,9 @@ export async function POST(request: NextRequest) {
   const requestedTotal = Number(body?.requested_total);
   const reason: string | null = typeof body?.reason === 'string' ? body.reason.slice(0, 1000) : null;
 
-  if (!Number.isFinite(requestedTotal) || requestedTotal <= (me.team_invite_limit ?? 5) || requestedTotal > 200) {
+  if (!Number.isFinite(requestedTotal) || requestedTotal <= (me.team_invite_limit ?? 10) || requestedTotal > 200) {
     return NextResponse.json(
-      { error: `Requested total must be greater than your current limit (${me.team_invite_limit ?? 5}).` },
+      { error: `Requested total must be greater than your current limit (${me.team_invite_limit ?? 10}).` },
       { status: 400 },
     );
   }
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       investorName: me.full_name ?? 'Investor',
       investorEmail: me.email ?? '',
       requestedTotal: Math.round(requestedTotal),
-      currentLimit: me.team_invite_limit ?? 5,
+      currentLimit: me.team_invite_limit ?? 10,
       reason,
     });
   } catch (err) {

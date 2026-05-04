@@ -64,7 +64,7 @@ export async function GET() {
   }));
 
   return NextResponse.json({
-    limit: me.team_invite_limit ?? 5,
+    limit: me.team_invite_limit ?? 10,
     used: members.filter((m) => m.is_active).length + invites.length,
     members,
     invites,

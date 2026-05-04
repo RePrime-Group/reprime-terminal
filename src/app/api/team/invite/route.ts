@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
   ]);
 
   const used = (activeCount ?? 0) + (pendingCount ?? 0);
-  if (used >= (me.team_invite_limit ?? 5)) {
+  if (used >= (me.team_invite_limit ?? 10)) {
     return NextResponse.json(
       { error: 'You\u2019ve used all of your team invites. Request more from the Team section.' },
       { status: 409 },
