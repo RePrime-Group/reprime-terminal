@@ -218,7 +218,7 @@ export default function DataRoomTab({
     setPackageWarning(null);
     const controller = new AbortController();
     abortRef.current = controller;
-    setPackaging({ done: 0, total: docs.length, currentFile: null, phase: 'fetching' });
+    setPackaging({ done: 0, total: docs.length, currentFile: null, phase: 'awaiting_save' });
     try {
       const result = await buildAndDownloadZip({
         dealId,
@@ -228,6 +228,8 @@ export default function DataRoomTab({
         signal: controller.signal,
         onProgress: (p) => setPackaging(p),
       });
+      // Picker dismissed before any work happened — silent no-op.
+      if (result.cancelledAtSavePrompt) return;
       if (result.failures.length > 0) {
         setPackageWarning({
           failed: result.failures,
@@ -299,56 +301,81 @@ export default function DataRoomTab({
       {/* Packaging progress / error / partial-success banner */}
       {(packaging || packageError || packageWarning) && (
         <div className="px-4 md:px-6 pb-2">
-          {packaging && (
-            <div className="rounded-lg border border-[#E5E7EB] bg-white p-3">
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <div className="text-[12px] font-semibold text-[#0F1B2D]">
-                    {packaging.phase === 'fetching'
-                      ? t('packagingFetching', { done: packaging.done, total: packaging.total })
-                      : packaging.phase === 'retrying'
-                      ? t('packagingRetrying', {
-                          done: packaging.retryDone ?? 0,
-                          total: packaging.retryTotal ?? 0,
-                          round: packaging.retryRound ?? 1,
-                        })
-                      : packaging.phase === 'zipping'
-                      ? t('packagingZipping', { percent: Math.round(packaging.zipPercent ?? 0) })
-                      : t('packagingFinalizing')}
-                  </div>
-                  {packaging.currentFile && (
-                    <div className="mt-0.5 text-[11px] text-[#9CA3AF] truncate">
-                      {packaging.currentFile}
+          {packaging && (() => {
+            const isMultiZip = (packaging.totalGroups ?? 0) > 1;
+            // Heading line: phase-specific status, optionally prefixed with
+            // "Section N of M" when the multi-zip fallback is active.
+            let heading: string;
+            if (packaging.phase === 'awaiting_save') {
+              heading = t('packagingAwaitingSave');
+            } else if (packaging.phase === 'packaging') {
+              heading = t('packagingPackaging', { done: packaging.done, total: packaging.total });
+            } else if (packaging.phase === 'fetching') {
+              heading = t('packagingFetching', { done: packaging.done, total: packaging.total });
+            } else if (packaging.phase === 'retrying') {
+              heading = t('packagingRetrying', {
+                done: packaging.retryDone ?? 0,
+                total: packaging.retryTotal ?? 0,
+                round: packaging.retryRound ?? 1,
+              });
+            } else if (packaging.phase === 'zipping') {
+              heading = t('packagingZipping', { percent: Math.round(packaging.zipPercent ?? 0) });
+            } else {
+              heading = t('packagingFinalizing');
+            }
+            // Bar percent — phase-dependent.
+            let barPercent = 0;
+            if (packaging.phase === 'awaiting_save') barPercent = 0;
+            else if (packaging.phase === 'packaging' || packaging.phase === 'fetching')
+              barPercent = Math.round((packaging.done / Math.max(packaging.total, 1)) * 100);
+            else if (packaging.phase === 'retrying')
+              barPercent = Math.round(((packaging.retryDone ?? 0) / Math.max(packaging.retryTotal ?? 1, 1)) * 100);
+            else if (packaging.phase === 'zipping') barPercent = Math.round(packaging.zipPercent ?? 0);
+            else if (packaging.phase === 'finalizing') barPercent = 100;
+            return (
+              <div className="rounded-lg border border-[#E5E7EB] bg-white p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    {isMultiZip && packaging.groupName && (
+                      <div className="text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF] mb-0.5">
+                        {t('packagingSection', {
+                          idx: packaging.groupIdx ?? 1,
+                          total: packaging.totalGroups ?? 1,
+                          name: packaging.groupName,
+                        })}
+                      </div>
+                    )}
+                    <div className="text-[12px] font-semibold text-[#0F1B2D]">
+                      {heading}
                     </div>
-                  )}
-                  <div className="mt-2 h-1.5 w-full bg-[#F3F4F6] rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-[#C8A951] transition-[width] duration-200"
-                      style={{
-                        width: `${
-                          packaging.phase === 'fetching'
-                            ? Math.round((packaging.done / Math.max(packaging.total, 1)) * 100)
-                            : packaging.phase === 'retrying'
-                            ? Math.round(((packaging.retryDone ?? 0) / Math.max(packaging.retryTotal ?? 1, 1)) * 100)
-                            : Math.round(packaging.zipPercent ?? 0)
-                        }%`,
-                      }}
-                    />
+                    {packaging.currentFile && (
+                      <div className="mt-0.5 text-[11px] text-[#9CA3AF] truncate">
+                        {packaging.currentFile}
+                      </div>
+                    )}
+                    <div className="mt-2 h-1.5 w-full bg-[#F3F4F6] rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-[#C8A951] transition-[width] duration-200"
+                        style={{ width: `${barPercent}%` }}
+                      />
+                    </div>
+                    <div className="mt-1 text-[10px] text-[#9CA3AF]">
+                      {packaging.phase === 'awaiting_save'
+                        ? t('awaitingSavePrompt')
+                        : t('dontCloseTab')}
+                    </div>
                   </div>
-                  <div className="mt-1 text-[10px] text-[#9CA3AF]">
-                    {t('dontCloseTab')}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={cancelPackage}
+                    className="shrink-0 px-2.5 py-1 rounded-md border border-[#E5E7EB] text-[11px] font-semibold text-[#0F1B2D] hover:bg-[#F9FAFB] transition-colors"
+                  >
+                    {t('cancel')}
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={cancelPackage}
-                  className="shrink-0 px-2.5 py-1 rounded-md border border-[#E5E7EB] text-[11px] font-semibold text-[#0F1B2D] hover:bg-[#F9FAFB] transition-colors"
-                >
-                  {t('cancel')}
-                </button>
               </div>
-            </div>
-          )}
+            );
+          })()}
           {!packaging && packageError && (
             <div className="rounded-lg border border-[#FCA5A5] bg-[#FEF2F2] p-2.5 flex items-center justify-between gap-2">
               <span className="text-[12px] text-[#991B1B] truncate">
