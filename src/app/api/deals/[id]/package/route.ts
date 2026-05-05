@@ -1,33 +1,12 @@
+// DEPRECATED: replaced by client-side ZIP assembly in DataRoomTab. Kept as a
+// safety fallback while the new flow bakes in production. Hits Vercel's
+// 100 MB response cap, 1 GB memory cap, and execution timeout for any
+// non-trivial deal — do not link to it from the UI.
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import JSZip from 'jszip';
-
-interface FolderRow {
-  id: string;
-  name: string;
-  parent_id: string | null;
-}
-
-// Build the "Marketing/Leases/Tractor Supply" path for a folder by walking up parent_id.
-function buildFolderPath(folderId: string, folders: Map<string, FolderRow>): string {
-  const parts: string[] = [];
-  let cursor: string | null = folderId;
-  const seen = new Set<string>();
-  while (cursor && !seen.has(cursor)) {
-    seen.add(cursor);
-    const f = folders.get(cursor);
-    if (!f) break;
-    parts.unshift(sanitizePathSegment(f.name));
-    cursor = f.parent_id;
-  }
-  return parts.join('/');
-}
-
-// Strip characters that break ZIP path segments on Windows/macOS.
-function sanitizePathSegment(name: string): string {
-  return name.replace(/[\\/:*?"<>|]+/g, '_').trim() || 'Untitled';
-}
+import { buildFolderPath, sanitizePathSegment, type FolderRow } from '@/lib/utils/dataRoomPaths';
 
 export async function GET(
   request: NextRequest,

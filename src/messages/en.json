@@ -1003,7 +1003,19 @@
       "noDocumentsInCategory": "No documents in this category yet",
       "inCategory": "in",
       "download": "Download",
-      "heldBy": "Held By:"
+      "heldBy": "Held By:",
+      "packagingFetching": "Preparing package — {done} of {total}",
+      "packagingRetrying": "Retrying {done} of {total} (attempt {round} of 2)",
+      "packagingZipping": "Compressing — {percent}%",
+      "packagingFinalizing": "Finalizing download…",
+      "dontCloseTab": "Don't close this tab until the download starts.",
+      "cancel": "Cancel",
+      "dismiss": "Dismiss",
+      "packageFailed": "Download failed: {reason}",
+      "packagePartial": "Downloaded {succeeded} of {total} files — {missing} couldn't be retrieved.",
+      "packagePartialNames": "Missing: {names}",
+      "packagePartialNamesOverflow": "Missing: {names} and {overflow} more.",
+      "packagePartialRetryHint": "Click Download All again to retry the missing files."
     },
     "compare": {
       "title": "Deal Comparison",

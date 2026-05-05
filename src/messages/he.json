@@ -1003,7 +1003,19 @@
       "noDocumentsInCategory": "אין מסמכים בקטגוריה זו עדיין",
       "inCategory": "ב",
       "download": "הורדה",
-      "heldBy": "מוחזק ע\"י:"
+      "heldBy": "מוחזק ע\"י:",
+      "packagingFetching": "מכין חבילה — {done} מתוך {total}",
+      "packagingRetrying": "מנסה שוב {done} מתוך {total} (ניסיון {round} מתוך 2)",
+      "packagingZipping": "דוחס — {percent}%",
+      "packagingFinalizing": "מסיים הורדה…",
+      "dontCloseTab": "אל תסגור את הכרטיסייה עד שההורדה תתחיל.",
+      "cancel": "ביטול",
+      "dismiss": "סגור",
+      "packageFailed": "ההורדה נכשלה: {reason}",
+      "packagePartial": "הורדו {succeeded} מתוך {total} קבצים — {missing} לא הצליחו להוריד.",
+      "packagePartialNames": "חסרים: {names}",
+      "packagePartialNamesOverflow": "חסרים: {names} ועוד {overflow}.",
+      "packagePartialRetryHint": "לחץ על 'הורד הכל' שוב כדי לנסות שוב את הקבצים החסרים."
     },
     "compare": {
       "title": "השוואת עסקאות",

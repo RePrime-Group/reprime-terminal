@@ -1,9 +1,10 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { TerminalDDFolder, TerminalDDDocument, DataRoomFolderNode } from '@/lib/types/database';
 import { FolderIcon, FileIcon } from '@/components/ui/DataRoomIcons';
+import { buildAndDownloadZip, type PackageDoc, type PackageFailure, type PackageProgress } from '@/lib/utils/clientZipPackage';
 
 interface TaskItem {
   id: string;
@@ -91,6 +92,37 @@ function allUploadedDocs(roots: DataRoomFolderNode[]): TerminalDDDocument[] {
   return out;
 }
 
+// Walk the tree once and emit { docId, fileName, folderPath } for every
+// uploaded document. folderPath uses "/" separators and is unsanitized — the
+// client-side zipper sanitizes each segment. Docs with no folder land under
+// "Uncategorized" to mirror the server route's behavior.
+interface DocWithPath {
+  doc: TerminalDDDocument;
+  folderPath: string;
+}
+
+function collectDocsWithPaths(roots: DataRoomFolderNode[]): DocWithPath[] {
+  const out: DocWithPath[] = [];
+  const walk = (node: DataRoomFolderNode, trail: string[]) => {
+    const nextTrail = [...trail, node.name];
+    const folderPath = nextTrail.join('/');
+    for (const d of node.documents) {
+      if (d.storage_path) out.push({ doc: d, folderPath });
+    }
+    for (const c of node.children) walk(c, nextTrail);
+  };
+  roots.forEach((r) => walk(r, []));
+  return out;
+}
+
+function toPackageDocs(docs: DocWithPath[]): PackageDoc[] {
+  return docs.map(({ doc, folderPath }) => ({
+    id: doc.id,
+    fileName: doc.display_name ?? doc.name,
+    folderPath: folderPath || 'Uncategorized',
+  }));
+}
+
 // Breadcrumb path to a folder: "Leases → Five Star Grocery"
 function pathLabelFor(roots: DataRoomFolderNode[], folderId: string): string {
   const walk = (nodes: DataRoomFolderNode[], trail: string[]): string[] | null => {
@@ -109,17 +141,27 @@ function pathLabelFor(roots: DataRoomFolderNode[], folderId: string): string {
 // ── Component ────────────────────────────────────────────────────────────────
 
 export default function DataRoomTab({
-  folders, dealId, investorName, investorEmail,
+  folders, dealId, dealName, investorName, investorEmail,
   onViewDocument, onDocumentDownload,
 }: DataRoomTabProps) {
   const t = useTranslations('portal.dataRoom');
 
   const tree = useMemo(() => buildTree(folders), [folders]);
   const uploadedDocs = useMemo(() => allUploadedDocs(tree), [tree]);
+  const docsWithPaths = useMemo(() => collectDocsWithPaths(tree), [tree]);
 
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDocs, setSelectedDocs] = useState<Set<string>>(new Set());
+
+  const [packaging, setPackaging] = useState<PackageProgress | null>(null);
+  const [packageError, setPackageError] = useState<string | null>(null);
+  const [packageWarning, setPackageWarning] = useState<{
+    failed: PackageFailure[];
+    succeeded: number;
+    total: number;
+  } | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const toggleExpanded = (id: string) => {
     setExpanded((prev) => {
@@ -170,13 +212,66 @@ export default function DataRoomTab({
     return hits;
   }, [searchQuery, tree]);
 
-  function downloadSelected() {
-    if (selectedDocs.size === 0) return;
-    const ids = [...selectedDocs].join(',');
-    window.location.href = `/api/deals/${dealId}/package?docs=${ids}`;
+  async function runPackage(mode: 'complete_package' | 'selected_package', docs: PackageDoc[]) {
+    if (docs.length === 0 || packaging) return;
+    setPackageError(null);
+    setPackageWarning(null);
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setPackaging({ done: 0, total: docs.length, currentFile: null, phase: 'fetching' });
+    try {
+      const result = await buildAndDownloadZip({
+        dealId,
+        dealName,
+        mode,
+        docs,
+        signal: controller.signal,
+        onProgress: (p) => setPackaging(p),
+      });
+      if (result.failures.length > 0) {
+        setPackageWarning({
+          failed: result.failures,
+          succeeded: result.succeeded,
+          total: result.total,
+        });
+      }
+    } catch (err) {
+      if ((err as DOMException)?.name !== 'AbortError') {
+        setPackageError(err instanceof Error ? err.message : 'Download failed');
+      }
+    } finally {
+      abortRef.current = null;
+      setPackaging(null);
+    }
   }
 
+  function downloadAll() {
+    void runPackage('complete_package', toPackageDocs(docsWithPaths));
+  }
+
+  function downloadSelected() {
+    if (selectedDocs.size === 0) return;
+    const filtered = docsWithPaths.filter(({ doc }) => selectedDocs.has(doc.id));
+    void runPackage('selected_package', toPackageDocs(filtered));
+  }
+
+  function cancelPackage() {
+    abortRef.current?.abort();
+  }
+
+  // Browser warns the investor before they close the tab mid-package.
+  useEffect(() => {
+    if (!packaging) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [packaging]);
+
   const hasSelection = selectedDocs.size > 0;
+  const isPackaging = !!packaging;
 
   return (
     <div>
@@ -186,9 +281,11 @@ export default function DataRoomTab({
           {t('watermarked')}{' '}
           <span className="font-semibold text-[#0E3470]">{investorName}</span> · {investorEmail}
         </p>
-        <a
-          href={`/api/deals/${dealId}/package`}
-          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[#0F1B2D] text-white text-[12px] font-semibold hover:bg-[#1a2a42] transition-colors self-start sm:self-auto shrink-0"
+        <button
+          type="button"
+          onClick={downloadAll}
+          disabled={isPackaging || uploadedDocs.length === 0}
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[#0F1B2D] text-white text-[12px] font-semibold hover:bg-[#1a2a42] transition-colors self-start sm:self-auto shrink-0 disabled:opacity-60 disabled:cursor-not-allowed"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
@@ -196,8 +293,118 @@ export default function DataRoomTab({
             <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
           {t('downloadAll')} ({uploadedDocs.length})
-        </a>
+        </button>
       </div>
+
+      {/* Packaging progress / error / partial-success banner */}
+      {(packaging || packageError || packageWarning) && (
+        <div className="px-4 md:px-6 pb-2">
+          {packaging && (
+            <div className="rounded-lg border border-[#E5E7EB] bg-white p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="text-[12px] font-semibold text-[#0F1B2D]">
+                    {packaging.phase === 'fetching'
+                      ? t('packagingFetching', { done: packaging.done, total: packaging.total })
+                      : packaging.phase === 'retrying'
+                      ? t('packagingRetrying', {
+                          done: packaging.retryDone ?? 0,
+                          total: packaging.retryTotal ?? 0,
+                          round: packaging.retryRound ?? 1,
+                        })
+                      : packaging.phase === 'zipping'
+                      ? t('packagingZipping', { percent: Math.round(packaging.zipPercent ?? 0) })
+                      : t('packagingFinalizing')}
+                  </div>
+                  {packaging.currentFile && (
+                    <div className="mt-0.5 text-[11px] text-[#9CA3AF] truncate">
+                      {packaging.currentFile}
+                    </div>
+                  )}
+                  <div className="mt-2 h-1.5 w-full bg-[#F3F4F6] rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[#C8A951] transition-[width] duration-200"
+                      style={{
+                        width: `${
+                          packaging.phase === 'fetching'
+                            ? Math.round((packaging.done / Math.max(packaging.total, 1)) * 100)
+                            : packaging.phase === 'retrying'
+                            ? Math.round(((packaging.retryDone ?? 0) / Math.max(packaging.retryTotal ?? 1, 1)) * 100)
+                            : Math.round(packaging.zipPercent ?? 0)
+                        }%`,
+                      }}
+                    />
+                  </div>
+                  <div className="mt-1 text-[10px] text-[#9CA3AF]">
+                    {t('dontCloseTab')}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={cancelPackage}
+                  className="shrink-0 px-2.5 py-1 rounded-md border border-[#E5E7EB] text-[11px] font-semibold text-[#0F1B2D] hover:bg-[#F9FAFB] transition-colors"
+                >
+                  {t('cancel')}
+                </button>
+              </div>
+            </div>
+          )}
+          {!packaging && packageError && (
+            <div className="rounded-lg border border-[#FCA5A5] bg-[#FEF2F2] p-2.5 flex items-center justify-between gap-2">
+              <span className="text-[12px] text-[#991B1B] truncate">
+                {t('packageFailed', { reason: packageError })}
+              </span>
+              <button
+                type="button"
+                onClick={() => setPackageError(null)}
+                className="shrink-0 text-[11px] font-semibold text-[#991B1B] hover:underline"
+              >
+                {t('dismiss')}
+              </button>
+            </div>
+          )}
+          {!packaging && !packageError && packageWarning && (() => {
+            // Cap the inline filename list. Past the cap, swap to a count-only
+            // message so a Knox-Mall-with-everything-on-fire scenario doesn't
+            // produce a wall of red.
+            const NAME_CAP = 3;
+            const failed = packageWarning.failed;
+            const shownNames = failed.slice(0, NAME_CAP).map((f) => f.name);
+            const overflow = failed.length - shownNames.length;
+            return (
+              <div className="rounded-lg border border-[#FCD34D] bg-[#FFFBEB] p-3 flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="text-[12px] font-semibold text-[#92400E]">
+                    {t('packagePartial', {
+                      succeeded: packageWarning.succeeded,
+                      total: packageWarning.total,
+                      missing: failed.length,
+                    })}
+                  </div>
+                  <div className="mt-1 text-[11px] text-[#92400E]/90 break-words">
+                    {overflow > 0
+                      ? t('packagePartialNamesOverflow', {
+                          names: shownNames.join(', '),
+                          overflow,
+                        })
+                      : t('packagePartialNames', { names: shownNames.join(', ') })}
+                  </div>
+                  <div className="mt-1 text-[11px] text-[#92400E]/80">
+                    {t('packagePartialRetryHint')}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPackageWarning(null)}
+                  className="shrink-0 text-[11px] font-semibold text-[#92400E] hover:underline"
+                >
+                  {t('dismiss')}
+                </button>
+              </div>
+            );
+          })()}
+        </div>
+      )}
 
       {/* Search + bulk download */}
       <div className="px-4 md:px-6 pb-2 flex items-center gap-2">
@@ -220,7 +427,8 @@ export default function DataRoomTab({
         {hasSelection && (
           <button
             onClick={downloadSelected}
-            className="py-[8px] px-3 rounded-lg bg-[#C8A951] text-[#0F1B2D] text-[12px] font-semibold whitespace-nowrap hover:bg-[#b89a42] transition-colors"
+            disabled={isPackaging}
+            className="py-[8px] px-3 rounded-lg bg-[#C8A951] text-[#0F1B2D] text-[12px] font-semibold whitespace-nowrap hover:bg-[#b89a42] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
             ⬇ {t('downloadSelected', { count: selectedDocs.size })}
           </button>

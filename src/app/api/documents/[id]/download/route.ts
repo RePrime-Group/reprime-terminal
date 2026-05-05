@@ -53,20 +53,38 @@ export async function GET(
   // for legacy rows backfilled pre-rename feature.
   const downloadName: string = doc.display_name ?? doc.name;
 
-  await supabase.from('terminal_activity_log').insert({
-    user_id: user.id,
-    deal_id: doc.deal_id,
-    action: 'document_downloaded',
-    metadata: { document_name: downloadName, document_id: id },
-  });
+  // bulk=1 is set by the client-side ZIP packager so the bundle gets a single
+  // summary activity row instead of N per-file rows.
+  const isBulk = request.nextUrl.searchParams.get('bulk') === '1';
+  if (!isBulk) {
+    await supabase.from('terminal_activity_log').insert({
+      user_id: user.id,
+      deal_id: doc.deal_id,
+      action: 'document_downloaded',
+      metadata: { document_name: downloadName, document_id: id },
+    });
+  }
 
   let responseBytes: ArrayBuffer;
   const isPDF = doc.file_type === 'application/pdf' || doc.name?.endsWith('.pdf');
 
   if (isPDF) {
     const pdfBytes = new Uint8Array(await fileData.arrayBuffer());
-    const watermarked = await watermarkPDF(pdfBytes, terminalUser.full_name);
-    responseBytes = watermarked.buffer as ArrayBuffer;
+    try {
+      const watermarked = await watermarkPDF(pdfBytes, terminalUser.full_name);
+      responseBytes = watermarked.buffer as ArrayBuffer;
+    } catch (err) {
+      // Fall back to the un-watermarked original instead of failing the
+      // download. Most failures here are user-password-protected PDFs that
+      // pdf-lib genuinely can't open — serving the file beats serving an
+      // error and breaking the bulk-download retry pass. Activity log still
+      // captures that this user pulled this document.
+      console.warn(
+        `[download] watermark failed for doc ${id}, serving original:`,
+        err instanceof Error ? err.message : err,
+      );
+      responseBytes = pdfBytes.buffer as ArrayBuffer;
+    }
   } else {
     responseBytes = await fileData.arrayBuffer();
   }
