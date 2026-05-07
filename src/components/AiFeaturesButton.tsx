@@ -18,14 +18,13 @@ export default function AiFeaturesButton() {
         type="button"
         onClick={close}
         aria-label="Close AI assistant"
-        className="fixed bottom-20 right-5 z-50 group cursor-pointer"
+        className="fixed bottom-20 right-5 z-50 group cursor-pointer inline-flex items-center gap-1.5 h-9 ps-3 pe-3.5 rounded-full text-[12px] font-semibold text-[#0B0E14] bg-gradient-to-br from-[#E8C977] via-[#D4B96A] to-[#BC9C45] shadow-[0_6px_18px_rgba(212,185,106,0.4)] hover:shadow-[0_8px_22px_rgba(212,185,106,0.55)] transition-all duration-200"
       >
-        <span className="flex items-center justify-center w-11 h-11 rounded-full bg-[#BC9C45]/20 border border-[#BC9C45] shadow-[0_10px_30px_rgba(10,22,40,0.35)] transition-colors">
-          <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="#D4A843" strokeWidth="1.8" strokeLinecap="round">
-            <line x1="2" y1="2" x2="10" y2="10" />
-            <line x1="10" y1="2" x2="2" y2="10" />
-          </svg>
-        </span>
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+          <line x1="2" y1="2" x2="10" y2="10" />
+          <line x1="10" y1="2" x2="2" y2="10" />
+        </svg>
+        <span className="tracking-[0.2px]">Close</span>
       </button>
     );
   }
@@ -39,34 +38,26 @@ export default function AiFeaturesButton() {
         open({ dealId: dealId ?? null, dealName });
       }}
       aria-label="Open AI assistant"
-      className="fixed bottom-20 right-5 z-50 group cursor-pointer"
+      className="fixed bottom-20 right-5 z-50 group cursor-pointer inline-flex items-center gap-1.5 h-9 ps-3 pe-3.5 rounded-full text-[12px] font-semibold text-[#0B0E14] bg-gradient-to-br from-[#E8C977] via-[#D4B96A] to-[#BC9C45] shadow-[0_6px_18px_rgba(212,185,106,0.4)] hover:shadow-[0_10px_26px_rgba(212,185,106,0.6)] hover:-translate-y-[1px] active:translate-y-0 transition-all duration-200 overflow-hidden"
     >
-      {/* Tooltip */}
+      {/* Shimmer sweep on hover */}
       <span
-        className="pointer-events-none absolute bottom-full right-0 mb-2.5 flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#BC9C45]/25 bg-[#0A1628]/95 backdrop-blur-md px-3 py-1.5 shadow-[0_8px_24px_rgba(7,9,15,0.5)] opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200 ease-out"
+        aria-hidden
+        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"
+      />
+      {/* Sparkle icon */}
+      <svg
+        className="relative"
+        width="12"
+        height="12"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        xmlns="http://www.w3.org/2000/svg"
         aria-hidden
       >
-        <span className="w-1 h-1 rounded-full bg-[#D4A843] flex-shrink-0" />
-        <span className="text-[10px] font-semibold uppercase tracking-[2.5px] text-white/70">
-          Terminal
-        </span>
-        <span className="font-[family-name:var(--font-playfair)] italic text-[#D4A843] text-[11px] leading-none">
-          Intelligence
-        </span>
-        {/* Tail */}
-        <span className="absolute -bottom-[5px] right-4 w-2.5 h-2.5 rotate-45 border-b border-r border-[#BC9C45]/25 bg-[#0A1628]/95" aria-hidden />
-      </span>
-
-      <span className="flex items-center justify-center w-11 h-11 rounded-full bg-[#0A1628] border border-[#BC9C45]/40 shadow-[0_10px_30px_rgba(10,22,40,0.35)] hover:border-[#BC9C45] transition-colors">
-        <span className="absolute inset-0 rounded-full bg-[#BC9C45]/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden />
-        <img
-          src="/ai-search.svg"
-          alt=""
-          aria-hidden
-          className="relative w-5 h-5"
-          style={{ filter: 'invert(72%) sepia(41%) saturate(502%) hue-rotate(5deg) brightness(98%) contrast(87%)' }}
-        />
-      </span>
+        <path d="M12 2 L13.6 10.4 L22 12 L13.6 13.6 L12 22 L10.4 13.6 L2 12 L10.4 10.4 Z" />
+      </svg>
+      <span className="relative tracking-[0.2px] whitespace-nowrap">Ask AI</span>
     </button>
   );
 }
