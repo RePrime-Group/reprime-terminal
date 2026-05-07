@@ -2690,7 +2690,7 @@ export default function DealDetailClient({
                   </span>
                 </div>
                 <p className="hidden sm:block text-[11.5px] text-white/55 leading-tight mt-0.5 truncate">
-                  Ask about financials, tenants, leases, or any document on this deal.
+                  Ask about financials, tenants, or leases on this deal.
                 </p>
               </div>
             </div>
