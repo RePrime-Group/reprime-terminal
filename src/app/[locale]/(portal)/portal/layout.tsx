@@ -4,8 +4,7 @@ import { getOnboardingState, nextOnboardingPath } from '@/lib/kyc/onboardingStat
 import PortalNavbar from '@/components/portal/PortalNavbar';
 import MarketTicker from '@/components/portal/MarketTicker';
 import OnboardingOverlay from '@/components/portal/OnboardingOverlay';
-import FloatingButtons from '@/components/FloatingButtons';
-import AssistantHost from '@/components/portal/ai/AssistantHost';
+import BetaLaunchBanner from '@/components/BetaLaunchBanner';
 
 export default async function PortalLayout({
   children,
@@ -37,27 +36,25 @@ export default async function PortalLayout({
   }
 
   return (
-    <AssistantHost>
-      <div className="min-h-dvh rp-page-texture overflow-x-hidden">
-        <MarketTicker />
-        <PortalNavbar
+    <div className="min-h-dvh rp-page-texture overflow-x-hidden">
+      <MarketTicker />
+      <PortalNavbar
+        firstName={terminalUser.full_name?.split(' ')[0] ?? ''}
+        fullName={terminalUser.full_name ?? ''}
+        email={user.email ?? ''}
+        locale={locale}
+        accessTier={(terminalUser as { access_tier?: 'investor' | 'marketplace_only' | null }).access_tier ?? 'investor'}
+      />
+      {!terminalUser.onboarding_completed && (
+        <OnboardingOverlay
           firstName={terminalUser.full_name?.split(' ')[0] ?? ''}
-          fullName={terminalUser.full_name ?? ''}
-          email={user.email ?? ''}
-          locale={locale}
-          accessTier={(terminalUser as { access_tier?: 'investor' | 'marketplace_only' | null }).access_tier ?? 'investor'}
+          userId={user.id}
         />
-        {!terminalUser.onboarding_completed && (
-          <OnboardingOverlay
-            firstName={terminalUser.full_name?.split(' ')[0] ?? ''}
-            userId={user.id}
-          />
-        )}
-        <main>
-          {children}
-        </main>
-        <FloatingButtons />
-      </div>
-    </AssistantHost>
+      )}
+      <main>
+        {children}
+      </main>
+      <BetaLaunchBanner />
+    </div>
   );
 }

@@ -31,9 +31,6 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-intersection-observer": "^10.0.3",
-    "react-markdown": "^10.1.0",
-    "rehype-sanitize": "^6.0.0",
-    "remark-gfm": "^4.0.1",
     "resend": "^6.9.4",
     "three": "^0.183.2",
     "xlsx-js-style": "^1.2.0"

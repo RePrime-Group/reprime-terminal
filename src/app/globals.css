@@ -343,44 +343,4 @@
     100% { transform: scaleY(1); }
   }
 
-  /* AI assistant thinking sparkle (replaces three-dot indicator) */
-  .ai-sparkle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transform-origin: center;
-    animation: aiSparklePulse 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    filter: drop-shadow(0 0 4px rgba(188, 156, 69, 0.55));
-  }
-
-  @keyframes aiSparklePulse {
-    0%, 100% {
-      transform: scale(0.85) rotate(0deg);
-      opacity: 0.7;
-    }
-    50% {
-      transform: scale(1.15) rotate(45deg);
-      opacity: 1;
-    }
-  }
-
-  /* Subtle shimmer on the rotating status text */
-  .ai-status-text {
-    background: linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.55) 0%,
-      rgba(255, 255, 255, 0.95) 50%,
-      rgba(255, 255, 255, 0.55) 100%
-    );
-    background-size: 200% 100%;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    animation: aiStatusShimmer 2.4s linear infinite;
-  }
-
-  @keyframes aiStatusShimmer {
-    0%   { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-  }
 }

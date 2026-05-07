@@ -1,19 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useDealAssistantPanelOptional } from '@/components/portal/ai/DealAssistantContext';
 
 // Official launch: 90 days from April 19, 2026 = July 18, 2026 (00:00 UTC).
 const LAUNCH_DATE_ISO = '2026-07-18T00:00:00Z';
 
 export default function BetaLaunchBanner() {
-  const assistant = useDealAssistantPanelOptional();
   const [now, setNow] = useState<number | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
-  // Collapse when the AI assistant panel is open
-  const shouldShowAsCircle = collapsed || (assistant?.isOpen ?? false);
+  const shouldShowAsCircle = collapsed;
 
   useEffect(() => {
     setNow(Date.now());
