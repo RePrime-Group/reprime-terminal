@@ -24,6 +24,7 @@ import { OverviewFinancials, DealStructureFinancials } from '@/components/portal
 import { parseDealInputs, calculateDeal, calculatePropertyMetrics, calculateTraditionalClose, type DealInputs, type DealMetrics } from '@/lib/utils/deal-calculator';
 import { exportDealToExcel } from '@/lib/utils/excel-export';
 import RePrimeLogo from '@/components/RePrimeLogo';
+import { useDealAssistantPanelOptional } from '@/components/portal/ai/DealAssistantContext';
 import type {
   DealWithDetails,
   TerminalDDFolder,
@@ -90,7 +91,8 @@ type TabKey =
   | 'deal-structure'
   | 'capex'
   | 'exit-strategy'
-  | 'schedule';
+  | 'schedule'
+  | 'assistant';
 type CalculatorMode = 'assignment' | 'gplp' | 'custom';
 
 // ---------------------------------------------------------------------------
@@ -2455,13 +2457,20 @@ export default function DealDetailClient({
     { key: 'capex', label: 'CapEx & Condition', enabled: showCapex },
     { key: 'exit-strategy', label: 'Exit Strategy', enabled: showExitStrategy },
     { key: 'schedule', label: t('scheduleContact'), enabled: true },
+    { key: 'assistant', label: 'Assistant', enabled: !previewMode },
   ];
+
+  const assistantPanel = useDealAssistantPanelOptional();
 
   // Social proof visibility
   const showSocialProof = (deal.viewing_count ?? 0) > 0 || (deal.meetings_count ?? 0) > 0;
 
   return (
-    <div className="min-h-dvh rp-page-texture font-[family-name:var(--font-poppins)]">
+    <div
+      className="min-h-dvh rp-page-texture font-[family-name:var(--font-poppins)]"
+      data-deal-id={deal.id}
+      data-deal-name={deal.name}
+    >
       {/* ------------------------------------------------------------------ */}
       {/* HERO GRADIENT BANNER                                               */}
       {/* ------------------------------------------------------------------ */}
@@ -2628,6 +2637,53 @@ export default function DealDetailClient({
         </div>
 
         {/* ------------------------------------------------------------------ */}
+        {/* AI SPOTLIGHT BANNER                                                */}
+        {/* ------------------------------------------------------------------ */}
+        {!previewMode && (
+          <div className="relative overflow-hidden bg-gradient-to-r from-[#07090F] via-[#0A1628] to-[#07090F] px-4 md:px-8 py-3 flex items-center justify-between gap-3">
+            <div
+              className="pointer-events-none absolute inset-0 opacity-[0.06]"
+              style={{ background: 'radial-gradient(ellipse at 30% 50%, rgba(212,185,106,0.8) 0%, transparent 60%)' }}
+              aria-hidden
+            />
+            <div className="relative flex items-center gap-2.5 min-w-0">
+              <div className="flex-shrink-0 w-7 h-7 rounded-full bg-[#BC9C45]/15 border border-[#BC9C45]/30 flex items-center justify-center">
+                <img
+                  src="/ai-search.svg"
+                  alt=""
+                  aria-hidden
+                  className="w-3.5 h-3.5"
+                  style={{ filter: 'invert(72%) sepia(41%) saturate(502%) hue-rotate(5deg) brightness(98%) contrast(87%)' }}
+                />
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[9px] font-semibold uppercase tracking-[2.5px] text-[#D4A843]">
+                  Terminal Intelligence
+                </span>
+                <span className="hidden sm:inline text-white/20 text-[10px]">·</span>
+                <span className="hidden sm:inline text-[11px] text-white/50">
+                  AI analysis active for this deal  ask anything
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => assistantPanel?.open({ dealId: deal.id, dealName: deal.name })}
+              className="relative flex-shrink-0 group inline-flex items-center gap-1.5 h-8 pl-3 pr-3.5 rounded-full text-[11px] font-semibold text-[#0B0E14] bg-gradient-to-br from-[#E8C977] via-[#D4B96A] to-[#BC9C45] shadow-[0_2px_10px_rgba(212,185,106,0.3)] hover:shadow-[0_4px_18px_rgba(212,185,106,0.55)] hover:-translate-y-[1px] active:translate-y-0 transition-all duration-200 overflow-hidden"
+            >
+              <span
+                aria-hidden
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"
+              />
+              <span className="relative">Ask AI</span>
+              <svg className="relative" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        {/* ------------------------------------------------------------------ */}
         {/* CANCELLED-DEAL BANNER                                              */}
         {/* ------------------------------------------------------------------ */}
         {deal.status === 'cancelled' && (
@@ -2729,22 +2785,51 @@ export default function DealDetailClient({
             {/* 5C. TERMINAL INTELLIGENCE PANEL                                    */}
             {/* ------------------------------------------------------------------ */}
             
-              <div className="bg-white rounded-xl p-5 border border-[#EEF0F4] rp-card-shadow">
-                {/* Header */}
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-9 h-9 rounded-lg bg-[#BC9C45]/10 flex items-center justify-center">
-                    <span className="text-[#BC9C45] text-lg">{'\u26A1'}</span>
-                  </div>
-                  <div>
-                    <div className="text-[12px] font-[700] uppercase tracking-[2px] text-[#BC9C45]">
-                      {t('terminalIntelligence')}
+              <div className="bg-white rounded-xl overflow-hidden border border-[#EEF0F4] rp-card-shadow">
+                {/* Dark header strip with Ask AI CTA */}
+                <div className="relative overflow-hidden bg-gradient-to-r from-[#07090F] via-[#0A1628] to-[#07090F] px-4 py-3 flex items-center justify-between gap-2">
+                  <div
+                    className="pointer-events-none absolute inset-0 opacity-[0.08]"
+                    style={{ background: 'radial-gradient(ellipse at left, #D4B96A 0%, transparent 60%)' }}
+                    aria-hidden
+                  />
+                  <div className="relative flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-[#BC9C45]/15 border border-[#BC9C45]/30 flex items-center justify-center flex-shrink-0">
+                      <img
+                        src="/ai-search.svg"
+                        alt=""
+                        aria-hidden
+                        className="w-3.5 h-3.5"
+                        style={{ filter: 'invert(72%) sepia(41%) saturate(502%) hue-rotate(5deg) brightness(98%) contrast(87%)' }}
+                      />
                     </div>
-                    <div className="text-[9px] text-[#9CA3AF]">
-                      {t('institutionalAnalysis')}
+                    <div>
+                      <div className="text-[9px] font-semibold uppercase tracking-[2.5px] text-[#D4A843]">
+                        {t('terminalIntelligence')}
+                      </div>
+                      <div className="text-[8.5px] text-white/35">
+                        {t('institutionalAnalysis')}
+                      </div>
                     </div>
                   </div>
+                  {!previewMode && (
+                    <button
+                      type="button"
+                      onClick={() => assistantPanel?.open({ dealId: deal.id, dealName: deal.name })}
+                      className="relative flex-shrink-0 group inline-flex items-center gap-1.5 h-7 pl-2.5 pr-3 rounded-full text-[10px] font-semibold text-[#0B0E14] bg-gradient-to-br from-[#E8C977] via-[#D4B96A] to-[#BC9C45] shadow-[0_2px_8px_rgba(212,185,106,0.3)] hover:shadow-[0_4px_14px_rgba(212,185,106,0.5)] hover:-translate-y-[1px] active:translate-y-0 transition-all duration-200 overflow-hidden"
+                    >
+                      <span
+                        aria-hidden
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"
+                      />
+                      <svg className="relative" width="10" height="10" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                        <path d="M40.3299141 17.2120533c0 .8254967.4496689 1.5848637 1.1737671 1.9805279l7.5286484 4.1175575 4.1164551 7.5286465c.3956642.7229977 1.1550331 1.173769 1.980526 1.173769.8254967 0 1.5848618-.4496689 1.9805298-1.173769l4.1175537-7.5286465 7.5286484-4.1175575c.7240982-.3956642 1.1737671-1.1550312 1.1737671-1.9805279 0-.8254948-.4496689-1.5848618-1.1737671-1.980526l-7.5286484-4.1175566-4.1175537-7.5286484c-.7913322-1.4481983-3.1697273-1.4459941-3.9610558 0l-4.1164551 7.5286484-7.5286484 4.1175566C40.779583 15.6271915 40.3299141 16.3865585 40.3299141 17.2120533z"/>
+                      </svg>
+                      <span className="relative">Ask AI</span>
+                    </button>
+                  )}
                 </div>
-                {/* Body */}
+                <div className="p-5">
                 <p
                   ref={thesisRef}
                   className={`text-[13px] text-[#4B5563] leading-[1.7] ${thesisExpanded ? '' : 'line-clamp-4'}`}
@@ -2811,8 +2896,9 @@ export default function DealDetailClient({
                     </span>
                   )}
                 </div>
+                </div>{/* /p-5 body */}
               </div>
-            
+
 
             {/* ------------------------------------------------------------------ */}
             {/* 5D. TRANSACTION DOCUMENTS (OM + Signed LOI + PSA)                  */}
@@ -2963,6 +3049,10 @@ export default function DealDetailClient({
                   onClick={() => {
                     if (isLocked) {
                       setShowNDAModal(true);
+                      return;
+                    }
+                    if (tab.key === 'assistant') {
+                      assistantPanel?.open({ dealId: deal.id, dealName: deal.name });
                       return;
                     }
                     setActiveTab(tab.key);

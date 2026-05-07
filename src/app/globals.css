@@ -159,6 +159,58 @@
     to { opacity: 1; transform: translateX(0); }
   }
 
+  .animate-rp-slide-in-right {
+    animation: rpSlideInRight 0.25s cubic-bezier(0.2, 0, 0, 1) forwards;
+  }
+  .animate-rp-slide-in-left {
+    animation: rpSlideInLeft 0.25s cubic-bezier(0.2, 0, 0, 1) forwards;
+  }
+
+  @keyframes rpSlideInRight {
+    from { transform: translateX(100%); }
+    to   { transform: translateX(0); }
+  }
+  @keyframes rpSlideInLeft {
+    from { transform: translateX(-100%); }
+    to   { transform: translateX(0); }
+  }
+
+  .animate-rp-bubble-in {
+    animation: rpBubbleIn 0.28s cubic-bezier(0.2, 0, 0, 1) forwards;
+    transform-origin: bottom right;
+  }
+  .animate-rp-bubble-in-left {
+    animation: rpBubbleIn 0.28s cubic-bezier(0.2, 0, 0, 1) forwards;
+    transform-origin: bottom left;
+  }
+  @keyframes rpBubbleIn {
+    from { opacity: 0; transform: translateY(12px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .animate-rp-msg-in {
+    animation: rpMsgIn 0.22s ease-out forwards;
+  }
+  @keyframes rpMsgIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .rp-cursor-blink {
+    animation: rpCursorBlink 0.9s steps(2, start) infinite;
+  }
+  @keyframes rpCursorBlink {
+    50% { opacity: 0; }
+  }
+
+  .animate-rp-pill-in {
+    animation: rpPillIn 0.32s cubic-bezier(0.2, 0, 0, 1) forwards;
+  }
+  @keyframes rpPillIn {
+    from { opacity: 0; transform: translateY(8px) scale(0.92); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
   /* Slide-down for dropdowns */
   .animate-slide-down {
     animation: slideDown 0.2s ease-out forwards;

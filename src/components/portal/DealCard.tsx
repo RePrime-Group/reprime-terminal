@@ -8,6 +8,7 @@ import { formatPercent, formatDSCR, formatPrice } from '@/lib/utils/format';
 import type { DealCardData } from '@/components/portal/PortalDashboardClient';
 import { friendlyFetchError } from '@/lib/utils/friendly-error';
 import DealNotepad from '@/components/portal/DealNotepad';
+import DealCardAiIcon from '@/components/portal/ai/DealCardAiIcon';
 
 interface DealCardProps {
   deal: DealCardData;
@@ -180,6 +181,17 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
                 initialContent={deal.note_content ?? ''}
                 initialUpdatedAt={deal.note_updated_at ?? undefined}
               />
+            </div>
+          )}
+
+          {/* AI assistant icon — stacked below notepad */}
+          {!previewMode && (
+            <div
+              className="absolute top-[92px] right-1 z-[3] p-2 min-w-[44px] min-h-[44px] flex items-center justify-center"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              <DealCardAiIcon dealId={deal.id} dealName={deal.name} />
             </div>
           )}
 

@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Link, usePathname } from '@/i18n/navigation';
 import Image from 'next/image';
 import RePrimeLogo from '@/components/RePrimeLogo';
+import AskAiSelector from '@/components/portal/ai/AskAiSelector';
 
 interface PortalNavbarProps {
   firstName: string;
@@ -141,6 +142,7 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
 
         {/* Right */}
         <div className="flex items-center gap-2 md:gap-3">
+          <AskAiSelector />
           {/* Notification Bell — wrapper is static on mobile so dropdown anchors to the sticky nav */}
           <div className="md:relative" ref={notifRef} data-tour="notif-bell">
             <button
