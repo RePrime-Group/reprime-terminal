@@ -46,3 +46,6 @@ db.sql
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local secrets in helper scripts
+scripts/connect-n8n-mcp.sh
