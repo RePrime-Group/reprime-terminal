@@ -54,14 +54,23 @@ export default function MessageList({
         <div
           role="status"
           aria-live="polite"
-          className="flex items-center gap-2 text-[12px] text-white/55"
+          className="flex items-center gap-2.5 text-[12px] text-white/60"
         >
-          <span className="inline-flex gap-1" aria-hidden>
-            <span className="w-1.5 h-1.5 rounded-full bg-[#BC9C45] animate-pulse" />
-            <span className="w-1.5 h-1.5 rounded-full bg-[#BC9C45] animate-pulse [animation-delay:120ms]" />
-            <span className="w-1.5 h-1.5 rounded-full bg-[#BC9C45] animate-pulse [animation-delay:240ms]" />
+          <span className="ai-sparkle" aria-hidden>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 2 L13.6 10.4 L22 12 L13.6 13.6 L12 22 L10.4 13.6 L2 12 L10.4 10.4 Z"
+                fill="#BC9C45"
+              />
+            </svg>
           </span>
-          <span>{t(statusText as 'thinking')}</span>
+          <span className="ai-status-text">{statusText}</span>
         </div>
       )}
 

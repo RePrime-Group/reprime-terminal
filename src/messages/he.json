@@ -1330,7 +1330,7 @@
     "copyright": "© {year} RePrime Terminal. כל הזכויות שמורות."
   },
   "ai": {
-    "title": "עוזר העסקה",
+    "title": "Terminal Assistance",
     "subtitle": "ממוקד ב-{deal}",
     "askPlaceholder": "שאל על העסקה הזו…",
     "askPill": "שאל את ה-AI",
@@ -1341,12 +1341,13 @@
     "expand": "הרחב חלונית",
     "collapse": "כווץ חלונית",
     "send": "שלח",
+    "stop": "עצור תשובה",
     "voiceInput": "קלט קולי (בקרוב)",
     "voiceInputUnsupported": "הדפדפן לא תומך בקלט קולי",
     "newThread": "שיחה חדשה",
     "threadHistory": "היסטוריה",
     "noPriorThreads": "אין שיחות קודמות על עסקה זו",
-    "emptyGreeting": "אני עוזר העסקה של {deal}. שאל אותי על הפיננסים, השוכרים או חדר הנתונים.",
+    "emptyGreeting": "אני Terminal Assistance של {deal}. שאל אותי על הפיננסים, השוכרים או חדר הנתונים.",
     "suggestedPrompts": "הצעות לשאלות",
     "prompt1": "סכם את לוח השכירויות ואת ריכוז השוכרים",
     "prompt2": "מה ה-IRR אם תשואת היציאה תעלה ל-9%?",

@@ -1,0 +1,132 @@
+{
+  "name": "deal-assistant-custom-tools",
+  "active": true,
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 304],
+      "parameters": { "inputSource": "passthrough" }
+    },
+    {
+      "id": "validate",
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [464, 304],
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst deal_id = input.deal_id;\nconst user_id = input.user_id;\nconst scenario_type = (input.scenario_type || 'cap_rate').toLowerCase();\n\nlet assumptions = input.assumptions || {};\nif (typeof assumptions === 'string') {\n  try { assumptions = JSON.parse(assumptions); } catch { assumptions = {}; }\n}\n\nconst validTypes = ['cap_rate', 'noi', 'cash_on_cash', 'dscr', 'full_underwrite'];\nif (!validTypes.includes(scenario_type)) {\n  throw new Error(`Invalid scenario_type. Must be one of: ${validTypes.join(', ')}`);\n}\nif (!deal_id || !user_id) {\n  throw new Error('deal_id and user_id are required');\n}\n\nreturn [{ json: { deal_id, user_id, scenario_type, assumptions } }];"
+      }
+    },
+    {
+      "id": "fetch-deal",
+      "name": "Fetch Deal",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [688, 304],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "terminal_deals",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            { "keyName": "id", "condition": "eq", "keyValue": "={{ $json.deal_id }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "deal-found",
+      "name": "Deal Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [912, 304],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "exists", "singleValue": true }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "respond-not-found",
+      "name": "Respond Not Found",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1120, 512],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "error",
+              "type": "string",
+              "value": "Deal not found or not accessible."
+            },
+            {
+              "id": "a2",
+              "name": "scenario_type",
+              "type": "string",
+              "value": "={{ $('Validate Input').item.json.scenario_type }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "call-compute-api",
+      "name": "Call Compute API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 288],
+      "parameters": {
+        "method": "POST",
+        "url": "https://reprimeterminal.com/api/ai/compute-scenario",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-internal-token", "value": "={{ $env.N8N_INTERNAL_TOKEN }}" },
+            { "name": "content-type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ deal_id: $('Validate Input').item.json.deal_id, scenario_type: $('Validate Input').item.json.scenario_type, assumptions: $('Validate Input').item.json.assumptions }) }}",
+        "options": { "timeout": 25000 }
+      }
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": { "main": [[{ "node": "Validate Input", "type": "main", "index": 0 }]] },
+    "Validate Input": { "main": [[{ "node": "Fetch Deal", "type": "main", "index": 0 }]] },
+    "Fetch Deal": { "main": [[{ "node": "Deal Found?", "type": "main", "index": 0 }]] },
+    "Deal Found?": {
+      "main": [
+        [{ "node": "Call Compute API", "type": "main", "index": 0 }],
+        [{ "node": "Respond Not Found", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "errorWorkflow": "3BgcBtDAuSj0zdYy",
+    "callerPolicy": "workflowsFromSameOwner",
+    "binaryMode": "separate"
+  },
+  "tags": []
+}

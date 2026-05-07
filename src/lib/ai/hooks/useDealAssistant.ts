@@ -14,17 +14,17 @@ export interface UseDealAssistantState {
 }
 
 const STATUS_ROTATION = [
-  'thinking',
-  'lookingUp',
-  'computing',
-  'draftingResponse',
-  'polishingProse',
-  'checkingFacts',
-  'finishingTouches',
-  'synthesizingData',
-  'runningSimulations',
-  'mappingLogic',
-  'identifyingPatterns',
+  'Thinking',
+  'Looking up deal data',
+  'Crunching the numbers',
+  'Drafting a response',
+  'Polishing the wording',
+  'Checking the facts',
+  'Adding finishing touches',
+  'Synthesizing the data',
+  'Running the scenarios',
+  'Mapping the logic',
+  'Spotting patterns',
 ] as const;
 
 export function useDealAssistant(dealId: string) {
@@ -58,6 +58,17 @@ export function useDealAssistant(dealId: string) {
       error: null,
       freshAssistantId: null,
     });
+  }, []);
+
+  const stop = useCallback(() => {
+    abortRef.current?.abort();
+    if (rotationRef.current) clearInterval(rotationRef.current);
+    setState((s) => ({
+      ...s,
+      status: 'idle',
+      statusText: null,
+      error: null,
+    }));
   }, []);
 
   const loadConversation = useCallback(async (conversationId: string) => {
@@ -159,5 +170,6 @@ export function useDealAssistant(dealId: string) {
     send,
     loadConversation,
     reset,
+    stop,
   };
 }

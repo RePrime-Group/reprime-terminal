@@ -153,6 +153,43 @@ User rates an assistant message.
 
 ---
 
+## `POST /api/ai/compute-scenario` *(internal — n8n → Vercel callback)*
+
+Called only by the n8n `Call Compute API` HTTP node inside `deal-assistant-custom-tools`. **Not** exposed to the browser. Authentication is via shared secret, not Supabase session.
+
+**Headers:**
+
+- `x-internal-token: <N8N_INTERNAL_TOKEN>` (required; mismatch returns 401)
+- `Content-Type: application/json`
+
+**Request:**
+
+```ts
+{
+  deal_id: string;                              // UUID of the deal
+  scenario_type?:                               // default: 'full_underwrite'
+    | 'cap_rate'
+    | 'noi'
+    | 'cash_on_cash'
+    | 'dscr'
+    | 'full_underwrite';
+  assumptions?: {                               // all optional; missing values use deal defaults
+    vacancy_rate?: number;                      // pct or decimal (auto-normalized)
+    ltv?: number;
+    interest_rate?: number;
+    exit_cap_rate?: number;
+    hold_years?: number;
+    rent_growth?: number;
+  };
+}
+```
+
+**Response 200:** scenario-specific shape. Common fields: `scenario_type`, `deal_id`, `deal_name`, `assumptions_applied`, plus the projected metrics (`cap_rate_pct`, `cash_on_cash_pct`, `lender_dscr`, `irr_pct`, etc.). See `src/app/api/ai/compute-scenario/route.ts` `projectScenario()` for the per-type field list.
+
+**Error responses:** `401` (missing/wrong token), `400` (no `deal_id`), `404` (deal not found), `500` (calc failure / Supabase error).
+
+---
+
 ## Mock toggle
 
 Routes branch on `process.env.AI_USE_MOCK`. When `'1'` they read from

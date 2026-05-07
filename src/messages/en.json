@@ -1330,7 +1330,7 @@
     "copyright": "© {year} RePrime Terminal. All rights reserved."
   },
   "ai": {
-    "title": "Deal Assistant",
+    "title": "Terminal Assistance",
     "subtitle": "Scoped to {deal}",
     "askPlaceholder": "Ask about this deal…",
     "askPill": "Ask AI",
@@ -1341,12 +1341,13 @@
     "expand": "Expand panel",
     "collapse": "Collapse panel",
     "send": "Send",
+    "stop": "Stop response",
     "voiceInput": "Voice input (coming soon)",
     "voiceInputUnsupported": "Voice input is not supported in this browser",
     "newThread": "New conversation",
     "threadHistory": "History",
     "noPriorThreads": "No prior conversations on this deal",
-    "emptyGreeting": "I'm your Deal Assistant for {deal}. Ask anything about the financials, tenants, or dataroom.",
+    "emptyGreeting": "I'm Terminal Assistance for {deal}. Ask anything about the financials, tenants, or dataroom.",
     "suggestedPrompts": "Suggested prompts",
     "prompt1": "Summarize the rent roll and tenant concentration",
     "prompt2": "What's the IRR if exit cap rises to 9%?",

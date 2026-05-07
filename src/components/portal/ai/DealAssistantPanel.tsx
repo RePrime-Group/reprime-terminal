@@ -35,6 +35,7 @@ export default function DealAssistantPanel() {
     conversationId,
     loadConversation,
     reset,
+    stop,
     error,
     freshAssistantId,
   } = useDealAssistant(dealId ?? '');
@@ -181,7 +182,12 @@ export default function DealAssistantPanel() {
       )}
 
       {dealId && (
-        <Composer onSend={handleSend} disabled={status === 'sending' || status === 'loading'} />
+        <Composer
+          onSend={handleSend}
+          onStop={stop}
+          disabled={status === 'sending' || status === 'loading'}
+          isStreaming={status === 'sending'}
+        />
       )}
 
       <CitationDrawer citation={activeCitation} onClose={() => setActiveCitation(null)} />

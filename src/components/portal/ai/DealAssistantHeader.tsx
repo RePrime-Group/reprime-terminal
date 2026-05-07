@@ -48,7 +48,7 @@ export default function DealAssistantHeader({
             type="button"
             onClick={onSwitchDeal}
             disabled={!dealName || !onSwitchDeal}
-            className="text-[10px] text-white/45 hover:text-[#D4B96A] disabled:hover:text-white/45 disabled:cursor-not-allowed cursor-pointer truncate transition-colors leading-tight"
+            className="block w-full text-start text-[10px] text-white/45 hover:text-[#D4B96A] disabled:hover:text-white/45 disabled:cursor-not-allowed cursor-pointer truncate transition-colors leading-tight"
             title={dealName ? t('subtitle', { deal: dealName }) : ''}
           >
             {dealName ? t('subtitle', { deal: dealName }) : t('selectDealPrompt')}
