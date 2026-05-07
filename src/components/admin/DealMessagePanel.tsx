@@ -12,10 +12,16 @@ export interface ThreadMessage {
   user_name: string | null;
 }
 
+export interface PreviewMessage {
+  message: string;
+  created_at: string;
+  author_name: string | null;
+}
+
 interface DealMessagePanelProps {
   dealId: string;
   onClose: () => void;
-  onMessageSent: (msg: ThreadMessage) => void;
+  onLatestMessageChange: (latest: PreviewMessage | null) => void;
 }
 
 function getInitials(name: string | null): string {
@@ -39,17 +45,35 @@ function formatStamp(iso: string): string {
   });
 }
 
+function previewFrom(messages: ThreadMessage[]): PreviewMessage | null {
+  if (messages.length === 0) return null;
+  const last = messages[messages.length - 1];
+  return {
+    message: last.message,
+    created_at: last.created_at,
+    author_name: last.user_name,
+  };
+}
+
 // Per-deal cache of fetched threads — survives panel close/reopen within the same SPA session.
 const threadCache = new Map<string, ThreadMessage[]>();
 
-export default function DealMessagePanel({ dealId, onClose, onMessageSent }: DealMessagePanelProps) {
+export default function DealMessagePanel({
+  dealId,
+  onClose,
+  onLatestMessageChange,
+}: DealMessagePanelProps) {
   const t = useTranslations('admin.dealList');
+  const tc = useTranslations('common');
   const supabase = createClient();
   const [messages, setMessages] = useState<ThreadMessage[]>(() => threadCache.get(dealId) ?? []);
   const [loading, setLoading] = useState(!threadCache.has(dealId));
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [currentUser, setCurrentUser] = useState<{ id: string; full_name: string | null } | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState('');
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Fetch the thread (skips network if cached — state already initialized from cache via lazy useState)
@@ -109,22 +133,38 @@ export default function DealMessagePanel({ dealId, onClose, onMessageSent }: Dea
     };
   }, [supabase]);
 
-  // Auto-scroll on open + after new messages
+  // Auto-scroll on open + after new messages (but not during edit, which would yank focus)
   useEffect(() => {
-    if (loading) return;
+    if (loading || editingId) return;
     const el = scrollRef.current;
     if (!el) return;
     el.scrollTop = el.scrollHeight;
-  }, [loading, messages.length]);
+  }, [loading, editingId, messages.length]);
 
-  // Escape closes the panel
+  // Escape closes the panel (or cancels an active edit/confirm first)
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
+      if (e.key !== 'Escape') return;
+      if (confirmDeleteId) {
+        setConfirmDeleteId(null);
+        return;
+      }
+      if (editingId) {
+        setEditingId(null);
+        setEditDraft('');
+        return;
+      }
+      onClose();
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  }, [onClose, editingId, confirmDeleteId]);
+
+  function commitMessages(next: ThreadMessage[]) {
+    threadCache.set(dealId, next);
+    setMessages(next);
+    onLatestMessageChange(previewFrom(next));
+  }
 
   async function send() {
     const trimmed = input.trim();
@@ -148,17 +188,61 @@ export default function DealMessagePanel({ dealId, onClose, onMessageSent }: Dea
       created_at: data.created_at,
       user_name: currentUser.full_name,
     };
-    const next = [...(threadCache.get(dealId) ?? []), newMsg];
-    threadCache.set(dealId, next);
-    setMessages(next);
+    commitMessages([...(threadCache.get(dealId) ?? []), newMsg]);
     setInput('');
-    onMessageSent(newMsg);
   }
 
-  function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+  function startEdit(msg: ThreadMessage) {
+    setEditingId(msg.id);
+    setEditDraft(msg.message);
+    setConfirmDeleteId(null);
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setEditDraft('');
+  }
+
+  async function saveEdit(msg: ThreadMessage) {
+    const trimmed = editDraft.trim();
+    if (!trimmed || trimmed === msg.message) {
+      cancelEdit();
+      return;
+    }
+    const { error } = await supabase
+      .from('terminal_deal_messages')
+      .update({ message: trimmed })
+      .eq('id', msg.id);
+    if (error) return;
+    const current = threadCache.get(dealId) ?? messages;
+    const next = current.map((m) => (m.id === msg.id ? { ...m, message: trimmed } : m));
+    commitMessages(next);
+    cancelEdit();
+  }
+
+  async function performDelete(msg: ThreadMessage) {
+    const { error } = await supabase
+      .from('terminal_deal_messages')
+      .delete()
+      .eq('id', msg.id);
+    if (error) return;
+    const current = threadCache.get(dealId) ?? messages;
+    const next = current.filter((m) => m.id !== msg.id);
+    commitMessages(next);
+    setConfirmDeleteId(null);
+  }
+
+  function onSendKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       void send();
+    }
+  }
+
+  function onEditKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>, msg: ThreadMessage) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      void saveEdit(msg);
     }
   }
 
@@ -187,22 +271,99 @@ export default function DealMessagePanel({ dealId, onClose, onMessageSent }: Dea
           <div className="text-center text-sm text-rp-gray-400 py-6">{t('noMessages')}</div>
         ) : (
           <ul className="space-y-3">
-            {messages.map((m) => (
-              <li key={m.id} className="flex gap-3">
-                <div className="w-8 h-8 rounded-full bg-rp-navy/10 text-rp-navy text-xs font-semibold flex items-center justify-center flex-shrink-0">
-                  {getInitials(m.user_name)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 text-xs">
-                    <span className="font-semibold text-rp-navy">{m.user_name ?? t('unknownUser')}</span>
-                    <span className="text-rp-gray-400">{formatStamp(m.created_at)}</span>
+            {messages.map((m) => {
+              const isOwn = currentUser?.id === m.user_id;
+              const isEditing = editingId === m.id;
+              const isConfirming = confirmDeleteId === m.id;
+              return (
+                <li key={m.id} className="flex gap-3 group">
+                  <div className="w-8 h-8 rounded-full bg-rp-navy/10 text-rp-navy text-xs font-semibold flex items-center justify-center flex-shrink-0">
+                    {getInitials(m.user_name)}
                   </div>
-                  <p className="text-sm text-rp-gray-700 whitespace-pre-wrap break-words mt-0.5">
-                    {m.message}
-                  </p>
-                </div>
-              </li>
-            ))}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="font-semibold text-rp-navy">
+                        {m.user_name ?? t('unknownUser')}
+                      </span>
+                      <span className="text-rp-gray-400">{formatStamp(m.created_at)}</span>
+                      {isOwn && !isEditing && !isConfirming && (
+                        <span className="ml-auto opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => startEdit(m)}
+                            className="text-rp-gray-500 hover:text-rp-navy transition-colors"
+                          >
+                            {tc('edit')}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setConfirmDeleteId(m.id);
+                              setEditingId(null);
+                            }}
+                            className="text-rp-gray-500 hover:text-red-600 transition-colors"
+                          >
+                            {tc('delete')}
+                          </button>
+                        </span>
+                      )}
+                    </div>
+                    {isEditing ? (
+                      <div className="mt-1 space-y-2">
+                        <textarea
+                          value={editDraft}
+                          onChange={(e) => setEditDraft(e.target.value)}
+                          onKeyDown={(e) => onEditKeyDown(e, m)}
+                          rows={Math.min(6, Math.max(1, editDraft.split('\n').length))}
+                          autoFocus
+                          className="w-full resize-none border border-rp-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rp-gold/20 focus:border-rp-gold transition-colors"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => void saveEdit(m)}
+                            disabled={!editDraft.trim() || editDraft.trim() === m.message}
+                            className="bg-rp-navy text-white px-3 py-1 rounded-md text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-rp-navy/90 transition-colors"
+                          >
+                            {tc('save')}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={cancelEdit}
+                            className="text-rp-gray-600 px-3 py-1 rounded-md text-xs font-semibold hover:bg-rp-gray-100 transition-colors"
+                          >
+                            {tc('cancel')}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-rp-gray-700 whitespace-pre-wrap break-words mt-0.5">
+                        {m.message}
+                      </p>
+                    )}
+                    {isConfirming && !isEditing && (
+                      <div className="mt-2 flex items-center gap-2 text-xs">
+                        <span className="text-rp-gray-600">{tc('confirmDelete')}</span>
+                        <button
+                          type="button"
+                          onClick={() => void performDelete(m)}
+                          className="bg-red-600 text-white px-3 py-1 rounded-md font-semibold hover:bg-red-700 transition-colors"
+                        >
+                          {tc('delete')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDeleteId(null)}
+                          className="text-rp-gray-600 px-3 py-1 rounded-md font-semibold hover:bg-rp-gray-100 transition-colors"
+                        >
+                          {tc('cancel')}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
@@ -210,7 +371,7 @@ export default function DealMessagePanel({ dealId, onClose, onMessageSent }: Dea
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={onKeyDown}
+          onKeyDown={onSendKeyDown}
           placeholder={t('typeMessage')}
           rows={1}
           className="flex-1 resize-none border border-rp-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rp-gold/20 focus:border-rp-gold transition-colors min-h-[40px] max-h-[120px]"

@@ -9,7 +9,7 @@ import { formatPrice, formatPercent } from '@/lib/utils/format';
 import type { DealStatus, PipelineStage } from '@/lib/types/database';
 import DealCard from './DealCard';
 import DealStatusGroup from './DealStatusGroup';
-import DealMessagePanel, { type ThreadMessage, clearThreadCache } from './DealMessagePanel';
+import DealMessagePanel, { clearThreadCache } from './DealMessagePanel';
 
 export interface LatestMessage {
   message: string;
@@ -113,9 +113,9 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
   });
   const [openMessageDealId, setOpenMessageDealId] = useState<string | null>(null);
 
-  // Local mirror of `latest_message` so sending updates the preview in-place
-  // without a server round-trip.
-  const [messageOverrides, setMessageOverrides] = useState<Record<string, LatestMessage>>({});
+  // Local mirror of `latest_message` so send/edit/delete update the preview in-place
+  // without a server round-trip. `null` value means the thread is empty.
+  const [messageOverrides, setMessageOverrides] = useState<Record<string, LatestMessage | null>>({});
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -182,7 +182,7 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
         return true;
       })
       .map((deal) =>
-        messageOverrides[deal.id]
+        deal.id in messageOverrides
           ? { ...deal, latest_message: messageOverrides[deal.id] }
           : deal
       );
@@ -206,15 +206,8 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
     setOpenMessageDealId((prev) => (prev === dealId ? null : dealId));
   }
 
-  function handleMessageSent(dealId: string, msg: ThreadMessage) {
-    setMessageOverrides((prev) => ({
-      ...prev,
-      [dealId]: {
-        message: msg.message,
-        created_at: msg.created_at,
-        author_name: msg.user_name,
-      },
-    }));
+  function handleLatestChange(dealId: string, latest: LatestMessage | null) {
+    setMessageOverrides((prev) => ({ ...prev, [dealId]: latest }));
   }
 
   function closePanel() {
@@ -358,7 +351,7 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
                           <DealMessagePanel
                             dealId={deal.id}
                             onClose={closePanel}
-                            onMessageSent={(msg) => handleMessageSent(deal.id, msg)}
+                            onLatestMessageChange={(latest) => handleLatestChange(deal.id, latest)}
                           />
                         </div>
                       )}
@@ -370,7 +363,7 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
                     locale={locale}
                     openMessageDealId={openMessageDealId}
                     onMessageClick={handleMessageClick}
-                    onMessageSent={handleMessageSent}
+                    onLatestChange={handleLatestChange}
                     onClosePanel={closePanel}
                     t={t}
                     tc={tc}
@@ -390,7 +383,7 @@ interface TableGroupProps {
   locale: string;
   openMessageDealId: string | null;
   onMessageClick: (dealId: string) => void;
-  onMessageSent: (dealId: string, msg: ThreadMessage) => void;
+  onLatestChange: (dealId: string, latest: LatestMessage | null) => void;
   onClosePanel: () => void;
   t: ReturnType<typeof useTranslations>;
   tc: ReturnType<typeof useTranslations>;
@@ -401,7 +394,7 @@ function TableGroup({
   locale,
   openMessageDealId,
   onMessageClick,
-  onMessageSent,
+  onLatestChange,
   onClosePanel,
   t,
   tc,
@@ -536,7 +529,7 @@ function TableGroup({
                     <DealMessagePanel
                       dealId={deal.id}
                       onClose={onClosePanel}
-                      onMessageSent={(msg) => onMessageSent(deal.id, msg)}
+                      onLatestMessageChange={(latest) => onLatestChange(deal.id, latest)}
                     />
                   </td>
                 </tr>

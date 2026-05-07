@@ -1,10 +1,13 @@
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { getCurrentAuthUser, getCurrentProfile } from '@/lib/supabase/currentUser';
+import PortalNavbar from '@/components/portal/PortalNavbar';
+import MarketTicker from '@/components/portal/MarketTicker';
 
-// Sidebar-free admin shell used only by the /admin/preview routes. The admin
-// previews what an investor sees, so we deliberately do NOT render the admin
-// sidebar or BetaLaunchBanner here — each preview page renders its own
-// "Admin Preview" banner so the back-link can be page-specific.
+// Investor-style shell used by /admin/preview/* — renders the same MarketTicker
+// + PortalNavbar an investor sees so the admin gets a faithful preview, but
+// passes previewMode to the navbar so all writes are gated and tabs that have
+// no preview equivalent are hidden. No admin sidebar; the BetaLaunchBanner is
+// also omitted to keep the chrome focused on what investors see.
 export const metadata = { title: 'Investor Preview — RePrime Terminal Beta Admin' };
 
 export default async function AdminPreviewLayout({
@@ -15,19 +18,26 @@ export default async function AdminPreviewLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const [user, terminalUser] = await Promise.all([
+    getCurrentAuthUser(),
+    getCurrentProfile(),
+  ]);
 
   if (!user) redirect(`/${locale}/login`);
-
-  const { data: terminalUser } = await supabase
-    .from('terminal_users')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-
   if (!terminalUser) redirect(`/${locale}/login`);
   if (terminalUser.role === 'investor') redirect(`/${locale}/portal`);
 
-  return <>{children}</>;
+  return (
+    <div className="min-h-dvh">
+      <MarketTicker />
+      <PortalNavbar
+        firstName={terminalUser.full_name?.split(' ')[0] ?? ''}
+        fullName={terminalUser.full_name ?? ''}
+        email={user.email ?? ''}
+        locale={locale}
+        previewMode
+      />
+      <main>{children}</main>
+    </div>
+  );
 }

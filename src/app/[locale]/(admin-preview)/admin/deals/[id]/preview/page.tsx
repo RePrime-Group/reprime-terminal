@@ -230,7 +230,7 @@ export default async function DealPreviewPage({ params }: DealPreviewPageProps) 
   return (
     <div className="min-h-screen bg-[#060D1B]">
       {/* Admin Preview Banner */}
-      <div className="sticky top-0 z-50 bg-[#0E3470] border-b border-[#BC9C45]/30 text-white px-6 py-3 flex items-center justify-between">
+      <div className="bg-[#0E3470] border-b border-[#BC9C45]/30 text-white px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span className="text-[10px] font-bold tracking-[1.5px] uppercase text-[#BC9C45]">
             {t('adminPreview')}

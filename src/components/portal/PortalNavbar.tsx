@@ -15,9 +15,15 @@ interface PortalNavbarProps {
   locale: string;
   /** Investor's access tier — drives which top-level tabs are visible. */
   accessTier?: 'investor' | 'marketplace_only' | null;
+  /**
+   * Rendered inside /admin/preview/* — disables every write (mark-as-read),
+   * hides nav tabs/settings that would bounce the admin out of the preview
+   * tree, and reroutes deal-link notifications to the preview equivalents.
+   */
+  previewMode?: boolean;
 }
 
-export default function PortalNavbar({ firstName, fullName, email, locale, accessTier = 'investor' }: PortalNavbarProps) {
+export default function PortalNavbar({ firstName, fullName, email, locale, accessTier = 'investor', previewMode = false }: PortalNavbarProps) {
   const t = useTranslations('portal');
   const tn = useTranslations('portal.navbar');
   const tc = useTranslations('common');
@@ -25,7 +31,7 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
   const pathname = usePathname();
   const activeTab = pathname.startsWith('/portal/portfolio')
     ? 'portfolio'
-    : pathname.startsWith('/portal/marketplace')
+    : pathname.startsWith('/portal/marketplace') || pathname.startsWith('/admin/preview/marketplace')
       ? 'marketplace'
       : pathname.startsWith('/portal/compare')
         ? 'compare'
@@ -93,13 +99,22 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
 
   // Marketplace-only investors see only the Marketplace tab. Full investors
   // see everything. Owners/employees never reach the portal navbar.
+  // In preview mode admins only see tabs whose routes have a preview equivalent
+  // (Dashboard + Marketplace) — Portfolio/Compare are hidden because they have
+  // none and clicking would bounce the admin out via the portal layout's role
+  // check. Tab hrefs are rerouted to /admin/preview/* when in preview.
   const isMarketplaceOnly = accessTier === 'marketplace_only';
-  const navTabs = isMarketplaceOnly
+  const navTabs = previewMode
+    ? [
+        { key: 'dashboard', label: t('dashboardTitle'), href: '/admin/preview' },
+        { key: 'marketplace', label: tn('marketplace'), href: '/admin/preview/marketplace' },
+      ]
+    : isMarketplaceOnly
     ? [{ key: 'marketplace', label: tn('marketplace'), href: '/portal/marketplace' }]
     : [
         { key: 'dashboard', label: t('dashboardTitle'), href: '/portal' },
-        { key: 'portfolio', label: tn('portfolio'), href: '/portal/portfolio' },
         { key: 'marketplace', label: tn('marketplace'), href: '/portal/marketplace' },
+        { key: 'portfolio', label: tn('portfolio'), href: '/portal/portfolio' },
         { key: 'compare', label: tn('compare'), href: '/portal/compare' },
       ];
 
@@ -108,39 +123,48 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
       {/* Gold accent strip */}
       <div className="h-[2px] bg-gradient-to-r from-[#BC9C45] via-[#D4B96A] to-[#BC9C45]" />
 
-      <nav className="h-[64px] bg-[#07090F]/95 backdrop-blur-xl px-4 md:px-8 flex items-center justify-between sticky top-0 z-50 border-b border-white/[0.06]">
-        {/* Left: Logo + Nav tabs */}
-        <div className="flex items-center gap-3 md:gap-5">
-          <Link href={isMarketplaceOnly ? '/portal/marketplace' : '/portal'} className="flex items-center gap-2.5 select-none group">
+      <nav className="h-[64px] bg-[#07090F]/95 backdrop-blur-xl px-4 md:px-8 flex items-center sticky top-0 z-50 border-b border-white/[0.06]">
+        {/* Left: Logo */}
+        <div className="flex items-center gap-3 shrink-0">
+          <Link href={previewMode ? '/admin/preview' : isMarketplaceOnly ? '/portal/marketplace' : '/portal'} className="flex items-center gap-2.5 select-none group">
             <RePrimeLogo width={180} className="transition-opacity duration-300 group-hover:opacity-90" />
             <span className="px-1.5 py-[2px] rounded bg-[#BC9C45] text-[#07090F] text-[8px] font-bold uppercase tracking-[1.5px] leading-none self-center">
               Beta
             </span>
           </Link>
 
-          <div className="hidden md:block h-5 w-px bg-white/10 ml-1" />
-
-          {/* Nav Tabs (desktop) */}
-          <div className="hidden md:flex items-center gap-1 ml-1" data-tour="nav-tabs">
-            {navTabs.map((tab) => (
-              <Link
-                key={tab.key}
-                href={tab.href}
-                locale={locale}
-                className={`px-3.5 py-2 text-[11px] font-medium rounded-md transition-all ${
-                  activeTab === tab.key
-                    ? 'bg-white/[0.08] text-white border-b-2 border-[#D4A843]'
-                    : 'text-white/40 hover:text-white/70 hover:bg-white/[0.04]'
-                }`}
-              >
-                {tab.label}
-              </Link>
-            ))}
-          </div>
+          {previewMode && (
+            <span className="hidden md:inline-flex items-center gap-1.5 ml-1 px-2.5 py-1 rounded-full bg-[#BC9C45]/15 border border-[#BC9C45]/40 text-[#D4A843] text-[10px] font-bold uppercase tracking-[1.5px]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#D4A843]" />
+              Admin Preview
+            </span>
+          )}
         </div>
 
+        {/* Center: Nav Tabs (desktop) — tall pills nearly filling the navbar height.
+            Active = dark fill + gold border + white text (high readability for older users). */}
+        <div className="hidden md:flex flex-1 items-center justify-center gap-6 px-10" data-tour="nav-tabs">
+          {navTabs.map((tab) => (
+            <Link
+              key={tab.key}
+              href={tab.href}
+              locale={locale}
+              className={`px-5 py-2 text-[17px] font-semibold rounded-full border-2 transition-all ${
+                activeTab === tab.key
+                  ? 'bg-white/[0.06] border-[#D4A843] text-white shadow-[0_0_18px_rgba(188,156,69,0.2)]'
+                  : 'bg-white/[0.04] border-transparent text-white/80 hover:bg-white/[0.08] hover:border-white/10 hover:text-white'
+              }`}
+            >
+              {tab.label}
+            </Link>
+          ))}
+        </div>
+
+        {/* Mobile spacer pushes the right cluster to the edge when center is hidden */}
+        <div className="md:hidden flex-1" />
+
         {/* Right */}
-        <div className="flex items-center gap-2 md:gap-3">
+        <div className="flex items-center gap-2 md:gap-3 shrink-0">
           {/* Notification Bell — wrapper is static on mobile so dropdown anchors to the sticky nav */}
           <div className="md:relative" ref={notifRef} data-tour="notif-bell">
             <button
@@ -160,6 +184,7 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
                     <button
                       onClick={async () => {
                         if (markingRead) return;
+                        if (previewMode) return;
                         setMarkingRead(true);
                         try {
                           const { error } = await supabase
@@ -214,14 +239,16 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
                       })();
 
                       const targetHref = item.deal_id
-                        ? item.type === 'document_uploaded'
-                          ? `/${locale}/portal/deals/${item.deal_id}?tab=due-diligence`
-                          : `/${locale}/portal/deals/${item.deal_id}`
+                        ? previewMode
+                          ? `/${locale}/admin/deals/${item.deal_id}/preview`
+                          : item.type === 'document_uploaded'
+                            ? `/${locale}/portal/deals/${item.deal_id}?tab=due-diligence`
+                            : `/${locale}/portal/deals/${item.deal_id}`
                         : null;
 
                       const handleClick = async () => {
                         setShowNotifications(false);
-                        if (!item.read_at) {
+                        if (!item.read_at && !previewMode) {
                           setNotifications((prev) =>
                             prev.map((n) => (n.id === item.id ? { ...n, read_at: new Date().toISOString() } : n)),
                           );
@@ -334,7 +361,7 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
                 </div>
 
                 {/* Menu items */}
-                <div className="py-1.5">
+                <div className="py-1.5" hidden={previewMode}>
                   <Link
                     href="/portal/settings"
                     locale={locale}
@@ -353,7 +380,7 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
                   </Link>
                 </div>
 
-                <div className="h-px bg-white/[0.06]" />
+                <div className="h-px bg-white/[0.06]" hidden={previewMode} />
 
                 <div className="py-1.5">
                   <button
@@ -398,6 +425,13 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
       {mobileMenuOpen && (
         <div className="md:hidden absolute top-full left-0 right-0 max-h-[calc(100dvh-64px)] z-40 bg-[#07090F]/98 backdrop-blur-xl border-t border-white/[0.06] animate-slide-down overflow-y-auto">
           <div className="px-4 py-5 flex flex-col gap-1">
+            {previewMode && (
+              <div className="px-4 py-3 inline-flex items-center gap-2 rounded-md bg-[#BC9C45]/10 border border-[#BC9C45]/30 text-[#D4A843] text-[11px] font-bold uppercase tracking-[1.5px] mb-2 w-fit">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#D4A843]" />
+                Admin Preview
+              </div>
+            )}
+
             {navTabs.map((tab) => (
               <Link
                 key={tab.key}
@@ -420,6 +454,7 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
               href="/portal/settings"
               locale={locale}
               onClick={() => setMobileMenuOpen(false)}
+              hidden={previewMode}
               className="flex items-center gap-3 px-1 py-3 rounded-md hover:bg-white/[0.04] transition-colors"
             >
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#BC9C45] to-[#A88A3D] flex items-center justify-center border border-[#D4A843]/30">
