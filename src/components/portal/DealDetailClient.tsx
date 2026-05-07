@@ -547,10 +547,7 @@ export default function DealDetailClient({
     { key: 'capex', label: 'CapEx & Condition', enabled: showCapex },
     { key: 'exit-strategy', label: 'Exit Strategy', enabled: showExitStrategy },
     { key: 'schedule', label: t('scheduleContact'), enabled: true },
-    { key: 'assistant', label: 'Assistant', enabled: !previewMode },
   ];
-
-  const assistantPanel = useDealAssistantPanelOptional();
 
   // Social proof visibility
   const showSocialProof = (deal.viewing_count ?? 0) > 0 || (deal.meetings_count ?? 0) > 0;
