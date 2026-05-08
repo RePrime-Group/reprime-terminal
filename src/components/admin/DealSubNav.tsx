@@ -27,6 +27,10 @@ export default function DealSubNav({ dealId, dealName, locale }: DealSubNavProps
     }
   };
 
+  const handleGenerateSellerBrief = () => {
+    window.open(`/${locale}/brief/${dealId}`, '_blank', 'noopener,noreferrer');
+  };
+
   const tabs = [
     {
       key: 'edit',
@@ -135,7 +139,20 @@ export default function DealSubNav({ dealId, dealName, locale }: DealSubNavProps
         <h1 className="text-[22px] font-bold text-rp-navy font-[family-name:var(--font-playfair)]">
           {dealName}
         </h1>
-        <div className="relative ml-auto">
+        <button
+          type="button"
+          onClick={handleGenerateSellerBrief}
+          className="ml-auto flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold transition-all text-[#0D1117] bg-gradient-to-r from-rp-gold to-rp-gold-soft hover:opacity-90 whitespace-nowrap shadow-sm"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="9" y1="13" x2="15" y2="13" />
+            <line x1="9" y1="17" x2="15" y2="17" />
+          </svg>
+          Generate Seller Brief
+        </button>
+        <div className="relative">
           <button
             type="button"
             onClick={handleCopyShareLink}
