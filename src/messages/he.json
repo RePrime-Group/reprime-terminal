@@ -113,6 +113,7 @@
       "marketplaceInterest": "עניין במרקטפלייס",
       "teamRequests": "בקשות צוות",
       "activity": "פעילות",
+      "aiUsage": "שימוש ב-AI",
       "previewAsInvestor": "תצוגת משקיע",
       "settings": "הגדרות"
     },
@@ -1393,9 +1394,6 @@
     "newMessage": "הודעה חדשה מהעוזר",
     "you": "אתה",
     "assistant": "עוזר",
-    "feedbackHelpful": "סמן תשובה כשימושית",
-    "feedbackNotHelpful": "סמן תשובה כלא שימושית",
-    "feedbackThanks": "תודה על המשוב.",
     "viewSource": "צפה במקור",
     "sourceDrawerTitle": "מקור",
     "closeSource": "סגור מקור",

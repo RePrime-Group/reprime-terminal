@@ -13,7 +13,6 @@ const URL          = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const KEY          = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const N8N          = process.env.N8N_BASE_URL;
 const PATH_CHAT    = process.env.N8N_WEBHOOK_PATH_CHAT;
-const PATH_FB      = process.env.N8N_WEBHOOK_PATH_FEEDBACK;
 
 if (!URL || !KEY || !N8N || !PATH_CHAT) {
   console.error('Missing env. Run: node --env-file=.env.local scripts/test-assistant-full.mjs');
@@ -116,11 +115,11 @@ const fuzzyHas = (h, n) => {
 
 async function preflight() {
   console.log(`\n${C.bold}${C.blue}── Preflight ──${C.reset}`);
-  const required = ['NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'N8N_BASE_URL', 'N8N_WEBHOOK_PATH_CHAT', 'N8N_WEBHOOK_PATH_FEEDBACK', 'ANTHROPIC_API_KEY'];
+  const required = ['NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'N8N_BASE_URL', 'N8N_WEBHOOK_PATH_CHAT', 'ANTHROPIC_API_KEY'];
   const missing = required.filter((k) => !process.env[k]);
   record('preflight', 'core env vars present', missing.length === 0, missing.length ? `missing: ${missing.join(', ')}` : '');
 
-  for (const t of ['terminal_deals', 'terminal_deal_addresses', 'tenant_leases', 'terminal_dd_documents', 'terminal_ai_conversations', 'terminal_ai_messages', 'terminal_ai_feedback', 'terminal_ai_audit']) {
+  for (const t of ['terminal_deals', 'terminal_deal_addresses', 'tenant_leases', 'terminal_dd_documents', 'terminal_ai_conversations', 'terminal_ai_messages', 'terminal_ai_audit']) {
     const r = await sb(`${t}?select=*&limit=1`);
     record('preflight', `table ${t}`, !!r && !r.code, r?.code ?? (!r ? 'unreachable' : ''));
   }
@@ -217,7 +216,7 @@ async function style() {
 
   await archiveActiveConversations(userId, PORTFOLIO_DEAL);
   const id = await sendChat({ userId, dealId: PORTFOLIO_DEAL, message: 'Who are you? What should I call you?' });
-  record('style', 'identity is "Terminal Assistance"', fuzzyHas(id.text, 'Terminal Assistance'));
+  record('style', 'identity is "Terminal AI Assistant"', fuzzyHas(id.text, 'Terminal AI Assistant'));
   record('style', 'never says "Claude"', !/\bclaude\b/i.test(id.text));
 
   await archiveActiveConversations(userId, PORTFOLIO_DEAL);
@@ -260,12 +259,6 @@ async function errors() {
     body: JSON.stringify({ message: 'no user_id or deal_id' }),
   });
   record('errors', 'chat 400 on missing user/deal', bad.status === 400, `status=${bad.status}`);
-
-  const fbBad = await fetch(`${N8N}${PATH_FB}`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ user_id: investor }),
-  });
-  record('errors', 'feedback 400 on missing fields', fbBad.status === 400, `status=${fbBad.status}`);
 }
 
 // ── Cleanup ────────────────────────────────────────────────────────────────
@@ -280,35 +273,18 @@ async function cleanup() {
   console.log(`  ${C.dim}deleting ${ids.length} conversation(s) and all related rows...${C.reset}`);
   const inList = `(${ids.join(',')})`;
 
-  // 1. delete feedback for messages in these conversations
-  const fbDel = await fetch(`${URL}/rest/v1/terminal_ai_feedback?message_id=in.(select id from terminal_ai_messages where conversation_id=in.${inList})`, {
-    method: 'DELETE', headers: { apikey: KEY, Authorization: `Bearer ${KEY}` },
-  });
-  // (feedback delete via subquery isn't supported in PostgREST; fetch ids first)
-  const msgs = await sb(`terminal_ai_messages?select=id&conversation_id=in.${inList}`);
-  if (msgs && msgs.length) {
-    const msgIds = `(${msgs.map((m) => m.id).join(',')})`;
-    await fetch(`${URL}/rest/v1/terminal_ai_feedback?message_id=in.${msgIds}`, {
-      method: 'DELETE', headers: { apikey: KEY, Authorization: `Bearer ${KEY}` },
-    });
-  }
-
-  // 2. delete messages
   const msgDel = await fetch(`${URL}/rest/v1/terminal_ai_messages?conversation_id=in.${inList}`, {
     method: 'DELETE', headers: { apikey: KEY, Authorization: `Bearer ${KEY}` },
   });
 
-  // 3. delete audit rows
   const auditDel = await fetch(`${URL}/rest/v1/terminal_ai_audit?conversation_id=in.${inList}`, {
     method: 'DELETE', headers: { apikey: KEY, Authorization: `Bearer ${KEY}` },
   });
 
-  // 4. delete the conversations
   const convDel = await fetch(`${URL}/rest/v1/terminal_ai_conversations?id=in.${inList}`, {
     method: 'DELETE', headers: { apikey: KEY, Authorization: `Bearer ${KEY}` },
   });
 
-  // 5. delete chat memory rows (langchain postgres memory keyed by session_id = conversation_id)
   await fetch(`${URL}/rest/v1/n8n_chat_histories?session_id=in.${inList}`, {
     method: 'DELETE', headers: { apikey: KEY, Authorization: `Bearer ${KEY}` },
   });

@@ -4,7 +4,6 @@ import { useTranslations } from 'next-intl';
 import type { Citation, Message } from '@/lib/ai/types';
 import { useStreamReveal } from '@/lib/ai/hooks/useStreamReveal';
 import CitationChip from './CitationChip';
-import FeedbackButtons from './FeedbackButtons';
 import Markdown from './Markdown';
 
 interface Props {
@@ -67,11 +66,6 @@ export default function MessageBubble({ message, onOpenCitation, stream = false,
         </div>
       )}
 
-      {isAssistant && (
-        <div className="max-w-[88%]">
-          <FeedbackButtons messageId={message.id} />
-        </div>
-      )}
     </article>
   );
 }

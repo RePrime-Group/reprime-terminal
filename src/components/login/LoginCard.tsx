@@ -25,8 +25,12 @@ function safeRedirectForRole(raw: string | null, role: string): string | null {
 export default function LoginCard({ locale }: LoginCardProps) {
   const t = useTranslations('auth');
   const searchParams = useSearchParams();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  // Dev convenience: prefill credentials so we don't retype on every reload.
+  // Stripped automatically in production builds.
+  const DEV_EMAIL = process.env.NODE_ENV !== 'production' ? 'aliak30062@gmail.com' : '';
+  const DEV_PASSWORD = process.env.NODE_ENV !== 'production' ? 'test1234' : '';
+  const [email, setEmail] = useState(DEV_EMAIL);
+  const [password, setPassword] = useState(DEV_PASSWORD);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);

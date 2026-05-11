@@ -6,7 +6,6 @@
 #   2. POST /webhook/deal-assistant                    (chat — follow-up, memory)
 #   3. POST /webhook/deal-assistant/conversations      (history — list)
 #   4. POST /webhook/deal-assistant/conversations      (history — messages)
-#   5. POST /webhook/deal-assistant/feedback           (feedback — thumbs up)
 #
 # USER_ID / DEAL_ID auto-discover from Supabase if not provided.
 # Required env (read from .env.local): NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, N8N_BASE_URL.
@@ -93,18 +92,6 @@ MSGS=$(post "/webhook/deal-assistant/conversations" "$(jq -nc \
   --arg u "$USER_ID" --arg c "$CONV_ID" \
   '{user_id:$u, conversation_id:$c, mode:"messages"}')")
 echo "$MSGS" | jq .
-ASST_MSG_ID=$(echo "$MSGS" | jq -r '[.messages[] | select(.role=="assistant")][0].id // empty')
-
-# 5. Feedback — thumbs up ────────────────────────────────────────────────
-hr
-bold "TEST 5 — feedback (rating=1)"
-if [[ -n "$ASST_MSG_ID" ]]; then
-  post "/webhook/deal-assistant/feedback" "$(jq -nc \
-    --arg u "$USER_ID" --arg m "$ASST_MSG_ID" \
-    '{user_id:$u, message_id:$m, rating:1, reason:"smoke test"}')" | jq .
-else
-  red "skipped — no assistant message id available"
-fi
 
 hr
 green "ALL TESTS DISPATCHED. Verify each block above returned a JSON body without an \"error\" field."

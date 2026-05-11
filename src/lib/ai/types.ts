@@ -56,16 +56,6 @@ export interface GetConversationResponse {
   messages: Message[];
 }
 
-export interface FeedbackRequest {
-  message_id: string;
-  rating: -1 | 1;
-  reason?: string;
-}
-
-export interface FeedbackResponse {
-  ok: true;
-}
-
 export interface ApiError {
   error: {
     code:

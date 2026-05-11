@@ -102,6 +102,19 @@ const navItems = [
       </svg>
     ),
   },
+  // Hidden pending senior approval. Page lives at /admin/ai-usage; re-enable
+  // by uncommenting this block.
+  // {
+  //   labelKey: 'sidebar.aiUsage' as const,
+  //   href: '/admin/ai-usage',
+  //   ownerOnly: true,
+  //   icon: (
+  //     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+  //       <circle cx="10" cy="10" r="6.5" stroke="#0E3470" strokeWidth="1.5" />
+  //       <path d="M10 6v4l2.5 2" stroke="#BC9C45" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  //     </svg>
+  //   ),
+  // },
   {
     labelKey: 'sidebar.settings' as const,
     href: '/admin/settings',

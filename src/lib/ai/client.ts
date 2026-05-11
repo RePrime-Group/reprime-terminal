@@ -1,8 +1,6 @@
 import type {
   ChatRequest,
   ChatResponse,
-  FeedbackRequest,
-  FeedbackResponse,
   GetConversationResponse,
   ListConversationsResponse,
 } from './types';
@@ -56,13 +54,6 @@ export function getConversation(id: string, signal?: AbortSignal) {
     `/api/ai/conversations/${encodeURIComponent(id)}`,
     { signal },
   );
-}
-
-export function submitFeedback(body: FeedbackRequest) {
-  return request<FeedbackResponse>('/api/ai/feedback', {
-    method: 'POST',
-    body: JSON.stringify(body),
-  });
 }
 
 export { AiClientError };

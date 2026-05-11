@@ -49,3 +49,6 @@ next-env.d.ts
 
 # local secrets in helper scripts
 scripts/connect-n8n-mcp.sh
+
+# internal working docs (notes, prompts, reports — kept out of the public repo)
+/docs

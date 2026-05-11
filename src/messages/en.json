@@ -113,6 +113,7 @@
       "marketplaceInterest": "Marketplace Interest",
       "teamRequests": "Team Requests",
       "activity": "Activity",
+      "aiUsage": "AI Usage",
       "previewAsInvestor": "Preview as Investor",
       "settings": "Settings"
     },
@@ -1393,9 +1394,6 @@
     "newMessage": "New assistant message",
     "you": "You",
     "assistant": "Assistant",
-    "feedbackHelpful": "Mark answer as helpful",
-    "feedbackNotHelpful": "Mark answer as not helpful",
-    "feedbackThanks": "Thanks for the feedback.",
     "viewSource": "View source",
     "sourceDrawerTitle": "Source",
     "closeSource": "Close source",
