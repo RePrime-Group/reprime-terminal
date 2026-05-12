@@ -225,7 +225,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
   }
 
   const hasSignedNDA = (blanketNDA?.length ?? 0) > 0 || (dealNDA?.length ?? 0) > 0;
-s
+
   // Marketplace-specific data: total interest count + this user's existing
   // interest row (so the form can pre-fill on revisit).
   let marketplaceInterestCount = 0;
