@@ -10,7 +10,7 @@ export default function BetaLaunchBanner() {
   const assistant = useDealAssistantPanelOptional();
   const [now, setNow] = useState<number | null>(null);
   const [expanded, setExpanded] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
 
   // Collapse when the AI assistant panel is open
   const shouldShowAsCircle = collapsed || (assistant?.isOpen ?? false);

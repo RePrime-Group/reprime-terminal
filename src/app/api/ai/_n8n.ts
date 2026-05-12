@@ -63,7 +63,7 @@ export async function callN8n<T>(
       const text = await res.text().catch(() => '');
       const code: CallN8nError['code'] =
         res.status === 401 ? 'unauthorized' : res.status === 403 ? 'forbidden' : res.status === 404 ? 'not_found' : 'upstream_error';
-      return { ok: false, status: res.status, code, message: text || `Upstream returned ${res.status}` };
+      return { ok: false, status: res.status, code, message: friendlyUpstreamMessage(res.status, text) };
     }
     const data = (await res.json()) as T;
     return { ok: true, data };
@@ -75,6 +75,17 @@ export async function callN8n<T>(
   } finally {
     clearTimeout(timeout);
   }
+}
+
+function friendlyUpstreamMessage(status: number, body: string): string {
+  if (status === 401) return 'You are not signed in. Please refresh and try again.';
+  if (status === 403) return 'You do not have access to this deal.';
+  if (status === 404) return 'Conversation not found.';
+  if (status === 504) return 'The assistant took too long to respond. Please try again.';
+  if (body.includes('Workflow execution failed')) {
+    return 'The assistant is temporarily unavailable. Please try again in a moment.';
+  }
+  return 'The assistant could not process your request. Please try again.';
 }
 
 export function unwrapMessageContent(content: unknown): string {

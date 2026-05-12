@@ -42,5 +42,9 @@
       "WebFetch(domain:blog.salrashid.dev)",
       "WebFetch(domain:dev.to)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "n8n"
+  ],
+  "enableAllProjectMcpServers": true
 }

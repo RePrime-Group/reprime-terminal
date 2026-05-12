@@ -1,8 +1,47 @@
 import { NextRequest, NextResponse, after } from 'next/server';
-import type { ChatRequest, ChatResponse, Message } from '@/lib/ai/types';
+import type { Citation, ChatRequest, ChatResponse, Message } from '@/lib/ai/types';
 import { isAssistantEnabled, jsonError, serviceDisabled } from '../_runtime';
 import { callN8n, getAuthedSession, unwrapMessageContent } from '../_n8n';
 import { generateAndSaveConversationTitle } from '@/lib/ai/title';
+import { createAdminClient } from '@/lib/supabase/admin';
+
+// Matches full UUID `(uuid)` `(uuid, 5)`, or short prefix `(abcdef12)` / `(abcdef12, 5)`.
+// The short-prefix form is a fallback for when the agent abbreviates; we resolve it by
+// looking up any document whose id starts with that prefix.
+const CITE_RE = /\(([0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}|[0-9a-f]{8,})(?:,\s*(?:p(?:age)?\.?\s*)?(\d+))?\)/gi;
+
+async function extractDocumentCitations(content: string, dealId: string): Promise<Citation[]> {
+  const hits: { ref: string; page?: number }[] = [];
+  for (const m of content.matchAll(CITE_RE)) {
+    hits.push({ ref: m[1].toLowerCase(), page: m[2] ? parseInt(m[2], 10) : undefined });
+  }
+  if (hits.length === 0) return [];
+
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from('terminal_dd_documents')
+    .select('id,name,display_name')
+    .eq('deal_id', dealId);
+  const docs = (data ?? []) as { id: string; name: string | null; display_name: string | null }[];
+
+  const resolve = (ref: string): { id: string; label: string } | null => {
+    const exact = docs.find((d) => d.id === ref);
+    if (exact) return { id: exact.id, label: exact.display_name || exact.name || exact.id };
+    const prefix = docs.find((d) => d.id.startsWith(ref));
+    return prefix ? { id: prefix.id, label: prefix.display_name || prefix.name || prefix.id } : null;
+  };
+
+  const seen = new Map<string, Citation>();
+  for (const { ref, page } of hits) {
+    const resolved = resolve(ref);
+    if (!resolved) continue;
+    const key = `${resolved.id}#${page ?? ''}`;
+    if (!seen.has(key)) {
+      seen.set(key, { id: key, kind: 'document', label: resolved.label, document_id: resolved.id, page });
+    }
+  }
+  return Array.from(seen.values());
+}
 
 export const maxDuration = 60;
 
@@ -56,6 +95,20 @@ export async function POST(request: NextRequest) {
           created_at: new Date().toISOString(),
         }
       : { ...raw.message, content: unwrapMessageContent(raw.message.content) };
+
+  if (!message.citations || message.citations.length === 0) {
+    message.citations = await extractDocumentCitations(message.content, body.deal_id);
+  }
+  if (message.citations && message.citations.length > 0) {
+    // Strip the now-redundant inline (uuid[, page]) markers; the chips below
+    // the message convey the same information visually.
+    message.content = message.content
+      .replace(CITE_RE, '')
+      .replace(/[ \t]+([.,;:!?])/g, '$1')
+      .replace(/[ \t]{2,}/g, ' ')
+      .replace(/[ \t]+\n/g, '\n')
+      .trim();
+  }
 
   const payload: ChatResponse = { conversation_id: raw.conversation_id, message };
 

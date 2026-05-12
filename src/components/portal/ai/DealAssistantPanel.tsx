@@ -26,6 +26,7 @@ export default function DealAssistantPanel() {
   const panelRef = useRef<HTMLDivElement>(null);
   const messageRefs = useRef<(HTMLElement | null)[]>([]);
   const [focusedMessageIdx, setFocusedMessageIdx] = useState<number | null>(null);
+  const [lastAttempt, setLastAttempt] = useState<string | null>(null);
 
   const {
     messages,
@@ -116,10 +117,18 @@ export default function DealAssistantPanel() {
 
   const handleSend = useCallback(
     (text: string) => {
+      setLastAttempt(text);
       send(text).then(() => refreshHistory());
     },
     [send, refreshHistory],
   );
+
+  // Clear the retry target once a send succeeds (status returns to idle with no error).
+  useEffect(() => {
+    if (status === 'idle' && !error && lastAttempt !== null) {
+      setLastAttempt(null);
+    }
+  }, [status, error, lastAttempt]);
 
   if (!isOpen) return null;
 
@@ -176,8 +185,26 @@ export default function DealAssistantPanel() {
       )}
 
       {error && (
-        <div role="alert" className="px-4 py-2 text-[11px] text-[#F87171] border-t border-white/[0.06] bg-[#F87171]/[0.05]">
-          {error}
+        <div
+          role="alert"
+          className="px-4 py-2 text-[11px] text-[#F87171] border-t border-white/[0.06] bg-[#F87171]/[0.05] flex items-center gap-2"
+        >
+          <span className="flex-1 min-w-0">{error}</span>
+          {lastAttempt && (
+            <button
+              type="button"
+              onClick={() => handleSend(lastAttempt)}
+              disabled={status === 'sending' || status === 'loading'}
+              aria-label={t('retry') ?? 'Retry'}
+              title={t('retry') ?? 'Retry'}
+              className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[#F87171]/80 hover:text-[#F87171] hover:bg-[#F87171]/[0.1] disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="23 4 23 10 17 10" />
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+              </svg>
+            </button>
+          )}
         </div>
       )}
 
