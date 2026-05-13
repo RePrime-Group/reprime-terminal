@@ -36,7 +36,6 @@ export default function CitationDrawer({ citation, onClose }: Props) {
 
   const isDocument = citation?.kind === 'document';
   const documentId = isDocument ? citation?.document_id : undefined;
-  const page = isDocument ? citation?.page ?? 1 : 1;
 
   useEffect(() => {
     setSignedUrl(null);
@@ -86,7 +85,7 @@ export default function CitationDrawer({ citation, onClose }: Props) {
   const viewerUrl = !signedUrl
     ? null
     : fileKind === 'pdf'
-      ? `${signedUrl}#page=${page}`
+      ? `${signedUrl}#page=1`
       : fileKind === 'office'
         ? `https://docs.google.com/viewer?url=${encodeURIComponent(signedUrl)}&embedded=true`
         : signedUrl;
@@ -141,11 +140,6 @@ export default function CitationDrawer({ citation, onClose }: Props) {
               {citation.label}
             </span>
           </div>
-          {isDocument && citation.page ? (
-            <span className="shrink-0 px-2 py-0.5 rounded-full bg-[#BC9C45]/15 border border-[#BC9C45]/25 text-[10px] font-semibold tracking-wide text-[#D4A843] tabular-nums">
-              p.{citation.page}
-            </span>
-          ) : null}
         </div>
         <button
           type="button"

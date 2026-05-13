@@ -2,7 +2,6 @@
 
 import { useTranslations } from 'next-intl';
 import type { Citation, Message } from '@/lib/ai/types';
-import { useStreamReveal } from '@/lib/ai/hooks/useStreamReveal';
 import CitationChip from './CitationChip';
 import Markdown from './Markdown';
 
@@ -11,21 +10,6 @@ interface Props {
   onOpenCitation: (citation: Citation) => void;
   stream?: boolean;
   refCallback?: (el: HTMLElement | null) => void;
-}
-
-function StreamedAssistant({ text }: { text: string }) {
-  const { visible, done } = useStreamReveal(text);
-  return (
-    <div className="relative">
-      <Markdown>{visible}</Markdown>
-      {!done && (
-        <span
-          aria-hidden
-          className="inline-block w-[6px] h-[12px] align-[-1px] ms-[1px] bg-[#BC9C45]/80 rp-cursor-blink"
-        />
-      )}
-    </div>
-  );
 }
 
 export default function MessageBubble({ message, onOpenCitation, stream = false, refCallback }: Props) {
@@ -48,11 +32,9 @@ export default function MessageBubble({ message, onOpenCitation, stream = false,
         }`}
       >
         {isAssistant ? (
-          stream ? (
-            <StreamedAssistant text={message.content} />
-          ) : (
+          <div className={stream ? 'rp-reveal' : undefined}>
             <Markdown>{message.content}</Markdown>
-          )
+          </div>
         ) : (
           message.content
         )}

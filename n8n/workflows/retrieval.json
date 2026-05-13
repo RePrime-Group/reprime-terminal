@@ -1,0 +1,173 @@
+{
+  "updatedAt": "2026-05-13T18:13:48.984Z",
+  "createdAt": "2026-05-12T16:54:20.454Z",
+  "id": "TnCTguqlGPIDVNbj",
+  "name": "Reprime Terminal - Documents Retrieval (RAG)",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "workflowInputs",
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "deal_id",
+              "type": "string"
+            },
+            {
+              "name": "query",
+              "type": "string"
+            },
+            {
+              "name": "top_k",
+              "type": "number"
+            },
+            {
+              "name": "document_id",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "n_trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googlePalmApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: { parts: [{ text: $json.query }] }, outputDimensionality: 1536, taskType: 'RETRIEVAL_QUERY' }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "n_embed",
+      "name": "Embed Query",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        240,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "9n1kO8grfHcCrgHF",
+          "name": "Reprime"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://kytvpaczfiajyjqohzri.supabase.co/rest/v1/rpc/search_doc_chunks",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ query_embedding: $json.embedding.values, p_deal_id: $('Execute Workflow Trigger').item.json.deal_id, query_text: $('Execute Workflow Trigger').item.json.query, k: $('Execute Workflow Trigger').item.json.top_k || 20, p_document_id: $('Execute Workflow Trigger').item.json.document_id || null }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "n_search",
+      "name": "Hybrid Search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        480,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000,
+      "credentials": {
+        "supabaseApi": {
+          "id": "38IRxbN81Zhllc9N",
+          "name": "Reprime Terminal"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = items[0]?.json;\nconst rows = Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : items.map((i) => i.json).filter((r) => r && typeof r === 'object' && 'content' in r);\nreturn [{\n  json: {\n    chunks: rows.map((r) => ({\n      document_id: r.document_id,\n      title: r.title,\n      page_start: r.page_start,\n      page_end: r.page_end,\n      content: r.content,\n    })),\n  },\n}];\n"
+      },
+      "id": "n_format",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Embed Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embed Query": {
+      "main": [
+        [
+          {
+            "node": "Hybrid Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hybrid Search": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "tags": []
+}

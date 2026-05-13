@@ -1,0 +1,186 @@
+Question 2
+
+Here is a summary of what the Offering Memorandum covers for 203 West Weber Avenue:
+
+Property Overview
+The OM presents this as a net lease sale of an Office/Flex building at 203 West Weber Avenue, DuBois, Pennsylvania. The property is a single-tenant building occupied entirely by GAI Consultants, Inc. under an absolute NNN sale-leaseback structure.
+
+Key property stats from the OM's Transaction Summary:
+
+Item	Detail
+Building Size	18,344 SF
+Land Size	0.99 acres
+Purchase Price	$2,415,062
+Cap Rate	8.0%
+Annual Rent	$193,205
+Lease Type	Absolute NNN
+Landlord Responsibilities	None
+Lease Commencement	March 5, 2013
+Lease Expiration	February 28, 2033
+Debt	Free and Clear
+Rent Increases	1.50% per year
+Renewal Options	One (1), Four (4) Year
+Tenant Summary
+The OM profiles GAI Consultants, Inc., a privately-held multi-disciplinary engineering, planning, and environmental consulting firm founded in August 1958 in Pittsburgh, PA. Key stats highlighted: 1,000+ employees company-wide and $151M+ in annual revenue. Services span airport design, bridge inspection, environmental engineering, geotechnical work, transportation planning, and more. The firm has received over 70 Engineering Excellence Awards and has been listed on ENR's Top 500 Design Firms from 2006 to 2023.
+
+Market Overview
+The OM positions DuBois as the most populous community in Clearfield County, PA, located approximately 100 miles northeast of Pittsburgh. It is part of the larger State College-DuBois Combined Statistical Area (CSA), which had a combined population of 235,632 in 2010. The broader CSA is anchored by Penn State University in State College, which employs over 17,000 workers and is the region's largest single employer. Other area industries include healthcare, retail, hospitality, construction, and government.
+
+DuBois-specific demographics (2-mile radius):
+
+Population: 11,631
+Estimated average household income: $53,686
+Brokerage
+The OM was prepared by ParaSell, Inc. and TCI Properties, with Scott Reid listed as the Pennsylvania-licensed broker of record. All inquiries are directed to those parties.
+
+Bottom line: The OM frames this as a clean, passive, bondable NNN investment with zero landlord responsibilities, a long-tenured engineering firm as the sole tenant, and a straightforward rent escalation structure. The secondary market location and single-tenant concentration are the key risk factors the OM does not dwell on but are worth stress-testing.
+
+Want me to pull the key risk flags from the Lease Summary or the Tenant Report to give you a fuller due diligence picture?
+
+Question 3
+Here is exactly what the OM says about cap rate and NOI for 203 West Weber:
+
+Cap Rate
+The OM states a going-in cap rate of 8.0%, derived directly from the Transaction Summary.
+
+NOI / Annual Rent
+On an absolute NNN lease, the NOI equals the annual base rent since the tenant pays every operating expense directly. The OM cites $193,205 in annual rent against a $2,415,062 purchase price, which is the basis for the 8.0% cap rate.
+
+The math checks out cleanly:
+
+$193,205 / $2,415,062 = 8.0% cap rate
+Rent Growth
+The OM also notes 1.50% per year rent increases baked into the lease, which means the NOI grows modestly over time. The Lease Summary provides a more granular rent schedule, showing the current Year 14 (3/1/2026) base rent at approximately $178,091/year, stepping up to $194,733 in the final initial-term year (Year 20, 3/1/2032).
+
+One Important Nuance
+The OM's $193,205 figure appears to be a forward or stabilized rent figure, not the current in-place rent. The Lease Summary's rent schedule shows the current period (Year 14) at $178,091, with the $193,205+ level not reached until closer to lease expiration. Buyers should confirm which rent period the OM's cap rate is based on, as this affects the true going-in yield.
+
+Additionally, there is a $10,000/year Admin Fee (escalating at 1.5% annually alongside base rent) that flows to the landlord as pure income on top of base rent. This is not typically highlighted in the OM's headline cap rate figure but adds incremental yield.
+
+Want me to pull the full rent schedule from the Lease Summary so you can see the year-by-year NOI progression through lease expiration in 2033?
+
+
+
+Question 4 
+Here is a comprehensive breakdown of the key lease terms from the Lease Summary for 203 West Weber:
+
+Anchor Tenant
+GAI Consultants, Inc. is the sole tenant, a Pennsylvania corporation and privately-held multi-disciplinary engineering, planning, and environmental consulting firm headquartered in Homestead, PA. This is a 100% single-tenant building with no other occupants. There is no parent guaranty and no personal guaranty on the lease. All credit exposure flows exclusively from GAI Consultants as the operating entity.
+
+Lease Term and Expiration
+Item	Detail
+Lease Commencement	March 4, 2013
+Lease Expiration	March 3, 2033
+Remaining Term	~6 years, 10 months
+Lease Type	Absolute NNN (zero landlord responsibilities)
+Renewal Option
+There is one (1) renewal option for a four (4) year term (Years 21-25). Key mechanics:
+
+Notice Window: Tenant must deliver the Renewal Notice no earlier than March 4, 2031 and no later than March 4, 2032. Time is of the essence; there is no cure provision if the window lapses.
+Renewal Rent: Resets to the greater of (a) Fair Market Base Rent (via a binding appraisal/arbitration process per Schedule B) or (b) 101.5% of the prior 12-month rent. The buyer has no control over the appraisal outcome.
+Key Risk: DuBois, PA is a secondary/tertiary office market that has softened post-COVID. FMV may come in at or near the 101.5% floor, meaning limited upside on renewal rent.
+Rent Escalations
+Base rent increases at 1.50% per year, with the current Year 14 rent at approximately $178,091/year stepping up to ~$194,733 by the final initial-term year. An additional $10,000/year Admin Fee (also escalating at 1.5% annually) flows to the landlord as pure income on top of base rent.
+
+Critical Lease Flags
+The Lease Summary highlights several deal-level risks worth knowing upfront:
+
+Tenant ROFO (§39): GAI Consultants holds a Right of First Offer on any landlord-initiated sale. Seller must confirm this has been properly waived in writing for RePrime's acquisition, or the deal is voidable.
+Lease Senior to Mortgage Without SNDA: Tenant's subordination obligation is conditional on delivery of a Non-Disturbance Agreement. Without a signed SNDA, the lease is senior to any mortgage. Acquisition financing is not possible without Tenant executing an SNDA.
+No Guarantor: Single point of failure. Buyer must review 3 years of audited financials under §35 and underwrite as non-investment-grade credit.
+CapEx Reserve Account: Tenant deposits $2,250/month into a landlord-held interest-bearing account (capped at $500K aggregate). Seller must transfer the full balance plus accrued interest to RePrime at closing.
+Bottom line: This is a textbook bondable NNN lease with no tenant-side termination rights. The primary risks are the single-tenant credit concentration (no guarantor), the renewal decision window in 2031-2032, and the ROFO that must be formally extinguished before closing.
+
+Want me to pull the year-by-year rent schedule through lease expiration, or dig into the tenant credit profile from the Tenants Report?
+
+
+Question 5 
+Here is a comprehensive summary of what the Tenant Intelligence Report says about GAI Consultants and the investment:
+
+Tenant Identity
+GAI Consultants, Inc. is a Pennsylvania corporation headquartered in Homestead, PA. It is a multi-disciplinary engineering, planning, and environmental consulting firm founded in 1958 in Pittsburgh. Key stats:
+
+1,000+ employees (PitchBook cites ~962)
+$151M+ in annual revenue
+Consistently ranked on ENR's Top 500 Design Firms (2006-2023) and Top 200 Environmental Firms (2008-2023)
+Serves markets including power, transportation, water, government, industrial, nuclear, and environmental
+Ownership Structure: PE-Backed Since 2022
+A critical development flagged in the report: Comvest Partners (~$10.4B AUM) acquired GAI Consultants in 2022, transitioning the firm from an employee-owned (ESOP) structure to a PE-backed platform. Since then, GAI has been executing an active M&A roll-up strategy, including the acquisition of Eland Engineering (June 2023) and Creighton Manning (May 2024).
+
+Implication: PE backing strengthens the balance sheet vs. the prior ESOP period, but also introduces footprint rationalization risk typical of PE-driven consolidation strategies.
+
+Investment Positives
+Positive	Detail
+Absolute NNN	Zero landlord responsibilities; pure mailbox income
+Long Tenure	~13 years in place as of 2026; ~20 years by lease expiry
+Opportunity Zone	Property is within a federally designated QOZ; meaningful tax-deferral/basis step-up optionality for qualifying investors
+Annual Escalations	1.50%/yr contractual rent increases provide predictable NOI growth
+PE-Backed Credit	Comvest backing since 2022 strengthens tenant balance sheet vs. prior ESOP period
+Investment Risks
+Risk	Detail
+Single-Tenant Binary	100% vacancy overnight if GAI vacates; no income diversification
+Tertiary Market Re-Leasing	DuBois is a thin market; expect 12-24 months downtime and $15-$25/SF TI to re-tenant 18,344 SF
+Office Consolidation Trend	Post-COVID PE ownership typically accelerates satellite office footprint rationalization
+Private Company, No Transparency	No public financials or credit rating; revenue, EBITDA, and leverage cannot be verified publicly
+Guarantor Unclear	OM does not disclose whether lease is with parent GAI Consultants, Inc. or a subsidiary; must confirm in DD
+Escalations Lag CPI	1.50%/yr bumps lagged 2022-2024 CPI of ~4%+; lease slowly loses real purchasing power
+Renewal Probability Verdict: MEDIUM
+The report assigns a MEDIUM renewal probability, reasoning as follows:
+
+Positive: ~20 years of cumulative tenure by expiry, exterior branding at the building, and ~7 years of remaining term all suggest operational stickiness.
+Negative: Post-Comvest PE ownership typically drives back-office consolidation in tertiary markets. DuBois is likely a field-operations office for western PA energy/environmental work. If project pipeline in Clearfield/central PA softens, consolidation into Homestead (~100 miles southwest) or Canonsburg becomes strategically logical.
+Recommendation: Monitor headcount and project pipeline at the DuBois office in years 3-5 of the hold period.
+Key Due Diligence Flags from the Report
+Guarantor entity: Confirm whether lease counterpart is parent GAI Consultants, Inc. or a subsidiary.
+Post-Comvest financial health: Verify current revenue, EBITDA, leverage ratios, and covenant compliance via D&B report and UCC searches.
+DuBois office operating condition: Request current headcount at 203 W. Weber, any subleased portions, and recent staffing trends.
+Phase I ESA: Order environmental study given engineering-firm use and downtown PA location; property is within an Opportunity Zone.
+Real estate taxes and NNN reimbursements: Verify tenant is current on all pass-through obligations and review 3 years of reconciliation statements.
+Bottom line: The Tenant Intelligence Report paints GAI Consultants as a financially strengthened, long-tenured tenant with genuine operational stickiness at this location. The primary concerns are the lack of public financial transparency, the PE-driven consolidation risk in a tertiary market, and the unconfirmed guarantor structure. The QOZ designation is a meaningful upside that the OM undersells.
+
+Want me to pull the deal-level financials to see how the underwriting accounts for the renewal probability and vacancy scenario?
+
+Here is a side-by-side comparison of what the Offering Memorandum and the Full Report (as reflected in the deal underwriting record) say about projected returns, with key differences called out clearly.
+
+Projected Returns: OM vs. Full Report (RePrime Underwriting)
+Metric	OM (Seller/Broker)	Full Report (RePrime Underwriting)	Variance
+Purchase Price	$2,415,062	$2,000,000	RePrime bid $415K below ask
+Going-In Cap Rate	8.0%	9.66%	+166 bps on lower price
+Annual NOI / Rent	$193,205	$193,205	Same in-place rent
+IRR	Not disclosed	28.30%	OM silent on IRR
+Cash-on-Cash	Not disclosed	14.54%	OM silent on CoC
+Exit Cap Rate	Not disclosed	8.6%	OM silent on exit assumptions
+Hold Period	Not disclosed	5 years	OM silent
+Rent Growth	1.50%/yr	1.50%/yr	Identical
+Debt	Free and Clear (seller)	75% LTV, 6.41% rate, $1.5M loan	RePrime adds leverage
+DSCR	N/A (no debt)	1.60x	Levered structure
+Equity Required	N/A	$500,000	Levered equity basis
+What the OM Says About Returns
+The OM is a broker marketing document and presents only the going-in metrics. It leads with:
+
+8.0% cap rate on $193,205 annual rent at the $2,415,062 ask price
+Absolute NNN structure with zero landlord responsibilities framed as the core return driver
+1.50%/yr rent escalations as the NOI growth story
+No IRR, no hold period, no exit cap, no leverage analysis disclosed. The OM is intentionally silent on levered returns, which is standard broker practice on NNN deals.
+The OM also presents the property as free and clear of debt, positioning it as a passive, all-cash investment.
+
+What the Full Report (RePrime Underwriting) Says About Returns
+RePrime's underwriting tells a materially different and more complete story:
+
+Purchase price negotiated down to $2,000,000, a $415,062 discount to ask. This alone drives the going-in cap from 8.0% to 9.66% on the same NOI.
+Leverage introduced at 75% LTV ($1,500,000 loan at 6.41%), reducing equity to just $500,000. This is the engine behind the high levered returns.
+IRR of 28.30% over a 5-year hold, driven by the combination of: (1) below-ask entry price, (2) contractual 1.5% annual rent growth, and (3) a projected exit at an 8.6% cap rate (a slight cap rate expansion from the 9.66% going-in, reflecting the shorter remaining lease term at exit).
+Cash-on-cash of 14.54% on $500,000 equity, supported by a healthy 1.60x DSCR on the levered structure.
+Key Takeaways from the Comparison
+Price gap is the biggest driver. The OM's 8.0% cap is based on a $2.415M ask. RePrime's 9.66% cap reflects a $415K negotiated discount, which is the single largest return enhancer in the model.
+
+The OM is silent on levered returns. The 28.30% IRR and 14.54% CoC are entirely RePrime's construct, not the seller's framing. The OM presents this as a passive NNN bond; RePrime is underwriting it as a levered equity play.
+
+Exit cap assumption is conservative. Exiting at 8.6% (wider than the 9.66% going-in) reflects the shorter remaining lease term at the Year 5 exit (roughly 2 years left on the initial term), which is appropriate. A buyer at exit will price in renewal risk.
+
+The OM's $193,205 rent figure is a forward number. The current in-place rent per the Lease Summary is approximately $178,091 (Year 14), meaning the OM's headline cap rate is slightly overstated on a current-rent basis.
+
+Want me to run a directional sensitivity on how the IRR moves if the exit cap widens further (say to 9.5%) to reflect a non-renewal scenario at Year 5?
+
+
+Cap rate is reponse is without citation 

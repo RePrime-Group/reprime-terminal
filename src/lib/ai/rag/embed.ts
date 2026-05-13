@@ -8,11 +8,14 @@
 // Changing this requires a migration AND a re-embed of every chunk — do not do
 // it casually.
 
-const GEMINI_EMBED_URL =
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent';
+import {
+  EMBEDDING_DIM,
+  EMBEDDING_MODEL,
+  EMBEDDING_MODEL_NAME,
+  GEMINI_EMBED_URL,
+} from './embedding-model.mjs';
 
-export const EMBEDDING_MODEL = 'gemini-embedding-001@1536';
-export const EMBEDDING_DIM = 1536;
+export { EMBEDDING_DIM, EMBEDDING_MODEL };
 
 export type EmbeddingTaskType = 'RETRIEVAL_QUERY' | 'RETRIEVAL_DOCUMENT';
 
@@ -33,7 +36,7 @@ async function embed(text: string, taskType: EmbeddingTaskType): Promise<number[
       headers: { 'Content-Type': 'application/json' },
       signal: controller.signal,
       body: JSON.stringify({
-        model: 'models/gemini-embedding-001',
+        model: `models/${EMBEDDING_MODEL_NAME}`,
         content: { parts: [{ text }] },
         taskType,
         outputDimensionality: EMBEDDING_DIM,

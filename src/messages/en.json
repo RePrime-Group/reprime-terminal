@@ -1397,6 +1397,8 @@
     "viewSource": "View source",
     "sourceDrawerTitle": "Source",
     "closeSource": "Close source",
+    "loadingSource": "Loading source…",
+    "sourceUnavailable": "Source unavailable.",
     "selectDealPrompt": "Select a deal to ask about",
     "searchDeals": "Search deals…",
     "noDealsFound": "No deals match your search",

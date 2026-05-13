@@ -7,7 +7,6 @@ export interface Citation {
   kind: CitationKind;
   label: string;
   document_id?: string;
-  page?: number;
   deal_field?: string;
   tenant_id?: string;
   scenario_id?: string;

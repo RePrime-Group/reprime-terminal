@@ -203,6 +203,29 @@
     50% { opacity: 0; }
   }
 
+  /* Smooth typewriter-feel reveal for assistant messages.
+     Renders Markdown ONCE (no per-tick re-parse). A CSS mask animates from
+     top → bottom over ~1.6s so the content "fills in" line by line.
+     Pure GPU; zero JS / setInterval / useEffect for the reveal itself. */
+  .rp-reveal {
+    --rp-reveal-duration: 1.6s;
+    -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 calc(var(--rp-reveal-progress, 0) * 100%), transparent calc(var(--rp-reveal-progress, 0) * 100%));
+    mask-image: linear-gradient(180deg, #000 0%, #000 calc(var(--rp-reveal-progress, 0) * 100%), transparent calc(var(--rp-reveal-progress, 0) * 100%));
+    animation: rpReveal var(--rp-reveal-duration) ease-out forwards;
+  }
+  @property --rp-reveal-progress {
+    syntax: '<number>';
+    initial-value: 0;
+    inherits: false;
+  }
+  @keyframes rpReveal {
+    from { --rp-reveal-progress: 0; }
+    to   { --rp-reveal-progress: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .rp-reveal { animation: none; --rp-reveal-progress: 1; }
+  }
+
   .animate-rp-pill-in {
     animation: rpPillIn 0.32s cubic-bezier(0.2, 0, 0, 1) forwards;
   }

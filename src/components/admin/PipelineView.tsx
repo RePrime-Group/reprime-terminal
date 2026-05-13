@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
+import { enqueueIngestAction } from '@/lib/ai/rag/actions';
 import { STAGE_LABELS, STAGE_DURATIONS, STAGE_ORDER } from '@/lib/pipeline/stage-templates';
 import type { PipelineStage } from '@/lib/pipeline/stage-templates';
 import {
@@ -454,15 +455,20 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
       // Create a DD document record so investors can see it.
       // Note: investor notification is NOT fired here. Admins send notifications
       // explicitly from the data room upload flow via the "Notify investors" toggle.
-      await supabase.from('terminal_dd_documents').insert({
-        folder_id: attachment.investor_folder_id,
-        deal_id: dealId,
-        name: attachment.name,
-        file_size: attachment.file_size,
-        file_type: attachment.file_type,
-        storage_path: attachment.storage_path,
-        uploaded_by: attachment.uploaded_by,
-      });
+      const { data: inserted } = await supabase
+        .from('terminal_dd_documents')
+        .insert({
+          folder_id: attachment.investor_folder_id,
+          deal_id: dealId,
+          name: attachment.name,
+          file_size: attachment.file_size,
+          file_type: attachment.file_type,
+          storage_path: attachment.storage_path,
+          uploaded_by: attachment.uploaded_by,
+        })
+        .select('id')
+        .single();
+      if (inserted?.id) void enqueueIngestAction(inserted.id as string, dealId);
     } else if (!value) {
       // Remove the DD document record when hiding from investors
       await supabase
@@ -494,15 +500,20 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
         .eq('deal_id', dealId)
         .eq('storage_path', attachment.storage_path);
       // Create new one in the correct folder
-      await supabase.from('terminal_dd_documents').insert({
-        folder_id: folderId,
-        deal_id: dealId,
-        name: attachment.name,
-        file_size: attachment.file_size,
-        file_type: attachment.file_type,
-        storage_path: attachment.storage_path,
-        uploaded_by: attachment.uploaded_by,
-      });
+      const { data: inserted } = await supabase
+        .from('terminal_dd_documents')
+        .insert({
+          folder_id: folderId,
+          deal_id: dealId,
+          name: attachment.name,
+          file_size: attachment.file_size,
+          file_type: attachment.file_type,
+          storage_path: attachment.storage_path,
+          uploaded_by: attachment.uploaded_by,
+        })
+        .select('id')
+        .single();
+      if (inserted?.id) void enqueueIngestAction(inserted.id as string, dealId);
     } else if (!folderId) {
       // Remove DD document if folder deselected
       await supabase

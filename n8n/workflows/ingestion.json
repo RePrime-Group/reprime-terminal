@@ -1,0 +1,1683 @@
+{
+  "updatedAt": "2026-05-13T14:58:55.609Z",
+  "createdAt": "2026-05-11T16:04:19.774Z",
+  "id": "Po35WsflKy9wGR4g",
+  "name": "Reprime Terminal - Documents Ingestion (RAG)",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "deal-document-ingest",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "n_webhook",
+      "name": "Ingest Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1400,
+        0
+      ],
+      "webhookId": "dd216b09-55e9-488b-a27c-ba615a5aa10f",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "document_id",
+              "value": "={{ $json.body.document_id }}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "deal_id",
+              "value": "={{ $json.body.deal_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "n_carry",
+      "name": "Carry Context",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1180,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "terminal_dd_documents",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Carry Context').item.json.document_id }}"
+            }
+          ]
+        }
+      },
+      "id": "n_load_doc",
+      "name": "Load Document",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -740,
+        0
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "38IRxbN81Zhllc9N",
+          "name": "Reprime Terminal"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://kytvpaczfiajyjqohzri.supabase.co/storage/v1/object/sign/terminal-dd-documents/{{ $('Load Document').item.json.storage_path }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"expiresIn\": 600\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "n_sign",
+      "name": "Sign Storage URL",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -520,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "credentials": {
+        "supabaseApi": {
+          "id": "38IRxbN81Zhllc9N",
+          "name": "Reprime Terminal"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const TARGET_CHARS = 3200;\nconst OVERLAP_CHARS = 400;\nconst SEPARATORS = ['\\n## ', '\\n### ', '\\n\\n', '\\n', '. ', ' ', ''];\n\nfunction split(text, separators) {\n  if (text.length <= TARGET_CHARS) return [text];\n  for (const sep of separators) {\n    if (sep === '') break;\n    if (text.includes(sep)) {\n      const parts = text.split(sep);\n      const out = [];\n      let buf = '';\n      for (const p of parts) {\n        const piece = (buf ? buf + sep : '') + p;\n        if (piece.length > TARGET_CHARS && buf) {\n          out.push(buf);\n          buf = p;\n        } else {\n          buf = piece;\n        }\n      }\n      if (buf) out.push(buf);\n      const flat = [];\n      for (const piece of out) {\n        if (piece.length > TARGET_CHARS) flat.push(...split(piece, separators.slice(1)));\n        else flat.push(piece);\n      }\n      return flat;\n    }\n  }\n  const out = [];\n  for (let i = 0; i < text.length; i += TARGET_CHARS) out.push(text.slice(i, i + TARGET_CHARS));\n  return out;\n}\n\nconst input = items[0].json;\nconst full = (input.data || '').trim();\nif (!full) return [{ json: { error: 'empty_markdown', document_id: $('Carry Context').item.json.document_id } }];\n\nconst raw = split(full, SEPARATORS).map((s) => s.trim()).filter(Boolean);\n\nconst chunks = raw.map((c, i) => {\n  if (i === 0) return c;\n  const prev = raw[i - 1];\n  const tail = prev.slice(-OVERLAP_CHARS);\n  return tail + '\\n\\n' + c;\n});\n\nreturn chunks.map((content, chunk_index) => ({\n  json: {\n    document_id: $('Carry Context').item.json.document_id,\n    deal_id:     $('Carry Context').item.json.deal_id,\n    chunk_index,\n    content,\n    full_text:   full\n  }\n}));"
+      },
+      "id": "n_chunk",
+      "name": "Chunk Markdown",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        360,
+        0
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "n_batch",
+      "name": "Per-Chunk Loop",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        580,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "anthropicApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-haiku-4-5-20251001\",\n  \"max_tokens\": 200,\n  \"system\": \"You write a short context that situates a chunk within a larger document so retrieval systems can find it. Answer with the context only — no preamble, no quoting, 50 to 100 tokens.\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": [\n        {\n          \"type\": \"text\",\n          \"text\": {{ JSON.stringify('<document>\\n' + ($json.full_text || '') + '\\n</document>') }},\n          \"cache_control\": { \"type\": \"ephemeral\" }\n        },\n        {\n          \"type\": \"text\",\n          \"text\": {{ JSON.stringify('Here is the chunk we want to situate within the whole document:\\n<chunk>\\n' + ($json.content || '') + '\\n</chunk>\\n\\nPlease give a short context that situates this chunk within the document, to improve search retrieval. Answer only with the context.') }}\n        }\n      ]\n    }\n  ]\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "n_haiku",
+      "name": "Contextualize (Haiku)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        700,
+        200
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "anthropicApi": {
+          "id": "5DTNJRzt6FRrADO0",
+          "name": "Reprime"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "k1",
+              "name": "document_id",
+              "value": "={{ $('Per-Chunk Loop').item.json.document_id }}",
+              "type": "string"
+            },
+            {
+              "id": "k2",
+              "name": "deal_id",
+              "value": "={{ $('Per-Chunk Loop').item.json.deal_id }}",
+              "type": "string"
+            },
+            {
+              "id": "k3",
+              "name": "chunk_index",
+              "value": "={{ $('Per-Chunk Loop').item.json.chunk_index }}",
+              "type": "number"
+            },
+            {
+              "id": "k4",
+              "name": "content",
+              "value": "={{ $('Per-Chunk Loop').item.json.content }}",
+              "type": "string"
+            },
+            {
+              "id": "k5",
+              "name": "context",
+              "value": "={{ $json.content[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "n_attach_ctx",
+      "name": "Attach Context",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        900,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = items.map((i) => i.json);\nrows.sort((a, b) => (a.chunk_index ?? 0) - (b.chunk_index ?? 0));\nif (rows.length === 0) return [{ json: { error: 'no_chunks' } }];\nreturn [{\n  json: {\n    document_id: rows[0].document_id,\n    deal_id:     rows[0].deal_id,\n    chunks:      rows.map((r) => ({\n      chunk_index: r.chunk_index,\n      content:     r.content,\n      context:     r.context,\n      indexed_text: (r.context || '') + '\\n\\n' + (r.content || '')\n    }))\n  }\n}];"
+      },
+      "id": "n_gather",
+      "name": "Gather Contextualized",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1020,
+        0
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-002:batchEmbedContents",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googlePalmApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"requests\": {{ JSON.stringify($json.chunks.map(c => ({ model: 'models/gemini-embedding-002', content: { parts: [{ text: c.indexed_text }] }, taskType: 'RETRIEVAL_DOCUMENT', outputDimensionality: 1536 }))) }}\n}",
+        "options": {
+          "timeout": 90000
+        }
+      },
+      "id": "n_embed",
+      "name": "Gemini Batch Embed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1240,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "9n1kO8grfHcCrgHF",
+          "name": "Reprime"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const api = items[0].json;\nconst gathered = $('Gather Contextualized').item.json;\nconst embeddings = (api.embeddings || []);\nif (embeddings.length !== gathered.chunks.length) {\n  throw new Error(`Embedding count mismatch: ${embeddings.length} vs ${gathered.chunks.length}`);\n}\nconst chunks = gathered.chunks.map((c, i) => {\n  const e = embeddings[i] || {};\n  return {\n    chunk_index: c.chunk_index,\n    content:     c.content,\n    context:     c.context,\n    embedding:   e.values || null\n  };\n});\nif (chunks.some((c) => !c.embedding)) {\n  throw new Error('Gemini returned a chunk with no embedding values');\n}\nreturn [{ json: { document_id: gathered.document_id, deal_id: gathered.deal_id, chunks } }];"
+      },
+      "id": "n_zip_embed",
+      "name": "Zip Embeddings",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1460,
+        0
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://kytvpaczfiajyjqohzri.supabase.co/rest/v1/rpc/replace_doc_chunks",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_document_id\": \"{{ $json.document_id }}\",\n  \"p_deal_id\":     \"{{ $json.deal_id }}\",\n  \"p_chunks\":      {{ JSON.stringify($json.chunks) }}\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "n_upsert",
+      "name": "Replace Chunks (RPC)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1680,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "credentials": {
+        "supabaseApi": {
+          "id": "38IRxbN81Zhllc9N",
+          "name": "Reprime Terminal"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"document_id\": \"{{ $('Zip Embeddings').item.json.document_id }}\",\n  \"chunk_count\": {{ $('Zip Embeddings').item.json.chunks.length }},\n  \"indexed_at\":  \"{{ new Date().toISOString() }}\"\n}",
+        "options": {}
+      },
+      "id": "n_respond",
+      "name": "Respond Done",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1900,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/vancura~docling/run-sync",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "timeout",
+              "value": "900"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ http_sources: [{ url: 'https://kytvpaczfiajyjqohzri.supabase.co/storage/v1' + $json.signedURL }], options: { to_formats: ['md'], do_ocr: true, image_export_mode: 'placeholder', ocr_preset: 'tesseract' } }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          },
+          "timeout": 900000
+        }
+      },
+      "id": "n_apify",
+      "name": "Apify Docling",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -300,
+        0
+      ],
+      "retryOnFail": false,
+      "maxTries": 1,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "apifyApi": {
+          "id": "9cMrosOyt4wTnDEB",
+          "name": "Reprime"
+        },
+        "httpQueryAuth": {
+          "id": "xgsC8zias7hPhhOB",
+          "name": "Impleko-Testing"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {},
+      "id": "n_decompress_apify",
+      "name": "Decompress Apify",
+      "type": "n8n-nodes-base.compression",
+      "typeVersion": 1.1,
+      "position": [
+        -80,
+        0
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "binaryPropertyName": "file_0",
+        "options": {}
+      },
+      "id": "n_extract_apify",
+      "name": "Extract Markdown Apify",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        140,
+        0
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://kytvpaczfiajyjqohzri.supabase.co/rest/v1/rpc/mark_doc_processing",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_id\": \"{{ $('Carry Context').item.json.document_id }}\"\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "ed2c3d69-b0fe-4273-939e-9fb1777011e0",
+      "name": "Mark Processing",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -960,
+        0
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "38IRxbN81Zhllc9N",
+          "name": "Reprime Terminal"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://kytvpaczfiajyjqohzri.supabase.co/rest/v1/rpc/mark_doc_failed",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_id\": \"{{ $('Carry Context').item.json.document_id }}\",\n  \"p_error\": {{ JSON.stringify(($json.error && ($json.error.message || $json.error.description)) || $json.message || 'unknown error') }}\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "691cf3ea-4be1-4f82-baab-62a022a84d09",
+      "name": "Mark Failed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        580,
+        400
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "38IRxbN81Zhllc9N",
+          "name": "Reprime Terminal"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"document_id\": \"{{ $('Carry Context').item.json.document_id }}\",\n  \"status\": \"failed\"\n}",
+        "options": {}
+      },
+      "id": "acdc39a3-edce-478d-9593-e19bb46e0cef",
+      "name": "Respond Failed",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1900,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Ingest Webhook": {
+      "main": [
+        [
+          {
+            "node": "Carry Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chunk Markdown": {
+      "main": [
+        [
+          {
+            "node": "Per-Chunk Loop",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Per-Chunk Loop": {
+      "main": [
+        [
+          {
+            "node": "Gather Contextualized",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Contextualize (Haiku)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contextualize (Haiku)": {
+      "main": [
+        [
+          {
+            "node": "Attach Context",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attach Context": {
+      "main": [
+        [
+          {
+            "node": "Per-Chunk Loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gather Contextualized": {
+      "main": [
+        [
+          {
+            "node": "Gemini Batch Embed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Batch Embed": {
+      "main": [
+        [
+          {
+            "node": "Zip Embeddings",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Zip Embeddings": {
+      "main": [
+        [
+          {
+            "node": "Replace Chunks (RPC)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Chunks (RPC)": {
+      "main": [
+        [
+          {
+            "node": "Respond Done",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decompress Apify": {
+      "main": [
+        [
+          {
+            "node": "Extract Markdown Apify",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Markdown Apify": {
+      "main": [
+        [
+          {
+            "node": "Chunk Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apify Docling": {
+      "main": [
+        [
+          {
+            "node": "Decompress Apify",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sign Storage URL": {
+      "main": [
+        [
+          {
+            "node": "Apify Docling",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Document": {
+      "main": [
+        [
+          {
+            "node": "Sign Storage URL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Carry Context": {
+      "main": [
+        [
+          {
+            "node": "Mark Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Processing": {
+      "main": [
+        [
+          {
+            "node": "Load Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Failed": {
+      "main": [
+        [
+          {
+            "node": "Respond Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "executionTimeout": 900,
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "Ingest Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "primary-production-9ee0c.up.railway.app",
+            "user-agent": "HTTPie/3.2.2",
+            "content-length": "106",
+            "accept": "application/json, */*;q=0.5",
+            "accept-encoding": "gzip, deflate",
+            "content-type": "application/json",
+            "x-forwarded-for": "72.255.0.163",
+            "x-forwarded-host": "primary-production-9ee0c.up.railway.app",
+            "x-forwarded-proto": "https",
+            "x-railway-edge": "railway/asia-southeast1-eqsg3a",
+            "x-railway-request-id": "yCIa4zF9ThGXT8w5AQeqjw",
+            "x-real-ip": "72.255.0.163",
+            "x-request-start": "1778596777558"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "document_id": "a3bea4b0-b734-405d-bae5-e693b6a76cf4",
+            "deal_id": "83c7bf2a-a169-4d92-b7b3-136809ae4b40"
+          },
+          "webhookUrl": "https://primary-production-9ee0c.up.railway.app/webhook/deal-document-ingest",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "14ae334f-995e-40ee-8b4e-533445fc7bb3",
+  "activeVersionId": "14ae334f-995e-40ee-8b4e-533445fc7bb3",
+  "versionCounter": 217,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-05-11T16:04:19.774Z",
+      "createdAt": "2026-05-11T16:04:19.774Z",
+      "role": "workflow:owner",
+      "workflowId": "Po35WsflKy9wGR4g",
+      "projectId": "mGC32Fajoqe5NgIt",
+      "project": {
+        "updatedAt": "2026-03-18T20:21:17.262Z",
+        "createdAt": "2026-03-18T19:29:37.504Z",
+        "id": "mGC32Fajoqe5NgIt",
+        "name": "Stephen Philipp <stephen.philipp32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "76144f13-0594-4f37-bc65-d8620ad9d6fd"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-05-13T14:58:55.611Z",
+    "createdAt": "2026-05-13T14:58:55.611Z",
+    "versionId": "14ae334f-995e-40ee-8b4e-533445fc7bb3",
+    "workflowId": "Po35WsflKy9wGR4g",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "deal-document-ingest",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "n_webhook",
+        "name": "Ingest Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -1400,
+          0
+        ],
+        "webhookId": "dd216b09-55e9-488b-a27c-ba615a5aa10f",
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "a1",
+                "name": "document_id",
+                "value": "={{ $json.body.document_id }}",
+                "type": "string"
+              },
+              {
+                "id": "a2",
+                "name": "deal_id",
+                "value": "={{ $json.body.deal_id }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "n_carry",
+        "name": "Carry Context",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          -1180,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "terminal_dd_documents",
+          "returnAll": true,
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $('Carry Context').item.json.document_id }}"
+              }
+            ]
+          }
+        },
+        "id": "n_load_doc",
+        "name": "Load Document",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -740,
+          0
+        ],
+        "credentials": {
+          "supabaseApi": {
+            "id": "38IRxbN81Zhllc9N",
+            "name": "Reprime Terminal"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://kytvpaczfiajyjqohzri.supabase.co/storage/v1/object/sign/terminal-dd-documents/{{ $('Load Document').item.json.storage_path }}",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "supabaseApi",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "{\n  \"expiresIn\": 600\n}",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "id": "n_sign",
+        "name": "Sign Storage URL",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -520,
+          0
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 3000,
+        "credentials": {
+          "supabaseApi": {
+            "id": "38IRxbN81Zhllc9N",
+            "name": "Reprime Terminal"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "const TARGET_CHARS = 3200;\nconst OVERLAP_CHARS = 400;\nconst SEPARATORS = ['\\n## ', '\\n### ', '\\n\\n', '\\n', '. ', ' ', ''];\n\nfunction split(text, separators) {\n  if (text.length <= TARGET_CHARS) return [text];\n  for (const sep of separators) {\n    if (sep === '') break;\n    if (text.includes(sep)) {\n      const parts = text.split(sep);\n      const out = [];\n      let buf = '';\n      for (const p of parts) {\n        const piece = (buf ? buf + sep : '') + p;\n        if (piece.length > TARGET_CHARS && buf) {\n          out.push(buf);\n          buf = p;\n        } else {\n          buf = piece;\n        }\n      }\n      if (buf) out.push(buf);\n      const flat = [];\n      for (const piece of out) {\n        if (piece.length > TARGET_CHARS) flat.push(...split(piece, separators.slice(1)));\n        else flat.push(piece);\n      }\n      return flat;\n    }\n  }\n  const out = [];\n  for (let i = 0; i < text.length; i += TARGET_CHARS) out.push(text.slice(i, i + TARGET_CHARS));\n  return out;\n}\n\nconst input = items[0].json;\nconst full = (input.data || '').trim();\nif (!full) return [{ json: { error: 'empty_markdown', document_id: $('Carry Context').item.json.document_id } }];\n\nconst raw = split(full, SEPARATORS).map((s) => s.trim()).filter(Boolean);\n\nconst chunks = raw.map((c, i) => {\n  if (i === 0) return c;\n  const prev = raw[i - 1];\n  const tail = prev.slice(-OVERLAP_CHARS);\n  return tail + '\\n\\n' + c;\n});\n\nreturn chunks.map((content, chunk_index) => ({\n  json: {\n    document_id: $('Carry Context').item.json.document_id,\n    deal_id:     $('Carry Context').item.json.deal_id,\n    chunk_index,\n    content,\n    full_text:   full\n  }\n}));"
+        },
+        "id": "n_chunk",
+        "name": "Chunk Markdown",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          360,
+          0
+        ],
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "id": "n_batch",
+        "name": "Per-Chunk Loop",
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          580,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.anthropic.com/v1/messages",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "anthropicApi",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "anthropic-version",
+                "value": "2023-06-01"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"model\": \"claude-haiku-4-5-20251001\",\n  \"max_tokens\": 200,\n  \"system\": \"You write a short context that situates a chunk within a larger document so retrieval systems can find it. Answer with the context only — no preamble, no quoting, 50 to 100 tokens.\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": [\n        {\n          \"type\": \"text\",\n          \"text\": {{ JSON.stringify('<document>\\n' + ($json.full_text || '') + '\\n</document>') }},\n          \"cache_control\": { \"type\": \"ephemeral\" }\n        },\n        {\n          \"type\": \"text\",\n          \"text\": {{ JSON.stringify('Here is the chunk we want to situate within the whole document:\\n<chunk>\\n' + ($json.content || '') + '\\n</chunk>\\n\\nPlease give a short context that situates this chunk within the document, to improve search retrieval. Answer only with the context.') }}\n        }\n      ]\n    }\n  ]\n}",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "id": "n_haiku",
+        "name": "Contextualize (Haiku)",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          700,
+          200
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000,
+        "credentials": {
+          "anthropicApi": {
+            "id": "5DTNJRzt6FRrADO0",
+            "name": "Reprime"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "k1",
+                "name": "document_id",
+                "value": "={{ $('Per-Chunk Loop').item.json.document_id }}",
+                "type": "string"
+              },
+              {
+                "id": "k2",
+                "name": "deal_id",
+                "value": "={{ $('Per-Chunk Loop').item.json.deal_id }}",
+                "type": "string"
+              },
+              {
+                "id": "k3",
+                "name": "chunk_index",
+                "value": "={{ $('Per-Chunk Loop').item.json.chunk_index }}",
+                "type": "number"
+              },
+              {
+                "id": "k4",
+                "name": "content",
+                "value": "={{ $('Per-Chunk Loop').item.json.content }}",
+                "type": "string"
+              },
+              {
+                "id": "k5",
+                "name": "context",
+                "value": "={{ $json.content[0].text }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "n_attach_ctx",
+        "name": "Attach Context",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          900,
+          200
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const rows = items.map((i) => i.json);\nrows.sort((a, b) => (a.chunk_index ?? 0) - (b.chunk_index ?? 0));\nif (rows.length === 0) return [{ json: { error: 'no_chunks' } }];\nreturn [{\n  json: {\n    document_id: rows[0].document_id,\n    deal_id:     rows[0].deal_id,\n    chunks:      rows.map((r) => ({\n      chunk_index: r.chunk_index,\n      content:     r.content,\n      context:     r.context,\n      indexed_text: (r.context || '') + '\\n\\n' + (r.content || '')\n    }))\n  }\n}];"
+        },
+        "id": "n_gather",
+        "name": "Gather Contextualized",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1020,
+          0
+        ],
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-002:batchEmbedContents",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "googlePalmApi",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"requests\": {{ JSON.stringify($json.chunks.map(c => ({ model: 'models/gemini-embedding-002', content: { parts: [{ text: c.indexed_text }] }, taskType: 'RETRIEVAL_DOCUMENT', outputDimensionality: 1536 }))) }}\n}",
+          "options": {
+            "timeout": 90000
+          }
+        },
+        "id": "n_embed",
+        "name": "Gemini Batch Embed",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1240,
+          0
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000,
+        "credentials": {
+          "googlePalmApi": {
+            "id": "9n1kO8grfHcCrgHF",
+            "name": "Reprime"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "const api = items[0].json;\nconst gathered = $('Gather Contextualized').item.json;\nconst embeddings = (api.embeddings || []);\nif (embeddings.length !== gathered.chunks.length) {\n  throw new Error(`Embedding count mismatch: ${embeddings.length} vs ${gathered.chunks.length}`);\n}\nconst chunks = gathered.chunks.map((c, i) => {\n  const e = embeddings[i] || {};\n  return {\n    chunk_index: c.chunk_index,\n    content:     c.content,\n    context:     c.context,\n    embedding:   e.values || null\n  };\n});\nif (chunks.some((c) => !c.embedding)) {\n  throw new Error('Gemini returned a chunk with no embedding values');\n}\nreturn [{ json: { document_id: gathered.document_id, deal_id: gathered.deal_id, chunks } }];"
+        },
+        "id": "n_zip_embed",
+        "name": "Zip Embeddings",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1460,
+          0
+        ],
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://kytvpaczfiajyjqohzri.supabase.co/rest/v1/rpc/replace_doc_chunks",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "supabaseApi",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Prefer",
+                "value": "return=representation"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"p_document_id\": \"{{ $json.document_id }}\",\n  \"p_deal_id\":     \"{{ $json.deal_id }}\",\n  \"p_chunks\":      {{ JSON.stringify($json.chunks) }}\n}",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "id": "n_upsert",
+        "name": "Replace Chunks (RPC)",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1680,
+          0
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 3000,
+        "credentials": {
+          "supabaseApi": {
+            "id": "38IRxbN81Zhllc9N",
+            "name": "Reprime Terminal"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={\n  \"document_id\": \"{{ $('Zip Embeddings').item.json.document_id }}\",\n  \"chunk_count\": {{ $('Zip Embeddings').item.json.chunks.length }},\n  \"indexed_at\":  \"{{ new Date().toISOString() }}\"\n}",
+          "options": {}
+        },
+        "id": "n_respond",
+        "name": "Respond Done",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          1900,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.apify.com/v2/acts/vancura~docling/run-sync",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpQueryAuth",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "timeout",
+                "value": "900"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ http_sources: [{ url: 'https://kytvpaczfiajyjqohzri.supabase.co/storage/v1' + $json.signedURL }], options: { to_formats: ['md'], do_ocr: true, image_export_mode: 'placeholder', ocr_preset: 'tesseract' } }) }}",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "file"
+              }
+            },
+            "timeout": 900000
+          }
+        },
+        "id": "n_apify",
+        "name": "Apify Docling",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -300,
+          0
+        ],
+        "retryOnFail": false,
+        "maxTries": 1,
+        "waitBetweenTries": 5000,
+        "credentials": {
+          "apifyApi": {
+            "id": "9cMrosOyt4wTnDEB",
+            "name": "Reprime"
+          },
+          "httpQueryAuth": {
+            "id": "xgsC8zias7hPhhOB",
+            "name": "Impleko-Testing"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {},
+        "id": "n_decompress_apify",
+        "name": "Decompress Apify",
+        "type": "n8n-nodes-base.compression",
+        "typeVersion": 1.1,
+        "position": [
+          -80,
+          0
+        ],
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "operation": "text",
+          "binaryPropertyName": "file_0",
+          "options": {}
+        },
+        "id": "n_extract_apify",
+        "name": "Extract Markdown Apify",
+        "type": "n8n-nodes-base.extractFromFile",
+        "typeVersion": 1.1,
+        "position": [
+          140,
+          0
+        ],
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://kytvpaczfiajyjqohzri.supabase.co/rest/v1/rpc/mark_doc_processing",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "supabaseApi",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"p_id\": \"{{ $('Carry Context').item.json.document_id }}\"\n}",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "id": "ed2c3d69-b0fe-4273-939e-9fb1777011e0",
+        "name": "Mark Processing",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -960,
+          0
+        ],
+        "credentials": {
+          "supabaseApi": {
+            "id": "38IRxbN81Zhllc9N",
+            "name": "Reprime Terminal"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://kytvpaczfiajyjqohzri.supabase.co/rest/v1/rpc/mark_doc_failed",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "supabaseApi",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"p_id\": \"{{ $('Carry Context').item.json.document_id }}\",\n  \"p_error\": {{ JSON.stringify(($json.error && ($json.error.message || $json.error.description)) || $json.message || 'unknown error') }}\n}",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "id": "691cf3ea-4be1-4f82-baab-62a022a84d09",
+        "name": "Mark Failed",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          580,
+          400
+        ],
+        "credentials": {
+          "supabaseApi": {
+            "id": "38IRxbN81Zhllc9N",
+            "name": "Reprime Terminal"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={\n  \"document_id\": \"{{ $('Carry Context').item.json.document_id }}\",\n  \"status\": \"failed\"\n}",
+          "options": {}
+        },
+        "id": "acdc39a3-edce-478d-9593-e19bb46e0cef",
+        "name": "Respond Failed",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          1900,
+          400
+        ]
+      }
+    ],
+    "connections": {
+      "Ingest Webhook": {
+        "main": [
+          [
+            {
+              "node": "Carry Context",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Chunk Markdown": {
+        "main": [
+          [
+            {
+              "node": "Per-Chunk Loop",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Mark Failed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Per-Chunk Loop": {
+        "main": [
+          [
+            {
+              "node": "Gather Contextualized",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Contextualize (Haiku)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Contextualize (Haiku)": {
+        "main": [
+          [
+            {
+              "node": "Attach Context",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Mark Failed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Attach Context": {
+        "main": [
+          [
+            {
+              "node": "Per-Chunk Loop",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Gather Contextualized": {
+        "main": [
+          [
+            {
+              "node": "Gemini Batch Embed",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Mark Failed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Gemini Batch Embed": {
+        "main": [
+          [
+            {
+              "node": "Zip Embeddings",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Mark Failed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Zip Embeddings": {
+        "main": [
+          [
+            {
+              "node": "Replace Chunks (RPC)",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Mark Failed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Replace Chunks (RPC)": {
+        "main": [
+          [
+            {
+              "node": "Respond Done",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Mark Failed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Decompress Apify": {
+        "main": [
+          [
+            {
+              "node": "Extract Markdown Apify",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Mark Failed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract Markdown Apify": {
+        "main": [
+          [
+            {
+              "node": "Chunk Markdown",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Mark Failed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Apify Docling": {
+        "main": [
+          [
+            {
+              "node": "Decompress Apify",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Mark Failed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Sign Storage URL": {
+        "main": [
+          [
+            {
+              "node": "Apify Docling",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Mark Failed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Load Document": {
+        "main": [
+          [
+            {
+              "node": "Sign Storage URL",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Mark Failed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Carry Context": {
+        "main": [
+          [
+            {
+              "node": "Mark Processing",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Mark Processing": {
+        "main": [
+          [
+            {
+              "node": "Load Document",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Mark Failed": {
+        "main": [
+          [
+            {
+              "node": "Respond Failed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Stephen Philipp",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-05-13T14:58:55.710Z",
+        "id": 386,
+        "workflowId": "Po35WsflKy9wGR4g",
+        "versionId": "14ae334f-995e-40ee-8b4e-533445fc7bb3",
+        "event": "deactivated",
+        "userId": "76144f13-0594-4f37-bc65-d8620ad9d6fd"
+      },
+      {
+        "createdAt": "2026-05-13T14:58:55.749Z",
+        "id": 387,
+        "workflowId": "Po35WsflKy9wGR4g",
+        "versionId": "14ae334f-995e-40ee-8b4e-533445fc7bb3",
+        "event": "activated",
+        "userId": "76144f13-0594-4f37-bc65-d8620ad9d6fd"
+      }
+    ]
+  }
+}

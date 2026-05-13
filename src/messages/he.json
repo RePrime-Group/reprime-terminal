@@ -1397,6 +1397,8 @@
     "viewSource": "צפה במקור",
     "sourceDrawerTitle": "מקור",
     "closeSource": "סגור מקור",
+    "loadingSource": "טוען מקור…",
+    "sourceUnavailable": "המקור אינו זמין.",
     "selectDealPrompt": "בחר עסקה לשאול עליה",
     "searchDeals": "חפש עסקאות…",
     "noDealsFound": "לא נמצאו עסקאות מתאימות",

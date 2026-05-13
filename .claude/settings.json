@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(jq -r '.tool_input.file_path // empty'); if echo \"$FILE\" | grep -qE '\\.(ts|tsx)$'; then cd \"$CLAUDE_PROJECT_DIR\" && OUT=$(npx --no-install tsc --noEmit 2>&1) || { echo \"TypeScript check failed after editing $FILE:\" >&2; echo \"$OUT\" | head -60 >&2; exit 2; }; fi"
+          }
+        ]
+      }
+    ]
+  }
+}

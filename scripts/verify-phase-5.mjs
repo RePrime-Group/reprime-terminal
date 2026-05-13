@@ -18,7 +18,7 @@
  * just because a provider key is missing locally; those keys live in the n8n
  * vault and Vercel server env, not on your laptop):
  *   N8N_BASE_URL          → enables the --doc-id end-to-end webhook test
- *   GOOGLE_API_KEY        → sanity-pings gemini-embedding-001
+ *   GOOGLE_API_KEY        → sanity-pings the Gemini embedding model
  *   COHERE_API_KEY        → sanity-pings cohere rerank
  *   ANTHROPIC_API_KEY     → sanity-pings haiku
  *
@@ -27,6 +27,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { EMBEDDING_DIM, EMBEDDING_MODEL_NAME } from '../src/lib/ai/rag/embedding-model.mjs';
 
 // ─── pretty printing ────────────────────────────────────────────────────────
 const C = {
@@ -132,15 +133,15 @@ step('RPC round-trip — replace_doc_chunks + search_doc_chunks');
 }
 
 // ─── 4. Gemini (optional) ───────────────────────────────────────────────────
-step('Gemini — gemini-embedding-001 @ 1536d');
+step(`Gemini — ${EMBEDDING_MODEL_NAME} @ ${EMBEDDING_DIM}d`);
 if (!process.env.GOOGLE_API_KEY) skip('GOOGLE_API_KEY not set locally (lives in n8n vault) — fine, n8n will exercise it');
 else {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key=${encodeURIComponent(process.env.GOOGLE_API_KEY)}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${EMBEDDING_MODEL_NAME}:embedContent?key=${encodeURIComponent(process.env.GOOGLE_API_KEY)}`;
   const body = {
-    model: 'models/gemini-embedding-001',
+    model: `models/${EMBEDDING_MODEL_NAME}`,
     content: { parts: [{ text: 'What is the cap rate on this deal?' }] },
     taskType: 'RETRIEVAL_QUERY',
-    outputDimensionality: 1536,
+    outputDimensionality: EMBEDDING_DIM,
   };
   try {
     const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -148,8 +149,8 @@ else {
     else {
       const data = await res.json();
       const dim = data?.embedding?.values?.length;
-      if (dim !== 1536) fail(`Gemini returned ${dim} dims; expected 1536`);
-      else pass('Gemini returned a 1536-d vector (RETRIEVAL_QUERY task_type honored)');
+      if (dim !== EMBEDDING_DIM) fail(`Gemini returned ${dim} dims; expected ${EMBEDDING_DIM}`);
+      else pass(`Gemini returned a ${EMBEDDING_DIM}-d vector (RETRIEVAL_QUERY task_type honored)`);
     }
   } catch (e) { fail('Gemini fetch threw', e.message); }
 }

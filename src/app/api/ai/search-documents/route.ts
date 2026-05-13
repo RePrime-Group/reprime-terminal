@@ -14,8 +14,6 @@ interface SearchRequest {
 interface ResponseChunk {
   document_id: string;
   title: string;
-  page_start: number | null;
-  page_end: number | null;
   content: string;
 }
 
@@ -76,8 +74,6 @@ export async function POST(request: NextRequest) {
   const chunks: ResponseChunk[] = top.map((c) => ({
     document_id: c.document_id,
     title: c.title,
-    page_start: c.page_start,
-    page_end: c.page_end,
     content: c.content,
   }));
 

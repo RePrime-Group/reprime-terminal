@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { TerminalDDDocument } from '@/lib/types/database';
 import { maybeCompressImage } from '@/lib/utils/imageCompression';
+import { enqueueIngestAction } from '@/lib/ai/rag/actions';
 
 // Supabase storage keys reject non-ASCII characters (e.g. "×", emoji, accented
 // letters). Replace anything outside [A-Za-z0-9._-] with "_" and collapse runs,
@@ -108,6 +109,10 @@ export async function uploadFileToFolder(
   } catch {
     // Activity logging is best-effort; never block the upload flow.
   }
+
+  // Fire-and-forget RAG ingestion. The Server Action keeps the n8n webhook
+  // URL server-only; failures are logged server-side and never surface here.
+  void enqueueIngestAction(inserted.id as string, dealId);
 
   return { document: inserted as TerminalDDDocument };
 }

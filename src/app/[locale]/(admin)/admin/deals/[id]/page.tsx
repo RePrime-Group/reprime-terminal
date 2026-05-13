@@ -15,6 +15,7 @@ import {
 } from '@/lib/utils/fee-resolver';
 import { createClient } from '@/lib/supabase/client';
 import { maybeCompressImage } from '@/lib/utils/imageCompression';
+import { promoteDealDocAction, removeDealDocAction } from '@/lib/ai/rag/actions';
 import {
   DEAL_STATUS_LABELS,
   DEAL_STATUS_TRANSITIONS,
@@ -925,6 +926,15 @@ export default function EditDealPage() {
 
       setOmPath(path);
       await logDocumentUploadActivity('om', file.name);
+
+      void promoteDealDocAction({
+        dealId,
+        storagePath: path,
+        sourceKind: 'deal_om',
+        name: 'Offering Memorandum',
+        fileType: file.type,
+        fileSize: file.size,
+      });
     } finally {
       setOmUploading(false);
       if (omInputRef.current) omInputRef.current.value = '';
@@ -936,6 +946,7 @@ export default function EditDealPage() {
     await supabase.storage.from('terminal-dd-documents').remove([omPath]);
     await supabase.from('terminal_deals').update({ om_storage_path: null }).eq('id', dealId);
     setOmPath(null);
+    void removeDealDocAction({ dealId, sourceKind: 'deal_om' });
   };
 
   const handleDocUpload = async (
@@ -977,6 +988,31 @@ export default function EditDealPage() {
         'lease-summary': 'lease_summary',
       };
       await logDocumentUploadActivity(docKeyToCategory[docKey], file.name);
+
+      const RAG_SOURCE_KIND: Record<Exclude<DocKey, 'om'>, 'deal_loi' | 'deal_psa' | 'deal_full_report' | 'deal_costar_report' | 'deal_tenants_report' | 'deal_lease_summary'> = {
+        'loi': 'deal_loi',
+        'psa': 'deal_psa',
+        'full-report': 'deal_full_report',
+        'costar-report': 'deal_costar_report',
+        'tenants-report': 'deal_tenants_report',
+        'lease-summary': 'deal_lease_summary',
+      };
+      const RAG_DOC_NAME: Record<Exclude<DocKey, 'om'>, string> = {
+        'loi': 'Signed LOI',
+        'psa': 'Purchase and Sale Agreement',
+        'full-report': 'Full Report',
+        'costar-report': 'CoStar Report',
+        'tenants-report': 'Tenants Report',
+        'lease-summary': 'Lease Summary',
+      };
+      void promoteDealDocAction({
+        dealId,
+        storagePath: path,
+        sourceKind: RAG_SOURCE_KIND[docKey],
+        name: RAG_DOC_NAME[docKey],
+        fileType: file.type,
+        fileSize: file.size,
+      });
     } finally {
       setDocUploading(null);
       const input = docInputRefs.current[docKey];
@@ -993,6 +1029,16 @@ export default function EditDealPage() {
       .update({ [DOC_CONFIG[docKey].column]: null })
       .eq('id', dealId);
     setDocPaths((prev) => ({ ...prev, [docKey]: null }));
+
+    const RAG_SOURCE_KIND: Record<Exclude<DocKey, 'om'>, 'deal_loi' | 'deal_psa' | 'deal_full_report' | 'deal_costar_report' | 'deal_tenants_report' | 'deal_lease_summary'> = {
+      'loi': 'deal_loi',
+      'psa': 'deal_psa',
+      'full-report': 'deal_full_report',
+      'costar-report': 'deal_costar_report',
+      'tenants-report': 'deal_tenants_report',
+      'lease-summary': 'deal_lease_summary',
+    };
+    void removeDealDocAction({ dealId, sourceKind: RAG_SOURCE_KIND[docKey] });
   };
 
   const handleDocView = async (path: string) => {
@@ -1118,6 +1164,18 @@ export default function EditDealPage() {
         prev.map((a) => a.id === addressId ? { ...a, om_storage_path: path } : a)
       );
       await logDocumentUploadActivity('om', file.name);
+
+      const addr = addresses.find((a) => a.id === addressId);
+      const addressLabel = addr?.label || addr?.address || 'address';
+      void promoteDealDocAction({
+        dealId,
+        storagePath: path,
+        sourceKind: 'deal_om_address',
+        name: `Offering Memorandum — ${addressLabel}`,
+        fileType: file.type,
+        fileSize: file.size,
+        sourceRef: addressId,
+      });
     }
   };
 

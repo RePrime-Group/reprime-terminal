@@ -5,17 +5,18 @@ import { callN8n, getAuthedSession, unwrapMessageContent } from '../_n8n';
 import { generateAndSaveConversationTitle } from '@/lib/ai/title';
 import { createAdminClient } from '@/lib/supabase/admin';
 
-// Matches full UUID `(uuid)` `(uuid, 5)`, or short prefix `(abcdef12)` / `(abcdef12, 5)`.
-// The short-prefix form is a fallback for when the agent abbreviates; we resolve it by
-// looking up any document whose id starts with that prefix.
-const CITE_RE = /\(([0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}|[0-9a-f]{8,})(?:,\s*(?:p(?:age)?\.?\s*)?(\d+))?\)/gi;
+// Matches full UUID `(uuid)` or short prefix `(abcdef12)` — Phase 6 simplified
+// the marker by dropping the optional page suffix. The short-prefix form is a
+// fallback for when the agent abbreviates; we resolve it by looking up any
+// document whose id starts with that prefix.
+const CITE_RE = /\(([0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}|[0-9a-f]{8,})\)/gi;
 
 async function extractDocumentCitations(content: string, dealId: string): Promise<Citation[]> {
-  const hits: { ref: string; page?: number }[] = [];
+  const refs: string[] = [];
   for (const m of content.matchAll(CITE_RE)) {
-    hits.push({ ref: m[1].toLowerCase(), page: m[2] ? parseInt(m[2], 10) : undefined });
+    refs.push(m[1].toLowerCase());
   }
-  if (hits.length === 0) return [];
+  if (refs.length === 0) return [];
 
   const admin = createAdminClient();
   const { data } = await admin
@@ -32,12 +33,11 @@ async function extractDocumentCitations(content: string, dealId: string): Promis
   };
 
   const seen = new Map<string, Citation>();
-  for (const { ref, page } of hits) {
+  for (const ref of refs) {
     const resolved = resolve(ref);
     if (!resolved) continue;
-    const key = `${resolved.id}#${page ?? ''}`;
-    if (!seen.has(key)) {
-      seen.set(key, { id: key, kind: 'document', label: resolved.label, document_id: resolved.id, page });
+    if (!seen.has(resolved.id)) {
+      seen.set(resolved.id, { id: resolved.id, kind: 'document', label: resolved.label, document_id: resolved.id });
     }
   }
   return Array.from(seen.values());
