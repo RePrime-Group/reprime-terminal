@@ -256,11 +256,12 @@ export function FileRow({
             onCancel={() => ctx.setEditingDocId(null)}
           />
         ) : hasFile ? (
-          // Single-click name → preview. Double-click → rename. Listeners block
-          // dnd-kit drag activation so a click doesn't get swallowed as a drag.
+          // Click → preview. Double-click → rename. We deliberately do NOT
+          // stopPropagation on pointerdown so dnd-kit's row-level listener can
+          // still see the gesture; its 5px activation distance lets a still
+          // click pass through to onClick while a drag fires onDragStart.
           <button
             type="button"
-            onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.stopPropagation();
               ctx.onViewDocument(doc.id, displayName, doc.storage_path ?? null);
