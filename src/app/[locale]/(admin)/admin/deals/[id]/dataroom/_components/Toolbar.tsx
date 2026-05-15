@@ -2,8 +2,9 @@
 
 import { useRef, useState } from 'react';
 import Button from '@/components/ui/Button';
+import { BulkZipUploadModal } from './BulkZipUploadModal';
 
-// Top toolbar: + New Folder, Populate DD, Bulk n8n ZIP upload, notify toggle.
+// Top toolbar: + New Folder, Populate DD, master ZIP upload, notify toggle.
 // The "Upload Files" action is handled per-folder (right-click menu or desktop
 // drag onto a folder in the tree) so the toolbar doesn't need a separate
 // "upload into what" flow.
@@ -27,63 +28,24 @@ export function Toolbar({
   onRefresh: () => Promise<void> | void;
 }) {
   const bulkInputRef = useRef<HTMLInputElement>(null);
-  const [bulkUploading, setBulkUploading] = useState(false);
-  const [bulkProgress, setBulkProgress] = useState(0);
+  const [bulkFile, setBulkFile] = useState<File | null>(null);
+  const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkToast, setBulkToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const [lastBulkFile, setLastBulkFile] = useState<File | null>(null);
   const [populating, setPopulating] = useState(false);
 
-  async function handleBulkUpload(fileList: FileList | null) {
+  function handleBulkUpload(fileList: FileList | null) {
     if (!fileList || fileList.length === 0) return;
     const file = fileList[0];
     const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
     if (ext !== 'zip') {
       setBulkToast({ type: 'error', message: 'Only ZIP files are accepted for bulk upload.' });
+      if (bulkInputRef.current) bulkInputRef.current.value = '';
       return;
     }
-
-    setLastBulkFile(file);
-    setBulkUploading(true);
-    setBulkProgress(0);
     setBulkToast(null);
-
-    const interval = setInterval(() => {
-      setBulkProgress((prev) => (prev < 85 ? prev + Math.random() * 8 : prev));
-    }, 500);
-
-    try {
-      const formData = new FormData();
-      formData.append('dealId', dealId);
-      if (userId) formData.append('userId', userId);
-      formData.append('files', file, file.name);
-
-      const res = await fetch(
-        'https://primary-production-9ee0c.up.railway.app/webhook/203bdaee-75d3-4d3b-bee5-e820281be377',
-        { method: 'POST', body: formData },
-      );
-
-      if (!res.ok) {
-        const errText = await res.text();
-        throw new Error(errText || `Webhook responded with ${res.status}`);
-      }
-
-      clearInterval(interval);
-      setBulkProgress(90);
-      await onRefresh();
-      setBulkProgress(100);
-      setBulkToast({ type: 'success', message: 'Files uploaded and organized successfully.' });
-      setTimeout(() => {
-        setBulkProgress(0);
-        setBulkUploading(false);
-      }, 800);
-    } catch {
-      clearInterval(interval);
-      setBulkProgress(0);
-      setBulkUploading(false);
-      setBulkToast({ type: 'error', message: 'Organization failed. Please try again.' });
-    } finally {
-      if (bulkInputRef.current) bulkInputRef.current.value = '';
-    }
+    setBulkFile(file);
+    setBulkOpen(true);
+    if (bulkInputRef.current) bulkInputRef.current.value = '';
   }
 
   async function handlePopulate() {
@@ -127,14 +89,11 @@ export function Toolbar({
         </div>
       </div>
 
-      {/* Bulk n8n upload */}
+      {/* Master ZIP upload — client-side extraction, folder-aware. */}
       <div className="mb-4 rounded-xl border border-rp-gray-200 bg-white p-4 shadow-sm">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-semibold text-rp-navy">Bulk Upload (Organized ZIP)</h3>
-            <p className="text-xs text-rp-gray-400 mt-0.5">
-              Send a master file to the n8n processing pipeline
-            </p>
           </div>
           <div className="flex items-center gap-3">
             <input
@@ -148,53 +107,38 @@ export function Toolbar({
               variant="primary"
               size="sm"
               onClick={() => bulkInputRef.current?.click()}
-              disabled={bulkUploading}
-              loading={bulkUploading}
+              disabled={bulkOpen}
             >
-              {bulkUploading ? 'Processing…' : 'Upload Master ZIP'}
+              Upload Master ZIP
             </Button>
           </div>
         </div>
 
-        {bulkUploading && (
-          <div className="mt-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-medium text-rp-navy">Uploading and organizing your files…</span>
-              <span className="text-xs font-semibold text-rp-gold">{Math.round(bulkProgress)}%</span>
-            </div>
-            <div className="h-2 rounded-full bg-rp-gray-200 overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-rp-gold to-rp-gold-soft rounded-full transition-all duration-500 ease-out"
-                style={{ width: `${bulkProgress}%` }}
-              />
-            </div>
-          </div>
-        )}
-
-        {bulkToast && !bulkUploading && (
+        {bulkToast && (
           <div
-            className={`mt-3 rounded-lg px-4 py-2.5 text-sm flex items-center justify-between ${
+            className={`mt-3 rounded-lg px-4 py-2.5 text-sm ${
               bulkToast.type === 'success'
                 ? 'bg-green-50 border border-green-200 text-green-700'
                 : 'bg-red-50 border border-red-200 text-red-600'
             }`}
           >
-            <span>{bulkToast.message}</span>
-            {bulkToast.type === 'error' && lastBulkFile && (
-              <button
-                onClick={() => {
-                  const dt = new DataTransfer();
-                  dt.items.add(lastBulkFile);
-                  handleBulkUpload(dt.files);
-                }}
-                className="ml-3 shrink-0 text-xs font-semibold text-red-700 underline hover:text-red-900"
-              >
-                Retry
-              </button>
-            )}
+            {bulkToast.message}
           </div>
         )}
       </div>
+
+      <BulkZipUploadModal
+        isOpen={bulkOpen}
+        dealId={dealId}
+        userId={userId}
+        notifyOnUpload={notifyOnUpload}
+        file={bulkFile}
+        onClose={() => {
+          setBulkOpen(false);
+          setBulkFile(null);
+        }}
+        onAfterDone={onRefresh}
+      />
 
       {/* Notify toggle */}
       <div className="flex items-start justify-between gap-4 mb-4 px-4 py-3 rounded-lg bg-white border border-rp-gray-200">
