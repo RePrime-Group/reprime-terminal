@@ -19,6 +19,7 @@
     "@react-three/fiber": "^9.5.0",
     "@supabase/ssr": "^0.9.0",
     "@supabase/supabase-js": "^2.99.2",
+    "@zip.js/zip.js": "^2.8.26",
     "browser-image-compression": "^2.0.2",
     "client-zip": "^2.5.0",
     "googleapis": "^171.4.0",
@@ -33,6 +34,7 @@
     "react-intersection-observer": "^10.0.3",
     "resend": "^6.9.4",
     "three": "^0.183.2",
+    "tus-js-client": "^4.3.1",
     "xlsx-js-style": "^1.2.0"
   },
   "devDependencies": {
