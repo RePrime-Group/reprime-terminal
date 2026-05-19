@@ -47,8 +47,8 @@ db.sql
 *.tsbuildinfo
 next-env.d.ts
 
-# local secrets in helper scripts
-scripts/connect-n8n-mcp.sh
+# local helper scripts (ad-hoc test / migration drivers — kept out of the repo)
+/scripts
 
 # internal working docs (notes, prompts, reports — kept out of the public repo)
 /docs
