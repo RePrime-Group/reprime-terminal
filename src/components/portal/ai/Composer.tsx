@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 interface Props {
@@ -10,34 +10,72 @@ interface Props {
   isStreaming?: boolean;
 }
 
-const useIsoLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 const MAX_HEIGHT = 160;
 
 export default function Composer({ onSend, onStop, disabled, isStreaming = false }: Props) {
   const t = useTranslations('ai');
-  const [value, setValue] = useState('');
   const ref = useRef<HTMLTextAreaElement>(null);
+  // Only tracks empty vs non-empty so canSend can re-render the send button.
+  // The textarea itself is uncontrolled — typing does not trigger React renders.
+  const [hasText, setHasText] = useState(false);
+  const hasTextRef = useRef(false);
+  const resizeRafRef = useRef(0);
 
-  useIsoLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return;
+  const resize = useCallback((el: HTMLTextAreaElement) => {
     el.style.height = 'auto';
     const next = Math.min(el.scrollHeight, MAX_HEIGHT);
     el.style.height = `${next}px`;
     if (el.scrollHeight > MAX_HEIGHT) {
       el.scrollTop = el.scrollHeight;
     }
-  }, [value]);
+  }, []);
 
-  const submit = () => {
-    const trimmed = value.trim();
+  const scheduleResize = useCallback(() => {
+    if (resizeRafRef.current) return;
+    resizeRafRef.current = requestAnimationFrame(() => {
+      resizeRafRef.current = 0;
+      const el = ref.current;
+      if (el) resize(el);
+    });
+  }, [resize]);
+
+  const handleInput = useCallback(
+    (e: React.FormEvent<HTMLTextAreaElement>) => {
+      const el = e.currentTarget;
+      // Defer the reflow off the input event. The character is already in the DOM;
+      // height catches up on the next frame — invisible at 60fps but keeps the
+      // keystroke itself reflow-free, so typing tracks the keyboard exactly.
+      scheduleResize();
+
+      const nextHas = el.value.length > 0 && el.value.trimStart().length > 0;
+      if (nextHas !== hasTextRef.current) {
+        hasTextRef.current = nextHas;
+        setHasText(nextHas);
+      }
+    },
+    [scheduleResize],
+  );
+
+  const submit = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    const trimmed = el.value.trim();
     if (!trimmed || disabled) return;
     onSend(trimmed);
-    setValue('');
-    requestAnimationFrame(() => ref.current?.focus());
-  };
+    el.value = '';
+    if (resizeRafRef.current) {
+      cancelAnimationFrame(resizeRafRef.current);
+      resizeRafRef.current = 0;
+    }
+    resize(el);
+    if (hasTextRef.current) {
+      hasTextRef.current = false;
+      setHasText(false);
+    }
+    requestAnimationFrame(() => el.focus());
+  }, [disabled, onSend, resize]);
 
-  const canSend = !disabled && value.trim().length > 0;
+  const canSend = !disabled && hasText;
   const showStop = isStreaming && !!onStop;
 
   return (
@@ -57,8 +95,8 @@ export default function Composer({ onSend, onStop, disabled, isStreaming = false
       >
         <textarea
           ref={ref}
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
+          defaultValue=""
+          onInput={handleInput}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
               e.preventDefault();

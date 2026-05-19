@@ -25,10 +25,10 @@ export default function MessageBubble({ message, onOpenCitation, stream = false,
       aria-label={isUser ? t('you') : t('assistant')}
     >
       <div
-        className={`max-w-[88%] rounded-2xl px-4 py-2.5 text-[13px] leading-[1.55] break-words ${
+        className={`max-w-[88%] rounded-2xl px-4 py-2.5 text-[15px] leading-[1.6] break-words ${
           isUser
             ? 'bg-gradient-to-br from-[#BC9C45] to-[#A88A3D] text-white shadow-[0_2px_8px_rgba(188,156,69,0.25)] whitespace-pre-wrap'
-            : 'bg-white/[0.04] border border-white/[0.06] text-white/90'
+            : 'bg-black/40 backdrop-blur-2xl  border border-[#BC9C45]/40 text-white/90'
         }`}
       >
         {isAssistant ? (

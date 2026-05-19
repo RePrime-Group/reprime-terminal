@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { History, Plus, ChevronDown } from 'lucide-react';
 import type { Conversation } from '@/lib/ai/types';
 
 interface Props {
@@ -49,19 +50,25 @@ export default function ThreadSwitcher({ conversations, activeId, onSelect, onNe
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={t('threadHistory')}
-        className="px-2.5 py-1.5 rounded-md hover:bg-white/[0.06] text-[11px] text-white/55 hover:text-white inline-flex items-center gap-1.5 cursor-pointer transition-colors"
+        className={`h-8 px-2.5 rounded-lg text-[12px] font-medium inline-flex items-center gap-1.5 cursor-pointer transition-all duration-150 border ${
+          open
+            ? 'bg-white/[0.08] text-white border-white/[0.12]'
+            : 'bg-white/[0.03] text-white/65 border-white/[0.06] hover:bg-white/[0.07] hover:text-white hover:border-white/[0.1]'
+        }`}
       >
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10" />
-          <polyline points="12 6 12 12 16 14" />
-        </svg>
-        {t('threadHistory')}
+        <History size={13} strokeWidth={1.9} className="opacity-80" />
+        <span className="leading-none">{t('threadHistory')}</span>
+        <ChevronDown
+          size={11}
+          strokeWidth={2}
+          className={`opacity-60 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+        />
       </button>
 
       {open && (
         <div
           role="menu"
-          className="absolute end-0 top-[calc(100%+6px)] w-[300px] max-h-[460px] flex flex-col bg-[#0B0E14] rounded-lg border border-white/[0.08] shadow-2xl z-10 overflow-hidden"
+          className="absolute end-0 top-[calc(100%+6px)] w-[260px] max-w-[calc(100vw-40px)] max-h-[460px] flex flex-col bg-[#0A1628] rounded-lg border border-white/[0.08] shadow-2xl z-10 overflow-hidden"
         >
           <button
             type="button"
@@ -71,10 +78,7 @@ export default function ThreadSwitcher({ conversations, activeId, onSelect, onNe
             }}
             className="shrink-0 w-full px-3 py-2.5 text-start text-[12px] font-medium text-[#D4B96A] hover:bg-white/[0.04] border-b border-white/[0.06] cursor-pointer flex items-center gap-2"
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
+            <Plus size={14} strokeWidth={2} aria-hidden />
             {t('newThread')}
           </button>
 

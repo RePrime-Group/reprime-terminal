@@ -1,6 +1,7 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { Maximize2, Minimize2, PanelRight, PanelLeft, X } from 'lucide-react';
 import type { Conversation } from '@/lib/ai/types';
 import ThreadSwitcher from './ThreadSwitcher';
 
@@ -32,6 +33,9 @@ export default function DealAssistantHeader({
   onSwitchDeal,
 }: Props) {
   const t = useTranslations('ai');
+  const locale = useLocale();
+  const isRtl = locale === 'he';
+  const DockIcon = isRtl ? PanelLeft : PanelRight;
 
   return (
     <header className="relative h-[56px] px-3 flex items-center justify-between border-b border-white/[0.06] bg-[#0F1320]">
@@ -79,10 +83,7 @@ export default function DealAssistantHeader({
                 : 'hover:bg-white/[0.06] text-white/55 hover:text-white'
             }`}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <line x1="15" y1="3" x2="15" y2="21" />
-            </svg>
+            <DockIcon size={16} strokeWidth={1.75} />
           </button>
         )}
         <button
@@ -91,23 +92,11 @@ export default function DealAssistantHeader({
           aria-label={expanded ? t('collapse') : t('expand')}
           className={`${docked ? 'hidden' : 'hidden md:flex'} w-8 h-8 rounded-lg hover:bg-white/[0.06] active:scale-95 text-white/55 hover:text-white items-center justify-center cursor-pointer transition-all duration-150`}
         >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            {expanded ? (
-              <>
-                <polyline points="4 14 10 14 10 20" />
-                <polyline points="20 10 14 10 14 4" />
-                <line x1="14" y1="10" x2="21" y2="3" />
-                <line x1="3" y1="21" x2="10" y2="14" />
-              </>
-            ) : (
-              <>
-                <polyline points="15 3 21 3 21 9" />
-                <polyline points="9 21 3 21 3 15" />
-                <line x1="21" y1="3" x2="14" y2="10" />
-                <line x1="3" y1="21" x2="10" y2="14" />
-              </>
-            )}
-          </svg>
+          {expanded ? (
+            <Minimize2 size={15} strokeWidth={1.75} />
+          ) : (
+            <Maximize2 size={15} strokeWidth={1.75} />
+          )}
         </button>
         <button
           type="button"
@@ -115,10 +104,7 @@ export default function DealAssistantHeader({
           aria-label={t('closeAssistant')}
           className="w-8 h-8 rounded-lg hover:bg-[#F87171]/10 active:scale-95 text-white/60 hover:text-[#F87171] flex items-center justify-center cursor-pointer transition-all duration-150"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
+          <X size={16} strokeWidth={2} />
         </button>
       </div>
     </header>
