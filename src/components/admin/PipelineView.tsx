@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
-import { enqueueIngestAction } from '@/lib/ai/rag/actions';
 import { STAGE_LABELS, STAGE_DURATIONS, STAGE_ORDER } from '@/lib/pipeline/stage-templates';
 import type { PipelineStage } from '@/lib/pipeline/stage-templates';
 import {
@@ -468,7 +467,7 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
         })
         .select('id')
         .single();
-      if (inserted?.id) void enqueueIngestAction(inserted.id as string, dealId);
+      void inserted;
     } else if (!value) {
       // Remove the DD document record when hiding from investors
       await supabase
@@ -513,7 +512,7 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
         })
         .select('id')
         .single();
-      if (inserted?.id) void enqueueIngestAction(inserted.id as string, dealId);
+      void inserted;
     } else if (!folderId) {
       // Remove DD document if folder deselected
       await supabase

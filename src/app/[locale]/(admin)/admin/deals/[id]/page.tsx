@@ -930,8 +930,8 @@ export default function EditDealPage() {
       void promoteDealDocAction({
         dealId,
         storagePath: path,
-        sourceKind: 'deal_om',
-        name: 'Offering Memorandum',
+        slot: 'offering-memorandum',
+        displayName: 'Offering Memorandum',
         fileType: file.type,
         fileSize: file.size,
       });
@@ -946,7 +946,7 @@ export default function EditDealPage() {
     await supabase.storage.from('terminal-dd-documents').remove([omPath]);
     await supabase.from('terminal_deals').update({ om_storage_path: null }).eq('id', dealId);
     setOmPath(null);
-    void removeDealDocAction({ dealId, sourceKind: 'deal_om' });
+    void removeDealDocAction({ dealId, slot: 'offering-memorandum' });
   };
 
   const handleDocUpload = async (
@@ -989,13 +989,13 @@ export default function EditDealPage() {
       };
       await logDocumentUploadActivity(docKeyToCategory[docKey], file.name);
 
-      const RAG_SOURCE_KIND: Record<Exclude<DocKey, 'om'>, 'deal_loi' | 'deal_psa' | 'deal_full_report' | 'deal_costar_report' | 'deal_tenants_report' | 'deal_lease_summary'> = {
-        'loi': 'deal_loi',
-        'psa': 'deal_psa',
-        'full-report': 'deal_full_report',
-        'costar-report': 'deal_costar_report',
-        'tenants-report': 'deal_tenants_report',
-        'lease-summary': 'deal_lease_summary',
+      const RAG_SLOT: Record<Exclude<DocKey, 'om'>, 'loi-signed' | 'purchase-sale-agreement' | 'full-report' | 'costar-report' | 'tenants-report' | 'lease-summary'> = {
+        'loi': 'loi-signed',
+        'psa': 'purchase-sale-agreement',
+        'full-report': 'full-report',
+        'costar-report': 'costar-report',
+        'tenants-report': 'tenants-report',
+        'lease-summary': 'lease-summary',
       };
       const RAG_DOC_NAME: Record<Exclude<DocKey, 'om'>, string> = {
         'loi': 'Signed LOI',
@@ -1008,8 +1008,8 @@ export default function EditDealPage() {
       void promoteDealDocAction({
         dealId,
         storagePath: path,
-        sourceKind: RAG_SOURCE_KIND[docKey],
-        name: RAG_DOC_NAME[docKey],
+        slot: RAG_SLOT[docKey],
+        displayName: RAG_DOC_NAME[docKey],
         fileType: file.type,
         fileSize: file.size,
       });
@@ -1030,15 +1030,15 @@ export default function EditDealPage() {
       .eq('id', dealId);
     setDocPaths((prev) => ({ ...prev, [docKey]: null }));
 
-    const RAG_SOURCE_KIND: Record<Exclude<DocKey, 'om'>, 'deal_loi' | 'deal_psa' | 'deal_full_report' | 'deal_costar_report' | 'deal_tenants_report' | 'deal_lease_summary'> = {
-      'loi': 'deal_loi',
-      'psa': 'deal_psa',
-      'full-report': 'deal_full_report',
-      'costar-report': 'deal_costar_report',
-      'tenants-report': 'deal_tenants_report',
-      'lease-summary': 'deal_lease_summary',
+    const RAG_SLOT: Record<Exclude<DocKey, 'om'>, 'loi-signed' | 'purchase-sale-agreement' | 'full-report' | 'costar-report' | 'tenants-report' | 'lease-summary'> = {
+      'loi': 'loi-signed',
+      'psa': 'purchase-sale-agreement',
+      'full-report': 'full-report',
+      'costar-report': 'costar-report',
+      'tenants-report': 'tenants-report',
+      'lease-summary': 'lease-summary',
     };
-    void removeDealDocAction({ dealId, sourceKind: RAG_SOURCE_KIND[docKey] });
+    void removeDealDocAction({ dealId, slot: RAG_SLOT[docKey] });
   };
 
   const handleDocView = async (path: string) => {
@@ -1170,11 +1170,11 @@ export default function EditDealPage() {
       void promoteDealDocAction({
         dealId,
         storagePath: path,
-        sourceKind: 'deal_om_address',
-        name: `Offering Memorandum — ${addressLabel}`,
+        slot: 'offering-memorandum',
+        displayName: `Offering Memorandum — ${addressLabel}`,
         fileType: file.type,
         fileSize: file.size,
-        sourceRef: addressId,
+        addressId,
       });
     }
   };
