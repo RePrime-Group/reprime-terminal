@@ -40,7 +40,7 @@ export async function callN8n<T>(
   pathEnv: 'N8N_WEBHOOK_PATH_CHAT' | 'N8N_WEBHOOK_PATH_HISTORY',
   payload: Record<string, unknown>,
   session: AuthedSession,
-  timeoutMs = 60_000,
+  timeoutMs = 170_000,
 ): Promise<CallN8nResult<T> | CallN8nError> {
   const base = process.env.N8N_BASE_URL;
   const path = process.env[pathEnv];

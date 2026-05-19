@@ -43,7 +43,7 @@ async function extractDocumentCitations(content: string, dealId: string): Promis
   return Array.from(seen.values());
 }
 
-export const maxDuration = 60;
+export const maxDuration = 180;
 
 export async function POST(request: NextRequest) {
   if (!isAssistantEnabled()) return serviceDisabled();
