@@ -3,9 +3,50 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import type { Conversation, GetConversationResponse, Message } from '@/lib/ai/types';
 import { isAssistantEnabled, jsonError, serviceDisabled } from '../../_runtime';
-import { unwrapMessageContent } from '../../_n8n';
+import { createAdminClient } from '@/lib/supabase/admin';
+import {
+  extractCitationsFromText,
+  rewriteMaxIterations,
+  stripCitationMarkers,
+} from '@/lib/ai/messageRewrite';
 
 export const maxDuration = 10;
+
+type N8nChatHistoryRow = {
+  id: number;
+  message: unknown;
+};
+
+type N8nChatMessage = {
+  type?: string;
+  content?: unknown;
+};
+
+function parseStoredMessage(raw: unknown): N8nChatMessage {
+  if (raw && typeof raw === 'object') return raw as N8nChatMessage;
+  if (typeof raw === 'string') {
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') return parsed as N8nChatMessage;
+    } catch {
+      // fall through
+    }
+  }
+  return {};
+}
+
+function roleFromType(type: string | undefined): Message['role'] {
+  return type === 'human' ? 'user' : 'assistant';
+}
+
+function contentFromMessage(msg: N8nChatMessage): string {
+  const c = msg.content;
+  if (typeof c === 'string') return c;
+  if (c && typeof c === 'object' && 'text' in c && typeof (c as { text: unknown }).text === 'string') {
+    return (c as { text: string }).text;
+  }
+  return '';
+}
 
 export async function GET(
   _request: NextRequest,
@@ -40,22 +81,38 @@ export async function GET(
     return jsonError('forbidden', 'You do not have access to this conversation.', 403);
   }
 
-  const { data: msgRows, error: msgErr } = await supabase
-    .from('terminal_ai_messages')
-    .select('id, role, content, citations, tool_calls, created_at')
-    .eq('conversation_id', id)
-    .order('created_at', { ascending: true });
+  // n8n_chat_histories is written by the Chat Memory node in workflow
+  // 6hz22YdBC500tHxg using the LangChain Postgres adapter. session_id is the
+  // conversation_id we pass in. Schema: id (int), session_id (text), message (jsonb).
+  // n8n owns this table; we only read.
+  const admin = createAdminClient();
+  const { data: histRows, error: histErr } = await admin
+    .from('n8n_chat_histories')
+    .select('id, message')
+    .eq('session_id', id)
+    .order('id', { ascending: true });
 
-  if (msgErr) return jsonError('internal', msgErr.message, 500);
+  if (histErr) return jsonError('internal', histErr.message, 500);
 
-  const messages: Message[] = (msgRows ?? []).map((row) => ({
-    id: row.id,
-    role: (row.role ?? 'assistant') as Message['role'],
-    content: unwrapMessageContent(row.content),
-    citations: Array.isArray(row.citations) ? (row.citations as Message['citations']) : [],
-    tool_calls: Array.isArray(row.tool_calls) ? (row.tool_calls as Message['tool_calls']) : undefined,
-    created_at: row.created_at ?? new Date().toISOString(),
-  }));
+  const fallbackTs = convRow.created_at ?? convRow.updated_at ?? new Date().toISOString();
+
+  const messages: Message[] = await Promise.all(
+    ((histRows ?? []) as N8nChatHistoryRow[]).map(async (row) => {
+      const msg = parseStoredMessage(row.message);
+      const role = roleFromType(msg.type);
+      const rawContent = contentFromMessage(msg);
+      const rewritten = rewriteMaxIterations(rawContent);
+      const citations = await extractCitationsFromText(rewritten, convRow.deal_id, admin);
+      const content = citations.length > 0 ? stripCitationMarkers(rewritten) : rewritten;
+      return {
+        id: String(row.id),
+        role,
+        content,
+        citations,
+        created_at: fallbackTs,
+      } satisfies Message;
+    }),
+  );
 
   const conversation: Conversation = {
     id: convRow.id,

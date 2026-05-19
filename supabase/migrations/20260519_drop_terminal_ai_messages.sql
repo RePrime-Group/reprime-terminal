@@ -1,0 +1,23 @@
+-- Drop terminal_ai_messages. Chat history now lives in n8n_chat_histories,
+-- written by the Chat Memory node in workflow 6hz22YdBC500tHxg and read by
+-- src/app/api/ai/conversations/[id]/route.ts.
+--
+-- Step 3 of the migration documented in docs/MIGRATION-n8n-chat-storage.md.
+-- Step 1 (read path) and Step 2 (workflow write-node removal) precede this.
+--
+-- ROLLBACK (best-effort only):
+--   1. Re-apply terminal_ai_messages section of 20260507_ai_assistant_tables.sql
+--   2. Re-apply terminal_ai_messages section of 20260507_ai_assistant_rls.sql
+--   3. Re-apply 20260509_drop_redundant_message_token_cols.sql
+--   4. Restore the chat workflow (versionCounter 468, activeVersionId
+--      3990cfc8-a3a0-477a-9be0-47050d489a57) or re-import from
+--      n8n/backups/chat-workflow-pre-migration-2026-05-19.json
+--   5. Revert src/app/api/ai/conversations/[id]/route.ts to read from
+--      terminal_ai_messages
+--
+-- HISTORICAL ROW DATA IS NOT RECOVERABLE post-drop without a Supabase
+-- point-in-time restore (PITR). Do not run this migration until you are
+-- willing to lose any rows in terminal_ai_messages that do not have a copy
+-- in n8n_chat_histories.
+
+drop table if exists terminal_ai_messages cascade;

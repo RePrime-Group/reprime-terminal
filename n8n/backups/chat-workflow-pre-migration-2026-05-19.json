@@ -1,0 +1,86 @@
+{
+  "_backup_meta": {
+    "exported_at": "2026-05-19",
+    "workflow_id": "6hz22YdBC500tHxg",
+    "workflow_name": "Reprime Terminal - Deal Assistant (Chat)",
+    "version_id": "fe941b54-81f6-4b02-927b-968b7452b41f",
+    "active_version_id": "3990cfc8-a3a0-477a-9be0-47050d489a57",
+    "version_counter": 468,
+    "purpose": "Pre-migration backup before n8n_chat_histories switchover (Step 1 read path, then Step 2 node removal). See docs/MIGRATION-n8n-chat-storage.md."
+  },
+  "id": "6hz22YdBC500tHxg",
+  "name": "Reprime Terminal - Deal Assistant (Chat)",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "deal-assistant",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "b984ba02-5b6f-4493-964e-aae1ef558248",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract and validate the inbound request body.\n// Vercel API route is responsible for JWT validation; this workflow trusts user_id from body.\nconst body = $input.first().json.body || {};\nconst user_id = body.user_id;\nconst deal_id = body.deal_id;\nconst message = body.message;\nconst conversation_id = body.conversation_id || null;\n\nconst valid = Boolean(user_id && deal_id && message && typeof message === 'string' && message.trim().length > 0);\n\nreturn [{\n  json: {\n    valid,\n    user_id,\n    deal_id,\n    conversation_id,\n    message: message ? message.trim() : '',\n    error: valid ? null : 'Missing required fields: user_id, deal_id, message',\n    start_ts: Date.now()\n  }\n}];"
+      },
+      "id": "extract",
+      "name": "Extract Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 0]
+    },
+    {
+      "id": "save-user-msg",
+      "name": "Save User Message",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [2400, 0],
+      "parameters": {
+        "tableId": "terminal_ai_messages",
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "conversation_id", "fieldValue": "={{ $json.conversation_id }}" },
+            { "fieldId": "role", "fieldValue": "user" },
+            { "fieldId": "content", "fieldValue": "={{ JSON.stringify({ text: $json.message }) }}" }
+          ]
+        }
+      },
+      "credentials": { "supabaseApi": { "id": "38IRxbN81Zhllc9N", "name": "Reprime Terminal" } }
+    },
+    {
+      "id": "save-asst-msg",
+      "name": "Save Assistant Message",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [3184, 0],
+      "parameters": {
+        "tableId": "terminal_ai_messages",
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "conversation_id", "fieldValue": "={{ $('Select Conversation').item.json.conversation_id }}" },
+            { "fieldId": "role", "fieldValue": "assistant" },
+            { "fieldId": "content", "fieldValue": "={{ JSON.stringify({ text: $json.output }) }}" },
+            { "fieldId": "latency_ms", "fieldValue": "={{ $json.latency_ms }}" },
+            { "fieldId": "tool_calls", "fieldValue": "={{ $json.tool_calls_json }}" }
+          ]
+        }
+      },
+      "credentials": { "supabaseApi": { "id": "38IRxbN81Zhllc9N", "name": "Reprime Terminal" } }
+    },
+    {
+      "_note": "Capture Metrics, AI Agent, Chat Memory, all tools, and all other nodes — full workflow body is recoverable via `n8n_get_workflow id=6hz22YdBC500tHxg mode=full`. This file captures the two write nodes that will be removed in Step 2, plus the connection map below."
+    }
+  ],
+  "_connections_to_restore_in_step_2_rollback": {
+    "Select Conversation -> Save User Message -> AI Agent": "Currently the path. In Step 2 it becomes Select Conversation -> AI Agent directly.",
+    "Capture Metrics -> Save Assistant Message -> Touch Conversation": "Currently the path. In Step 2 it becomes Capture Metrics -> Touch Conversation directly."
+  }
+}
