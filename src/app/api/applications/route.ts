@@ -11,11 +11,9 @@ export async function POST(request: NextRequest) {
 
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('terminal_membership_applications')
-    .insert({ full_name, email, company_name: company_name || null, phone: phone || null })
-    .select('id')
-    .single();
+    .insert({ full_name, email, company_name: company_name || null, phone: phone || null });
 
   if (error) {
     console.error('[applications] Insert error:', error);
@@ -36,5 +34,5 @@ export async function POST(request: NextRequest) {
     });
   });
 
-  return NextResponse.json({ id: data.id });
+  return NextResponse.json({ ok: true });
 }
