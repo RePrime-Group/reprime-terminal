@@ -13,7 +13,7 @@ import CitationDrawer from './CitationDrawer';
 import DealPicker from './DealPicker';
 import { useDealAssistantPanel } from './DealAssistantContext';
 
-type PanelSize = 'compact' | 'expanded';
+type PanelSize = 'compact' | 'expanded' | 'sidebar';
 
 export default function DealAssistantPanel() {
   const t = useTranslations('ai');
@@ -133,15 +133,29 @@ export default function DealAssistantPanel() {
   if (!isOpen) return null;
 
   const compact = size === 'compact';
+  const isSidebar = size === 'sidebar';
   const sideClass = isRtl ? 'left-4 md:left-5' : 'right-4 md:right-5';
 
-  const compactBox =
-    'w-[min(calc(100vw-32px),380px)] h-[min(calc(100dvh-120px),580px)]';
-  const expandedBox =
-    'w-[min(calc(100vw-32px),720px)] h-[min(calc(100dvh-100px),760px)]';
-  const sizeClass = compact ? compactBox : expandedBox;
+  const dimStyle: React.CSSProperties = isSidebar
+    ? {
+        width: 'min(calc(100vw - 32px), 440px)',
+        height: 'calc(100dvh - 32px)',
+        bottom: '16px',
+      }
+    : compact
+      ? {
+          width: 'min(calc(100vw - 32px), 380px)',
+          height: 'min(calc(100dvh - 120px), 580px)',
+          bottom: '88px',
+        }
+      : {
+          width: 'min(calc(100vw - 32px), 720px)',
+          height: 'min(calc(100dvh - 100px), 760px)',
+          bottom: '88px',
+        };
 
   const animClass = isRtl ? 'animate-rp-bubble-in-left' : 'animate-rp-bubble-in';
+  const easing = 'cubic-bezier(0.32, 0.72, 0, 1)';
 
   return (
     <div
@@ -149,8 +163,11 @@ export default function DealAssistantPanel() {
       role="dialog"
       aria-label={t('title')}
       aria-modal={false}
-      className={`fixed bottom-[88px] ${sideClass} ${sizeClass} ${animClass} z-[55] bg-[#0B0E14] text-white rounded-2xl border border-white/[0.08] shadow-[0_24px_60px_rgba(0,0,0,0.55),0_2px_8px_rgba(0,0,0,0.35)] flex flex-col overflow-hidden`}
-      style={{ transition: 'width 220ms ease-out, height 220ms ease-out' }}
+      className={`fixed ${sideClass} ${animClass} z-[55] bg-[#0B0E14] text-white rounded-2xl border border-white/[0.08] shadow-[0_24px_60px_rgba(0,0,0,0.55),0_2px_8px_rgba(0,0,0,0.35)] flex flex-col overflow-hidden`}
+      style={{
+        ...dimStyle,
+        transition: `width 320ms ${easing}, height 320ms ${easing}, bottom 320ms ${easing}, border-radius 320ms ${easing}`,
+      }}
     >
       <DealAssistantHeader
         dealName={dealName}
@@ -160,6 +177,8 @@ export default function DealAssistantPanel() {
         onNewConversation={reset}
         expanded={!compact}
         onToggleExpand={() => setSize((s) => (s === 'compact' ? 'expanded' : 'compact'))}
+        docked={isSidebar}
+        onToggleDock={() => setSize((s) => (s === 'sidebar' ? 'compact' : 'sidebar'))}
         onClose={close}
         onSwitchDeal={() => setDeal(null)}
       />
