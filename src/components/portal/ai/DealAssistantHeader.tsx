@@ -11,6 +11,7 @@ interface Props {
   activeConversationId: string | null;
   onSelectConversation: (id: string) => void;
   onNewConversation: () => void;
+  onDeleteConversation?: (conversation: Conversation) => void;
   expanded: boolean;
   onToggleExpand: () => void;
   docked?: boolean;
@@ -25,6 +26,7 @@ export default function DealAssistantHeader({
   activeConversationId,
   onSelectConversation,
   onNewConversation,
+  onDeleteConversation,
   expanded,
   onToggleExpand,
   docked = false,
@@ -70,6 +72,7 @@ export default function DealAssistantHeader({
           activeId={activeConversationId}
           onSelect={onSelectConversation}
           onNew={onNewConversation}
+          onDelete={onDeleteConversation}
         />
         {onToggleDock && (
           <button

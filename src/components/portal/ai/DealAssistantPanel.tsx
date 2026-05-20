@@ -2,15 +2,16 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import type { Citation } from '@/lib/ai/types';
+import type { Citation, Conversation } from '@/lib/ai/types';
 import { useDealAssistant } from '@/lib/ai/hooks/useDealAssistant';
 import { useConversationHistory } from '@/lib/ai/hooks/useConversationHistory';
 import DealAssistantHeader from './DealAssistantHeader';
 import MessageList from './MessageList';
-import Composer from './Composer';
+import Composer, { type ComposerHandle } from './Composer';
 import SuggestedPrompts from './SuggestedPrompts';
 import CitationDrawer from './CitationDrawer';
 import DealPicker from './DealPicker';
+import DeleteConversationDialog from './DeleteConversationDialog';
 import { useDealAssistantPanel } from './DealAssistantContext';
 
 type PanelSize = 'compact' | 'expanded' | 'sidebar';
@@ -24,9 +25,11 @@ export default function DealAssistantPanel() {
   const [size, setSize] = useState<PanelSize>('compact');
   const [activeCitation, setActiveCitation] = useState<Citation | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const composerRef = useRef<ComposerHandle>(null);
   const messageRefs = useRef<(HTMLElement | null)[]>([]);
   const [focusedMessageIdx, setFocusedMessageIdx] = useState<number | null>(null);
   const [lastAttempt, setLastAttempt] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Conversation | null>(null);
 
   const {
     messages,
@@ -40,7 +43,7 @@ export default function DealAssistantPanel() {
     error,
     freshAssistantId,
   } = useDealAssistant(dealId ?? '');
-  const { conversations, refresh: refreshHistory } = useConversationHistory(
+  const { conversations, refresh: refreshHistory, remove: removeConversation } = useConversationHistory(
     dealId ?? '',
     !!dealId && isOpen,
   );
@@ -123,6 +126,24 @@ export default function DealAssistantPanel() {
     [send, refreshHistory],
   );
 
+  // Edit: pull a previously sent message back into the composer to revise + resend.
+  const handleEditMessage = useCallback((content: string) => {
+    composerRef.current?.setText(content);
+  }, []);
+
+  // Delete: trash icon requests confirmation; the dialog performs the delete.
+  const handleRequestDelete = useCallback((conversation: Conversation) => {
+    setPendingDelete(conversation);
+  }, []);
+
+  const confirmDelete = useCallback(() => {
+    if (!pendingDelete) return;
+    const { id } = pendingDelete;
+    removeConversation(id);
+    if (id === conversationId) reset();
+    setPendingDelete(null);
+  }, [pendingDelete, removeConversation, conversationId, reset]);
+
   // Clear the retry target once a send succeeds (status returns to idle with no error).
   useEffect(() => {
     if (status === 'idle' && !error && lastAttempt !== null) {
@@ -187,6 +208,7 @@ export default function DealAssistantPanel() {
         activeConversationId={conversationId}
         onSelectConversation={loadConversation}
         onNewConversation={reset}
+        onDeleteConversation={handleRequestDelete}
         expanded={!compact}
         onToggleExpand={() => setSize((s) => (s === 'compact' ? 'expanded' : 'compact'))}
         docked={isSidebar}
@@ -212,6 +234,7 @@ export default function DealAssistantPanel() {
           statusText={statusText}
           freshAssistantId={freshAssistantId}
           messageRefsCallback={(el, idx) => { messageRefs.current[idx] = el; }}
+          onEditMessage={handleEditMessage}
         />
       )}
 
@@ -241,6 +264,7 @@ export default function DealAssistantPanel() {
 
       {dealId && (
         <Composer
+          ref={composerRef}
           onSend={handleSend}
           onStop={stop}
           disabled={status === 'sending' || status === 'loading'}
@@ -249,6 +273,14 @@ export default function DealAssistantPanel() {
       )}
 
       <CitationDrawer citation={activeCitation} onClose={() => setActiveCitation(null)} />
+
+      {pendingDelete && (
+        <DeleteConversationDialog
+          title={pendingDelete.title}
+          onConfirm={confirmDelete}
+          onCancel={() => setPendingDelete(null)}
+        />
+      )}
     </div>
   );
 }

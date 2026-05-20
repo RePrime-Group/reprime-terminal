@@ -342,6 +342,26 @@
     font-family: var(--font-playfair);
   }
 
+  /* Minimal, low-contrast scrollbar for dense dropdowns and lists */
+  .minimal-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+  }
+  .minimal-scrollbar::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  .minimal-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .minimal-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.12);
+    border-radius: 9999px;
+  }
+  .minimal-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.22);
+  }
+
   /* Bloomberg-style data label */
   .data-label {
     font-size: 10px;

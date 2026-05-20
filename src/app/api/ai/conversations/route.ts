@@ -31,7 +31,6 @@ export async function GET(request: NextRequest) {
     .select('id, deal_id, title, updated_at, created_at')
     .eq('deal_id', dealId)
     .eq('user_id', user.id)
-    .eq('status', 'active')
     .order('updated_at', { ascending: false })
     .limit(50);
 

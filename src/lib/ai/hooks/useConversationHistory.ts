@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { listConversations } from '../client';
+import { deleteConversation } from '../actions';
 import type { Conversation } from '../types';
 
 export function useConversationHistory(dealId: string, enabled = true) {
@@ -27,11 +28,26 @@ export function useConversationHistory(dealId: string, enabled = true) {
     }
   }, [dealId]);
 
+  const remove = useCallback(
+    async (id: string) => {
+      // Optimistic: drop the row immediately, restore on failure.
+      const prev = conversations;
+      setConversations((list) => list.filter((c) => c.id !== id));
+      try {
+        await deleteConversation(id);
+      } catch (err) {
+        setConversations(prev);
+        setError(err instanceof Error ? err.message : 'Failed to delete conversation');
+      }
+    },
+    [conversations],
+  );
+
   useEffect(() => {
     if (!enabled) return;
     refresh();
     return () => abortRef.current?.abort();
   }, [enabled, refresh]);
 
-  return { conversations, loading, error, refresh };
+  return { conversations, loading, error, refresh, remove };
 }

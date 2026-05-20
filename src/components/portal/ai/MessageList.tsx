@@ -11,6 +11,7 @@ interface Props {
   statusText: string | null;
   freshAssistantId?: string | null;
   messageRefsCallback?: (el: HTMLElement | null, idx: number) => void;
+  onEditMessage?: (content: string) => void;
 }
 
 export default function MessageList({
@@ -19,6 +20,7 @@ export default function MessageList({
   statusText,
   freshAssistantId = null,
   messageRefsCallback,
+  onEditMessage,
 }: Props) {
   const t = useTranslations('ai');
   const endRef = useRef<HTMLDivElement>(null);
@@ -47,6 +49,7 @@ export default function MessageList({
           onOpenCitation={onOpenCitation}
           stream={!!freshAssistantId && m.id === freshAssistantId}
           refCallback={messageRefsCallback ? (el) => messageRefsCallback(el, idx) : undefined}
+          onEdit={onEditMessage}
         />
       ))}
 

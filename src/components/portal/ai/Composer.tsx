@@ -1,7 +1,9 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
+import { Mic } from 'lucide-react';
+import { useVoiceInput } from '@/lib/ai/hooks/useVoiceInput';
 
 interface Props {
   onSend: (text: string) => void;
@@ -10,10 +12,19 @@ interface Props {
   isStreaming?: boolean;
 }
 
+export interface ComposerHandle {
+  /** Replace the composer text and focus it (used by "edit message"). */
+  setText: (text: string) => void;
+}
+
 const MAX_HEIGHT = 160;
 
-export default function Composer({ onSend, onStop, disabled, isStreaming = false }: Props) {
+const Composer = forwardRef<ComposerHandle, Props>(function Composer(
+  { onSend, onStop, disabled, isStreaming = false },
+  handleRef,
+) {
   const t = useTranslations('ai');
+  const locale = useLocale();
   const ref = useRef<HTMLTextAreaElement>(null);
   // Only tracks empty vs non-empty so canSend can re-render the send button.
   // The textarea itself is uncontrolled — typing does not trigger React renders.
@@ -56,11 +67,32 @@ export default function Composer({ onSend, onStop, disabled, isStreaming = false
     [scheduleResize],
   );
 
+  // Append a dictated segment to the textarea, spacing it from existing text.
+  const appendTranscript = useCallback(
+    (text: string) => {
+      const el = ref.current;
+      if (!el) return;
+      const sep = el.value && !/\s$/.test(el.value) ? ' ' : '';
+      el.value = el.value + sep + text;
+      resize(el);
+      if (!hasTextRef.current) {
+        hasTextRef.current = true;
+        setHasText(true);
+      }
+      el.focus();
+    },
+    [resize],
+  );
+
+  const { supported: voiceSupported, recording, toggle: toggleVoice, stop: stopVoice } =
+    useVoiceInput(locale === 'he' ? 'he-IL' : 'en-US', appendTranscript);
+
   const submit = useCallback(() => {
     const el = ref.current;
     if (!el) return;
     const trimmed = el.value.trim();
     if (!trimmed || disabled) return;
+    stopVoice(); // stop dictation when the message is sent
     onSend(trimmed);
     el.value = '';
     if (resizeRafRef.current) {
@@ -73,10 +105,37 @@ export default function Composer({ onSend, onStop, disabled, isStreaming = false
       setHasText(false);
     }
     requestAnimationFrame(() => el.focus());
-  }, [disabled, onSend, resize]);
+  }, [disabled, onSend, resize, stopVoice]);
+
+  // Imperative API for "edit message": load text back into the composer.
+  useImperativeHandle(
+    handleRef,
+    () => ({
+      setText: (text: string) => {
+        const el = ref.current;
+        if (!el) return;
+        el.value = text;
+        resize(el);
+        const has = text.trim().length > 0;
+        if (has !== hasTextRef.current) {
+          hasTextRef.current = has;
+          setHasText(has);
+        }
+        el.focus();
+        el.setSelectionRange(text.length, text.length);
+      },
+    }),
+    [resize],
+  );
 
   const canSend = !disabled && hasText;
   const showStop = isStreaming && !!onStop;
+  const micDisabled = disabled || !voiceSupported;
+  const micLabel = !voiceSupported
+    ? t('voiceInputUnsupported')
+    : recording
+      ? t('stop')
+      : t('voiceInput');
 
   return (
     <form
@@ -113,33 +172,37 @@ export default function Composer({ onSend, onStop, disabled, isStreaming = false
         <span className="relative group/voice shrink-0 self-end mb-[2px] inline-flex">
           <button
             type="button"
-            disabled
-            aria-label={t('voiceInput')}
-            className="w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-br from-[#E8C977]/45 via-[#D4B96A]/45 to-[#A88A3D]/45 text-[#0B0E14]/70 shadow-[0_2px_8px_rgba(212,185,106,0.18)] cursor-not-allowed pointer-events-none"
+            onClick={toggleVoice}
+            disabled={micDisabled}
+            aria-label={micLabel}
+            aria-pressed={recording}
+            className={`relative w-8 h-8 rounded-full flex items-center justify-center transition-[transform,box-shadow,background-color,color] duration-200 ${
+              recording
+                ? 'bg-[#F87171] text-white shadow-[0_2px_10px_rgba(248,113,113,0.5)] active:scale-95 cursor-pointer'
+                : micDisabled
+                  ? 'bg-white/[0.04] text-white/25 cursor-not-allowed'
+                  : 'bg-gradient-to-br from-[#E8C977] via-[#D4B96A] to-[#A88A3D] text-[#0B0E14] shadow-[0_2px_8px_rgba(212,185,106,0.3)] hover:shadow-[0_4px_14px_rgba(212,185,106,0.5)] hover:-translate-y-[1px] active:translate-y-0 active:scale-95 cursor-pointer'
+            }`}
           >
-            <svg
-              width="13"
-              height="13"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden
-            >
-              <line x1="5" y1="11" x2="5" y2="13" />
-              <line x1="9" y1="9" x2="9" y2="15" />
-              <line x1="13" y1="6" x2="13" y2="18" />
-              <line x1="17" y1="9" x2="17" y2="15" />
-              <line x1="21" y1="11" x2="21" y2="13" />
-            </svg>
+            {recording ? (
+              <span className="relative flex items-center justify-center gap-[2px] h-[13px]" aria-hidden>
+                {[0, 1, 2, 3].map((i) => (
+                  <span
+                    key={i}
+                    className="audio-bar w-[2px] h-full rounded-full bg-current origin-center"
+                    style={{ animationDelay: `${i * 0.14}s`, animationDuration: '0.7s' }}
+                  />
+                ))}
+              </span>
+            ) : (
+              <Mic size={14} strokeWidth={2} className="relative" />
+            )}
           </button>
           <span
             role="tooltip"
             className="pointer-events-none absolute bottom-full mb-2 end-0 px-2 py-1 rounded-md bg-[#1a1f2e] border border-white/[0.08] text-white/85 text-[10px] font-medium whitespace-nowrap shadow-[0_4px_14px_rgba(0,0,0,0.45)] opacity-0 translate-y-1 group-hover/voice:opacity-100 group-hover/voice:translate-y-0 transition-all duration-150"
           >
-            {t('voiceInput')}
+            {micLabel}
           </span>
         </span>
 
@@ -185,4 +248,6 @@ export default function Composer({ onSend, onStop, disabled, isStreaming = false
       </div>
     </form>
   );
-}
+});
+
+export default Composer;
