@@ -22,10 +22,14 @@ export default function BetaLaunchBanner() {
   }, []);
 
   // Auto-collapse on small viewports so the card never covers form controls.
+  // Only ever force-collapse — never auto-open — so the banner stays minimized
+  // (a small circle) until the user clicks it open.
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const mq = window.matchMedia('(max-width: 640px)');
-    const apply = () => setCollapsed(mq.matches);
+    const apply = () => {
+      if (mq.matches) setCollapsed(true);
+    };
     apply();
     if (mq.addEventListener) mq.addEventListener('change', apply);
     else mq.addListener(apply);
