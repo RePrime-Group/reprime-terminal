@@ -4,7 +4,8 @@ import { getOnboardingState, nextOnboardingPath } from '@/lib/kyc/onboardingStat
 import PortalNavbar from '@/components/portal/PortalNavbar';
 import MarketTicker from '@/components/portal/MarketTicker';
 import OnboardingOverlay from '@/components/portal/OnboardingOverlay';
-import BetaLaunchBanner from '@/components/BetaLaunchBanner';
+import FloatingButtons from '@/components/FloatingButtons';
+import AssistantHost from '@/components/portal/ai/AssistantHost';
 
 export default async function PortalLayout({
   children,
@@ -51,10 +52,10 @@ export default async function PortalLayout({
           userId={user.id}
         />
       )}
-      <main>
-        {children}
-      </main>
-      <BetaLaunchBanner />
+      <AssistantHost>
+        <main>{children}</main>
+        <FloatingButtons />
+      </AssistantHost>
     </div>
   );
 }
