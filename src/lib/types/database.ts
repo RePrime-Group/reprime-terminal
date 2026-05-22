@@ -441,3 +441,114 @@ export interface DealWithDetails extends TerminalDeal {
   viewing_count: number;
   meetings_count: number;
 }
+
+// ─── Investor CRM ────────────────────────────────────────────────────────────
+// Staff-only relationship CRM. Distinct from terminal_users (auth accounts).
+
+export type CrmInvestorStatus = 'lead' | 'qualified' | 'committed' | 'funded' | 'repeat';
+export type CrmContactMethod = 'email' | 'phone' | 'whatsapp' | 'text_message' | 'linkedin' | 'zoom';
+export type CrmMessageType =
+  | 'note' | 'email' | 'whatsapp' | 'phone_call' | 'text_message'
+  | 'zoom' | 'meeting' | 'document_sent' | 'commitment' | 'follow_up';
+export type CrmMessageDirection = 'outbound' | 'inbound' | 'internal';
+export type CrmInvestmentPriority = 'cash_flow' | 'appreciation' | 'balanced';
+
+export interface CrmInvestmentPreferences {
+  property_types?: string[];
+  markets?: string[];
+  min_check_size?: number | null;
+  max_check_size?: number | null;
+  preferred_returns?: boolean;
+  preferred_return_rate?: number | null;
+  accepts_seller_mezz?: boolean;
+  priority?: CrmInvestmentPriority | null;
+  hold_period_years?: string | null;
+  structure_preferences?: string[];
+}
+
+// Attachment on a message; document on an investor (documents also carry uploaded_at).
+export interface CrmAttachment {
+  name: string;
+  url: string;
+  size: number | null;
+  type: string | null;
+}
+export interface CrmDocument extends CrmAttachment {
+  uploaded_at: string;
+}
+
+// numeric columns surface as strings via supabase-js (matches TerminalDeal).
+export interface TerminalCrmInvestor {
+  id: string;
+  first_name: string;
+  last_name: string;
+  company_name: string | null;
+  title: string | null;
+  photo_url: string | null;
+
+  email: string | null;
+  phone: string | null;
+  whatsapp: string | null;
+  linkedin_url: string | null;
+  preferred_contact_method: CrmContactMethod | null;
+
+  address_line1: string | null;
+  address_line2: string | null;
+  city: string | null;
+  state: string | null;
+  zip: string | null;
+  country: string | null;
+
+  status: CrmInvestorStatus;
+  source: string | null;
+  referred_by: string | null;
+  entity_type: string | null;
+  is_accredited: boolean;
+
+  equity_ready: string | null;
+  equity_committed: string | null;
+  equity_timeline: string | null;
+  total_deployed_with_reprime: string | null;
+  deal_count: number;
+
+  investment_preferences: CrmInvestmentPreferences;
+  documents: CrmDocument[];
+
+  last_contacted_at: string | null;
+  last_contacted_by: string | null;
+  internal_notes: string | null;
+
+  is_archived: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TerminalCrmInvestorSummary extends TerminalCrmInvestor {
+  full_name: string;
+  message_count: number;
+  last_message_at: string | null;
+  total_commitments: string | null;
+  pending_follow_up_count: number;
+  pinned_count: number;
+}
+
+export interface TerminalCrmMessage {
+  id: string;
+  investor_id: string;
+  deal_reference: string | null;
+  body: string | null;
+  type: CrmMessageType;
+  direction: CrmMessageDirection | null;
+  posted_by: string;
+  attachments: CrmAttachment[];
+  amount_discussed: string | null;
+  commitment_amount: string | null;
+  follow_up_date: string | null;
+  follow_up_assigned_to: string | null;
+  follow_up_completed: boolean;
+  follow_up_completed_at: string | null;
+  is_pinned: boolean;
+  created_at: string;
+  updated_at: string;
+}
