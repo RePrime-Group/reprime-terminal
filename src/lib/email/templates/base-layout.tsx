@@ -63,10 +63,31 @@ export default function BaseLayout({ children, preview }: BaseLayoutProps) {
                   </Text>
                   <Text style={footerTextStyle}>
                     This communication is confidential and intended solely for the
-                    individual to whom it is addressed. All investments involve risk.
+                    individual to whom it is addressed.
+                  </Text>
+                  <Text style={footerTextStyle}>
+                    All investments involve risk, including the possible loss of principal.
+                    Past performance is not indicative of, and does not guarantee, future results.
+                  </Text>
+                  <Text style={footerTextStyle}>
+                    This communication may contain forward-looking statements regarding future
+                    events, performance, or returns. Such statements are subject to known and
+                    unknown risks and uncertainties; actual results may differ materially from
+                    those expressed or implied. No representation is made that any investment
+                    will or is likely to achieve results comparable to those shown.
+                  </Text>
+                  <Text style={footerTextStyle}>
+                    Investment opportunities referenced herein are offered only to verified
+                    accredited investors (as defined under Rule 501 of Regulation D under the
+                    Securities Act of 1933) and are not registered under federal or state
+                    securities laws. This communication does not constitute an offer to sell
+                    or a solicitation of an offer to buy any security.
                   </Text>
                   <Text style={footerTextStyle}>
                     &copy; {new Date().getFullYear()} RePrime Group, LLC. All rights reserved.
+                  </Text>
+                  <Text style={footerTextStyle}>
+                    RePrime Group, LLC &middot; 123 North Lawler St, Postville, IA 52162
                   </Text>
                   <Text style={{ ...footerTextStyle, marginTop: '12px' }}>
                     <a href="https://reprimeterminal.com" style={{ color: '#BC9C45', textDecoration: 'none', fontSize: '11px' }}>

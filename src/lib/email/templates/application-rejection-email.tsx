@@ -10,7 +10,7 @@ export default function ApplicationRejectionEmail({ applicantName }: Application
   const firstName = applicantName.split(' ')[0];
 
   return (
-    <BaseLayout preview="Update on your RePrime Terminal Beta membership application">
+    <BaseLayout preview="An update on the status of your RePrime Terminal membership application.">
       <Section style={{ textAlign: 'center' as const, marginBottom: '32px' }}>
         <table cellPadding="0" cellSpacing="0" align="center" style={{ margin: '0 auto 20px', borderCollapse: 'collapse' }}>
           <tr>

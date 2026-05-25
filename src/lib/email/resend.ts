@@ -15,7 +15,7 @@ export function getResend(): Resend {
 }
 
 export const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'terminal@reprimeterminal.com';
-export const FROM_NAME = 'RePrime Terminal Beta';
+export const FROM_NAME = 'RePrime Terminal';
 
 // CID used to reference the logo from inside email templates: <Img src="cid:logo" />.
 export const LOGO_CID = 'logo';

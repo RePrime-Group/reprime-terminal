@@ -13,9 +13,15 @@ export default function InviteEmail({ inviteUrl, recipientEmail, inviteCode, exp
   const expiryDisplay = expiresAt
     ? new Date(expiresAt).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
     : '30 days from now';
+  const expiryShort = expiresAt
+    ? new Date(expiresAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })
+    : null;
+  const preheader = expiryShort
+    ? `Your private invitation to RePrime Terminal. Expires ${expiryShort}.`
+    : 'Your private invitation to RePrime Terminal.';
 
   return (
-    <BaseLayout preview="You've been selected for exclusive access to RePrime Terminal Beta">
+    <BaseLayout preview={preheader}>
       <Section style={{ textAlign: 'center' as const, marginBottom: '32px' }}>
         <table cellPadding="0" cellSpacing="0" align="center" style={{ margin: '0 auto 20px', borderCollapse: 'collapse' }}>
           <tr>
@@ -26,7 +32,7 @@ export default function InviteEmail({ inviteUrl, recipientEmail, inviteCode, exp
         </table>
       </Section>
 
-      <Text style={headingStyle}>You&apos;ve Been Selected</Text>
+      <Text style={headingStyle}>Your invitation to RePrime Terminal</Text>
 
       <Text style={bodyStyle}>
         You have been chosen for exclusive access to the <strong style={{ color: '#0E3470' }}>RePrime Terminal Beta</strong> —
