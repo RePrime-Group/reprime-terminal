@@ -310,11 +310,11 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
           {allActiveDeals.length > 0 && (
             <div className="grid grid-cols-2 md:grid-cols-5 gap-[1px] rounded-xl overflow-hidden border border-white/[0.06]" data-tour="hero-metrics" style={{ background: 'rgba(255,255,255,0.04)' }}>
               {summaryMetrics.map((m) => (
-                <div key={m.label} className="px-4 md:px-5 py-4 md:py-5" style={{ background: 'rgba(14, 52, 112, 0.25)', backdropFilter: 'blur(8px)' }}>
-                  <div className="text-[9px] font-semibold tracking-[2px] uppercase text-white/30 mb-2">
+                <div key={m.label} className="px-5 md:px-6 py-5 md:py-6" style={{ background: 'rgba(14, 52, 112, 0.25)', backdropFilter: 'blur(8px)' }}>
+                  <div className="text-[12px] md:text-[13px] font-semibold tracking-[2px] uppercase text-white/65 mb-3">
                     {m.label}
                   </div>
-                  <div className="text-[18px] md:text-[22px] font-semibold text-white tabular-nums tracking-tight">
+                  <div className="text-[24px] md:text-[30px] font-semibold text-white tabular-nums tracking-tight">
                     {m.value}
                   </div>
                 </div>
