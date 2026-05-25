@@ -9,6 +9,7 @@ interface DocumentUploadEmailProps {
   docCount: number;
   firstDocName: string;
   portalUrl: string;
+  unsubscribeUrl?: string;
 }
 
 export default function DocumentUploadEmail({
@@ -18,6 +19,7 @@ export default function DocumentUploadEmail({
   docCount,
   firstDocName,
   portalUrl,
+  unsubscribeUrl,
 }: DocumentUploadEmailProps) {
   const tag = 'NEW DOCUMENTS';
   const tagColor = '#0E3470';
@@ -27,7 +29,7 @@ export default function DocumentUploadEmail({
       : `${docCount} new documents have been uploaded to the data room for ${dealName}, starting with ${firstDocName}.`;
 
   return (
-    <BaseLayout preview={`${tag}: ${dealName} — ${city}, ${state}`}>
+    <BaseLayout preview={`${tag}: ${dealName} — ${city}, ${state}`} unsubscribeUrl={unsubscribeUrl}>
       <div style={{ display: 'inline-block', backgroundColor: `${tagColor}15`, borderRadius: '6px', padding: '6px 14px', marginBottom: '20px' }}>
         <Text style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '2px', color: tagColor, margin: 0 }}>
           {tag}

@@ -8,6 +8,7 @@ interface DealActivityEmailProps {
   state: string;
   changes: string[];
   portalUrl: string;
+  unsubscribeUrl?: string;
 }
 
 export default function DealActivityEmail({
@@ -16,12 +17,13 @@ export default function DealActivityEmail({
   state,
   changes,
   portalUrl,
+  unsubscribeUrl,
 }: DealActivityEmailProps) {
   const tag = 'DEAL UPDATE';
   const tagColor = '#BC9C45';
 
   return (
-    <BaseLayout preview={`${tag}: ${dealName} — ${city}, ${state}`}>
+    <BaseLayout preview={`${tag}: ${dealName} — ${city}, ${state}`} unsubscribeUrl={unsubscribeUrl}>
       <div style={{ display: 'inline-block', backgroundColor: `${tagColor}15`, borderRadius: '6px', padding: '6px 14px', marginBottom: '20px' }}>
         <Text style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '2px', color: tagColor, margin: 0 }}>
           {tag}

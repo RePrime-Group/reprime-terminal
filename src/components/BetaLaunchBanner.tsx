@@ -1,11 +1,18 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 // Official launch: 90 days from April 19, 2026 = July 18, 2026 (00:00 UTC).
 const LAUNCH_DATE_ISO = '2026-07-18T00:00:00Z';
 
+// Routes where urgency marketing must not appear alongside legal/consent moments
+// (account creation, NDA, KYC). Path is the `usePathname()` form which includes
+// the locale prefix, e.g. "/en/invite/abc123" or "/he/onboarding/nda".
+const HIDDEN_PATH_PATTERN = /^\/[^/]+\/(invite|onboarding)(\/|$)/;
+
 export default function BetaLaunchBanner() {
+  const pathname = usePathname();
   const [now, setNow] = useState<number | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [collapsed, setCollapsed] = useState(true);
@@ -43,6 +50,8 @@ export default function BetaLaunchBanner() {
   const minutes = Math.floor((diff % 3_600_000) / 60_000);
   const seconds = Math.floor((diff % 60_000) / 1000);
   const isLaunched = now !== null && diff === 0;
+
+  if (pathname && HIDDEN_PATH_PATTERN.test(pathname)) return null;
 
   if (shouldShowAsCircle) {
     return (

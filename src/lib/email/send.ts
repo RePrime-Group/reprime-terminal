@@ -1,4 +1,6 @@
 import { getResend, getLogoAttachment, FROM_EMAIL, FROM_NAME } from './resend';
+import { buildUnsubscribeUrl } from './unsubscribe-token';
+import type { NotifEventKey } from '@/lib/notifications/types';
 import InviteEmail from './templates/invite-email';
 import WelcomeEmail from './templates/welcome-email';
 import DealNotificationEmail from './templates/deal-notification';
@@ -16,6 +18,17 @@ import PasswordResetEmail from './templates/password-reset-email';
 import type { TeamPermissionKey } from '@/lib/types/database';
 
 const from = `${FROM_NAME} <${FROM_EMAIL}>`;
+
+function unsubscribeHeaders(userId: string, cat: NotifEventKey) {
+  const url = buildUnsubscribeUrl(userId, cat);
+  return {
+    url,
+    headers: {
+      'List-Unsubscribe': `<${url}>`,
+      'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+    },
+  };
+}
 
 export async function sendInviteEmail(
   recipientEmail: string,
@@ -62,16 +75,19 @@ export async function sendDealNotificationEmail(
   recipientEmail: string,
   deal: { name: string; city: string; state: string; property_type: string; status: string },
   portalUrl: string,
+  userId: string,
 ) {
   const subject = deal.status === 'published'
     ? `New Deal: ${deal.name} — ${deal.city}, ${deal.state}`
     : `Update: ${deal.name}`;
+  const unsub = unsubscribeHeaders(userId, 'new_deals');
 
   return getResend().emails.send({
     from,
     attachments: [getLogoAttachment()],
     to: recipientEmail,
     subject,
+    headers: unsub.headers,
     react: DealNotificationEmail({
       dealName: deal.name,
       city: deal.city,
@@ -79,6 +95,7 @@ export async function sendDealNotificationEmail(
       propertyType: deal.property_type,
       status: deal.status,
       portalUrl,
+      unsubscribeUrl: unsub.url,
     }),
   });
 }
@@ -181,13 +198,16 @@ export async function sendDocumentUploadEmail(
     firstDocName: string;
     portalUrl: string;
   },
+  userId: string,
 ) {
+  const unsub = unsubscribeHeaders(userId, 'document_uploads');
   return getResend().emails.send({
     from,
     attachments: [getLogoAttachment()],
     to: recipientEmail,
     subject: `New Documents: ${data.dealName} — ${data.city}, ${data.state}`,
-    react: DocumentUploadEmail(data),
+    headers: unsub.headers,
+    react: DocumentUploadEmail({ ...data, unsubscribeUrl: unsub.url }),
   });
 }
 
@@ -200,13 +220,16 @@ export async function sendDealActivityEmail(
     changes: string[];
     portalUrl: string;
   },
+  userId: string,
 ) {
+  const unsub = unsubscribeHeaders(userId, 'deal_activity');
   return getResend().emails.send({
     from,
     attachments: [getLogoAttachment()],
     to: recipientEmail,
     subject: `Deal Update: ${data.dealName} — ${data.city}, ${data.state}`,
-    react: DealActivityEmail(data),
+    headers: unsub.headers,
+    react: DealActivityEmail({ ...data, unsubscribeUrl: unsub.url }),
   });
 }
 

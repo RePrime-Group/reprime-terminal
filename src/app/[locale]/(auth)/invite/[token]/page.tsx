@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 import { friendlyAuthError, friendlyFetchError, readApiError } from '@/lib/utils/friendly-error';
+import RePrimeLogo from '@/components/RePrimeLogo';
 
 type ValidationResult =
   | { valid: true; email: string; role: string; parent_investor_id?: string | null; parent_name?: string | null }
@@ -164,9 +165,9 @@ export default function InviteRegistrationPage() {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#07090F' }}>
-        <div className="flex flex-col items-center gap-4">
-          <div className="text-[#C9A54E] text-4xl font-bold">R</div>
+      <div className="min-h-screen flex items-start justify-center pt-24" style={{ backgroundColor: '#07090F' }}>
+        <div className="flex flex-col items-center gap-5">
+          <RePrimeLogo width={180} />
           <div className="text-white/40 text-sm">{t('validatingInvitation')}</div>
         </div>
       </div>
@@ -177,9 +178,9 @@ export default function InviteRegistrationPage() {
   // don't tell the investor their link is bad when it's actually their connection.
   if (validationNetworkError) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: '#07090F' }}>
+      <div className="min-h-screen flex items-start justify-center px-4 pt-24 pb-12" style={{ backgroundColor: '#07090F' }}>
         <div className="w-full max-w-md flex flex-col items-center gap-8">
-          <div className="text-[#C9A54E] text-5xl font-bold tracking-tight">R</div>
+          <RePrimeLogo width={220} />
           <div className="w-full rounded-2xl border border-white/[0.08] bg-white/[0.02] backdrop-blur p-8 text-center">
             <h1 className="text-xl font-semibold text-white mb-2">Connection problem</h1>
             <p className="text-white/50 text-sm mb-6">We couldn&rsquo;t reach our servers to check your invitation. Please check your internet connection and try again.</p>
@@ -201,9 +202,9 @@ export default function InviteRegistrationPage() {
     const msg = ERROR_MESSAGES[reason] || ERROR_MESSAGES.not_found;
 
     return (
-      <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: '#07090F' }}>
+      <div className="min-h-screen flex items-start justify-center px-4 pt-24 pb-12" style={{ backgroundColor: '#07090F' }}>
         <div className="w-full max-w-md flex flex-col items-center gap-8">
-          <div className="text-[#C9A54E] text-5xl font-bold tracking-tight">R</div>
+          <RePrimeLogo width={220} />
 
           <div className="w-full rounded-2xl border border-white/[0.08] bg-white/[0.02] backdrop-blur p-8 text-center">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10">
@@ -222,10 +223,10 @@ export default function InviteRegistrationPage() {
 
   // Valid token - registration form
   return (
-    <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: '#07090F' }}>
+    <div className="min-h-screen flex items-start justify-center px-4 pt-16 pb-12" style={{ backgroundColor: '#07090F' }}>
       <div className="w-full max-w-md flex flex-col items-center gap-8">
-        <div className="flex flex-col items-center gap-2">
-          <div className="text-[#C9A54E] text-5xl font-bold tracking-tight">R</div>
+        <div className="flex flex-col items-center gap-4">
+          <RePrimeLogo width={240} />
           <h1 className="text-white text-xl font-semibold">{t('createYourAccount')}</h1>
           {validation.parent_investor_id && validation.parent_name ? (
             <p className="text-white/60 text-sm text-center px-4">
@@ -312,6 +313,7 @@ export default function InviteRegistrationPage() {
                   )}
                 </button>
               </div>
+              <PasswordStrength password={password} t={t} />
             </div>
 
             {/* Confirm Password */}
@@ -368,6 +370,91 @@ export default function InviteRegistrationPage() {
           </form>
         </div>
       </div>
+    </div>
+  );
+}
+
+function PasswordStrength({ password, t }: { password: string; t: ReturnType<typeof useTranslations> }) {
+  const hasLength = password.length >= 8;
+  const hasUpper = /[A-Z]/.test(password);
+  const hasLower = /[a-z]/.test(password);
+  const hasNumber = /\d/.test(password);
+  const hasSymbol = /[^A-Za-z0-9]/.test(password);
+  const hasLongLength = password.length >= 12;
+
+  // Score 0–4 mapped to Weak/Fair/Good/Strong. Empty password = 0 segments lit.
+  let score = 0;
+  if (hasLength) score++;
+  if (hasLongLength) score++;
+  if (hasUpper && hasLower) score++;
+  if (hasNumber) score++;
+  if (hasSymbol) score++;
+  score = Math.min(score, 4);
+  if (password.length === 0) score = 0;
+  else if (score < 1) score = 1;
+
+  const levels = [
+    { color: '#F87171', label: t('passwordStrengthWeak') },
+    { color: '#FBBF24', label: t('passwordStrengthFair') },
+    { color: '#D4A843', label: t('passwordStrengthGood') },
+    { color: '#34D399', label: t('passwordStrengthStrong') },
+  ];
+  const activeIdx = Math.max(0, score - 1);
+  const showLabel = password.length > 0;
+  const current = levels[activeIdx];
+
+  const rules: Array<{ ok: boolean; label: string }> = [
+    { ok: hasLength, label: t('passwordRuleLength') },
+    { ok: hasUpper, label: t('passwordRuleUppercase') },
+    { ok: hasLower, label: t('passwordRuleLowercase') },
+    { ok: hasNumber, label: t('passwordRuleNumber') },
+  ];
+
+  return (
+    <div className="mt-2 flex flex-col gap-2.5">
+      {/* Strength meter */}
+      <div className="flex items-center gap-2.5">
+        <div className="flex-1 flex items-center gap-1">
+          {[0, 1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="flex-1 h-1 rounded-full transition-colors"
+              style={{
+                backgroundColor: i < score ? current.color : 'rgba(255,255,255,0.08)',
+              }}
+            />
+          ))}
+        </div>
+        <span
+          className="text-[10px] font-semibold uppercase tracking-[1.5px] w-14 text-right transition-colors"
+          style={{ color: showLabel ? current.color : 'rgba(255,255,255,0.25)' }}
+        >
+          {showLabel ? current.label : ' '}
+        </span>
+      </div>
+
+      {/* Rules checklist */}
+      <ul className="flex flex-col gap-1">
+        {rules.map((r) => (
+          <li key={r.label} className="flex items-center gap-2">
+            {r.ok ? (
+              <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="#34D399" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            ) : (
+              <span className="w-3 h-3 shrink-0 flex items-center justify-center">
+                <span className="w-1 h-1 rounded-full bg-white/30" />
+              </span>
+            )}
+            <span
+              className="text-[11px] transition-colors"
+              style={{ color: r.ok ? '#34D399' : 'rgba(255,255,255,0.45)' }}
+            >
+              {r.label}
+            </span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

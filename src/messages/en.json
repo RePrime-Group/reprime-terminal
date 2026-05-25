@@ -70,6 +70,14 @@
     "companyNameOptional": "Company Name (optional)",
     "enterCompanyName": "Enter your company name",
     "minimumChars": "Minimum 8 characters",
+    "passwordRuleLength": "At least 8 characters",
+    "passwordRuleUppercase": "One uppercase letter (A–Z)",
+    "passwordRuleLowercase": "One lowercase letter (a–z)",
+    "passwordRuleNumber": "One number (0–9)",
+    "passwordStrengthWeak": "Weak",
+    "passwordStrengthFair": "Fair",
+    "passwordStrengthGood": "Good",
+    "passwordStrengthStrong": "Strong",
     "reenterPassword": "Re-enter your password",
     "creatingAccount": "Creating Account...",
     "createAccount": "Create Account",
@@ -1427,5 +1435,13 @@
     "forbidden": "You do not have permission to access this page.",
     "networkError": "Network error — please check your connection.",
     "tryAgain": "Please try again."
+  },
+  "unsubscribe": {
+    "successTitle": "You've been unsubscribed",
+    "invalidTitle": "Invalid or expired link",
+    "successGeneric": "You will no longer receive these emails. You can manage all of your notification preferences in your account settings.",
+    "successWithCategory": "You will no longer receive {category} emails. You can manage all of your notification preferences in your account settings.",
+    "invalidBody": "This unsubscribe link is invalid or has expired. Please sign in to manage your notification preferences directly.",
+    "managePreferences": "Manage Preferences"
   }
 }

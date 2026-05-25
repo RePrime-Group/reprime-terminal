@@ -35,8 +35,7 @@ export default function InviteEmail({ inviteUrl, recipientEmail, inviteCode, exp
       <Text style={headingStyle}>Your invitation to RePrime Terminal</Text>
 
       <Text style={bodyStyle}>
-        You have been chosen for exclusive access to the <strong style={{ color: '#0E3470' }}>RePrime Terminal Beta</strong> —
-        a private platform for institutional-grade commercial real estate opportunities.
+        This is the invitation link to set up your <strong style={{ color: '#0E3470' }}>RePrime Terminal</strong> account.
       </Text>
 
       <div style={dividerStyle} />
@@ -76,16 +75,6 @@ export default function InviteEmail({ inviteUrl, recipientEmail, inviteCode, exp
           </Text>
         </div>
       )}
-
-      <div style={infoBoxStyle}>
-        <Text style={{ fontSize: '11px', color: '#6B7280', margin: 0, lineHeight: '18px' }}>
-          <strong style={{ color: '#0E3470' }}>What you&apos;ll access:</strong><br />
-          • Off-market CRE investment opportunities<br />
-          • Complete due diligence data rooms<br />
-          • Financial modeling & IRR calculators<br />
-          • Direct scheduling with our acquisition team
-        </Text>
-      </div>
 
       <div style={expiryBoxStyle}>
         <Text style={{ fontSize: '12px', color: '#92400E', margin: 0, lineHeight: '18px' }}>
@@ -133,14 +122,6 @@ const goldButtonStyle: React.CSSProperties = {
   textDecoration: 'none',
   display: 'inline-block',
   boxShadow: '0 4px 16px rgba(188, 156, 69, 0.3)',
-};
-
-const infoBoxStyle: React.CSSProperties = {
-  backgroundColor: '#F7F8FA',
-  borderRadius: '12px',
-  padding: '20px',
-  border: '1px solid #EEF0F4',
-  margin: '24px 0',
 };
 
 const badgeCellStyle: React.CSSProperties = {

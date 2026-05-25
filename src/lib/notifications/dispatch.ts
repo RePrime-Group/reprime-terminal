@@ -141,7 +141,7 @@ export async function dispatchNewDeal(admin: Admin, deal: DealSummary) {
   const portalUrl = `${getPortalUrl()}/deals/${deal.id}`;
   for (const r of email) {
     await runEmail(`new_deal email to ${r.email}`, () =>
-      sendDealNotificationEmail(r.email, deal, portalUrl),
+      sendDealNotificationEmail(r.email, deal, portalUrl, r.id),
     );
   }
   return { sent: recipients.length };
@@ -184,7 +184,7 @@ export async function dispatchDocumentUploads(
         docCount: docs.length,
         firstDocName: docs[0].name,
         portalUrl,
-      }),
+      }, r.id),
     );
   }
   return { sent: recipients.length };
@@ -227,7 +227,7 @@ export async function dispatchDealActivity(
         state: deal.state,
         changes: labels,
         portalUrl,
-      }),
+      }, r.id),
     );
   }
   return { sent: recipients.length };

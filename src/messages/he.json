@@ -70,6 +70,14 @@
     "companyNameOptional": "שם חברה (אופציונלי)",
     "enterCompanyName": "הזן את שם החברה",
     "minimumChars": "מינימום 8 תווים",
+    "passwordRuleLength": "לפחות 8 תווים",
+    "passwordRuleUppercase": "אות גדולה אחת (A–Z)",
+    "passwordRuleLowercase": "אות קטנה אחת (a–z)",
+    "passwordRuleNumber": "ספרה אחת (0–9)",
+    "passwordStrengthWeak": "חלשה",
+    "passwordStrengthFair": "סבירה",
+    "passwordStrengthGood": "טובה",
+    "passwordStrengthStrong": "חזקה",
     "reenterPassword": "הזן סיסמה שוב",
     "creatingAccount": "יוצר חשבון...",
     "createAccount": "צור חשבון",
@@ -1427,5 +1435,13 @@
     "forbidden": "אין לך הרשאה לגשת לדף זה.",
     "networkError": "שגיאת רשת — בדוק את החיבור שלך.",
     "tryAgain": "נא לנסות שוב."
+  },
+  "unsubscribe": {
+    "successTitle": "ההסרה מרשימת התפוצה הושלמה",
+    "invalidTitle": "קישור לא חוקי או שפג תוקפו",
+    "successGeneric": "לא תקבלו עוד הודעות אלה. תוכלו לנהל את כל העדפות ההתראות שלכם בהגדרות החשבון.",
+    "successWithCategory": "לא תקבלו עוד הודעות {category}. תוכלו לנהל את כל העדפות ההתראות שלכם בהגדרות החשבון.",
+    "invalidBody": "קישור ההסרה הזה אינו חוקי או שפג תוקפו. אנא התחברו לחשבון כדי לנהל את העדפות ההתראות ישירות.",
+    "managePreferences": "ניהול העדפות"
   }
 }

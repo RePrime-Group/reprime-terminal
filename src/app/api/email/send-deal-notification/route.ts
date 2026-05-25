@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
   // Fetch all active investors
   const { data: investors } = await supabase
     .from('terminal_users')
-    .select('email')
+    .select('id, email')
     .eq('role', 'investor')
     .eq('is_active', true);
 
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
 
   for (const investor of investors) {
     try {
-      const { error } = await sendDealNotificationEmail(investor.email, deal, portalUrl);
+      const { error } = await sendDealNotificationEmail(investor.email, deal, portalUrl, investor.id);
       if (error) {
         errors.push(`${investor.email}: ${error.message}`);
       } else {

@@ -9,6 +9,7 @@ interface DealNotificationEmailProps {
   propertyType: string;
   status: string;
   portalUrl: string;
+  unsubscribeUrl?: string;
 }
 
 export default function DealNotificationEmail({
@@ -18,6 +19,7 @@ export default function DealNotificationEmail({
   propertyType,
   status,
   portalUrl,
+  unsubscribeUrl,
 }: DealNotificationEmailProps) {
   const isNew = status === 'published';
   const isLoi = status === 'loi_signed';
@@ -35,7 +37,7 @@ export default function DealNotificationEmail({
         : 'There has been an update to a deal on the Terminal.';
 
   return (
-    <BaseLayout preview={`${tag}: ${dealName} — ${city}, ${state}`}>
+    <BaseLayout preview={`${tag}: ${dealName} — ${city}, ${state}`} unsubscribeUrl={unsubscribeUrl}>
       {/* Tag */}
       <div style={{ display: 'inline-block', backgroundColor: `${tagColor}15`, borderRadius: '6px', padding: '6px 14px', marginBottom: '20px' }}>
         <Text style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '2px', color: tagColor, margin: 0 }}>

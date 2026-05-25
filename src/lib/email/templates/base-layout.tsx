@@ -13,9 +13,10 @@ import * as React from 'react';
 interface BaseLayoutProps {
   children: React.ReactNode;
   preview?: string;
+  unsubscribeUrl?: string;
 }
 
-export default function BaseLayout({ children, preview }: BaseLayoutProps) {
+export default function BaseLayout({ children, preview, unsubscribeUrl }: BaseLayoutProps) {
   // The logo is sent as an inline attachment (see getLogoAttachment in resend.ts).
   // Referencing it via cid: avoids any external fetch from the recipient's mail client.
   const logoUrl = 'cid:logo';
@@ -94,6 +95,13 @@ export default function BaseLayout({ children, preview }: BaseLayoutProps) {
                       reprimeterminal.com
                     </a>
                   </Text>
+                  {unsubscribeUrl && (
+                    <Text style={{ ...footerTextStyle, marginTop: '12px' }}>
+                      <a href={unsubscribeUrl} style={{ color: '#9CA3AF', textDecoration: 'underline', fontSize: '11px' }}>
+                        Unsubscribe from these emails
+                      </a>
+                    </Text>
+                  )}
                 </td>
               </tr>
             </table>
