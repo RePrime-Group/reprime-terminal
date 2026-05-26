@@ -1344,6 +1344,7 @@
     "marketplace": {
       "title": "Marketplace",
       "subtitle": "Early-stage opportunities — pricing and terms under negotiation",
+      "marketplaceListings": "MARKETPLACE LISTINGS",
       "noDealsYet": "No marketplace deals are currently active. Check back soon for new opportunities.",
       "interestSectionTitle": "MARKETPLACE INTEREST",
       "iAmInterested": "I'm interested in this deal",

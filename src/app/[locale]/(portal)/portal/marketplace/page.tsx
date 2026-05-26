@@ -4,7 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getCurrentAuthUser } from '@/lib/supabase/currentUser';
 import { parseDealInputs, calculatePropertyMetrics } from '@/lib/utils/deal-calculator';
-import DealCard from '@/components/portal/DealCard';
+import { formatPrice } from '@/lib/utils/format';
+import MarketplaceClient from '@/components/portal/MarketplaceClient';
 import type { DealCardData } from '@/components/portal/PortalDashboardClient';
 
 export const metadata = { title: 'Marketplace — RePrime Terminal Beta' };
@@ -22,6 +23,7 @@ export default async function MarketplacePage({
 }) {
   const { locale } = await params;
   const t = await getTranslations('portal.marketplace');
+  const tp = await getTranslations('portal');
   const supabase = await createClient();
   const user = await getCurrentAuthUser();
   if (!user) redirect(`/${locale}/login`);
@@ -34,15 +36,12 @@ export default async function MarketplacePage({
 
   if (!deals || deals.length === 0) {
     return (
-      <div className="max-w-[1600px] mx-auto px-4 py-6 md:px-10 md:py-10">
-        <header className="mb-8">
-          <h1 className="font-[family-name:var(--font-playfair)] text-[28px] font-bold text-[#0A1628]">
-            {t('title')}
-          </h1>
-          <p className="text-[14px] text-gray-500 mt-1.5">{t('subtitle')}</p>
-        </header>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 px-6 py-12 text-center">
-          <p className="text-[14px] text-gray-400">{t('noDealsYet')}</p>
+      <div>
+        <MarketplaceHero title={t('title')} subtitle={t('subtitle')} metrics={null} />
+        <div className="max-w-[1600px] mx-auto px-4 py-6 md:px-10 md:py-10">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-100 px-6 py-12 text-center">
+            <p className="text-[14px] text-gray-400">{t('noDealsYet')}</p>
+          </div>
         </div>
       </div>
     );
@@ -142,20 +141,77 @@ export default async function MarketplacePage({
     };
   });
 
-  return (
-    <div className="max-w-[1600px] mx-auto px-4 py-6 md:px-10 md:py-10">
-      <header className="mb-8">
-        <h1 className="font-[family-name:var(--font-playfair)] text-[28px] font-bold text-[#0A1628]">
-          {t('title')}
-        </h1>
-        <p className="text-[14px] text-gray-500 mt-1.5">{t('subtitle')}</p>
-      </header>
+  const totalDealVolume = enriched.reduce((sum, d) => sum + (d.purchase_price || 0), 0);
+  const totalEquity = enriched.reduce((sum, d) => sum + (d.equity_required || 0), 0);
+  const avgIrr = enriched.length > 0
+    ? enriched.reduce((sum, d) => sum + (d.irr || 0), 0) / enriched.length
+    : 0;
+  const avgCapRate = enriched.length > 0
+    ? enriched.reduce((sum, d) => sum + (d.cap_rate || 0), 0) / enriched.length
+    : 0;
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-        {enriched.map((deal, i) => (
-          <DealCard key={deal.id} deal={deal} locale={locale} index={i} />
-        ))}
+  const summaryMetrics = [
+    { label: tp('totalDealVolume'), value: formatPrice(totalDealVolume) },
+    { label: tp('aggregateEquity'), value: formatPrice(totalEquity) },
+    { label: tp('avgProjectedIrr'), value: avgIrr > 0 ? `${avgIrr.toFixed(2)}%` : '--' },
+    { label: tp('avgCapRate'), value: avgCapRate > 0 ? `${avgCapRate.toFixed(2)}%` : '--' },
+    { label: t('marketplaceListings'), value: String(enriched.length) },
+  ];
+
+  return (
+    <div>
+      <MarketplaceHero title={t('title')} subtitle={t('subtitle')} metrics={summaryMetrics} />
+      <MarketplaceClient deals={enriched} locale={locale} />
+    </div>
+  );
+}
+
+function MarketplaceHero({
+  title,
+  subtitle,
+  metrics,
+}: {
+  title: string;
+  subtitle: string;
+  metrics: Array<{ label: string; value: string }> | null;
+}) {
+  return (
+    <div className="relative overflow-hidden" style={{ background: 'linear-gradient(180deg, #07090F 0%, #0A1628 35%, #0E3470 70%, #1A4A8A 100%)' }}>
+      <div
+        className="absolute inset-0 opacity-[0.015]"
+        style={{
+          backgroundImage:
+            'linear-gradient(rgba(188,156,69,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(188,156,69,0.5) 1px, transparent 1px)',
+          backgroundSize: '40px 40px',
+        }}
+      />
+      <div className="max-w-[1600px] mx-auto relative px-4 pt-8 pb-5 md:px-10 md:pt-12 md:pb-7">
+        <div className="mb-5 md:mb-7">
+          <h1 className="font-[family-name:var(--font-playfair)] text-[28px] md:text-[42px] font-semibold text-white leading-[1.1] tracking-[-0.02em]">
+            {title}
+          </h1>
+          <p className="text-[12px] md:text-[13px] text-white/35 mt-3 font-light tracking-wide leading-relaxed">
+            {subtitle}
+          </p>
+        </div>
+
+        {metrics && metrics.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-[1px] rounded-xl overflow-hidden border border-white/[0.06]" style={{ background: 'rgba(255,255,255,0.04)' }}>
+            {metrics.map((m) => (
+              <div key={m.label} className="px-5 md:px-6 py-5 md:py-6" style={{ background: 'rgba(14, 52, 112, 0.25)', backdropFilter: 'blur(8px)' }}>
+                <div className="text-[12px] md:text-[13px] font-semibold tracking-[2px] uppercase text-white/65 mb-3">
+                  {m.label}
+                </div>
+                <div className="text-[24px] md:text-[30px] font-semibold text-white tabular-nums tracking-tight">
+                  {m.value}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
+
+      <div className="h-20" style={{ background: 'linear-gradient(180deg, rgba(26,74,138,0) 0%, #F8F6F1 100%)' }} />
     </div>
   );
 }

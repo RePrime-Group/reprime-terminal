@@ -239,7 +239,7 @@ function dealToForm(deal: TerminalDeal): DealFormData {
     psa_draft_start: toDatetimeLocal(deal.psa_draft_start),
     loi_signed_at: toDatetimeLocal(deal.loi_signed_at),
     teaser_description: deal.teaser_description ?? '',
-    deposit_amount: deal.deposit_amount ?? '',
+    deposit_amount: (deal.deposit_amount ?? '').replace(/\D/g, ''),
     deposit_held_by: deal.deposit_held_by ?? '',
     neighborhood: deal.neighborhood ?? '',
     metro_population: deal.metro_population ?? '',
@@ -586,7 +586,9 @@ export default function EditDealPage() {
         psa_draft_start: form.psa_draft_start || null,
         loi_signed_at: form.loi_signed_at || null,
         teaser_description: form.teaser_description || null,
-        deposit_amount: form.deposit_amount || null,
+        deposit_amount: form.deposit_amount
+          ? '$' + Number(form.deposit_amount.replace(/\D/g, '')).toLocaleString()
+          : null,
         deposit_held_by: form.deposit_held_by || null,
         neighborhood: form.neighborhood || null,
         metro_population: form.metro_population || null,
@@ -1641,6 +1643,31 @@ export default function EditDealPage() {
           rows={3}
           className="w-full px-3.5 py-2.5 border border-rp-gray-300 rounded-lg text-sm text-rp-gray-700 focus:outline-none focus:ring-[3px] focus:ring-rp-gold/15 focus:border-rp-gold placeholder:text-rp-gray-400 transition-all resize-vertical"
         />
+      </div>
+
+      {/* Deposit */}
+      <div className="bg-white rounded-2xl border border-rp-gray-200 p-6 mb-6">
+        <h2 className="text-[16px] font-semibold text-rp-navy mb-5">Deposit</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="deposit_amount" className="block text-[13px] font-medium text-rp-gray-700 mb-1.5">
+              Deposit Amount
+            </label>
+            <div className="relative">
+              <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-sm text-rp-gray-500">
+                $
+              </span>
+              <input
+                id="deposit_amount"
+                inputMode="numeric"
+                value={form.deposit_amount ? Number(form.deposit_amount.replace(/\D/g, '') || '0').toLocaleString() : ''}
+                onChange={(e) => updateField('deposit_amount', e.target.value.replace(/\D/g, ''))}
+                placeholder="e.g. 50,000"
+                className="w-full pl-7 pr-3.5 py-2.5 border border-rp-gray-300 rounded-lg text-sm text-rp-gray-700 focus:outline-none focus:ring-[3px] focus:ring-rp-gold/15 focus:border-rp-gold placeholder:text-rp-gray-400 transition-all duration-200"
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Section 4: Timeline */}
