@@ -27,7 +27,7 @@ export default async function PortalDashboardPage({
   // Fetch deals — include new pre-pipeline statuses
   const { data: deals } = await supabase
     .from('terminal_deals')
-    .select('id, name, address, city, state, property_type, purchase_price, noi, cap_rate, irr, coc, dscr, equity_required, occupancy, seller_financing, note_sale, special_terms, dd_deadline, close_deadline, status, assigned_to, quarter_release, square_footage, units, class_type, year_renovated, psa_draft_start, loi_signed_at, teaser_description, ltv, interest_rate, amortization_years, loan_fee_points, io_period_months, mezz_percent, mezz_rate, mezz_term_months, seller_credit, assignment_fee, acq_fee, asset_mgmt_fee, gp_carry, pref_return, hold_period_years, exit_cap_rate, rent_growth, legal_title_estimate, disposition_cost_pct, capex, area_cap_rate, asking_cap_rate')
+    .select('id, name, address, city, state, property_type, purchase_price, noi, cap_rate, irr, coc, dscr, equity_required, occupancy, seller_financing, note_sale, special_terms, dd_deadline, close_deadline, status, assigned_to, quarter_release, square_footage, units, class_type, year_renovated, psa_draft_start, loi_signed_at, teaser_description, deposit_amount, ltv, interest_rate, amortization_years, loan_fee_points, io_period_months, mezz_percent, mezz_rate, mezz_term_months, seller_credit, assignment_fee, acq_fee, asset_mgmt_fee, gp_carry, pref_return, hold_period_years, exit_cap_rate, rent_growth, legal_title_estimate, disposition_cost_pct, capex, area_cap_rate, asking_cap_rate')
     .in('status', ['coming_soon', 'loi_signed', 'published', 'assigned', 'closed', 'cancelled'])
     .order('created_at', { ascending: false });
 
@@ -173,6 +173,7 @@ export default async function PortalDashboardPage({
       commitment_count: commitmentsByDeal.get(deal.id) ?? 0,
       note_content: notesByDeal.get(deal.id)?.content ?? null,
       note_updated_at: notesByDeal.get(deal.id)?.updated_at ?? null,
+      deposit_amount: num(deal.deposit_amount),
     };
   });
 

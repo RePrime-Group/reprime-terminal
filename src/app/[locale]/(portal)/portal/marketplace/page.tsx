@@ -30,7 +30,7 @@ export default async function MarketplacePage({
 
   const { data: deals } = await supabase
     .from('terminal_deals')
-    .select('id, name, address, city, state, property_type, purchase_price, noi, cap_rate, irr, coc, dscr, equity_required, occupancy, seller_financing, note_sale, special_terms, dd_deadline, close_deadline, status, assigned_to, quarter_release, square_footage, units, class_type, ltv, interest_rate, amortization_years, loan_fee_points, io_period_months, mezz_percent, mezz_rate, mezz_term_months, seller_credit, assignment_fee, acq_fee, asset_mgmt_fee, gp_carry, pref_return, hold_period_years, exit_cap_rate, rent_growth, legal_title_estimate, disposition_cost_pct, capex, area_cap_rate, asking_cap_rate')
+    .select('id, name, address, city, state, property_type, purchase_price, noi, cap_rate, irr, coc, dscr, equity_required, occupancy, seller_financing, note_sale, special_terms, dd_deadline, close_deadline, status, assigned_to, quarter_release, square_footage, units, class_type, deposit_amount, ltv, interest_rate, amortization_years, loan_fee_points, io_period_months, mezz_percent, mezz_rate, mezz_term_months, seller_credit, assignment_fee, acq_fee, asset_mgmt_fee, gp_carry, pref_return, hold_period_years, exit_cap_rate, rent_growth, legal_title_estimate, disposition_cost_pct, capex, area_cap_rate, asking_cap_rate')
     .eq('status', 'marketplace')
     .order('created_at', { ascending: false });
 
@@ -138,11 +138,13 @@ export default async function MarketplacePage({
       note_content: notesByDeal.get(deal.id)?.content ?? null,
       note_updated_at: notesByDeal.get(deal.id)?.updated_at ?? null,
       interest_count: interestByDeal.get(deal.id) ?? 0,
+      deposit_amount: num(deal.deposit_amount),
     };
   });
 
   const totalDealVolume = enriched.reduce((sum, d) => sum + (d.purchase_price || 0), 0);
   const totalEquity = enriched.reduce((sum, d) => sum + (d.equity_required || 0), 0);
+  const totalDeposits = enriched.reduce((sum, d) => sum + (d.deposit_amount || 0), 0);
   const avgIrr = enriched.length > 0
     ? enriched.reduce((sum, d) => sum + (d.irr || 0), 0) / enriched.length
     : 0;
@@ -153,6 +155,7 @@ export default async function MarketplacePage({
   const summaryMetrics = [
     { label: tp('totalDealVolume'), value: formatPrice(totalDealVolume) },
     { label: tp('aggregateEquity'), value: formatPrice(totalEquity) },
+    { label: tp('totalDepositsRequired'), value: formatPrice(totalDeposits) },
     { label: tp('avgProjectedIrr'), value: avgIrr > 0 ? `${avgIrr.toFixed(2)}%` : '--' },
     { label: tp('avgCapRate'), value: avgCapRate > 0 ? `${avgCapRate.toFixed(2)}%` : '--' },
     { label: t('marketplaceListings'), value: String(enriched.length) },
@@ -196,13 +199,13 @@ function MarketplaceHero({
         </div>
 
         {metrics && metrics.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-[1px] rounded-xl overflow-hidden border border-white/[0.06]" style={{ background: 'rgba(255,255,255,0.04)' }}>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-[1px] rounded-xl overflow-hidden border border-white/[0.06]" style={{ background: 'rgba(255,255,255,0.04)' }}>
             {metrics.map((m) => (
-              <div key={m.label} className="px-5 md:px-6 py-5 md:py-6" style={{ background: 'rgba(14, 52, 112, 0.25)', backdropFilter: 'blur(8px)' }}>
-                <div className="text-[12px] md:text-[13px] font-semibold tracking-[2px] uppercase text-white/65 mb-3">
+              <div key={m.label} className="px-4 md:px-5 py-5 md:py-6" style={{ background: 'rgba(14, 52, 112, 0.25)', backdropFilter: 'blur(8px)' }}>
+                <div className="text-[11px] md:text-[12px] font-semibold tracking-[1.2px] uppercase text-white/65 mb-3 whitespace-nowrap">
                   {m.label}
                 </div>
-                <div className="text-[24px] md:text-[30px] font-semibold text-white tabular-nums tracking-tight">
+                <div className="text-[22px] md:text-[26px] font-semibold text-white tabular-nums tracking-tight">
                   {m.value}
                 </div>
               </div>

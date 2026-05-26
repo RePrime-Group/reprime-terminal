@@ -707,6 +707,7 @@
     "noMatchingDeals": "No deals match your filters",
     "totalDealVolume": "TOTAL TERMINAL VOLUME",
     "aggregateEquity": "EQUITY REQUIRED",
+    "totalDepositsRequired": "TOTAL DEPOSITS REQUIRED",
     "avgProjectedIrr": "AVG. PROJECTED IRR",
     "avgCapRate": "AVG. CAP RATE",
     "activeReleases": "ACTIVE RELEASES",

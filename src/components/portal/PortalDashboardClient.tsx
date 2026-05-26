@@ -57,6 +57,8 @@ export interface DealCardData {
   note_updated_at?: string | null;
   /** Marketplace deals only — count of investors who have expressed interest. */
   interest_count?: number;
+  /** Numeric form of terminal_deals.deposit_amount (which is stored as text like "$300,000"). */
+  deposit_amount?: number;
 }
 
 interface PortalDashboardClientProps {
@@ -249,6 +251,7 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
   const allActiveDeals = deals.filter((d) => d.status === 'published');
   const totalDealVolume = allActiveDeals.reduce((sum, d) => sum + (d.purchase_price || 0), 0);
   const totalEquity = allActiveDeals.reduce((sum, d) => sum + (d.equity_required || 0), 0);
+  const totalDeposits = allActiveDeals.reduce((sum, d) => sum + (d.deposit_amount || 0), 0);
   const avgIrr = allActiveDeals.length > 0
     ? allActiveDeals.reduce((sum, d) => sum + (d.irr || 0), 0) / allActiveDeals.length
     : 0;
@@ -262,6 +265,7 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
   const summaryMetrics = [
     { label: t('totalDealVolume'), value: formatPrice(totalDealVolume) },
     { label: t('aggregateEquity'), value: formatPrice(totalEquity) },
+    { label: t('totalDepositsRequired'), value: formatPrice(totalDeposits) },
     { label: t('avgProjectedIrr'), value: avgIrr > 0 ? `${avgIrr.toFixed(2)}%` : '--' },
     { label: t('avgCapRate'), value: avgCapRate > 0 ? `${avgCapRate.toFixed(2)}%` : '--' },
     { label: t('activeReleases'), value: String(allActiveDeals.length) },
@@ -308,13 +312,13 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
           </div>
 
           {allActiveDeals.length > 0 && (
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-[1px] rounded-xl overflow-hidden border border-white/[0.06]" data-tour="hero-metrics" style={{ background: 'rgba(255,255,255,0.04)' }}>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-[1px] rounded-xl overflow-hidden border border-white/[0.06]" data-tour="hero-metrics" style={{ background: 'rgba(255,255,255,0.04)' }}>
               {summaryMetrics.map((m) => (
-                <div key={m.label} className="px-5 md:px-6 py-5 md:py-6" style={{ background: 'rgba(14, 52, 112, 0.25)', backdropFilter: 'blur(8px)' }}>
-                  <div className="text-[12px] md:text-[13px] font-semibold tracking-[2px] uppercase text-white/65 mb-3">
+                <div key={m.label} className="px-4 md:px-5 py-5 md:py-6" style={{ background: 'rgba(14, 52, 112, 0.25)', backdropFilter: 'blur(8px)' }}>
+                  <div className="text-[11px] md:text-[12px] font-semibold tracking-[1.2px] uppercase text-white/65 mb-3 whitespace-nowrap">
                     {m.label}
                   </div>
-                  <div className="text-[24px] md:text-[30px] font-semibold text-white tabular-nums tracking-tight">
+                  <div className="text-[22px] md:text-[26px] font-semibold text-white tabular-nums tracking-tight">
                     {m.value}
                   </div>
                 </div>
