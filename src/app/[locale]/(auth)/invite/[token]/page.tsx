@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 import { friendlyAuthError, friendlyFetchError, readApiError } from '@/lib/utils/friendly-error';
 import RePrimeLogo from '@/components/RePrimeLogo';
+import { ESIGN_DISCLOSURE_TITLE, ESIGN_DISCLOSURE_BODY } from '@/lib/legal/esign-disclosure';
 
 type ValidationResult =
   | { valid: true; email: string; role: string; parent_investor_id?: string | null; parent_name?: string | null }
@@ -42,6 +43,9 @@ export default function InviteRegistrationPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [eSignConsent, setESignConsent] = useState(false);
+  const [showDisclosure, setShowDisclosure] = useState(false);
+  const [tosConsent, setTosConsent] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -84,6 +88,16 @@ export default function InviteRegistrationPage() {
 
     if (password !== confirmPassword) {
       setError(t('passwordMismatch'));
+      return;
+    }
+
+    if (!eSignConsent) {
+      setError(t('eSignConsentRequired'));
+      return;
+    }
+
+    if (!tosConsent) {
+      setError(t('tosPrivacyRequired'));
       return;
     }
 
@@ -352,6 +366,78 @@ export default function InviteRegistrationPage() {
               </div>
             </div>
 
+            {/* E-Sign Act consent */}
+            <div className="flex items-start gap-3">
+              <button
+                type="button"
+                role="checkbox"
+                aria-checked={eSignConsent}
+                onClick={() => setESignConsent((v) => !v)}
+                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition-colors ${
+                  eSignConsent ? 'border-[#C9A54E] bg-[#C9A54E]' : 'border-white/[0.15] bg-white/[0.03]'
+                }`}
+              >
+                {eSignConsent && (
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+              </button>
+              <p className="text-white/60 text-sm leading-relaxed">
+                {t('eSignConsent')}{' '}
+                <button
+                  type="button"
+                  onClick={() => setShowDisclosure(true)}
+                  className="text-[#C9A54E] underline underline-offset-2 hover:opacity-80 transition-opacity"
+                >
+                  {t('eSignViewDisclosure')}
+                </button>
+              </p>
+            </div>
+
+            {/* Terms of Service & Privacy Policy consent */}
+            <div className="flex items-start gap-3">
+              <button
+                type="button"
+                role="checkbox"
+                aria-checked={tosConsent}
+                onClick={() => setTosConsent((v) => !v)}
+                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition-colors ${
+                  tosConsent ? 'border-[#C9A54E] bg-[#C9A54E]' : 'border-white/[0.15] bg-white/[0.03]'
+                }`}
+              >
+                {tosConsent && (
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+              </button>
+              <p className="text-white/60 text-sm leading-relaxed">
+                {t.rich('tosPrivacyConsent', {
+                  terms: (chunks) => (
+                    <a
+                      href={`/${locale}/legal/terms`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#C9A54E] underline underline-offset-2 hover:opacity-80 transition-opacity"
+                    >
+                      {chunks}
+                    </a>
+                  ),
+                  privacy: (chunks) => (
+                    <a
+                      href={`/${locale}/legal/privacy`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#C9A54E] underline underline-offset-2 hover:opacity-80 transition-opacity"
+                    >
+                      {chunks}
+                    </a>
+                  ),
+                })}
+              </p>
+            </div>
+
             {/* Error */}
             {error && (
               <div className="rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-3 text-red-400 text-sm">
@@ -370,6 +456,47 @@ export default function InviteRegistrationPage() {
           </form>
         </div>
       </div>
+
+      {/* E-Sign disclosure modal — dark-themed to match this auth screen */}
+      {showDisclosure && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-8"
+          onClick={() => setShowDisclosure(false)}
+        >
+          <div
+            className="flex max-h-[80vh] w-full max-w-lg flex-col rounded-2xl border border-white/[0.08] bg-[#0B0E15] shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4 border-b border-white/[0.06] px-6 py-4">
+              <h2 className="text-base font-semibold text-white">{ESIGN_DISCLOSURE_TITLE}</h2>
+              <button
+                type="button"
+                onClick={() => setShowDisclosure(false)}
+                aria-label={t('eSignDisclosureClose')}
+                className="-mr-1 shrink-0 p-1 text-white/40 hover:text-white/80 transition-colors"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex flex-col gap-3 overflow-y-auto px-6 py-5 text-sm leading-relaxed text-white/60">
+              {ESIGN_DISCLOSURE_BODY.split('\n\n').map((para, i) => (
+                <p key={i}>{para}</p>
+              ))}
+            </div>
+            <div className="border-t border-white/[0.06] px-6 py-4">
+              <button
+                type="button"
+                onClick={() => setShowDisclosure(false)}
+                className="w-full rounded-lg bg-white/[0.06] py-2.5 text-sm font-medium text-white hover:bg-white/[0.1] transition-colors"
+              >
+                {t('eSignDisclosureClose')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
