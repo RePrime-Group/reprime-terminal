@@ -28,17 +28,15 @@ interface ActivityRow {
   metadata: Record<string, unknown> | null;
 }
 
-const ADMIN_ACTIONS = [
-  'deal_created',
+// LP-facing feed: only investor-relevant events. Internal admin churn
+// (deal_created drafts, deal_updated field edits) must not leak to investors.
+const INVESTOR_VISIBLE_ACTIONS = [
   'deal_published',
-  'deal_updated',
   'deal_document_uploaded',
 ] as const;
 
 const ACTION_COLOR: Record<string, string> = {
-  deal_created: 'bg-[#0B8A4D]',
   deal_published: 'bg-[#BC9C45]',
-  deal_updated: 'bg-[#1D5FB8]',
   deal_document_uploaded: 'bg-[#0E3470]',
 };
 
@@ -47,9 +45,7 @@ export default function MarketIntelSidebar() {
   const ta = useTranslations('admin.activity');
 
   const actionTitles: Record<string, string> = {
-    deal_created: ta('dealCreated'),
     deal_published: ta('dealPublished'),
-    deal_updated: ta('dealUpdated'),
     deal_document_uploaded: ta('dealDocumentUploaded'),
   };
 
@@ -72,12 +68,6 @@ export default function MarketIntelSidebar() {
     if (item.action === 'deal_document_uploaded') {
       return docCategoryLabel((meta as { document_category?: unknown }).document_category);
     }
-    if (item.action === 'deal_updated' || item.action === 'deal_published') {
-      const fields = (meta as { changed_fields?: unknown }).changed_fields;
-      if (Array.isArray(fields) && fields.length > 0) {
-        return ta('fieldsUpdated', { count: fields.length });
-      }
-    }
     return null;
   };
 
@@ -88,7 +78,7 @@ export default function MarketIntelSidebar() {
     supabase
       .from('terminal_activity_log')
       .select('action, created_at, metadata')
-      .in('action', ADMIN_ACTIONS as unknown as string[])
+      .in('action', INVESTOR_VISIBLE_ACTIONS as unknown as string[])
       .order('created_at', { ascending: false })
       .limit(5)
       .then(({ data }) => {
@@ -190,6 +180,10 @@ export default function MarketIntelSidebar() {
             </div>
           ))}
         </div>
+
+        <p className="mt-4 text-[9px] text-gray-400 leading-snug">
+          {t('maturityIllustrative')}
+        </p>
       </div>
 
       {/* Card 3: Terminal Activity Feed — real data */}

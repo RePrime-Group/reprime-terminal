@@ -15,9 +15,36 @@ import DealActivityEmail from './templates/deal-activity-notification';
 import TeamInviteEmail from './templates/team-invite-email';
 import TeamRequestAdminEmail from './templates/team-request-admin-email';
 import PasswordResetEmail from './templates/password-reset-email';
+import NdaSignedEmail from './templates/nda-signed-email';
 import type { TeamPermissionKey } from '@/lib/types/database';
 
 const from = `${FROM_NAME} <${FROM_EMAIL}>`;
+
+/**
+ * Emails the signer a PDF copy of their executed NDA. `pdfBase64` is the
+ * base64-encoded PDF (Resend's `content` field expects a base64 string).
+ */
+export async function sendNdaSignedEmail(
+  recipientEmail: string,
+  signerName: string,
+  dateSigned: string,
+  pdfBase64: string,
+) {
+  return getResend().emails.send({
+    from,
+    attachments: [
+      getLogoAttachment(),
+      {
+        filename: 'RePrime-NDA-Signed.pdf',
+        content: pdfBase64,
+        contentType: 'application/pdf',
+      },
+    ],
+    to: recipientEmail,
+    subject: 'Your signed RePrime confidentiality agreement',
+    react: NdaSignedEmail({ signerName, dateSigned }),
+  });
+}
 
 function unsubscribeHeaders(userId: string, cat: NotifEventKey) {
   const url = buildUnsubscribeUrl(userId, cat);

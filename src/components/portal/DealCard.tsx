@@ -67,7 +67,17 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
     ? (deal.has_positive_cash_flow ? '∞' : 'N/A')
     : null;
 
-  const address = [deal.address, deal.city, deal.state].filter(Boolean).join(', ');
+  // Some deals store a full address (street + city + state + zip) in deal.address,
+  // others store street only. Only append city/state when the address doesn't
+  // already contain the city as its own ", City" token — otherwise tokens
+  // duplicate (e.g. "…Danville, IL 61832, Danville, IL"). Matching ", City"
+  // (not a bare substring) avoids false hits like "Chandler" in "Chandler Blvd".
+  const addressHasCity = !!(
+    deal.address && deal.city && deal.address.toLowerCase().includes(`, ${deal.city.toLowerCase()}`)
+  );
+  const address = (addressHasCity ? [deal.address] : [deal.address, deal.city, deal.state])
+    .filter(Boolean)
+    .join(', ');
 
   return (
     <Link
@@ -87,7 +97,10 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
       >
         {/* ── Header: Name + Address ── */}
         <div className="px-[20px] pt-[14px] pb-2">
-          <h3 className="text-[22px] font-semibold text-[#0E3470] font-[family-name:var(--font-playfair)] leading-tight tracking-[-0.01em] truncate">
+          <h3
+            title={deal.name}
+            className="text-[22px] font-semibold text-[#0E3470] font-[family-name:var(--font-playfair)] leading-tight tracking-[-0.01em] line-clamp-2"
+          >
             {deal.name}
           </h3>
           {address && (
@@ -305,8 +318,26 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
             <SecondaryMetric label={t('dscr')} value={formatDSCR(deal.dscr)} />
             <SecondaryMetric
               label={t('occupancy')}
-              value={deal.occupancy ? `${deal.occupancy}%` : '—'}
+              value={deal.occupancy ? `${deal.occupancy}%` : t('occupancyPending')}
+              placeholder={!deal.occupancy}
             />
+          </div>
+
+          {/* Projected-returns label + per-card methodology link (FINRA 2210) */}
+          <div className="mt-2 flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-[1.2px]">
+            <span className="text-gray-400">{t('projectedLabel')}</span>
+            <span className="text-gray-300" aria-hidden>·</span>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                window.open(`/${locale}/legal/performance-methodology`, '_blank', 'noopener,noreferrer');
+              }}
+              className="text-[#BC9C45] underline underline-offset-2 hover:opacity-80 uppercase tracking-[1.2px]"
+            >
+              {t('methodologyLink')}
+            </button>
           </div>
 
           {/* ── Countdown bar ── (hidden for cancelled deals — overlay handles the messaging) */}
@@ -451,11 +482,14 @@ function SecondaryMetric({
   value,
   highlight,
   isInfinity,
+  placeholder,
 }: {
   label: string;
   value: string | null;
   highlight?: boolean;
   isInfinity?: boolean;
+  /** Render value as muted "missing data" text rather than a headline metric. */
+  placeholder?: boolean;
 }) {
   return (
     <div>
@@ -463,8 +497,14 @@ function SecondaryMetric({
         {label}
       </div>
       <div
-        className={`font-semibold tabular-nums leading-none mt-1.5 ${
-          isInfinity ? 'text-[20px] text-[#0B8A4D]' : highlight ? 'text-[17px] text-[#0B8A4D]' : 'text-[17px] text-[#0E3470]'
+        className={`leading-none mt-1.5 ${
+          placeholder
+            ? 'text-[11px] font-medium text-gray-400 italic'
+            : isInfinity
+              ? 'text-[20px] font-semibold tabular-nums text-[#0B8A4D]'
+              : highlight
+                ? 'text-[17px] font-semibold tabular-nums text-[#0B8A4D]'
+                : 'text-[17px] font-semibold tabular-nums text-[#0E3470]'
         }`}
       >
         {value ?? '—'}

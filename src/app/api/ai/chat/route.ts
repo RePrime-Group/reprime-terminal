@@ -45,6 +45,10 @@ async function extractDocumentCitations(content: string, dealId: string): Promis
 
 export const maxDuration = 180;
 
+// Server-side guard: the composer caps height, not length, and is bypassable.
+// A multi-MB paste inflates token cost and widens the prompt-injection surface.
+const MAX_MESSAGE_CHARS = 8000;
+
 export async function POST(request: NextRequest) {
   if (!isAssistantEnabled()) return serviceDisabled();
 
@@ -57,6 +61,10 @@ export async function POST(request: NextRequest) {
 
   if (!body.deal_id || !body.message?.trim()) {
     return jsonError('bad_request', 'deal_id and message are required.', 400);
+  }
+
+  if (body.message.trim().length > MAX_MESSAGE_CHARS) {
+    return jsonError('bad_request', `Message exceeds the ${MAX_MESSAGE_CHARS}-character limit.`, 400);
   }
 
   const session = await getAuthedSession();

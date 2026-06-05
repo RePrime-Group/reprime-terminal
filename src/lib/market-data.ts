@@ -3,6 +3,10 @@ export interface MarketDataPoint {
   value: string;
   change: string;
   direction: 'up' | 'down' | 'flat';
+  /** Attribution for the figure (e.g. "FRED"). Omitted = indicative/unsourced. */
+  source?: string;
+  /** As-of date of the underlying data point (ISO date string). */
+  asOf?: string;
 }
 
 const FRED_BASE = 'https://api.stlouisfed.org/fred/series/observations';

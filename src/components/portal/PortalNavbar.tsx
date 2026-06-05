@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
+import { clearClientState } from '@/lib/auth/clear-client-state';
 import { Link, usePathname } from '@/i18n/navigation';
 import Image from 'next/image';
 import RePrimeLogo from '@/components/RePrimeLogo';
@@ -76,6 +77,7 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
 
   const handleSignOut = async () => {
     setSigningOut(true);
+    clearClientState();
     await supabase.auth.signOut();
     router.push(`/${locale}/login`);
   };

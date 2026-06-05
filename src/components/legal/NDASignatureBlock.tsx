@@ -24,6 +24,9 @@ export default function NDASignatureBlock({
         </div>
         <div className="text-[12px] text-[#4B5563] mt-1">{NDA_DISCLOSING_PARTY.signerTitle}</div>
         <div className="text-[12px] text-[#6B7280] mt-1">{date}</div>
+        <div className="text-[10px] italic text-[#9CA3AF] mt-1.5">
+          Pre-executed by an authorized officer of {NDA_DISCLOSING_PARTY.entity}.
+        </div>
       </div>
 
       {/* Receiving party — auto-fills as user types */}

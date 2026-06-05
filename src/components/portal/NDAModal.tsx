@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import NDADocument from '@/components/legal/NDADocument';
 import NDASignaturePanel, { type NDASignatureValues } from '@/components/legal/NDASignaturePanel';
 import { formatNDADate } from '@/lib/legal/nda-text';
+import { downloadNdaCopy } from '@/lib/legal/download-nda';
 
 interface NDAModalProps {
   dealName: string;
@@ -21,15 +22,40 @@ export default function NDAModal({ dealName, onSign, onClose }: NDAModalProps) {
     company: '',
     title: '',
     agreed: false,
+    eSignConsent: false,
+    signatureMode: 'type',
+    signatureDataUrl: '',
   });
   const [signing, setSigning] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState('');
 
   const today = formatNDADate();
 
+  const handleDownload = async () => {
+    setDownloading(true);
+    try {
+      await downloadNdaCopy({
+        date: today,
+        receivingPartyName: values.fullName.trim(),
+        receivingPartyCompany: values.company.trim() || undefined,
+        receivingPartyTitle: values.title.trim() || undefined,
+        signatureDataUrl: values.signatureMode === 'draw' ? values.signatureDataUrl : undefined,
+        signed: false,
+      });
+    } catch {
+      setError(t('downloadFailed'));
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   const handleSign = async () => {
     setError('');
     if (!values.fullName.trim()) { setError(t('fullNameRequired')); return; }
+    if (values.company.trim() && !values.title.trim()) { setError(t('titleRequiredWithCompany')); return; }
+    if (values.signatureMode === 'draw' && !values.signatureDataUrl) { setError(t('drawSignatureRequired')); return; }
+    if (!values.eSignConsent) { setError(t('eSignConsentRequired')); return; }
     if (!values.agreed) { setError(t('mustAgreeTerms')); return; }
     setSigning(true);
     try {
@@ -128,6 +154,16 @@ export default function NDAModal({ dealName, onSign, onClose }: NDAModalProps) {
               {error}
             </div>
           )}
+
+          {/* Download a copy */}
+          <button
+            type="button"
+            onClick={handleDownload}
+            disabled={downloading}
+            className="w-full mb-3 py-2.5 rounded-xl border border-[#EEF0F4] text-[#6B7280] text-[12px] font-medium hover:bg-[#F7F8FA] transition-colors disabled:opacity-50"
+          >
+            {downloading ? t('preparing') : t('downloadCopy')}
+          </button>
 
           {/* Actions */}
           <div className="flex gap-3">

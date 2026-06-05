@@ -3,9 +3,16 @@
 
 export const NDA_TITLE = 'CONFIDENTIALITY AGREEMENT';
 
+/**
+ * Sentinel inserted into the preamble when no receiving-party name has been
+ * entered yet. NDADocument detects this and renders it as a greyed field hint
+ * (rather than literal bracket text that reads like an unfilled merge field).
+ */
+export const NDA_RECEIVING_PARTY_PLACEHOLDER = '[Your full legal name]';
+
 export const NDA_DISCLOSING_PARTY = {
   entity: 'RePrime Group LLC',
-  signerName: 'Gideon Menahem Gratsiani',
+  signerName: 'Gideon Menachem Gratsiani',
   signerTitle: 'Founder & Co-CEO',
 } as const;
 
@@ -24,7 +31,7 @@ export interface NDATemplateInput {
  * preamble updates live as the user types in the signature form.
  */
 export function getNDABody({ date, receivingPartyName }: NDATemplateInput): string {
-  const receivingParty = receivingPartyName?.trim() || '[Your full legal name]';
+  const receivingParty = receivingPartyName?.trim() || NDA_RECEIVING_PARTY_PLACEHOLDER;
 
   return `This CONFIDENTIALITY AGREEMENT (the "Agreement") is entered into this ${date} by and between RePrime Group LLC, an Iowa limited liability company (hereinafter "Disclosing Party"), and ${receivingParty} (hereinafter "Receiving Party"; and collectively, the "Parties").
 
@@ -36,7 +43,7 @@ WHEREAS, the Receiving Party may share some of the information disclosed by the 
 
 NOW, THEREFORE, in consideration of the mutual undertakings and promises herein, the parties hereto hereby agree as follows:
 
-1. Confidential Information. "Confidential Information" includes all non-public, confidential, or proprietary information that has commercial value or utility in the Disclosing Party's business, directly or indirectly, whether communicated orally, in writing, electronically, or in any other form, before or after the effective date hereof. This includes, without limitation, methodologies, deal structures, project pipelines, financial models, and marketing materials. Receiving Party shall treat all such information as strictly confidential and proprietary.
+1. Confidential Information. "Confidential Information" includes all non-public, confidential, or proprietary information that has commercial value or utility in the Disclosing Party's business, directly or indirectly, whether communicated orally, in writing, electronically, or in any other form, before or after the effective date hereof. This includes, without limitation, methodologies, deal structures, project pipelines, and financial models. Receiving Party shall treat all such information as strictly confidential and proprietary.
 
 2. Exclusions. Confidential Information does not include information that: (a) was already known to the Receiving Party prior to disclosure and such prior knowledge can be demonstrated by the Receiving Party by dated, written records; (b) which at the time of disclosure by the Disclosing Party is or becomes publicly available other than through a breach of any obligation under this Agreement caused by an act or omission on the part of the Receiving Party; (c) is received from a third party without breach of any obligation; or (d) is independently developed by or for the Receiving Party without reference to Disclosing Party's information.
 
@@ -46,15 +53,15 @@ NOW, THEREFORE, in consideration of the mutual undertakings and promises herein,
 
 5. Compelled Disclosure. In the event the Receiving Party is required by law or legal process to disclose any Confidential Information, Receiving Party shall give prompt notice to Disclosing Party and cooperate in seeking protective measures.
 
-6. Return or Destruction. All Confidential Information is provided 'as is' and shall remain the sole property of the Disclosing Party. It is agreed that all documents and other materials which embody the Confidential Information will be returned to the Disclosing Party or destroyed immediately upon the request of the Disclosing Party, and no copies, extracts or other reproductions shall be retained by the Receiving Party or the Representatives. The Receiving Party shall promptly confirm in writing of the destruction and/or the return of all of the Confidential Information provided that the confidentiality undertakings hereunder shall remain in effect following such destruction and/or return.
+6. Return or Destruction. All Confidential Information is provided 'as is' and shall remain the sole property of the Disclosing Party. It is agreed that all documents and other materials which embody the Confidential Information will be returned to the Disclosing Party or destroyed immediately upon the request of the Disclosing Party, and no copies, extracts or other reproductions shall be retained by the Receiving Party or the Representatives. Notwithstanding the foregoing, where the Receiving Party accesses Confidential Information through the RePrime Terminal platform, its return-and-destruction obligation under this Section is satisfied by ceasing all access to and use of the platform, and the Receiving Party shall not be required to return or destroy Confidential Information that remains hosted within the platform or that is technically impracticable to delete, provided that the confidentiality obligations of this Agreement continue to apply to any such information. The Receiving Party shall promptly confirm in writing of the destruction and/or the return of all of the Confidential Information provided that the confidentiality undertakings hereunder shall remain in effect following such destruction and/or return.
 
 7. No License or Obligation. It is understood and agreed that the disclosure of the Confidential Information by the Disclosing Party shall not grant the Receiving Party any express, implied or other license or rights to patents, intellectual property rights or assets, trade secrets or know-how of the Disclosing Party or its suppliers, whether or not patentable, nor shall it constitute or be deemed to create a partnership, joint venture or other undertaking. The Parties agree and acknowledge that the Disclosing Party shall remain the sole and exclusive owner of any and all Confidential Information disclosed to the Receiving Party. Without derogating from the generality of the above, the Receiving Party agrees that it shall not remove or otherwise alter any of the Disclosing Party's trademarks or service marks, serial numbers, logos, copyrights, notices or other proprietary notices or indicia, if any, fixed or attached to the Confidential Information or any part thereof. None of the Confidential Information which may be disclosed by the Disclosing Party shall constitute any representation, warranty, assurance, guarantee or inducement by the Disclosing Party of any kind, and, in particular, with respect to the non-infringement of any intellectual property rights, or other rights of third parties or the Disclosing Party.
 
 8. Remedies. Since a breach by either Party of any of the promises or obligations contained herein may result in irreparable and continuing damage to the other Party for which there may be no adequate remedy at law, the Receiving Party agrees that money damages will not be a sufficient remedy for any breach of this Agreement by the Receiving Party or its Representatives, and the Disclosing Party shall be entitled, in addition to money damages, to specific performance and injunctive relief and any other appropriate equitable remedies for any such breach. Such remedies shall not be deemed to be the exclusive remedies for a breach of this Agreement but shall be in addition to all other remedies available at law or in equity.
 
-9. Term. The obligations under this Agreement shall survive for a period of two (2) years commencing on the date hereof. The foregoing notwithstanding, the obligations of confidentiality hereunder with respect to all Confidential Information shall survive the termination or expiration of this Agreement for any reason, shall be binding upon the Receiving Party, the Representatives and its affiliates or successors and shall continue for five (5) years following the date hereof.
+9. Term. The obligations of confidentiality under this Agreement shall survive the termination or expiration of this Agreement for any reason, shall be binding upon the Receiving Party, the Representatives and its affiliates or successors, and shall continue for five (5) years following the date hereof.
 
-10. Governing Law. This Agreement shall be governed by the laws of the State of Florida, without regard to conflict of law rules.
+10. Governing Law. This Agreement shall be governed by the laws of the State of Iowa, without regard to conflict of law rules.
 
 11. Entire Agreement. This Agreement constitutes the entire understanding between the parties and may not be modified except in writing signed by both parties.`;
 }

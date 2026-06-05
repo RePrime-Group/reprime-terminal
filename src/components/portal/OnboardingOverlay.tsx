@@ -86,15 +86,24 @@ export default function OnboardingOverlay({ firstName, userId }: OnboardingOverl
     }
   };
 
-  const handleFinish = async () => {
+  const handleFinish = () => {
     if (finishing) return;
     setFinishing(true);
-    const supabase = createClient();
-    await supabase
+    // Close immediately so the user is never trapped behind a network round-trip.
+    // (Previously this awaited the Supabase update before dismissing, so a slow or
+    // failed request left the modal stuck on the last step until a page reload.)
+    setDismissed(true);
+    // Persist completion in the background, best-effort.
+    createClient()
       .from('terminal_users')
       .update({ onboarding_completed: true })
-      .eq('id', userId);
-    setDismissed(true);
+      .eq('id', userId)
+      .then(
+        ({ error }) => {
+          if (error) console.error('Failed to persist onboarding completion:', error);
+        },
+        (err) => console.error('Failed to persist onboarding completion:', err),
+      );
   };
 
   if (dismissed || !stage) return null;
@@ -102,7 +111,7 @@ export default function OnboardingOverlay({ firstName, userId }: OnboardingOverl
   // Welcome screen
   if (stage === 'welcome') {
     return (
-      <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" style={{ background: 'rgba(7,9,15,0.85)', backdropFilter: 'blur(12px)' }}>
+      <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" style={{ background: 'rgba(7,9,15,0.85)', backdropFilter: 'blur(6px)' }}>
         <div className="w-full max-w-[520px] text-center animate-fade-up" style={{ animationDuration: '0.5s' }}>
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#BC9C45] to-[#D4B96A] mx-auto mb-6 flex items-center justify-center shadow-[0_8px_32px_rgba(188,156,69,0.3)]">
             <span className="text-white text-[28px] font-bold font-[family-name:var(--font-playfair)] italic">R</span>
@@ -128,7 +137,7 @@ export default function OnboardingOverlay({ firstName, userId }: OnboardingOverl
           <button
             onClick={handleFinish}
             disabled={finishing}
-            className="block mx-auto mt-4 text-[11px] text-white/20 hover:text-white/40 transition-colors disabled:opacity-50"
+            className="block mx-auto mt-5 px-6 py-2.5 rounded-xl border border-white/25 text-white/70 text-[13px] font-medium hover:text-white hover:border-white/45 transition-colors disabled:opacity-50"
           >
             {finishing ? t('skipTour') + '...' : t('skip')}
           </button>
@@ -147,17 +156,25 @@ export default function OnboardingOverlay({ firstName, userId }: OnboardingOverl
     if (!spotlight) return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
 
     const gap = 16;
+    const margin = 16;
     const style: React.CSSProperties = { position: 'fixed' };
+
+    // Keep the (up to 320px) tooltip fully on-screen — without this, a
+    // bottom/top tooltip centered on an edge target (e.g. the notification bell
+    // in the top-right) overflows the viewport and hides the Next/Done button.
+    const halfWidth = Math.min(320, window.innerWidth - 32) / 2;
+    const clampX = (center: number) =>
+      Math.min(Math.max(center, halfWidth + margin), window.innerWidth - halfWidth - margin);
 
     switch (step.position) {
       case 'bottom':
         style.top = spotlight.bottom + gap;
-        style.left = spotlight.left + spotlight.width / 2;
+        style.left = clampX(spotlight.left + spotlight.width / 2);
         style.transform = 'translateX(-50%)';
         break;
       case 'top':
         style.bottom = window.innerHeight - spotlight.top + gap;
-        style.left = spotlight.left + spotlight.width / 2;
+        style.left = clampX(spotlight.left + spotlight.width / 2);
         style.transform = 'translateX(-50%)';
         break;
       case 'left':

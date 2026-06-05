@@ -135,10 +135,10 @@ export default function MarketplaceClient({ deals, locale }: MarketplaceClientPr
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t('searchDealsPlaceholder')}
-                className="w-full pl-9 pr-3 py-2 text-[13px] text-[#0E3470] bg-[#F7F8FA] border border-[#D1D5DB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BC9C45]/20 focus:border-[#BC9C45]/40 placeholder:text-[#6B7280] transition-all"
+                className="w-full pl-9 pr-3 py-2 text-[13px] text-[#0E3470] bg-white border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BC9C45]/20 focus:border-[#BC9C45]/40 placeholder:text-[#6B7280] transition-all"
               />
               {searchQuery && (
-                <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#0E3470] transition-colors">
+                <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#0E3470] transition-colors cursor-pointer">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
               )}
@@ -159,10 +159,10 @@ export default function MarketplaceClient({ deals, locale }: MarketplaceClientPr
                       else next.add(pt);
                       setSelectedTypes(next);
                     }}
-                    className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all border ${
+                    className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all border cursor-pointer ${
                       active
-                        ? 'bg-[#0E3470] text-white border-[#0E3470]'
-                        : 'bg-[#F7F8FA] text-[#6B7280] border-[#D1D5DB] hover:border-[#BC9C45]/40 hover:text-[#0E3470]'
+                        ? 'bg-[#BC9C45] text-[#0E3470] border-[#BC9C45] shadow-sm'
+                        : 'bg-white text-[#6B7280] border-[#E5E7EB] hover:border-[#BC9C45]/50 hover:bg-[#FDF8ED] hover:text-[#0E3470]'
                     }`}
                   >
                     {tPt.has(pt) ? tPt(pt) : pt}
@@ -176,10 +176,10 @@ export default function MarketplaceClient({ deals, locale }: MarketplaceClientPr
             {/* Filters toggle */}
             <button
               onClick={() => setFiltersOpen(!filtersOpen)}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-semibold transition-all border ${
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-semibold transition-all border cursor-pointer ${
                 filtersOpen || hasActiveFilters
                   ? 'bg-[#FDF8ED] text-[#BC9C45] border-[#BC9C45]/30'
-                  : 'bg-[#F7F8FA] text-[#6B7280] border-[#D1D5DB] hover:border-[#BC9C45]/30'
+                  : 'bg-white text-[#6B7280] border-[#E5E7EB] hover:bg-[#FDF8ED] hover:border-[#BC9C45]/50 hover:text-[#0E3470]'
               }`}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -202,7 +202,7 @@ export default function MarketplaceClient({ deals, locale }: MarketplaceClientPr
                   setSortKey(key);
                   setSortDir(dir);
                 }}
-                className="appearance-none pl-3 pr-7 py-2 rounded-lg text-[11px] font-semibold bg-[#F7F8FA] text-[#6B7280] border border-[#D1D5DB] hover:border-[#BC9C45]/30 focus:outline-none focus:ring-2 focus:ring-[#BC9C45]/20 cursor-pointer transition-all"
+                className="appearance-none pl-3 pr-7 py-2 rounded-lg text-[11px] font-semibold bg-white text-[#6B7280] border border-[#E5E7EB] hover:bg-[#FDF8ED] hover:border-[#BC9C45]/50 hover:text-[#0E3470] focus:outline-none focus:ring-2 focus:ring-[#BC9C45]/20 cursor-pointer transition-all"
               >
                 <option value="">{t('sortBy')}</option>
                 <option value="name_asc">{t('sortNameAZ')}</option>
@@ -224,7 +224,7 @@ export default function MarketplaceClient({ deals, locale }: MarketplaceClientPr
             {hasActiveFilters && (
               <button
                 onClick={clearAllFilters}
-                className="text-[11px] font-semibold text-[#DC2626]/70 hover:text-[#DC2626] transition-colors whitespace-nowrap"
+                className="text-[11px] font-semibold text-[#DC2626]/70 hover:text-[#DC2626] transition-colors whitespace-nowrap cursor-pointer"
               >
                 {t('clearAll')}
               </button>
@@ -326,7 +326,7 @@ export default function MarketplaceClient({ deals, locale }: MarketplaceClientPr
               {searchQuery && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#EFF6FF] text-[#1D5FB8] rounded-md text-[10px] font-semibold">
                   &quot;{searchQuery}&quot;
-                  <button onClick={() => setSearchQuery('')} className="hover:text-[#DC2626] transition-colors"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                  <button onClick={() => setSearchQuery('')} className="hover:text-[#DC2626] transition-colors cursor-pointer"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
                 </span>
               )}
               {[...selectedTypes].map((pt) => (

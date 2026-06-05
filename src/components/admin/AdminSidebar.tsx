@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
+import { clearClientState } from '@/lib/auth/clear-client-state';
 import type { TerminalUser } from '@/lib/types/database';
 import RePrimeLogo from '@/components/RePrimeLogo';
 
@@ -149,6 +150,7 @@ export default function AdminSidebar({ user, locale }: AdminSidebarProps) {
   const supabase = createClient();
 
   const handleSignOut = async () => {
+    clearClientState();
     await supabase.auth.signOut();
     router.push(`/${locale}/login`);
   };

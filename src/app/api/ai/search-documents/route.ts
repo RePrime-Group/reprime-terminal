@@ -22,15 +22,15 @@ function jsonError(message: string, status: number) {
 }
 
 export async function POST(request: NextRequest) {
-  // TODO: secure this endpoint once N8N_INTERNAL_TOKEN is provisioned on both
-  // Vercel (this app) and Railway (n8n). When set, gate by header or ?token=.
+  // Internal RAG tool route: only n8n calls this. The token is mandatory so an
+  // unset env var can never leave the endpoint open as an unauthenticated,
+  // deal-arbitrary document-content reader. Mirrors compute-scenario.
   const expected = process.env.N8N_INTERNAL_TOKEN;
-  if (expected) {
-    const provided =
-      request.headers.get('x-internal-token') ??
-      new URL(request.url).searchParams.get('token');
-    if (provided !== expected) return jsonError('Unauthorized.', 401);
-  }
+  if (!expected) return jsonError('Internal token not configured.', 503);
+  const provided =
+    request.headers.get('x-internal-token') ??
+    new URL(request.url).searchParams.get('token');
+  if (provided !== expected) return jsonError('Unauthorized.', 401);
 
   let body: SearchRequest;
   try {

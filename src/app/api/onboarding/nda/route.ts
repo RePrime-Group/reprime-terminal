@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
+import { generateNdaPdf } from '@/lib/legal/nda-pdf';
+import { formatNDADate } from '@/lib/legal/nda-text';
+import { sendNdaSignedEmail } from '@/lib/email/send';
 
 interface SignNDABody {
   fullName?: string;
   company?: string | null;
   title?: string | null;
+  signatureDataUrl?: string | null;
 }
 
 function getClientIP(h: Headers): string | null {
@@ -55,5 +59,25 @@ export async function POST(request: NextRequest) {
   });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Email the signer a PDF copy of the executed NDA. Best-effort — a mail
+  // failure must never fail the signature that's already persisted.
+  try {
+    if (user.email) {
+      const dateSigned = formatNDADate();
+      const pdf = await generateNdaPdf({
+        date: dateSigned,
+        receivingPartyName: fullName,
+        receivingPartyCompany: body.company?.trim() || undefined,
+        receivingPartyTitle: body.title?.trim() || undefined,
+        signatureDataUrl: body.signatureDataUrl || undefined,
+        signed: true,
+      });
+      await sendNdaSignedEmail(user.email, fullName, dateSigned, Buffer.from(pdf).toString('base64'));
+    }
+  } catch (e) {
+    console.error('NDA signed-copy email failed:', e);
+  }
+
   return NextResponse.json({ ok: true });
 }

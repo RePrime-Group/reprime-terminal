@@ -18,6 +18,8 @@ export async function GET() {
       value: `${treasury.value.toFixed(2)}%`,
       change: treasury.change >= 0 ? `+${treasury.change.toFixed(2)}` : treasury.change.toFixed(2),
       direction: treasury.change > 0 ? 'up' : treasury.change < 0 ? 'down' : 'flat',
+      source: 'FRED',
+      asOf: treasury.date,
     });
   }
 
@@ -27,6 +29,8 @@ export async function GET() {
       value: `${sofr.value.toFixed(2)}%`,
       change: sofr.change >= 0 ? `+${sofr.change.toFixed(2)}` : sofr.change.toFixed(2),
       direction: sofr.change > 0 ? 'up' : sofr.change < 0 ? 'down' : 'flat',
+      source: 'FRED',
+      asOf: sofr.date,
     });
   }
 
@@ -56,6 +60,8 @@ export async function GET() {
           value: item.value,
           change: item.change || '—',
           direction: (item.direction as 'up' | 'down' | 'flat') || 'flat',
+          source: item.source || undefined,
+          asOf: item.as_of_date || undefined,
         });
       }
     }

@@ -75,6 +75,11 @@ interface PortalDashboardClientProps {
 type SortKey = 'name' | 'purchase_price' | 'cap_rate' | 'irr' | 'coc' | 'equity_required' | 'noi';
 type SortDir = 'asc' | 'desc';
 
+function priceBoundsOf(deals: DealCardData[]): [number, number] {
+  const prices = deals.map((d) => d.purchase_price).filter(Boolean);
+  return [Math.min(...prices, 0), Math.max(...prices, 1)];
+}
+
 export default function PortalDashboardClient({ deals, locale, previewMode = false }: PortalDashboardClientProps) {
   const t = useTranslations('portal');
   const tPt = useTranslations('portal.propertyTypes');
@@ -83,7 +88,10 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
   const [sellerFinancingOnly, setSellerFinancingOnly] = useState(false);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 0]);
+  // Initialize to the full price range so the price filter is inactive on load.
+  // Starting at [0,0] made the filter "price <= 0" run on first render and show
+  // 0 deals (a spurious empty state) until the init effect corrected it.
+  const [priceRange, setPriceRange] = useState<[number, number]>(() => priceBoundsOf(deals));
   const [irrMin, setIrrMin] = useState<number>(0);
   const [cocMin, setCocMin] = useState<number>(0);
   const [sortKey, setSortKey] = useState<SortKey | ''>('');
@@ -92,10 +100,7 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
 
   // Derive unique property types and price bounds from data
   const propertyTypes = useMemo(() => [...new Set(deals.map((d) => d.property_type).filter(Boolean))].sort(), [deals]);
-  const priceBounds = useMemo(() => {
-    const prices = deals.map((d) => d.purchase_price).filter(Boolean);
-    return [Math.min(...prices, 0), Math.max(...prices, 1)] as [number, number];
-  }, [deals]);
+  const priceBounds = useMemo(() => priceBoundsOf(deals), [deals]);
 
   // Initialize price range once
   useEffect(() => {
@@ -305,7 +310,10 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <span className="bg-white/[0.03] border border-white/[0.06] text-white/40 px-4 md:px-5 py-2 md:py-2.5 rounded-lg text-[9px] font-medium tracking-[2px] uppercase">
+              <span
+                title={t('confidentialTooltip')}
+                className="bg-white/[0.03] border border-white/[0.06] text-white/40 px-4 md:px-5 py-2 md:py-2.5 rounded-lg text-[9px] font-medium tracking-[2px] uppercase cursor-help"
+              >
                 {t('confidential')}
               </span>
             </div>
@@ -324,6 +332,20 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
                 </div>
               ))}
             </div>
+          )}
+
+          {allActiveDeals.length > 0 && (
+            <p className="mt-4 text-[12px] md:text-[13px] text-white/55 leading-relaxed">
+              {t('dealPerformanceDisclaimer')}{' '}
+              <a
+                href={`/${locale}/legal/performance-methodology`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#C9A54E] font-medium underline underline-offset-2 hover:opacity-80"
+              >
+                {t('viewMethodology')}
+              </a>
+            </p>
           )}
         </div>
 
@@ -347,10 +369,10 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={t('searchDealsPlaceholder')}
-                  className="w-full pl-9 pr-3 py-2 text-[13px] text-[#0E3470] bg-[#F7F8FA] border border-[#D1D5DB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BC9C45]/20 focus:border-[#BC9C45]/40 placeholder:text-[#6B7280] transition-all"
+                  className="w-full pl-9 pr-3 py-2 text-[13px] text-[#0E3470] bg-white border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BC9C45]/20 focus:border-[#BC9C45]/40 placeholder:text-[#6B7280] transition-all"
                 />
                 {searchQuery && (
-                  <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#0E3470] transition-colors">
+                  <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#0E3470] transition-colors cursor-pointer">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                   </button>
                 )}
@@ -371,10 +393,10 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
                         active ? next.delete(pt) : next.add(pt);
                         setSelectedTypes(next);
                       }}
-                      className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all border ${
+                      className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all border cursor-pointer ${
                         active
-                          ? 'bg-[#0E3470] text-white border-[#0E3470]'
-                          : 'bg-[#F7F8FA] text-[#6B7280] border-[#D1D5DB] hover:border-[#BC9C45]/40 hover:text-[#0E3470]'
+                          ? 'bg-[#BC9C45] text-[#0E3470] border-[#BC9C45] shadow-sm'
+                          : 'bg-white text-[#6B7280] border-[#E5E7EB] hover:border-[#BC9C45]/50 hover:bg-[#FDF8ED] hover:text-[#0E3470]'
                       }`}
                     >
                       {tPt.has(pt) ? tPt(pt) : pt}
@@ -389,10 +411,10 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
               {/* Filters toggle */}
               <button
                 onClick={() => setFiltersOpen(!filtersOpen)}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-semibold transition-all border ${
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[11px] font-semibold transition-all border cursor-pointer ${
                   filtersOpen || hasActiveFilters
                     ? 'bg-[#FDF8ED] text-[#BC9C45] border-[#BC9C45]/30'
-                    : 'bg-[#F7F8FA] text-[#6B7280] border-[#D1D5DB] hover:border-[#BC9C45]/30'
+                    : 'bg-white text-[#6B7280] border-[#E5E7EB] hover:bg-[#FDF8ED] hover:border-[#BC9C45]/50 hover:text-[#0E3470]'
                 }`}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -417,7 +439,7 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
                     setSortKey(key);
                     setSortDir(dir);
                   }}
-                  className="appearance-none pl-3 pr-7 py-2 rounded-lg text-[11px] font-semibold bg-[#F7F8FA] text-[#6B7280] border border-[#D1D5DB] hover:border-[#BC9C45]/30 focus:outline-none focus:ring-2 focus:ring-[#BC9C45]/20 cursor-pointer transition-all"
+                  className="appearance-none pl-3 pr-7 py-2 rounded-lg text-[11px] font-semibold bg-white text-[#6B7280] border border-[#E5E7EB] hover:bg-[#FDF8ED] hover:border-[#BC9C45]/50 hover:text-[#0E3470] focus:outline-none focus:ring-2 focus:ring-[#BC9C45]/20 cursor-pointer transition-all"
                 >
                   <option value="">{t('sortBy')}</option>
                   <option value="name_asc">{t('sortNameAZ')}</option>
@@ -440,7 +462,7 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
               {hasActiveFilters && (
                 <button
                   onClick={clearAllFilters}
-                  className="text-[11px] font-semibold text-[#DC2626]/70 hover:text-[#DC2626] transition-colors whitespace-nowrap"
+                  className="text-[11px] font-semibold text-[#DC2626]/70 hover:text-[#DC2626] transition-colors whitespace-nowrap cursor-pointer"
                 >
                   {t('clearAll')}
                 </button>

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
+import { clearClientState } from '@/lib/auth/clear-client-state';
 
 export default function OnboardingSignOutButton({ locale }: { locale: string }) {
   const tc = useTranslations('common');
@@ -13,6 +14,7 @@ export default function OnboardingSignOutButton({ locale }: { locale: string }) 
   const handleSignOut = async () => {
     if (signingOut) return;
     setSigningOut(true);
+    clearClientState();
     const supabase = createClient();
     await supabase.auth.signOut();
     router.replace(`/${locale}/login`);

@@ -37,7 +37,14 @@ export default async function MarketplacePage({
   if (!deals || deals.length === 0) {
     return (
       <div>
-        <MarketplaceHero title={t('title')} subtitle={t('subtitle')} metrics={null} />
+        <MarketplaceHero
+          title={t('title')}
+          subtitle={t('subtitle')}
+          metrics={null}
+          locale={locale}
+          disclaimer={tp('performanceDisclaimer')}
+          methodologyLabel={tp('viewMethodology')}
+        />
         <div className="max-w-[1600px] mx-auto px-4 py-6 md:px-10 md:py-10">
           <div className="bg-white rounded-lg shadow-sm border border-gray-100 px-6 py-12 text-center">
             <p className="text-[14px] text-gray-400">{t('noDealsYet')}</p>
@@ -152,18 +159,26 @@ export default async function MarketplacePage({
     ? enriched.reduce((sum, d) => sum + (d.cap_rate || 0), 0) / enriched.length
     : 0;
 
+  const n = enriched.length;
   const summaryMetrics = [
-    { label: tp('totalDealVolume'), value: formatPrice(totalDealVolume) },
-    { label: tp('aggregateEquity'), value: formatPrice(totalEquity) },
+    { label: tp('totalDealVolume'), value: formatPrice(totalDealVolume), tooltip: tp('volumeTooltip', { count: n }) },
+    { label: tp('aggregateEquity'), value: formatPrice(totalEquity), tooltip: tp('equityTooltip', { count: n }) },
     { label: tp('totalDepositsRequired'), value: formatPrice(totalDeposits) },
-    { label: tp('avgProjectedIrr'), value: avgIrr > 0 ? `${avgIrr.toFixed(2)}%` : '--' },
-    { label: tp('avgCapRate'), value: avgCapRate > 0 ? `${avgCapRate.toFixed(2)}%` : '--' },
-    { label: t('marketplaceListings'), value: String(enriched.length) },
+    { label: tp('avgProjectedIrr'), value: avgIrr > 0 ? `${avgIrr.toFixed(2)}%` : '--', tooltip: tp('irrTooltip', { count: n }) },
+    { label: tp('avgCapRate'), value: avgCapRate > 0 ? `${avgCapRate.toFixed(2)}%` : '--', tooltip: tp('capRateTooltip', { count: n }) },
+    { label: t('marketplaceListings'), value: String(n) },
   ];
 
   return (
     <div>
-      <MarketplaceHero title={t('title')} subtitle={t('subtitle')} metrics={summaryMetrics} />
+      <MarketplaceHero
+        title={t('title')}
+        subtitle={t('subtitle')}
+        metrics={summaryMetrics}
+        locale={locale}
+        disclaimer={tp('performanceDisclaimer')}
+        methodologyLabel={tp('viewMethodology')}
+      />
       <MarketplaceClient deals={enriched} locale={locale} />
     </div>
   );
@@ -173,10 +188,16 @@ function MarketplaceHero({
   title,
   subtitle,
   metrics,
+  locale,
+  disclaimer,
+  methodologyLabel,
 }: {
   title: string;
   subtitle: string;
-  metrics: Array<{ label: string; value: string }> | null;
+  metrics: Array<{ label: string; value: string; tooltip?: string }> | null;
+  locale: string;
+  disclaimer: string;
+  methodologyLabel: string;
 }) {
   return (
     <div className="relative overflow-hidden" style={{ background: 'linear-gradient(180deg, #07090F 0%, #0A1628 35%, #0E3470 70%, #1A4A8A 100%)' }}>
@@ -199,18 +220,43 @@ function MarketplaceHero({
         </div>
 
         {metrics && metrics.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-[1px] rounded-xl overflow-hidden border border-white/[0.06]" style={{ background: 'rgba(255,255,255,0.04)' }}>
-            {metrics.map((m) => (
-              <div key={m.label} className="px-4 md:px-5 py-5 md:py-6" style={{ background: 'rgba(14, 52, 112, 0.25)', backdropFilter: 'blur(8px)' }}>
-                <div className="text-[11px] md:text-[12px] font-semibold tracking-[1.2px] uppercase text-white/65 mb-3 whitespace-nowrap">
-                  {m.label}
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-[1px] rounded-xl overflow-hidden border border-white/[0.06]" style={{ background: 'rgba(255,255,255,0.04)' }}>
+              {metrics.map((m) => (
+                <div key={m.label} className="px-4 md:px-5 py-5 md:py-6" style={{ background: 'rgba(14, 52, 112, 0.25)', backdropFilter: 'blur(8px)' }}>
+                  <div className="flex items-center gap-1 mb-3">
+                    <span className="text-[11px] md:text-[12px] font-semibold tracking-[1.2px] uppercase text-white/65 whitespace-nowrap">
+                      {m.label}
+                    </span>
+                    {m.tooltip && (
+                      <span title={m.tooltip} aria-label={m.tooltip} className="cursor-help text-white/35 hover:text-white/60 transition-colors">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <circle cx="12" cy="12" r="10" />
+                          <line x1="12" y1="16" x2="12" y2="12" />
+                          <line x1="12" y1="8" x2="12.01" y2="8" />
+                        </svg>
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[22px] md:text-[26px] font-semibold text-white tabular-nums tracking-tight">
+                    {m.value}
+                  </div>
                 </div>
-                <div className="text-[22px] md:text-[26px] font-semibold text-white tabular-nums tracking-tight">
-                  {m.value}
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+
+            <p className="mt-3 text-[10px] md:text-[11px] text-white/35 leading-relaxed">
+              {disclaimer}{' '}
+              <a
+                href={`/${locale}/legal/performance-methodology`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#C9A54E]/80 underline underline-offset-2 hover:text-[#C9A54E]"
+              >
+                {methodologyLabel}
+              </a>
+            </p>
+          </>
         )}
       </div>
 
