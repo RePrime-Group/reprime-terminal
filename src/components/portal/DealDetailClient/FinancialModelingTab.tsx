@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { parseDealInputs, calculatePropertyMetrics, type DealInputs } from '@/lib/utils/deal-calculator';
 import { exportDealToExcel } from '@/lib/utils/excel-export';
 import type { DealWithDetails } from '@/lib/types/database';
 
 export function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
   const t = useTranslations('portal.dealDetail');
+  const locale = useLocale();
 
   const baseInputs = useMemo(
     () => parseDealInputs(deal as unknown as Record<string, unknown>),
@@ -65,6 +66,27 @@ export function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
   ];
 
   const exitNOI = baseInputs.noi * Math.pow(1 + (parseFloat(rentGrowth) || 0) / 100, holdNum);
+
+  // Cap-rate sensitivity centered on the going-in cap (6.5): show BOTH the upside
+  // (lower cap) and the realistic downside (higher cap), with IRR + equity multiple.
+  const entryCap = baseMetrics.capRate;
+  const sensitivity = useMemo(() => {
+    const center = Math.round(entryCap * 4) / 4;
+    const caps = [center - 1, center - 0.5, center, center + 0.5, center + 1].filter((c) => c >= 1);
+    const hold = parseInt(holdYears) || 5;
+    const growth = parseFloat(rentGrowth) || 0;
+    return caps.map((cr) => {
+      const m = calculatePropertyMetrics({
+        ...baseInputs,
+        ltv: parseFloat(ltv) || baseInputs.ltv,
+        interestRate: parseFloat(rate) || baseInputs.interestRate,
+        holdPeriodYears: hold,
+        exitCapRate: cr,
+        rentGrowth: growth,
+      });
+      return { cr, irr: m.irr, em: m.equityMultiple };
+    });
+  }, [baseInputs, entryCap, ltv, rate, holdYears, rentGrowth]);
 
   const handleExportExcel = () => {
     exportDealToExcel(deal, baseInputs, mm, {
@@ -144,6 +166,21 @@ export function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
               <div className="text-[22px] font-bold tabular-nums mt-1.5" style={{ color: m.c }}>{m.v}</div>
             </div>
           ))}
+        </div>
+
+        {/* Risk-of-loss disclosure for projected figures — FINRA 2210(d)(1)(D) (6.3) */}
+        <div className="rounded-lg border border-[#ECD9A0]/40 bg-[#FDF8ED] px-3.5 py-3">
+          <p className="text-[12px] leading-relaxed text-[#6B7280]">
+            {t('modelDisclaimer')}{' '}
+            <a
+              href={`/${locale}/legal/performance-methodology`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-[#BC9C45] underline underline-offset-2 hover:opacity-80"
+            >
+              {t('methodologyLink')}
+            </a>
+          </p>
         </div>
 
         {/* Cash flow chart */}
@@ -229,26 +266,56 @@ export function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
           })()}
         </div>
 
-        {/* Cap rate sensitivity */}
+        {/* Cap rate sensitivity — symmetric around going-in cap; IRR + multiple (6.5) */}
         <div className="bg-white rounded-xl p-5 border border-[#EEF0F4] rp-card-shadow">
           <h4 className="text-[14px] font-semibold text-[#0E3470] mb-3">{t('capRateSensitivity')}</h4>
-          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-            {[6.0, 6.5, 7.0, 7.5, 8.0].map((cr) => {
-              const ev = exitNOI / (cr / 100);
-              const isSel = cr === exitCapNum;
-              return (
-                <button
-                  key={cr}
-                  onClick={() => setExitCap(String(cr))}
-                  className="text-center py-2.5 px-1 rounded-lg transition-all cursor-pointer hover:ring-2 hover:ring-[#BC9C45]/30"
-                  style={{ background: isSel ? '#0E3470' : '#F7F8FA' }}
-                >
-                  <div className="text-[11px] font-bold" style={{ color: isSel ? '#D4A843' : '#9CA3AF' }}>{cr}%</div>
-                  <div className="text-[13px] font-bold mt-1 tabular-nums" style={{ color: isSel ? '#FFFFFF' : '#0E3470' }}>{fmt(ev)}</div>
-                </button>
-              );
-            })}
+          <div className="overflow-x-auto -mx-1 px-1">
+            <table className="w-full border-collapse text-[12px]">
+              <thead>
+                <tr>
+                  <th className="text-left font-semibold text-[#9CA3AF] py-1.5 pe-2 whitespace-nowrap">{t('exitCapRate')}</th>
+                  {sensitivity.map((s) => {
+                    const isSel = s.cr === exitCapNum;
+                    const isDownside = s.cr > entryCap + 0.01;
+                    return (
+                      <th
+                        key={s.cr}
+                        onClick={() => setExitCap(String(s.cr))}
+                        className="cursor-pointer px-1.5 py-1.5 text-center rounded-t-md hover:ring-2 hover:ring-[#BC9C45]/30 tabular-nums"
+                        style={{ background: isSel ? '#0E3470' : 'transparent', color: isSel ? '#D4A843' : (isDownside ? '#DC2626' : '#0B8A4D') }}
+                      >
+                        {s.cr.toFixed(2)}%
+                      </th>
+                    );
+                  })}
+                </tr>
+              </thead>
+              <tbody>
+                {([
+                  { label: t('exitValue'), get: (s: (typeof sensitivity)[number]) => fmt(exitNOI / (s.cr / 100)) },
+                  { label: t('estLeveredIrr'), get: (s: (typeof sensitivity)[number]) => (s.irr !== null ? s.irr.toFixed(1) + '%' : '—') },
+                  { label: t('equityMultiple'), get: (s: (typeof sensitivity)[number]) => (s.em !== null ? s.em.toFixed(2) + 'x' : '—') },
+                ]).map((row, ri) => (
+                  <tr key={ri} className="border-t border-[#EEF0F4]">
+                    <td className="text-left text-[#6B7280] py-1.5 pe-2 whitespace-nowrap">{row.label}</td>
+                    {sensitivity.map((s) => {
+                      const isSel = s.cr === exitCapNum;
+                      return (
+                        <td
+                          key={s.cr}
+                          className="px-1.5 py-1.5 text-center tabular-nums font-semibold text-[#0E3470]"
+                          style={{ background: isSel ? '#F0F4FA' : 'transparent' }}
+                        >
+                          {row.get(s)}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+          <p className="text-[11px] text-[#9CA3AF] mt-2.5 leading-relaxed">{t('sensitivityNote')}</p>
         </div>
       </div>
     </div>

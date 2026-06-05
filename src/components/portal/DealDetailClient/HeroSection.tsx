@@ -26,6 +26,12 @@ interface Props {
   deal: DealWithDetails;
   photoUrls: string[];
   computed: ReturnType<typeof calculatePropertyMetrics>;
+  /** Fee-adjusted net IRR/CoC (after all fees + carry) for the headline return tiles.
+   *  When provided, these replace the property-level (gross) figures — see 6.1 fix. */
+  netIrr?: number | null;
+  netCoc?: number | null;
+  /** Single current occupancy % (from rent roll, falling back to the typed field). */
+  occupancyPct?: number | null;
   addresses: Address[];
   omMenuRef: RefObject<HTMLDivElement | null>;
   omMenuOpen: boolean;
@@ -41,6 +47,9 @@ export function HeroSection({
   deal,
   photoUrls,
   computed,
+  netIrr,
+  netCoc,
+  occupancyPct,
   addresses,
   omMenuRef,
   omMenuOpen,
@@ -58,15 +67,19 @@ export function HeroSection({
   const hasPositiveCF = computed.distributableCashFlow > 0;
   const infReturn = fullyFinanced ? (hasPositiveCF ? '∞' : 'N/A') : null;
   const irrNote = fullyFinanced ? undefined : buildIrrAssumptions(deal, computed);
+  // Headline returns use the fee-adjusted net figures (after all fees + carry) when
+  // the parent provides them; fall back to property-level only if not passed.
+  const headlineIrr = netIrr !== undefined ? netIrr : computed.irr;
+  const headlineCoc = netCoc !== undefined ? netCoc : computed.cocReturn;
 
   const metrics = [
     { label: tc('purchasePrice'), value: formatPrice(deal.purchase_price), borderColor: '#0E3470', span: 'col-span-2', size: 'headline' },
     { label: tc('equityRequired'), value: fullyFinanced ? '$0' : (computed.netEquity > 0 ? '$' + Math.round(computed.netEquity).toLocaleString() : formatPrice(deal.equity_required)), borderColor: '#BC9C45', valueColor: fullyFinanced ? '#0B8A4D' : undefined, span: 'col-span-2', size: 'headline' },
     { label: tc('noi'), value: formatPrice(deal.noi), borderColor: '#0E3470', span: 'col-span-1' },
-    { label: t('occupancy'), value: deal.occupancy ? `${deal.occupancy}%` : '—', borderColor: '#0E3470', span: 'col-span-1' },
+    { label: t('occupancy'), value: occupancyPct != null ? `${occupancyPct.toFixed(1)}%` : '—', borderColor: '#0E3470', span: 'col-span-1' },
     { label: tc('capRate'), value: computed.capRate > 0 ? computed.capRate.toFixed(2) + '%' : formatPercent(deal.cap_rate), borderColor: '#BC9C45', span: 'col-span-1' },
-    { label: tc('irr'), value: infReturn ?? (computed.irr !== null ? computed.irr.toFixed(2) + '%' : (deal.irr ? formatPercent(deal.irr) : '—')), borderColor: '#0B8A4D', valueColor: '#0B8A4D', span: 'col-span-1', note: irrNote },
-    { label: tc('coc'), value: infReturn ?? (computed.cocReturn !== null ? computed.cocReturn.toFixed(2) + '%' : (deal.coc ? formatPercent(deal.coc) : '—')), borderColor: '#0B8A4D', valueColor: '#0B8A4D', span: 'col-span-1' },
+    { label: tc('irr'), value: infReturn ?? (headlineIrr !== null ? headlineIrr.toFixed(2) + '%' : tc('pending')), borderColor: '#0B8A4D', valueColor: '#0B8A4D', span: 'col-span-1', note: irrNote },
+    { label: tc('coc'), value: infReturn ?? (headlineCoc !== null ? headlineCoc.toFixed(2) + '%' : tc('pending')), borderColor: '#0B8A4D', valueColor: '#0B8A4D', span: 'col-span-1' },
     { label: tc('dscr'), value: computed.combinedDSCR > 0 ? computed.combinedDSCR.toFixed(2) + 'x' : formatDSCR(deal.dscr), borderColor: '#0E3470', span: 'col-span-1' },
   ] as { label: string; value: string; borderColor: string; valueColor?: string; span: string; note?: string; size?: 'headline' | 'normal' }[];
 

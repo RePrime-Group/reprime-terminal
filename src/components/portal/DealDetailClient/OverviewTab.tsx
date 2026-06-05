@@ -5,7 +5,7 @@ import FadeInOnScroll from '@/components/ui/FadeInOnScroll';
 import { OverviewFinancials } from '@/components/portal/FinancialOverview';
 import MarketplaceInterestForm from '@/components/portal/MarketplaceInterestForm';
 import { formatNumber, formatSqFt } from '@/lib/utils/format';
-import { computeWALT, computeOccupancy, formatYears } from '@/lib/utils/rent-roll';
+import { computeWALT, formatYears } from '@/lib/utils/rent-roll';
 import type { DealWithDetails, TerminalTenantLease } from '@/lib/types/database';
 import type { FeeDefaults } from '@/lib/utils/fee-resolver';
 import { type DealInputs, calculatePropertyMetrics, calculateTraditionalClose } from '@/lib/utils/deal-calculator';
@@ -36,6 +36,8 @@ interface Props {
   financialProps: FinancialProps;
   addresses: Address[];
   tenants: TerminalTenantLease[];
+  /** Single current occupancy % (from rent roll, falling back to the typed field). */
+  occupancyPct?: number | null;
   isMarketplaceDeal: boolean;
   myMarketplaceInterest?: {
     interest_type: 'at_asking' | 'custom_price';
@@ -55,6 +57,7 @@ export function OverviewTab({
   financialProps,
   addresses,
   tenants,
+  occupancyPct,
   isMarketplaceDeal,
   myMarketplaceInterest,
   previewMode,
@@ -211,7 +214,7 @@ export function OverviewTab({
                   <span className="data-label">{t('occupancy')}</span>
                 </div>
                 <div className="text-lg font-bold text-[#0E3470]">
-                  {deal.occupancy ? `${deal.occupancy}%` : '--'}
+                  {occupancyPct != null ? `${occupancyPct.toFixed(1)}%` : '--'}
                 </div>
               </div>
             </div>
@@ -311,9 +314,18 @@ export function OverviewTab({
           </h3>
           <div className="space-y-0">
             {(() => {
+              // Hydrate SF/units from the buildings when the deal-level field is
+              // empty (portfolios store these per building) so the panel matches
+              // the rest of the page instead of rendering blank (6.10).
+              const sumAddrSf = addresses.reduce((s, a) => s + (parseFloat(String(a.square_footage ?? '').replace(/[^0-9.]/g, '')) || 0), 0);
+              const totalSf = Number.isFinite(sfNum) && sfNum > 0 ? sfNum : sumAddrSf;
+              const sumAddrUnits = addresses.reduce((s, a) => s + (parseInt(String(a.units ?? '').replace(/[^0-9]/g, ''), 10) || 0), 0);
+              const dealUnitsNum = parseInt(String(deal.units ?? '').replace(/[^0-9]/g, ''), 10);
+              const totalUnits = Number.isFinite(dealUnitsNum) && dealUnitsNum > 0 ? dealUnitsNum : sumAddrUnits;
+
               const ppNum = parseFloat(deal.purchase_price ?? '0');
-              const pricePerSf = ppNum > 0 && sfNum > 0
-                ? `$${(ppNum / sfNum).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+              const pricePerSf = ppNum > 0 && totalSf > 0
+                ? `$${(ppNum / totalSf).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                 : null;
 
               const rows: { key: string; label: string; value: string | null | undefined }[] = [];
@@ -329,23 +341,17 @@ export function OverviewTab({
                 rows.push({ key: 'yearRenovated', label: t('yearRenovated'), value: deal.year_renovated });
               }
               rows.push(
-                { key: 'sqFt', label: t('sqFt'), value: formatSqFt(deal.square_footage) },
-                { key: 'units', label: t('units'), value: deal.units },
+                { key: 'sqFt', label: t('sqFt'), value: totalSf > 0 ? formatSqFt(totalSf) : null },
+                { key: 'units', label: t('units'), value: totalUnits > 0 ? totalUnits.toLocaleString() : deal.units },
               );
               if (tenants.length > 0) {
                 const wVal = computeWALT(tenants);
-                const occ = computeOccupancy(
-                  tenants,
-                  Number.isFinite(sfNum) && sfNum > 0 ? sfNum : null,
-                );
                 if (wVal !== null) {
                   rows.push({ key: 'walt', label: 'WALT', value: formatYears(wVal) });
                 }
-                if (occ.occupancyPct !== null) {
-                  rows.push({ key: 'occupancy', label: 'Occupancy', value: `${occ.occupancyPct.toFixed(1)}%` });
-                }
-              } else if (deal.occupancy) {
-                rows.push({ key: 'occupancy', label: 'Occupancy', value: `${deal.occupancy}%` });
+              }
+              if (occupancyPct != null) {
+                rows.push({ key: 'occupancy', label: 'Occupancy', value: `${occupancyPct.toFixed(1)}%` });
               }
               rows.push({ key: 'neighborhood', label: t('neighborhood'), value: deal.neighborhood });
               if (pricePerSf) {

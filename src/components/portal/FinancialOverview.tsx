@@ -94,6 +94,16 @@ export function OverviewFinancials({ inputs, metrics, traditional }: FinancialPr
 // ═══════════════════════════════════════════════════════════
 export function DealStructureFinancials({ inputs, metrics, traditional, isEstimated, feeDisclosure }: FinancialProps) {
   const t = useTranslations('portal.financial');
+  // High-leverage risk warning (6.4): equity cushion ≈ 100 − combined leverage.
+  const showLeverageWarning = metrics.totalLeverage >= 80;
+  const levPct = metrics.totalLeverage.toFixed(1);
+  const cushionPct = Math.max(0, 100 - metrics.totalLeverage).toFixed(1);
+  // Tight-DSCR warning (6.7): a (1 − 1/DSCR) NOI drop wipes out debt coverage.
+  const showDscrWarning = metrics.combinedDSCR > 0 && metrics.combinedDSCR < 1.30;
+  const dscrVal = metrics.combinedDSCR.toFixed(2);
+  const dscrCushionPct = metrics.combinedDSCR > 0
+    ? Math.max(0, (1 - 1 / metrics.combinedDSCR) * 100).toFixed(0)
+    : '0';
   return (
     <div className="space-y-5">
       {/* Capital Stack */}
@@ -208,6 +218,10 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
                 </div>
               ))}
             </div>
+            {/* Refinance-risk disclosure for the mezz balloon (6.6) */}
+            <p className="mt-3 text-[12px] leading-relaxed text-[#92723A] bg-[#FDF8ED] border border-[#ECD9A0]/40 rounded-lg px-3.5 py-3">
+              {t('refinanceRiskNote')}
+            </p>
           </div>
         )}
 
@@ -228,6 +242,25 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
               </div>
             ))}
           </div>
+          {showLeverageWarning && (
+            <div className="mt-3 rounded-lg border border-[#FECACA] bg-[#FEF2F2] px-3.5 py-3">
+              <div className="flex items-start gap-2">
+                <svg className="w-4 h-4 shrink-0 mt-0.5 text-[#DC2626]" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+                  <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 6a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 6zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                </svg>
+                <p className="text-[12px] leading-relaxed text-[#B91C1C]">
+                  {t('highLeverageWarning', { leverage: levPct, cushion: cushionPct })}
+                </p>
+              </div>
+            </div>
+          )}
+          {showDscrWarning && (
+            <div className="mt-3 rounded-lg border border-[#ECD9A0]/40 bg-[#FDF8ED] px-3.5 py-3">
+              <p className="text-[12px] leading-relaxed text-[#92723A]">
+                {t('tightDscrWarning', { dscr: dscrVal, cushion: dscrCushionPct })}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 

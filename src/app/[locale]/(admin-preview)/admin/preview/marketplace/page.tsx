@@ -1,7 +1,8 @@
 import { getTranslations } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { parseDealInputs, calculatePropertyMetrics } from '@/lib/utils/deal-calculator';
+import { parseDealInputs, calculatePropertyMetrics, calculateDeal } from '@/lib/utils/deal-calculator';
+import { getGlobalFeeDefaults, resolveAllFees } from '@/lib/utils/fee-resolver';
 import DealCard from '@/components/portal/DealCard';
 import type { DealCardData } from '@/components/portal/PortalDashboardClient';
 
@@ -98,9 +99,22 @@ export default async function MarketplacePreviewPage({
     interestByDeal.set(r.deal_id, (interestByDeal.get(r.deal_id) ?? 0) + 1);
   }
 
+  const globalFeeDefaults = await getGlobalFeeDefaults(supabase);
+
   const enriched: DealCardData[] = deals.map((deal) => {
     const inputs = parseDealInputs(deal as unknown as Record<string, unknown>);
     const computed = calculatePropertyMetrics(inputs);
+    // Net returns: overlay resolved REPRIME fee terms → IRR/CoC after fees + carry.
+    const fees = resolveAllFees(deal as unknown as Record<string, unknown>, globalFeeDefaults);
+    const net = calculateDeal({
+      ...inputs,
+      assignmentFee: fees.assignmentFee,
+      acqFee: fees.acqFee,
+      assetMgmtFee: fees.assetMgmtFee,
+      gpCarry: fees.gpCarry,
+      prefReturn: fees.prefReturn,
+    });
+    const netIrr = net.irr ?? net.assignmentIRR;
 
     const storagePath = photoByDeal.get(deal.id);
     let photo_url: string | null = null;
@@ -110,8 +124,6 @@ export default async function MarketplacePreviewPage({
     }
 
     const dbCapRate = num(deal.cap_rate);
-    const dbIrr = num(deal.irr);
-    const dbCoc = num(deal.coc);
     const dbDscr = num(deal.dscr);
     const dbEquity = num(deal.equity_required);
 
@@ -125,8 +137,9 @@ export default async function MarketplacePreviewPage({
       purchase_price: num(deal.purchase_price),
       noi: num(deal.noi),
       cap_rate: computed.capRate > 0 ? computed.capRate : dbCapRate,
-      irr: computed.irr !== null && computed.irr !== 0 ? computed.irr : dbIrr,
-      coc: computed.cocReturn !== null && computed.cocReturn !== 0 ? computed.cocReturn : dbCoc,
+      // Net IRR/CoC (after fees + carry); null → "Pending" in UI (6.1 fix).
+      irr: netIrr !== null && netIrr !== 0 ? netIrr : null,
+      coc: net.cocReturn !== null && net.cocReturn !== 0 ? net.cocReturn : null,
       dscr: computed.combinedDSCR > 0 ? computed.combinedDSCR : dbDscr,
       equity_required: computed.netEquity > 0 ? computed.netEquity : dbEquity,
       occupancy: deal.occupancy ?? null,

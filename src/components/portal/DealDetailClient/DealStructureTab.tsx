@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import FadeInOnScroll from '@/components/ui/FadeInOnScroll';
 import { DealStructureFinancials } from '@/components/portal/FinancialOverview';
 import { formatPrice } from '@/lib/utils/format';
@@ -52,6 +52,7 @@ export function DealStructureTab({
   onSliderChange,
 }: Props) {
   const t = useTranslations('portal.dealDetail');
+  const locale = useLocale();
 
   return (
     <div className="mt-4 md:mt-5 px-4 md:px-8 pb-6 md:pb-8">
@@ -68,7 +69,18 @@ export function DealStructureTab({
         </FadeInOnScroll>
       )}
 
-      <div className="mt-6" />
+      {/* Clarify the two structure returns are both after-fee net + link methodology (6.2) */}
+      <div className="mt-6 mb-3 flex flex-wrap items-center gap-x-2 gap-y-1">
+        <p className="text-[13px] text-[#6B7280]">{t('structuresNetNote')}</p>
+        <a
+          href={`/${locale}/legal/performance-methodology`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[13px] font-semibold text-[#BC9C45] underline underline-offset-2 hover:opacity-80"
+        >
+          {t('methodologyLink')}
+        </a>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <FadeInOnScroll delay={0}>

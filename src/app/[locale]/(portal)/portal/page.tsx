@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { parseDealInputs, calculatePropertyMetrics } from '@/lib/utils/deal-calculator';
+import { parseDealInputs, calculatePropertyMetrics, calculateDeal } from '@/lib/utils/deal-calculator';
+import { getGlobalFeeDefaults, resolveAllFees } from '@/lib/utils/fee-resolver';
 import PortalDashboardClient from '@/components/portal/PortalDashboardClient';
 
 export const metadata = { title: 'Active Opportunities — RePrime Terminal Beta' };
@@ -114,6 +115,9 @@ export default async function PortalDashboardPage({
     notesByDeal.set(n.deal_id, { content: n.content ?? '', updated_at: n.updated_at });
   }
 
+  // Resolve global fee defaults once; per-deal net returns overlay these.
+  const globalFeeDefaults = await getGlobalFeeDefaults(supabase);
+
   // Enrich deals using lookup maps (no additional queries)
   const enrichedDeals = deals.map((deal) => {
     const storagePath = photoByDeal.get(deal.id);
@@ -128,10 +132,20 @@ export default async function PortalDashboardPage({
     // Compute metrics from deal inputs, fall back to stored DB values
     const inputs = parseDealInputs(deal as unknown as Record<string, unknown>);
     const computed = calculatePropertyMetrics(inputs);
+    // Net returns: overlay the resolved REPRIME fee terms and recompute, so the
+    // displayed IRR/CoC are AFTER all fees + carry (matches the deal detail page).
+    const fees = resolveAllFees(deal as unknown as Record<string, unknown>, globalFeeDefaults);
+    const net = calculateDeal({
+      ...inputs,
+      assignmentFee: fees.assignmentFee,
+      acqFee: fees.acqFee,
+      assetMgmtFee: fees.assetMgmtFee,
+      gpCarry: fees.gpCarry,
+      prefReturn: fees.prefReturn,
+    });
+    const netIrr = net.irr ?? net.assignmentIRR;
 
     const dbCapRate = num(deal.cap_rate);
-    const dbIrr = num(deal.irr);
-    const dbCoc = num(deal.coc);
     const dbDscr = num(deal.dscr);
     const dbEquity = num(deal.equity_required);
 
@@ -145,8 +159,10 @@ export default async function PortalDashboardPage({
       purchase_price: num(deal.purchase_price),
       noi: num(deal.noi),
       cap_rate: computed.capRate > 0 ? computed.capRate : dbCapRate,
-      irr: computed.irr !== null && computed.irr !== 0 ? computed.irr : dbIrr,
-      coc: computed.cocReturn !== null && computed.cocReturn !== 0 ? computed.cocReturn : dbCoc,
+      // Net IRR/CoC (after fees + carry) only — never fall back to the un-vetted
+      // stored DB headline figure. null = "Pending" in the UI (see 6.1 fix).
+      irr: netIrr !== null && netIrr !== 0 ? netIrr : null,
+      coc: net.cocReturn !== null && net.cocReturn !== 0 ? net.cocReturn : null,
       dscr: computed.combinedDSCR > 0 ? computed.combinedDSCR : dbDscr,
       equity_required: computed.netEquity > 0 ? computed.netEquity : dbEquity,
       occupancy: deal.occupancy ?? null,

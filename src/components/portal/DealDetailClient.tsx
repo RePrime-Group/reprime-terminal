@@ -16,6 +16,7 @@ import CapExTab from '@/components/portal/CapExTab';
 import ExitStrategyTab from '@/components/portal/ExitStrategyTab';
 import { parseHoldPeriod } from '@/lib/utils/capex';
 import { parseDealInputs, calculateDeal, calculatePropertyMetrics, calculateTraditionalClose, type DealInputs } from '@/lib/utils/deal-calculator';
+import { computeOccupancy } from '@/lib/utils/rent-roll';
 import { useDealAssistantPanelOptional } from '@/components/portal/ai/DealAssistantContext';
 import type {
   TerminalDDFolder,
@@ -494,6 +495,17 @@ export default function DealDetailClient({
   // only in the Fee Disclosure section and the Returns Calculator below.
   const dealInputs = useMemo(() => parseDealInputs(deal as unknown as Record<string, unknown>), [deal]);
   const computed = useMemo(() => calculatePropertyMetrics(dealInputs), [dealInputs]);
+
+  // Single current occupancy (6.9): prefer the rent-roll calc, fall back to the
+  // manually entered field, so every panel shows the same number.
+  const currentOccupancyPct = useMemo(() => {
+    const sfNum = parseFloat(String(deal.square_footage ?? '').replace(/,/g, ''));
+    const denom = Number.isFinite(sfNum) && sfNum > 0 ? sfNum : null;
+    const occ = computeOccupancy(tenants, denom);
+    if (occ.occupancyPct !== null) return occ.occupancyPct;
+    const manual = parseFloat(String(deal.occupancy ?? '').replace(/[^0-9.]/g, ''));
+    return Number.isFinite(manual) && manual > 0 ? manual : null;
+  }, [tenants, deal.square_footage, deal.occupancy]);
   // Fee-adjusted inputs overlay the resolved REPRIME terms onto the raw deal
   // inputs. Used by the Returns Calculator and Option A/B cards to show
   // fee-impacted IRRs. The headline metrics above still go through
@@ -595,6 +607,9 @@ export default function DealDetailClient({
           deal={deal}
           photoUrls={photoUrls}
           computed={computed}
+          netIrr={feeAdjustedMetrics.irr ?? feeAdjustedMetrics.assignmentIRR}
+          netCoc={feeAdjustedMetrics.cocReturn}
+          occupancyPct={currentOccupancyPct}
           addresses={addresses}
           omMenuRef={omMenuRef}
           omMenuOpen={omMenuOpen}
@@ -627,6 +642,7 @@ export default function DealDetailClient({
             financialProps={financialProps}
             addresses={addresses}
             tenants={tenants}
+            occupancyPct={currentOccupancyPct}
             isMarketplaceDeal={isMarketplaceDeal}
             myMarketplaceInterest={myMarketplaceInterest}
             previewMode={previewMode}
@@ -682,6 +698,8 @@ export default function DealDetailClient({
           <div className="mt-6 md:mt-8 px-4 md:px-8 pb-8 md:pb-10">
             <RentRollTab
               tenants={tenants}
+              noi={dealInputs.noi}
+              annualDebtService={computed.headlineSeniorDS + computed.annualMezzPayment}
               dealTotalSf={(() => {
                 const sfNum = parseFloat((deal.square_footage ?? '').replace(/,/g, ''));
                 return Number.isFinite(sfNum) && sfNum > 0 ? sfNum : null;

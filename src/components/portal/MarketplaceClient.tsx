@@ -89,8 +89,8 @@ export default function MarketplaceClient({ deals, locale }: MarketplaceClientPr
       );
     }
 
-    if (irrMin > 0) result = result.filter((d) => d.irr >= irrMin);
-    if (cocMin > 0) result = result.filter((d) => d.coc >= cocMin);
+    if (irrMin > 0) result = result.filter((d) => d.irr != null && d.irr >= irrMin);
+    if (cocMin > 0) result = result.filter((d) => d.coc != null && d.coc >= cocMin);
 
     if (sortKey) {
       result = [...result].sort((a, b) => {

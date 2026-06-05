@@ -24,8 +24,9 @@ export interface DealCardData {
   purchase_price: number;
   noi: number;
   cap_rate: number;
-  irr: number;
-  coc: number;
+  /** Net IRR/CoC (after all fees + carry); null = not computable → "Pending" in UI. */
+  irr: number | null;
+  coc: number | null;
   dscr: number;
   equity_required: number;
   occupancy?: string | null;
@@ -150,14 +151,14 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
       result = result.filter((d) => d.purchase_price >= priceRange[0] && d.purchase_price <= priceRange[1]);
     }
 
-    // IRR minimum
+    // IRR minimum (Pending deals — null net IRR — are excluded by a minimum filter)
     if (irrMin > 0) {
-      result = result.filter((d) => d.irr >= irrMin);
+      result = result.filter((d) => d.irr != null && d.irr >= irrMin);
     }
 
     // CoC minimum
     if (cocMin > 0) {
-      result = result.filter((d) => d.coc >= cocMin);
+      result = result.filter((d) => d.coc != null && d.coc >= cocMin);
     }
 
     // Sort
@@ -257,8 +258,10 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
   const totalDealVolume = allActiveDeals.reduce((sum, d) => sum + (d.purchase_price || 0), 0);
   const totalEquity = allActiveDeals.reduce((sum, d) => sum + (d.equity_required || 0), 0);
   const totalDeposits = allActiveDeals.reduce((sum, d) => sum + (d.deposit_amount || 0), 0);
-  const avgIrr = allActiveDeals.length > 0
-    ? allActiveDeals.reduce((sum, d) => sum + (d.irr || 0), 0) / allActiveDeals.length
+  // Average only deals with a real (computable) net IRR — Pending deals don't drag it.
+  const dealsWithIrr = allActiveDeals.filter((d) => d.irr != null && d.irr > 0);
+  const avgIrr = dealsWithIrr.length > 0
+    ? dealsWithIrr.reduce((sum, d) => sum + (d.irr ?? 0), 0) / dealsWithIrr.length
     : 0;
   const avgCapRate = allActiveDeals.length > 0
     ? allActiveDeals.reduce((sum, d) => sum + (d.cap_rate || 0), 0) / allActiveDeals.length

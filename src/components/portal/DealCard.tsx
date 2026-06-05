@@ -305,15 +305,17 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
             <SecondaryMetric label={t('capRate')} value={formatPercent(deal.cap_rate)} />
             <SecondaryMetric
               label={t('irr')}
-              value={infReturn ?? formatPercent(deal.irr)}
+              value={infReturn ?? (deal.irr == null ? t('pending') : formatPercent(deal.irr))}
               highlight
               isInfinity={infReturn === '∞'}
+              placeholder={deal.irr == null && infReturn === null}
             />
             <SecondaryMetric
               label={t('coc')}
-              value={infReturn ?? formatPercent(deal.coc)}
+              value={infReturn ?? (deal.coc == null ? t('pending') : formatPercent(deal.coc))}
               highlight
               isInfinity={infReturn === '∞'}
+              placeholder={deal.coc == null && infReturn === null}
             />
             <SecondaryMetric label={t('dscr')} value={formatDSCR(deal.dscr)} />
             <SecondaryMetric

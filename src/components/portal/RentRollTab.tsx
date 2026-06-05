@@ -29,6 +29,9 @@ interface RentRollTabProps {
   dealTotalSf?: number | null;
   isPortfolio?: boolean;
   buildings?: BuildingOption[];
+  /** NOI + annual debt service, used for the largest-tenant-loss DSCR stress (6.7). */
+  noi?: number | null;
+  annualDebtService?: number | null;
 }
 
 const ALL_BUILDINGS = '__all__';
@@ -38,6 +41,8 @@ export default function RentRollTab({
   dealTotalSf,
   isPortfolio = false,
   buildings = [],
+  noi,
+  annualDebtService,
 }: RentRollTabProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [selectedBuildingId, setSelectedBuildingId] = useState<string>(ALL_BUILDINGS);
@@ -69,6 +74,18 @@ export default function RentRollTab({
     0,
   );
   const totalAllSf = filtered.reduce((s, l) => s + (l.leased_sf ?? 0), 0);
+
+  // Largest-tenant loss stress (6.7): approximate DSCR if the top tenant leaves.
+  const parseAmt = (v: string | null) => {
+    if (!v) return 0;
+    const n = parseFloat(String(v).replace(/[^0-9.]/g, ''));
+    return Number.isFinite(n) ? n : 0;
+  };
+  const topRent = topTenant ? parseAmt(topTenant.tenant.annual_base_rent) : 0;
+  const hasDscrInputs = noi != null && annualDebtService != null && annualDebtService > 0;
+  const baseDscr = hasDscrInputs ? noi! / annualDebtService! : null;
+  const stressedDscr = hasDscrInputs ? Math.max(0, noi! - topRent) / annualDebtService! : null;
+  const showTenantLossDscr = !!topTenant && baseDscr !== null && stressedDscr !== null && topRent > 0;
 
   const maxBarPct = Math.max(
     1,
@@ -162,6 +179,24 @@ export default function RentRollTab({
           accent={rollover.length === 0 ? 'green' : 'amber'}
         />
       </div>
+
+      {/* Largest-tenant loss DSCR stress (6.7) */}
+      {showTenantLossDscr && (
+        <div className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] p-4">
+          <div className="text-[10px] font-semibold tracking-[1.5px] uppercase text-[#DC2626] mb-1">
+            Largest-Tenant Loss Scenario
+          </div>
+          <p className="text-[13px] text-[#0E3470] leading-relaxed">
+            If {topTenant!.tenant.tenant_name} ({topTenant!.pctOfRent.toFixed(0)}% of rent) leaves,
+            debt coverage (DSCR) drops from about <strong>{baseDscr!.toFixed(2)}x</strong> to{' '}
+            <strong>{stressedDscr!.toFixed(2)}x</strong>
+            {stressedDscr! < 1 ? ', which is below the 1.00x needed to cover debt payments.' : '.'}
+          </p>
+          <p className="text-[11px] text-[#9CA3AF] mt-1.5">
+            Approximate stress test. Assumes the space stays vacant and operating expenses continue.
+          </p>
+        </div>
+      )}
 
       {/* Tenant table */}
       <div className="bg-white rounded-xl border border-[#EEF0F4] overflow-hidden">
