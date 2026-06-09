@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
 import { getCurrentAuthUser, getCurrentProfile } from '@/lib/supabase/currentUser';
 import { getOnboardingState, nextOnboardingPath } from '@/lib/kyc/onboardingState';
 import PortalNavbar from '@/components/portal/PortalNavbar';
@@ -36,6 +37,15 @@ export default async function PortalLayout({
     if (next) redirect(next);
   }
 
+  // Enabled investor groups this user belongs to (RLS returns exactly those) —
+  // one curated nav tab per group.
+  const supabase = await createClient();
+  const { data: groupRows } = await supabase
+    .from('terminal_investor_tabs')
+    .select('id, name')
+    .order('name', { ascending: true });
+  const groups = groupRows ?? [];
+
   return (
     <div className="min-h-dvh rp-page-texture overflow-x-hidden">
       <MarketTicker />
@@ -45,6 +55,7 @@ export default async function PortalLayout({
         email={user.email ?? ''}
         locale={locale}
         accessTier={(terminalUser as { access_tier?: 'investor' | 'marketplace_only' | null }).access_tier ?? 'investor'}
+        groups={groups}
       />
       {!terminalUser.onboarding_completed && (
         <OnboardingOverlay

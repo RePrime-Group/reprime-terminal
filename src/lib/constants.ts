@@ -129,3 +129,9 @@ export const ACCEPTED_VIDEO_TYPES = [
 export const MAX_IMAGE_SIZE = 100 * 1024 * 1024; // 100MB
 export const MAX_DOC_SIZE = 1024 * 1024 * 1024; // 1GB — no limit for DD uploads
 export const MAX_IMAGE_WIDTH = 1600;
+
+// Investor Group Tabs: whether marketplace_only investors who belong to an
+// enabled group still see their curated group tab(s). Flip to false to hide
+// curated tabs from marketplace_only members. (Curated reads are RLS-gated
+// regardless; this only controls the navbar entry.)
+export const SHOW_CURATED_TABS_FOR_MARKETPLACE_ONLY = true;

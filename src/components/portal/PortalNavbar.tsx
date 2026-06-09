@@ -7,6 +7,8 @@ import { createClient } from '@/lib/supabase/client';
 import { Link, usePathname } from '@/i18n/navigation';
 import Image from 'next/image';
 import RePrimeLogo from '@/components/RePrimeLogo';
+import CuratedNavTabs, { type CuratedNavGroup } from '@/components/portal/CuratedNavTabs';
+import { SHOW_CURATED_TABS_FOR_MARKETPLACE_ONLY } from '@/lib/constants';
 
 interface PortalNavbarProps {
   firstName: string;
@@ -15,6 +17,8 @@ interface PortalNavbarProps {
   locale: string;
   /** Investor's access tier — drives which top-level tabs are visible. */
   accessTier?: 'investor' | 'marketplace_only' | null;
+  /** Enabled investor groups the user belongs to (RLS-scoped). One tab each. */
+  groups?: CuratedNavGroup[];
   /**
    * Rendered inside /admin/preview/* — disables every write (mark-as-read),
    * hides nav tabs/settings that would bounce the admin out of the preview
@@ -23,7 +27,7 @@ interface PortalNavbarProps {
   previewMode?: boolean;
 }
 
-export default function PortalNavbar({ firstName, fullName, email, locale, accessTier = 'investor', previewMode = false }: PortalNavbarProps) {
+export default function PortalNavbar({ firstName, fullName, email, locale, accessTier = 'investor', groups = [], previewMode = false }: PortalNavbarProps) {
   const t = useTranslations('portal');
   const tn = useTranslations('portal.navbar');
   const tc = useTranslations('common');
@@ -118,6 +122,13 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
         { key: 'compare', label: tn('compare'), href: '/portal/compare' },
       ];
 
+  // Curated group tabs: hidden in preview; marketplace_only members see them
+  // only when the config flag allows it. (Reads stay RLS-gated regardless.)
+  const curatedGroups =
+    !previewMode && (accessTier !== 'marketplace_only' || SHOW_CURATED_TABS_FOR_MARKETPLACE_ONLY)
+      ? groups
+      : [];
+
   return (
     <>
       {/* Gold accent strip */}
@@ -158,6 +169,7 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
               {tab.label}
             </Link>
           ))}
+          <CuratedNavTabs groups={curatedGroups} locale={locale} variant="desktop" />
         </div>
 
         {/* Mobile spacer pushes the right cluster to the edge when center is hidden */}
@@ -447,6 +459,7 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
                 {tab.label}
               </Link>
             ))}
+            <CuratedNavTabs groups={curatedGroups} locale={locale} variant="mobile" />
 
             <div className="h-px bg-white/[0.08] my-3" />
 

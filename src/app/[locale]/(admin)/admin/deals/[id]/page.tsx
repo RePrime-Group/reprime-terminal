@@ -8,6 +8,7 @@ import Input from '@/components/ui/Input';
 import Badge from '@/components/ui/Badge';
 import Modal from '@/components/ui/Modal';
 import DealSubNav from '@/components/admin/DealSubNav';
+import DealInvestorGroupsCard from '@/components/admin/investor-tabs/DealInvestorGroupsCard';
 import { parseDealInputs, calculatePropertyMetrics } from '@/lib/utils/deal-calculator';
 import {
   REPRIME_STANDARD_FEES,
@@ -2238,6 +2239,9 @@ export default function EditDealPage() {
           </label>
         </div>
       </div>
+
+      {/* Investor Groups — assign this deal to one or more curated groups */}
+      <DealInvestorGroupsCard dealId={dealId} />
 
       {/* Bottom buttons */}
       <div className="flex items-center justify-between pb-8">

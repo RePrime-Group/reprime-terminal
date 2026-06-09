@@ -113,6 +113,8 @@ export default function ActivityLogClient({ activities, filterOptions }: Activit
     deal_published: t('dealPublished'),
     deal_updated: t('dealUpdated'),
     deal_document_uploaded: t('dealDocumentUploaded'),
+    deal_curated: t('dealCurated'),
+    curated_deal_viewed: t('curatedDealViewed'),
   };
 
   const ROLE_LABELS: Record<UserRole, string> = {

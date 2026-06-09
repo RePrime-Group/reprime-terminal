@@ -17,7 +17,9 @@ export type ActivityAction =
   | 'deal_created'
   | 'deal_published'
   | 'deal_updated'
-  | 'deal_document_uploaded';
+  | 'deal_document_uploaded'
+  | 'deal_curated'
+  | 'curated_deal_viewed';
 
 export type TeamPermissionKey =
   | 'view_deals'

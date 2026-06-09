@@ -39,7 +39,8 @@
     "resend": "^6.9.4",
     "three": "^0.183.2",
     "tus-js-client": "^4.3.1",
-    "xlsx-js-style": "^1.2.0"
+    "xlsx-js-style": "^1.2.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

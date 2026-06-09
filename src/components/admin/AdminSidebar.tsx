@@ -77,6 +77,19 @@ const navItems = [
     ),
   },
   {
+    labelKey: 'sidebar.investorTabs' as const,
+    href: '/admin/investor-tabs',
+    ownerOnly: false,
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2.5" y="4" width="15" height="12" rx="2" stroke="#0E3470" strokeWidth="1.5" />
+        <path d="M2.5 8h15" stroke="#0E3470" strokeWidth="1.5" />
+        <path d="M6.5 4V2.5" stroke="#BC9C45" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M13.5 4V2.5" stroke="#BC9C45" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
     labelKey: 'sidebar.marketplaceInterest' as const,
     href: '/admin/marketplace-interest',
     ownerOnly: true,
