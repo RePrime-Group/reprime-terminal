@@ -690,7 +690,14 @@
       "assetMgmtFeePct": "עמלת ניהול נכסים %",
       "gpCarryPct": "GP Carry %",
       "prefReturnPct": "תשואה מועדפת %",
-      "saveDefaults": "שמור ברירות מחדל"
+      "saveDefaults": "שמור ברירות מחדל",
+      "activityWebhook": "Webhook פעילות",
+      "activityWebhookDesc": "שלח פעילות משקיעים ל-URL זה בזמן אמת. השאר את ה-URL ריק כדי להשבית.",
+      "webhookUrl": "כתובת Webhook",
+      "webhookUrlPlaceholder": "https://...",
+      "webhookSecret": "סוד משותף",
+      "webhookSecretPlaceholder": "נשלח בכותרת x-webhook-secret",
+      "saveWebhook": "שמור Webhook"
     },
     "dataroom": {
       "title": "חדר נתונים",

@@ -690,7 +690,14 @@
       "assetMgmtFeePct": "Asset Mgmt Fee %",
       "gpCarryPct": "GP Carry %",
       "prefReturnPct": "Preferred Return %",
-      "saveDefaults": "Save Defaults"
+      "saveDefaults": "Save Defaults",
+      "activityWebhook": "Activity Webhook",
+      "activityWebhookDesc": "POST investor activity to this URL as it happens. Leave the URL blank to disable.",
+      "webhookUrl": "Webhook URL",
+      "webhookUrlPlaceholder": "https://...",
+      "webhookSecret": "Shared Secret",
+      "webhookSecretPlaceholder": "Sent as the x-webhook-secret header",
+      "saveWebhook": "Save Webhook"
     },
     "dataroom": {
       "title": "Data Room",

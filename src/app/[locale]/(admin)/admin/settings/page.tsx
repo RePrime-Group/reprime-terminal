@@ -111,6 +111,12 @@ export default function SettingsPage() {
   const [feeDefaultsSaving, setFeeDefaultsSaving] = useState(false);
   const [feeDefaultsSaved, setFeeDefaultsSaved] = useState(false);
 
+  // Activity webhook state
+  const [webhookUrl, setWebhookUrl] = useState('');
+  const [webhookSecret, setWebhookSecret] = useState('');
+  const [webhookSaving, setWebhookSaving] = useState(false);
+  const [webhookSaved, setWebhookSaved] = useState(false);
+
   const [loading, setLoading] = useState(true);
 
   const loadSettings = useCallback(async () => {
@@ -131,6 +137,8 @@ export default function SettingsPage() {
         'default_asset_mgmt_fee',
         'default_gp_carry',
         'default_pref_return',
+        'activity_webhook_url',
+        'activity_webhook_secret',
       ]);
 
     if (settings) {
@@ -153,6 +161,8 @@ export default function SettingsPage() {
         gp_carry: (settingsMap.get('default_gp_carry') as string) ?? String(REPRIME_STANDARD_FEES.gpCarry),
         pref_return: (settingsMap.get('default_pref_return') as string) ?? String(REPRIME_STANDARD_FEES.prefReturn),
       });
+      setWebhookUrl((settingsMap.get('activity_webhook_url') as string) ?? '');
+      setWebhookSecret((settingsMap.get('activity_webhook_secret') as string) ?? '');
     }
 
     // Load availability slots
@@ -269,6 +279,29 @@ export default function SettingsPage() {
     setFeeDefaultsSaving(false);
     setFeeDefaultsSaved(true);
     setTimeout(() => setFeeDefaultsSaved(false), 2500);
+  };
+
+  const handleSaveWebhook = async () => {
+    setWebhookSaving(true);
+    setWebhookSaved(false);
+
+    const entries = [
+      { key: 'activity_webhook_url', value: webhookUrl.trim() },
+      { key: 'activity_webhook_secret', value: webhookSecret },
+    ];
+
+    for (const entry of entries) {
+      await supabase
+        .from('terminal_settings')
+        .upsert(
+          { key: entry.key, value: entry.value, updated_at: new Date().toISOString() },
+          { onConflict: 'key' },
+        );
+    }
+
+    setWebhookSaving(false);
+    setWebhookSaved(true);
+    setTimeout(() => setWebhookSaved(false), 2500);
   };
 
   const updateSlot = (day: DayOfWeek, patch: Partial<DaySlot>) => {
@@ -494,6 +527,35 @@ export default function SettingsPage() {
           {availSaved && (
             <span className="text-sm text-green-600 font-medium">{tc('saved')}</span>
           )}
+        </div>
+      </div>
+
+      {/* Section 4: Activity Webhook */}
+      <div className="bg-white rounded-2xl border border-rp-gray-200 p-6 mt-6">
+        <h2 className="text-[16px] font-semibold text-rp-navy mb-1.5">{t('activityWebhook')}</h2>
+        <p className="text-[13px] text-rp-gray-400 mb-5">{t('activityWebhookDesc')}</p>
+        <div className="flex flex-col gap-4 max-w-lg">
+          <Input
+            label={t('webhookUrl')}
+            type="url"
+            value={webhookUrl}
+            onChange={(e) => setWebhookUrl(e.target.value)}
+            placeholder={t('webhookUrlPlaceholder')}
+          />
+          <Input
+            label={t('webhookSecret')}
+            value={webhookSecret}
+            onChange={(e) => setWebhookSecret(e.target.value)}
+            placeholder={t('webhookSecretPlaceholder')}
+          />
+          <div className="flex items-center gap-3 mt-1">
+            <Button variant="gold" loading={webhookSaving} onClick={handleSaveWebhook}>
+              {t('saveWebhook')}
+            </Button>
+            {webhookSaved && (
+              <span className="text-sm text-green-600 font-medium">{tc('saved')}</span>
+            )}
+          </div>
         </div>
       </div>
     </div>
