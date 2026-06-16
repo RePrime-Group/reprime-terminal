@@ -5,6 +5,10 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { formatPrice } from '@/lib/utils/format';
 
+// Keep digits only, then group with thousands separators (e.g. "750000" -> "750,000").
+const formatWithCommas = (value: string) =>
+  value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
 export interface MarketplaceInterestInitial {
   interest_type: 'at_asking' | 'custom_price';
   target_price: number | null;
@@ -33,7 +37,7 @@ export default function MarketplaceInterestForm({
     initialInterest?.interest_type ?? 'at_asking',
   );
   const [targetPrice, setTargetPrice] = useState<string>(
-    initialInterest?.target_price != null ? String(initialInterest.target_price) : '',
+    initialInterest?.target_price != null ? formatWithCommas(String(initialInterest.target_price)) : '',
   );
   const [notes, setNotes] = useState(initialInterest?.notes ?? '');
   const [submitting, setSubmitting] = useState(false);
@@ -115,14 +119,19 @@ export default function MarketplaceInterestForm({
           <label className="block text-[11px] font-medium text-[#4B5563] mb-1">
             {t('myTargetPrice')}
           </label>
-          <input
-            type="text"
-            inputMode="numeric"
-            value={targetPrice}
-            onChange={(e) => setTargetPrice(e.target.value)}
-            placeholder="$"
-            className="w-full px-3.5 py-2.5 border border-[#D1D5DB] rounded-lg text-[14px] text-[#0E3470] focus:outline-none focus:ring-[3px] focus:ring-[#0E7490]/15 focus:border-[#0E7490] placeholder:text-[#9CA3AF] transition-all"
-          />
+          <div className="relative">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[14px] text-[#9CA3AF] pointer-events-none">
+              $
+            </span>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={targetPrice}
+              onChange={(e) => setTargetPrice(formatWithCommas(e.target.value))}
+              placeholder="0"
+              className="w-full pl-7 pr-3.5 py-2.5 border border-[#D1D5DB] rounded-lg text-[14px] text-[#0E3470] focus:outline-none focus:ring-[3px] focus:ring-[#0E7490]/15 focus:border-[#0E7490] placeholder:text-[#9CA3AF] transition-all"
+            />
+          </div>
         </div>
       )}
 
