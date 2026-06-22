@@ -2,10 +2,12 @@
 
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Input from '@/components/ui/Input';
 import { DEAL_STATUS_LABELS } from '@/lib/constants';
 import { formatPrice, formatPercent } from '@/lib/utils/format';
+import { bulkUpdateDealStatus } from '@/app/[locale]/(admin)/admin/deals/actions';
 import type { DealStatus, PipelineStage } from '@/lib/types/database';
 import DealCard from './DealCard';
 import DealStatusGroup from './DealStatusGroup';
@@ -83,6 +85,13 @@ function formatDate(dateStr: string | null): string {
 export default function DealListClient({ deals, locale }: DealListClientProps) {
   const t = useTranslations('admin.dealList');
   const tc = useTranslations('common');
+  const router = useRouter();
+
+  // Bulk selection + status change
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkStatus, setBulkStatus] = useState<DealStatus | ''>('');
+  const [applying, setApplying] = useState(false);
+  const [bulkError, setBulkError] = useState<string | null>(null);
 
   const [statusFilter, setStatusFilter] = useState<DealStatus | 'all'>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -215,6 +224,49 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
     setOpenMessageDealId(null);
   }
 
+  function toggleSelected(dealId: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(dealId)) next.delete(dealId);
+      else next.add(dealId);
+      return next;
+    });
+  }
+
+  function setGroupSelected(dealIds: string[], checked: boolean) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      for (const id of dealIds) {
+        if (checked) next.add(id);
+        else next.delete(id);
+      }
+      return next;
+    });
+  }
+
+  function clearSelection() {
+    setSelected(new Set());
+    setBulkStatus('');
+    setBulkError(null);
+  }
+
+  async function applyBulkStatus() {
+    if (selected.size === 0 || !bulkStatus) return;
+    setApplying(true);
+    setBulkError(null);
+    try {
+      const res = await bulkUpdateDealStatus(Array.from(selected), bulkStatus);
+      if (!res.ok) {
+        setBulkError(res.error);
+        return;
+      }
+      clearSelection();
+      router.refresh();
+    } finally {
+      setApplying(false);
+    }
+  }
+
   const visibleGroups = STATUS_GROUP_ORDER.filter(
     (s) => (grouped.get(s)?.length ?? 0) > 0
   );
@@ -226,11 +278,18 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
       {/* Top bar */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-[24px] font-bold text-rp-navy">{t('title')}</h1>
-        <Link href={`/${locale}/admin/deals/new`}>
-          <button className="bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] font-semibold px-5 py-2.5 rounded-lg shadow-[0_2px_8px_rgba(188,156,69,0.2)] hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(188,156,69,0.25)] transition-all">
-            {t('newDeal')}
-          </button>
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link href={`/${locale}/admin/deals/import`}>
+            <button className="border border-rp-gray-300 bg-white text-rp-gray-700 font-semibold px-5 py-2.5 rounded-lg hover:bg-rp-gray-100 transition-all">
+              Import
+            </button>
+          </Link>
+          <Link href={`/${locale}/admin/deals/new`}>
+            <button className="bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] font-semibold px-5 py-2.5 rounded-lg shadow-[0_2px_8px_rgba(188,156,69,0.2)] hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(188,156,69,0.25)] transition-all">
+              {t('newDeal')}
+            </button>
+          </Link>
+        </div>
       </div>
 
       {/* Filter row */}
@@ -335,7 +394,16 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
               >
                 {view === 'cards' ? (
                   groupDeals.map((deal) => (
-                    <div key={deal.id}>
+                    <div key={deal.id} className="relative">
+                      <label className="absolute top-3 left-3 z-10 flex items-center justify-center w-6 h-6 rounded-md bg-white/90 border border-rp-gray-300 shadow-sm cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selected.has(deal.id)}
+                          onChange={() => toggleSelected(deal.id)}
+                          className="accent-rp-gold cursor-pointer"
+                          aria-label={`Select ${deal.name}`}
+                        />
+                      </label>
                       <div data-message-trigger-deal={deal.id}>
                         <DealCard
                           deal={deal}
@@ -365,6 +433,9 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
                     onMessageClick={handleMessageClick}
                     onLatestChange={handleLatestChange}
                     onClosePanel={closePanel}
+                    selected={selected}
+                    onToggleSelected={toggleSelected}
+                    onSetGroupSelected={setGroupSelected}
                     t={t}
                     tc={tc}
                   />
@@ -373,6 +444,43 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
             );
           })}
         </>
+      )}
+
+      {/* Bulk action bar */}
+      {selected.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-4 bg-rp-navy text-white rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.25)] px-5 py-3">
+          <span className="text-sm font-semibold">{selected.size} selected</span>
+          <div className="flex items-center gap-2">
+            <select
+              value={bulkStatus}
+              onChange={(e) => setBulkStatus(e.target.value as DealStatus | '')}
+              className="px-3 py-2 rounded-lg text-sm text-rp-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-rp-gold/40"
+            >
+              <option value="">Set status…</option>
+              {STATUS_GROUP_ORDER.map((s) => (
+                <option key={s} value={s}>
+                  {DEAL_STATUS_LABELS[s] ?? s}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={applyBulkStatus}
+              disabled={!bulkStatus || applying}
+              className="px-4 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              {applying ? 'Applying…' : 'Apply'}
+            </button>
+          </div>
+          {bulkError && <span className="text-xs text-rp-red max-w-[200px]">{bulkError}</span>}
+          <button
+            type="button"
+            onClick={clearSelection}
+            className="text-sm text-white/70 hover:text-white transition-colors"
+          >
+            Clear
+          </button>
+        </div>
       )}
     </div>
   );
@@ -385,6 +493,9 @@ interface TableGroupProps {
   onMessageClick: (dealId: string) => void;
   onLatestChange: (dealId: string, latest: LatestMessage | null) => void;
   onClosePanel: () => void;
+  selected: Set<string>;
+  onToggleSelected: (dealId: string) => void;
+  onSetGroupSelected: (dealIds: string[], checked: boolean) => void;
   t: ReturnType<typeof useTranslations>;
   tc: ReturnType<typeof useTranslations>;
 }
@@ -396,14 +507,27 @@ function TableGroup({
   onMessageClick,
   onLatestChange,
   onClosePanel,
+  selected,
+  onToggleSelected,
+  onSetGroupSelected,
   t,
   tc,
 }: TableGroupProps) {
+  const allSelected = deals.length > 0 && deals.every((d) => selected.has(d.id));
   return (
     <div className="bg-white rounded-2xl rp-card-shadow overflow-hidden">
       <table className="w-full">
         <thead>
           <tr className="bg-[#F7F8FA]">
+            <th className="w-10 px-4 py-3">
+              <input
+                type="checkbox"
+                checked={allSelected}
+                onChange={(e) => onSetGroupSelected(deals.map((d) => d.id), e.target.checked)}
+                className="accent-rp-gold cursor-pointer"
+                aria-label="Select all in group"
+              />
+            </th>
             <Th>{t('name')}</Th>
             <Th>{t('cityState')}</Th>
             <Th>{t('type')}</Th>
@@ -418,6 +542,15 @@ function TableGroup({
           {deals.map((deal) => (
             <Fragment key={deal.id}>
               <tr className="hover:bg-[#FAFBFC] transition-colors">
+                <td className="px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={selected.has(deal.id)}
+                    onChange={() => onToggleSelected(deal.id)}
+                    className="accent-rp-gold cursor-pointer"
+                    aria-label={`Select ${deal.name}`}
+                  />
+                </td>
                 <td className="px-4 py-3 text-sm font-medium text-rp-navy">
                   <Link
                     href={`/${locale}/admin/deals/${deal.id}`}
@@ -525,7 +658,7 @@ function TableGroup({
               </tr>
               {openMessageDealId === deal.id && (
                 <tr data-message-panel-deal={deal.id}>
-                  <td colSpan={8} className="p-0 bg-[#FAFBFC]">
+                  <td colSpan={9} className="p-0 bg-[#FAFBFC]">
                     <DealMessagePanel
                       dealId={deal.id}
                       onClose={onClosePanel}

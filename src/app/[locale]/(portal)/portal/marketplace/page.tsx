@@ -28,13 +28,28 @@ export default async function MarketplacePage({
   const user = await getCurrentAuthUser();
   if (!user) redirect(`/${locale}/login`);
 
-  const { data: deals } = await supabase
+  const { data: dealsRaw } = await supabase
     .from('terminal_deals')
     .select('id, name, address, city, state, property_type, purchase_price, noi, cap_rate, irr, coc, dscr, equity_required, occupancy, seller_financing, note_sale, special_terms, dd_deadline, close_deadline, status, assigned_to, quarter_release, square_footage, units, class_type, deposit_amount, ltv, interest_rate, amortization_years, loan_fee_points, io_period_months, mezz_percent, mezz_rate, mezz_term_months, seller_credit, assignment_fee, acq_fee, asset_mgmt_fee, gp_carry, pref_return, hold_period_years, exit_cap_rate, rent_growth, legal_title_estimate, disposition_cost_pct, capex, area_cap_rate, asking_cap_rate')
     .eq('status', 'marketplace')
     .order('created_at', { ascending: false });
 
-  if (!deals || deals.length === 0) {
+  const admin = createAdminClient();
+
+  // Deals curated to an investor group surface only in that group's tab — never
+  // in the open marketplace. Read assignments with the admin client because RLS
+  // hides assignment rows from investors.
+  let deals = dealsRaw ?? [];
+  if (deals.length > 0) {
+    const { data: assignments } = await admin
+      .from('terminal_deal_tab_assignments')
+      .select('deal_id')
+      .in('deal_id', deals.map((d) => d.id));
+    const assignedDealIds = new Set((assignments ?? []).map((a) => a.deal_id));
+    deals = deals.filter((d) => !assignedDealIds.has(d.id));
+  }
+
+  if (deals.length === 0) {
     return (
       <div>
         <MarketplaceHero title={t('title')} subtitle={t('subtitle')} metrics={null} />
@@ -48,7 +63,6 @@ export default async function MarketplacePage({
   }
 
   const dealIds = deals.map((d) => d.id);
-  const admin = createAdminClient();
 
   // Photos + per-user notes via the user-auth client (RLS allowed by phase A
   // policies). Interest counts run via the admin client because RLS hides

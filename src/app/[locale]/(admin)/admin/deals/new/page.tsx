@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { createClient } from '@/lib/supabase/client';
+import { createDeal } from '../actions';
 import { parseDealInputs, calculatePropertyMetrics } from '@/lib/utils/deal-calculator';
 import {
   REPRIME_STANDARD_FEES,
@@ -452,16 +453,11 @@ export default function NewDealPage() {
     setSaving(true);
 
     try {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
       const highlights = form.investment_highlights.filter(
         (h) => h.trim() !== ''
       );
 
-      const { data: newDeal, error } = await supabase.from('terminal_deals').insert({
+      const result = await createDeal({
         name: form.name.trim(),
         property_type: form.property_type,
         is_portfolio: isPortfolio,
@@ -476,12 +472,6 @@ export default function NewDealPage() {
         occupancy: form.occupancy || null,
         purchase_price: form.purchase_price.trim(),
         noi: form.noi || null,
-        cap_rate: form.cap_rate || null,
-        irr: form.irr || null,
-        coc: form.coc || null,
-        dscr: form.dscr || null,
-        equity_required: form.equity_required || null,
-        loan_estimate: form.loan_estimate || null,
         seller_financing: form.seller_financing,
         note_sale: form.note_sale,
         special_terms: form.special_terms,
@@ -524,147 +514,30 @@ export default function NewDealPage() {
         exit_cap_rate: form.exit_cap_rate || null,
         debt_terms_quoted: form.debt_terms_quoted || false,
         status,
-        created_by: user?.id ?? null,
-      }).select('id').single();
+        // Portfolio addresses + AI-extracted tenants are persisted server-side
+        // by createDeal (computes metrics, maps tenants to building UUIDs).
+        addresses: isPortfolio
+          ? portfolioAddresses
+              .filter((a) => a.label.trim())
+              .map((a) => ({
+                label: a.label,
+                address: a.address,
+                city: a.city,
+                state: a.state,
+                square_footage: a.sf,
+                units: a.units,
+              }))
+          : [],
+        tenants: extractedTenants,
+      });
 
-      // Persist computed metrics
-      if (newDeal) {
-        const insertData: Record<string, unknown> = {
-          purchase_price: form.purchase_price, noi: form.noi, ltv: form.ltv,
-          interest_rate: form.interest_rate, amortization_years: form.amortization_years,
-          loan_fee_points: form.loan_fee_points, seller_financing: form.seller_financing,
-          mezz_percent: form.mezz_percent, mezz_rate: form.mezz_rate,
-          mezz_term_months: form.mezz_term_months, seller_credit: form.seller_credit,
-          assignment_fee: form.assignment_fee, acq_fee: form.acq_fee,
-          asset_mgmt_fee: form.asset_mgmt_fee, gp_carry: form.gp_carry,
-          pref_return: form.pref_return, hold_period_years: form.hold_period_years,
-          exit_cap_rate: form.exit_cap_rate,
-        };
-        const ci = parseDealInputs(insertData);
-        const cm = calculatePropertyMetrics(ci);
-        await supabase.from('terminal_deals').update({
-          cap_rate: cm.capRate > 0 ? cm.capRate.toFixed(2) : null,
-          irr: cm.irr !== null ? cm.irr.toFixed(2) : null,
-          coc: cm.cocReturn !== null ? cm.cocReturn.toFixed(2) : null,
-          dscr: cm.lenderDSCR > 0 ? cm.lenderDSCR.toFixed(2) : null,
-          equity_required: cm.netEquity > 0 ? String(Math.round(cm.netEquity)) : null,
-          loan_estimate: cm.loanAmount > 0 ? String(Math.round(cm.loanAmount)) : null,
-        }).eq('id', newDeal.id);
-      }
-
-      if (error || !newDeal) {
-        console.error('Failed to create deal:', error);
-        alert('Failed to create deal. Please try again.');
+      if (!result.ok) {
+        console.error('Failed to create deal:', result.error);
+        alert(`Failed to create deal: ${result.error}`);
         return;
       }
 
-      // Create portfolio addresses first, so we can map extracted tenants
-      // to their building's UUID by label.
-      // Single-property deals keep the street on terminal_deals.address.
-      const labelToAddressId = new Map<string, string>();
-      if (isPortfolio && portfolioAddresses.length > 0) {
-        const addressInserts = portfolioAddresses
-          .filter((a) => a.label.trim())
-          .map((a, i) => ({
-            deal_id: newDeal.id,
-            label: a.label.trim(),
-            address: a.address.trim() || null,
-            city: a.city.trim() || null,
-            state: a.state.trim() || null,
-            square_footage: a.sf.trim() || null,
-            units: a.units.trim() || null,
-            display_order: i,
-          }));
-
-        if (addressInserts.length > 0) {
-          const { data: insertedAddresses } = await supabase
-            .from('terminal_deal_addresses')
-            .insert(addressInserts)
-            .select('id, label');
-          for (const row of insertedAddresses ?? []) {
-            const label = (row as { label?: string }).label;
-            const id = (row as { id?: string }).id;
-            if (label && id) labelToAddressId.set(label.toLowerCase(), id);
-          }
-        }
-      }
-
-      // Save AI-extracted tenant roster (ai_extracted=true — admin reviews).
-      if (extractedTenants.length > 0) {
-        const LEASE_TYPES_SET = new Set(['NNN', 'NN', 'Modified Gross', 'Gross', 'Ground']);
-        const CREDIT_SET = new Set(['Investment Grade', 'National Credit', 'Regional', 'Local', 'Unknown']);
-        const toNum = (v: unknown): number | null => {
-          if (typeof v === 'number' && Number.isFinite(v)) return v;
-          if (typeof v === 'string') {
-            const n = parseFloat(v.replace(/[$,\s]/g, ''));
-            return Number.isFinite(n) ? n : null;
-          }
-          return null;
-        };
-        const toStr = (v: unknown): string | null =>
-          typeof v === 'string' && v.trim() ? v.trim() : null;
-        const toBool = (v: unknown): boolean =>
-          v === true || v === 'true' || v === 'yes';
-
-        // Resolve the AI-supplied address_label into the actual address UUID.
-        // Single-property deals always land with address_id=NULL.
-        const resolveAddressId = (rawLabel: unknown): string | null => {
-          if (!isPortfolio) return null;
-          const label = toStr(rawLabel);
-          if (!label) return null;
-          return labelToAddressId.get(label.toLowerCase()) ?? null;
-        };
-
-        const tenantRows = extractedTenants
-          .filter((t) => toStr(t.tenant_name) || toBool(t.is_vacant))
-          .map((t, idx) => {
-            const vacant = toBool(t.is_vacant);
-            const leaseType = toStr(t.lease_type);
-            const credit = toStr(t.tenant_credit_rating);
-            return {
-              deal_id: newDeal.id,
-              address_id: resolveAddressId(t.address_label),
-              tenant_name: vacant ? 'Vacant' : (toStr(t.tenant_name) ?? 'Unknown'),
-              suite_unit: toStr(t.suite_unit),
-              leased_sf: (() => {
-                const n = toNum(t.leased_sf);
-                return n !== null ? Math.round(n) : null;
-              })(),
-              annual_base_rent: vacant ? null : toNum(t.annual_base_rent),
-              rent_per_sf: vacant ? null : toNum(t.rent_per_sf),
-              lease_type: vacant
-                ? null
-                : leaseType && LEASE_TYPES_SET.has(leaseType) ? leaseType : 'NNN',
-              lease_start_date: toStr(t.lease_start_date),
-              lease_end_date: toStr(t.lease_end_date),
-              option_renewals: toStr(t.option_renewals),
-              escalation_structure: toStr(t.escalation_structure),
-              is_anchor: toBool(t.is_anchor),
-              is_vacant: vacant,
-              tenant_industry: toStr(t.tenant_industry),
-              guarantor: toStr(t.guarantor),
-              tenant_credit_rating: credit && CREDIT_SET.has(credit) ? credit : null,
-              market_rent_estimate: vacant ? toNum(t.market_rent_estimate) : null,
-              status: 'Active',
-              sort_order: idx,
-              ai_extracted: true,
-            };
-          });
-        if (tenantRows.length > 0) {
-          await supabase.from('tenant_leases').insert(tenantRows);
-        }
-      }
-
-      if (status !== 'draft' && user?.id) {
-        await supabase.from('terminal_activity_log').insert({
-          user_id: user.id,
-          deal_id: newDeal.id,
-          action: 'deal_created',
-          metadata: { deal_name: form.name.trim(), status },
-        });
-      }
-
-      router.push(`/${locale}/admin/deals/${newDeal.id}`);
+      router.push(`/${locale}/admin/deals/${result.id}`);
     } finally {
       setSaving(false);
     }
