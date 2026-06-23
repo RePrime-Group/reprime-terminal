@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
@@ -175,6 +175,17 @@ export default function InvestorListClient({
   const tc = useTranslations('common');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+
+  // Deep-link support: when arriving with ?focus=<userId>, auto-open that
+  // user's detail modal. Used by the CRM "Linked to" link so an admin lands
+  // straight on the linked Terminal user.
+  useEffect(() => {
+    const focusId = searchParams.get('focus');
+    if (focusId && /^[0-9a-f-]{36}$/i.test(focusId)) {
+      setSelectedId(focusId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [bulkSelected, setBulkSelected] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);

@@ -448,25 +448,17 @@ export interface DealWithDetails extends TerminalDeal {
 // Staff-only relationship CRM. Distinct from terminal_users (auth accounts).
 
 export type CrmInvestorStatus = 'lead' | 'qualified' | 'committed' | 'funded' | 'repeat';
+export type CrmLifecycleState = 'lead' | 'invited' | 'submitted' | 'active';
 export type CrmContactMethod = 'email' | 'phone' | 'whatsapp' | 'text_message' | 'linkedin' | 'zoom';
 export type CrmMessageType =
   | 'note' | 'email' | 'whatsapp' | 'phone_call' | 'text_message'
   | 'zoom' | 'meeting' | 'document_sent' | 'commitment' | 'follow_up';
 export type CrmMessageDirection = 'outbound' | 'inbound' | 'internal';
-export type CrmInvestmentPriority = 'cash_flow' | 'appreciation' | 'balanced';
 
-export interface CrmInvestmentPreferences {
-  property_types?: string[];
-  markets?: string[];
-  min_check_size?: number | null;
-  max_check_size?: number | null;
-  preferred_returns?: boolean;
-  preferred_return_rate?: number | null;
-  accepts_seller_mezz?: boolean;
-  priority?: CrmInvestmentPriority | null;
-  hold_period_years?: string | null;
-  structure_preferences?: string[];
-}
+export type CrmInvestingAs = 'principal' | 'fund' | 'family_office' | 'jv' | '1031';
+export type CrmOwnershipPref = 'direct' | 'gp_lp' | 'either';
+export type CrmStrategy = 'value_add' | 'stabilized' | 'opportunistic' | 'either';
+export type CrmTenantCreditPref = 'investment_grade' | 'mixed' | 'not_important';
 
 // Attachment on a message; document on an investor (documents also carry uploaded_at).
 export interface CrmAttachment {
@@ -513,8 +505,20 @@ export interface TerminalCrmInvestor {
   total_deployed_with_reprime: string | null;
   deal_count: number;
 
-  investment_preferences: CrmInvestmentPreferences;
   documents: CrmDocument[];
+
+  // Criteria-form / lifecycle
+  submission_token: string | null;
+  submission_token_issued_at: string | null;
+  form_last_sent_at: string | null;
+  criteria_submitted_at: string | null;
+  auth_user_id: string | null;
+  managed_by: string | null;
+  consent_contact: boolean;
+  investing_as: CrmInvestingAs | null;
+  capital_ready: string | null;
+  ownership_pref: CrmOwnershipPref | null;
+  timeline_to_deploy: string | null;
 
   last_contacted_at: string | null;
   last_contacted_by: string | null;
@@ -528,11 +532,57 @@ export interface TerminalCrmInvestor {
 
 export interface TerminalCrmInvestorSummary extends TerminalCrmInvestor {
   full_name: string;
+  lifecycle_state: CrmLifecycleState;
+  mandate_count: number;
   message_count: number;
   last_message_at: string | null;
   total_commitments: string | null;
   pending_follow_up_count: number;
   pinned_count: number;
+}
+
+// numeric arrays surface as `string | null`; text[] surfaces as string[]
+export interface TerminalCrmMandate {
+  id: string;
+  investor_id: string;
+  label: string | null;
+  color: string | null;
+  is_active: boolean;
+
+  property_types: string[];
+  listing_types: string[];
+  states: string[];
+  property_class: string[];
+  structure_prefs: string[];
+
+  min_price: string | null;
+  max_price: string | null;
+  min_cap: string | null;
+  min_coc: string | null;
+  min_occupancy: string | null;
+  max_occupancy: string | null;
+  min_sqft: string | null;
+  max_sqft: string | null;
+  price_per_sf_max: string | null;
+  min_lease_term_years: string | null;
+
+  strategy: CrmStrategy | null;
+  tenant_credit_pref: CrmTenantCreditPref | null;
+  notes: string | null;
+
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TerminalCrmFormSend {
+  id: string;
+  investor_id: string;
+  submission_token: string;
+  sent_at: string;
+  sent_by: string | null;
+  resend_message_id: string | null;
+  subject: string | null;
+  delivery_status: 'sent' | 'failed' | 'bounced';
 }
 
 export interface TerminalCrmMessage {

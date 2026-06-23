@@ -6,17 +6,18 @@ import { useTranslations } from 'next-intl';
 import type {
   CrmContactMethod,
   CrmInvestorStatus,
-  CrmInvestmentPriority,
+  CrmInvestingAs,
+  CrmOwnershipPref,
   TerminalCrmInvestor,
 } from '@/lib/types/database';
 import { createInvestor, updateInvestor, type CrmInvestorInput } from '@/app/[locale]/(admin)/admin/crm/actions';
 import {
   STATUS_OPTIONS,
   CONTACT_METHODS,
-  PROPERTY_TYPES,
-  MARKETS,
-  PRIORITIES,
-  STRUCTURE_PREFERENCES,
+  INVESTING_AS_OPTIONS,
+  CAPITAL_READY_BUCKETS,
+  OWNERSHIP_PREFS,
+  TIMELINE_OPTIONS,
 } from './CrmConstants';
 import { CrmAvatar } from './CrmAvatar';
 import { uploadCrmFile } from './uploadCrmFile';
@@ -59,7 +60,6 @@ export default function CrmInvestorFormClient({
   const t = useTranslations('admin.crm');
   const router = useRouter();
   const isEdit = !!investor;
-  const prefs = investor?.investment_preferences ?? {};
 
   const [form, setForm] = useState({
     first_name: investor?.first_name ?? '',
@@ -83,23 +83,15 @@ export default function CrmInvestorFormClient({
     referred_by: investor?.referred_by ?? '',
     entity_type: investor?.entity_type ?? '',
     is_accredited: investor?.is_accredited ?? false,
+    investing_as: (investor?.investing_as ?? '') as CrmInvestingAs | '',
+    capital_ready: investor?.capital_ready ?? '',
+    ownership_pref: (investor?.ownership_pref ?? '') as CrmOwnershipPref | '',
+    timeline_to_deploy: investor?.timeline_to_deploy ?? '',
     equity_ready: investor?.equity_ready ?? '',
     equity_committed: investor?.equity_committed ?? '',
     equity_timeline: investor?.equity_timeline ?? '',
     internal_notes: investor?.internal_notes ?? '',
   });
-
-  const [propertyTypes, setPropertyTypes] = useState<string[]>(prefs.property_types ?? []);
-  const [markets, setMarkets] = useState<string[]>(prefs.markets ?? []);
-  const [structures, setStructures] = useState<string[]>(prefs.structure_preferences ?? []);
-  const [minCheck, setMinCheck] = useState(prefs.min_check_size != null ? String(prefs.min_check_size) : '');
-  const [maxCheck, setMaxCheck] = useState(prefs.max_check_size != null ? String(prefs.max_check_size) : '');
-  const [returnRate, setReturnRate] = useState(
-    prefs.preferred_return_rate != null ? String(prefs.preferred_return_rate) : '',
-  );
-  const [holdPeriod, setHoldPeriod] = useState(prefs.hold_period_years ?? '');
-  const [priority, setPriority] = useState<CrmInvestmentPriority | ''>(prefs.priority ?? '');
-  const [acceptsMezz, setAcceptsMezz] = useState<boolean>(prefs.accepts_seller_mezz ?? false);
 
   const [photoUploading, setPhotoUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -107,9 +99,6 @@ export default function CrmInvestorFormClient({
 
   const set = (key: keyof typeof form, value: string | boolean) =>
     setForm((f) => ({ ...f, [key]: value }));
-
-  const toggle = (list: string[], setter: (v: string[]) => void, value: string) =>
-    setter(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
 
   const handlePhoto = async (file: File) => {
     setPhotoUploading(true);
@@ -153,21 +142,14 @@ export default function CrmInvestorFormClient({
       referred_by: form.referred_by || null,
       entity_type: form.entity_type || null,
       is_accredited: form.is_accredited,
+      investing_as: (form.investing_as as CrmInvestingAs) || null,
+      capital_ready: form.capital_ready || null,
+      ownership_pref: (form.ownership_pref as CrmOwnershipPref) || null,
+      timeline_to_deploy: form.timeline_to_deploy || null,
       equity_ready: num(form.equity_ready),
       equity_committed: num(form.equity_committed),
       equity_timeline: form.equity_timeline || null,
       internal_notes: form.internal_notes || null,
-      investment_preferences: {
-        property_types: propertyTypes,
-        markets,
-        structure_preferences: structures,
-        min_check_size: num(minCheck),
-        max_check_size: num(maxCheck),
-        preferred_return_rate: num(returnRate),
-        hold_period_years: holdPeriod || null,
-        priority: priority || null,
-        accepts_seller_mezz: acceptsMezz,
-      },
     };
 
     const result = isEdit ? await updateInvestor(investor!.id, input) : await createInvestor(input);
@@ -298,6 +280,46 @@ export default function CrmInvestorFormClient({
           <Field label={t('fieldReferredBy')}>
             <input value={form.referred_by} onChange={(e) => set('referred_by', e.target.value)} className={inputCls} />
           </Field>
+          <Field label={t('investingAs')}>
+            <select value={form.investing_as} onChange={(e) => set('investing_as', e.target.value)} className={inputCls}>
+              <option value="">{t('notSpecified')}</option>
+              {INVESTING_AS_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label={t('capitalReady')}>
+            <select value={form.capital_ready} onChange={(e) => set('capital_ready', e.target.value)} className={inputCls}>
+              <option value="">{t('notSpecified')}</option>
+              {CAPITAL_READY_BUCKETS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label={t('ownershipPref')}>
+            <select value={form.ownership_pref} onChange={(e) => set('ownership_pref', e.target.value)} className={inputCls}>
+              <option value="">{t('notSpecified')}</option>
+              {OWNERSHIP_PREFS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label={t('timelineToDeploy')}>
+            <select value={form.timeline_to_deploy} onChange={(e) => set('timeline_to_deploy', e.target.value)} className={inputCls}>
+              <option value="">{t('notSpecified')}</option>
+              {TIMELINE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </Field>
         </div>
         <label className="flex items-center gap-2 mt-4 text-sm text-rp-gray-700">
           <input
@@ -325,83 +347,6 @@ export default function CrmInvestorFormClient({
         </div>
       </Section>
 
-      {/* Investment Preferences */}
-      <Section title={t('secPreferences')}>
-        <Field label={t('prefPropertyTypes')}>
-          <div className="flex flex-wrap gap-2 mt-1">
-            {PROPERTY_TYPES.map((p) => (
-              <CheckChip
-                key={p.value}
-                label={p.label}
-                active={propertyTypes.includes(p.value)}
-                onClick={() => toggle(propertyTypes, setPropertyTypes, p.value)}
-              />
-            ))}
-          </div>
-        </Field>
-        <div className="mt-4">
-          <Field label={t('prefMarkets')}>
-            <div className="flex flex-wrap gap-2 mt-1">
-              {MARKETS.map((m) => (
-                <CheckChip
-                  key={m}
-                  label={m}
-                  active={markets.includes(m)}
-                  onClick={() => toggle(markets, setMarkets, m)}
-                />
-              ))}
-            </div>
-          </Field>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-          <Field label={`${t('minCheck')} ($)`}>
-            <input type="number" value={minCheck} onChange={(e) => setMinCheck(e.target.value)} className={inputCls} />
-          </Field>
-          <Field label={`${t('maxCheck')} ($)`}>
-            <input type="number" value={maxCheck} onChange={(e) => setMaxCheck(e.target.value)} className={inputCls} />
-          </Field>
-          <Field label={t('preferredReturnRate')}>
-            <input type="number" value={returnRate} onChange={(e) => setReturnRate(e.target.value)} className={inputCls} />
-          </Field>
-          <Field label={t('prefPriority')}>
-            <select value={priority} onChange={(e) => setPriority(e.target.value as CrmInvestmentPriority | '')} className={inputCls}>
-              <option value="">{t('notSpecified')}</option>
-              {PRIORITIES.map((p) => (
-                <option key={p.value} value={p.value}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label={t('holdPeriod')}>
-            <input value={holdPeriod} onChange={(e) => setHoldPeriod(e.target.value)} className={inputCls} />
-          </Field>
-        </div>
-        <div className="mt-4">
-          <Field label={t('prefStructure')}>
-            <div className="flex flex-wrap gap-2 mt-1">
-              {STRUCTURE_PREFERENCES.map((s) => (
-                <CheckChip
-                  key={s.value}
-                  label={s.label}
-                  active={structures.includes(s.value)}
-                  onClick={() => toggle(structures, setStructures, s.value)}
-                />
-              ))}
-            </div>
-          </Field>
-        </div>
-        <label className="flex items-center gap-2 mt-4 text-sm text-rp-gray-700">
-          <input
-            type="checkbox"
-            checked={acceptsMezz}
-            onChange={(e) => setAcceptsMezz(e.target.checked)}
-            className="accent-rp-gold"
-          />
-          {t('acceptsSellerMezz')}
-        </label>
-      </Section>
-
       {/* Internal notes */}
       <Section title={t('internalNotes')}>
         <textarea
@@ -411,6 +356,10 @@ export default function CrmInvestorFormClient({
           className={inputCls}
         />
       </Section>
+
+      {!isEdit && (
+        <p className="text-xs text-rp-gray-500 -mt-3">{t('mandatesHint')}</p>
+      )}
 
       {error && <p className="text-sm text-rp-red">{error}</p>}
 
@@ -431,29 +380,5 @@ export default function CrmInvestorFormClient({
         </button>
       </div>
     </div>
-  );
-}
-
-function CheckChip({
-  label,
-  active,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-        active
-          ? 'bg-rp-gold-bg text-rp-gold border-rp-gold/40'
-          : 'bg-white text-rp-gray-600 border-rp-gray-200 hover:border-rp-gold/40'
-      }`}
-    >
-      {label}
-    </button>
   );
 }

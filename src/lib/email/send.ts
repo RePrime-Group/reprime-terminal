@@ -15,6 +15,7 @@ import DealActivityEmail from './templates/deal-activity-notification';
 import TeamInviteEmail from './templates/team-invite-email';
 import TeamRequestAdminEmail from './templates/team-request-admin-email';
 import PasswordResetEmail from './templates/password-reset-email';
+import CriteriaFormEmail from './templates/criteria-form-email';
 import type { TeamPermissionKey } from '@/lib/types/database';
 
 const from = `${FROM_NAME} <${FROM_EMAIL}>`;
@@ -284,6 +285,23 @@ export async function sendTeamRequestAdminNotification(data: {
       ...data,
       adminUrl,
     }),
+  });
+}
+
+export async function sendCriteriaFormEmail(
+  recipientEmail: string,
+  recipientName: string,
+  submissionToken: string,
+  locale: string = 'en',
+) {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://reprimeterminal.com';
+  const formUrl = `${baseUrl}/${locale}/criteria?token=${encodeURIComponent(submissionToken)}`;
+  return getResend().emails.send({
+    from,
+    attachments: [getLogoAttachment()],
+    to: recipientEmail,
+    subject: "RePrime: tell us what you're buying",
+    react: CriteriaFormEmail({ formUrl, recipientName }),
   });
 }
 

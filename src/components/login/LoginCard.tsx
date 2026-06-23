@@ -29,7 +29,9 @@ export default function LoginCard({ locale }: LoginCardProps) {
   // Stripped automatically in production builds.
   const DEV_EMAIL = process.env.NODE_ENV !== 'production' ? 'aliak30062@gmail.com' : '';
   const DEV_PASSWORD = process.env.NODE_ENV !== 'production' ? 'test1234' : '';
-  const [email, setEmail] = useState(DEV_EMAIL);
+  // ?email=… prefill (used by the criteria → smart-routing flow).
+  const prefilledEmail = searchParams.get('email')?.trim();
+  const [email, setEmail] = useState(prefilledEmail || DEV_EMAIL);
   const [password, setPassword] = useState(DEV_PASSWORD);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');

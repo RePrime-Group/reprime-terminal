@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from '@/i18n/navigation';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import RePrimeLogo from '@/components/RePrimeLogo';
 
@@ -62,10 +62,27 @@ export default function JoinPage() {
   const params = useParams();
   const locale = (params?.locale as string) || 'en';
   const t = useTranslations('join');
-  const [formData, setFormData] = useState({ name: '', email: '', company: '', phone: '' });
+  const searchParams = useSearchParams();
+  const prefilledEmail = searchParams.get('email')?.trim() || '';
+  const fromCriteria = searchParams.get('from') === 'criteria';
+  const [formData, setFormData] = useState({
+    name: '',
+    email: prefilledEmail,
+    company: '',
+    phone: '',
+  });
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // When arriving from a /criteria submission, scroll the application form
+  // into view so the user doesn't have to hunt past the pricing tiers.
+  const formRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (fromCriteria && formRef.current) {
+      formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [fromCriteria]);
 
   const handleSubmit = async () => {
     if (!formData.name.trim() || !formData.email.trim()) return;
@@ -203,7 +220,7 @@ export default function JoinPage() {
       </div>
 
       {/* Application Form */}
-      <div className="max-w-[1200px] mx-auto px-5 md:px-10 pb-6 md:pb-8">
+      <div id="apply" ref={formRef} className="max-w-[1200px] mx-auto px-5 md:px-10 pb-6 md:pb-8 scroll-mt-6">
         <div className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-6 md:p-8">
           <h2 className="font-[family-name:var(--font-playfair)] text-[20px] md:text-[24px] font-semibold text-white mb-2 text-center">
             {submitted ? t('applicationReceived') : t('membershipApplication')}
@@ -227,12 +244,24 @@ export default function JoinPage() {
             </div>
           ) : (
             <div className="max-w-[500px] mx-auto flex flex-col gap-4">
+              {fromCriteria && (
+                <div className="px-4 py-3 rounded-lg border border-[#BC9C45]/30 bg-[#BC9C45]/[0.05]">
+                  <p className="text-[12px] text-[#D4A843] font-medium">
+                    {t('fromCriteriaBanner')}
+                  </p>
+                </div>
+              )}
               <input type="text" placeholder={t('fullName')} value={formData.name}
                 onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))}
                 className="w-full px-4 py-3.5 bg-white/[0.04] border border-white/[0.08] rounded-lg text-white text-[14px] placeholder:text-white/25 focus:outline-none focus:border-[#D4A843]/40 transition-colors" />
               <input type="email" placeholder={t('emailAddress')} value={formData.email}
                 onChange={(e) => setFormData(p => ({ ...p, email: e.target.value }))}
-                className="w-full px-4 py-3.5 bg-white/[0.04] border border-white/[0.08] rounded-lg text-white text-[14px] placeholder:text-white/25 focus:outline-none focus:border-[#D4A843]/40 transition-colors" />
+                readOnly={!!prefilledEmail}
+                className={`w-full px-4 py-3.5 rounded-lg text-[14px] focus:outline-none focus:border-[#D4A843]/40 transition-colors ${
+                  prefilledEmail
+                    ? 'bg-white/[0.02] border border-white/[0.06] text-white/70 cursor-not-allowed'
+                    : 'bg-white/[0.04] border border-white/[0.08] text-white placeholder:text-white/25'
+                }`} />
               <input type="text" placeholder={t('companyFundName')} value={formData.company}
                 onChange={(e) => setFormData(p => ({ ...p, company: e.target.value }))}
                 className="w-full px-4 py-3.5 bg-white/[0.04] border border-white/[0.08] rounded-lg text-white text-[14px] placeholder:text-white/25 focus:outline-none focus:border-[#D4A843]/40 transition-colors" />

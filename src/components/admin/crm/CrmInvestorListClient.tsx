@@ -67,12 +67,20 @@ export default function CrmInvestorListClient({
           <h1 className="text-2xl font-bold text-rp-navy">{t('title')}</h1>
           <p className="text-sm text-rp-gray-500 mt-1">{t('subtitle')}</p>
         </div>
-        <Link
-          href={`/${locale}/admin/crm/new`}
-          className="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-rp-gold to-rp-gold-soft text-white text-sm font-semibold hover:opacity-90 transition-opacity"
-        >
-          + {t('addInvestor')}
-        </Link>
+        <div className="flex-shrink-0 flex items-center gap-2">
+          <Link
+            href={`/${locale}/admin/crm/import`}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-rp-gray-300 text-rp-navy text-sm font-semibold hover:border-rp-gold/40 transition-colors"
+          >
+            ↑ {t('importXlsx')}
+          </Link>
+          <Link
+            href={`/${locale}/admin/crm/new`}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-rp-gold to-rp-gold-soft text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+          >
+            + {t('addInvestor')}
+          </Link>
+        </div>
       </div>
 
       {/* Stats bar */}
