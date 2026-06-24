@@ -38,6 +38,7 @@ yarn-error.log*
 #db.sql
 
 db.sql
+portal_db.sql
 
 
 # vercel

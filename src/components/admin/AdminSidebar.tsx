@@ -77,6 +77,18 @@ const navItems = [
     ),
   },
   {
+    labelKey: 'sidebar.sourcing' as const,
+    href: '/admin/sourcing',
+    ownerOnly: false,
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="9" cy="9" r="6" stroke="#0E3470" strokeWidth="1.5" />
+        <path d="M13.5 13.5L17.5 17.5" stroke="#0E3470" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M9 6v3l2 2" stroke="#BC9C45" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
     labelKey: 'sidebar.investorTabs' as const,
     href: '/admin/investor-tabs',
     ownerOnly: false,
