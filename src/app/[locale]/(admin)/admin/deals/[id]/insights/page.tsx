@@ -260,28 +260,38 @@ function CategoryCard({
     <div className="bg-white rounded-2xl border border-rp-gray-200 p-6">
       <div className="flex items-center justify-between mb-4 gap-3">
         {editingName ? (
-          <div className="flex items-center gap-2 flex-1">
-            <Input label="" value={nameDraft} onChange={(e) => setNameDraft(e.target.value)} />
-            <Button
-              variant="gold"
-              size="sm"
-              onClick={() => {
-                onRename(nameDraft.trim() || category.display_name);
-                setEditingName(false);
-              }}
-            >
-              Save
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setNameDraft(category.display_name);
-                setEditingName(false);
-              }}
-            >
-              Cancel
-            </Button>
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <Input label="" value={nameDraft} onChange={(e) => setNameDraft(e.target.value)} />
+              <Button
+                variant="gold"
+                size="sm"
+                onClick={() => {
+                  onRename(nameDraft.trim() || category.display_name);
+                  setEditingName(false);
+                }}
+              >
+                Save
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setNameDraft(category.display_name);
+                  setEditingName(false);
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+            <p className="mt-1.5 flex items-center gap-1.5 text-[11px] text-rp-red">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+              Categories are shared — renaming this changes its label on every deal it&rsquo;s used in.
+            </p>
           </div>
         ) : (
           <div className="flex items-center gap-2">
@@ -424,43 +434,72 @@ function AddCategoryModal({
     setCreating(false);
   }
 
+  const slugPreview = newName
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .replace(/_{2,}/g, '_');
+
   return (
     <Modal isOpen onClose={onClose} title="Add Category">
-      <div className="space-y-5">
+      <div className="space-y-6">
         {/* Create new */}
         <div>
           <label className="block text-[13px] font-medium text-rp-gray-700 mb-1.5">
-            Create new category
+            Create a new category
           </label>
-          <div className="flex items-start gap-2">
-            <Input
-              label=""
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              placeholder="e.g. Pressure Point"
-            />
-            <Button variant="gold" size="sm" onClick={submitNew} loading={creating}>
-              Create
-            </Button>
+          <Input
+            label=""
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            placeholder="e.g. Pressure Point"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') submitNew();
+            }}
+            autoFocus
+          />
+          <div className="mt-1.5 flex items-center justify-between gap-3 min-h-[18px]">
+            <p className="text-[11px] text-rp-gray-400">
+              {slugPreview ? (
+                <>
+                  Stored as <span className="font-mono text-rp-gray-500">{slugPreview}</span> ·
+                  duplicates merge automatically
+                </>
+              ) : (
+                'Stored as a snake_case key; duplicates merge automatically.'
+              )}
+            </p>
           </div>
-          <p className="mt-1 text-[11px] text-rp-gray-400">
-            Stored as a snake_case key; duplicates are merged automatically.
-          </p>
+          <Button
+            variant="gold"
+            size="sm"
+            onClick={submitNew}
+            loading={creating}
+            disabled={!newName.trim()}
+            className="mt-2 w-full"
+          >
+            Create category
+          </Button>
         </div>
 
         {/* Choose existing */}
         {available.length > 0 && (
           <div>
-            <label className="block text-[13px] font-medium text-rp-gray-700 mb-1.5">
-              Or choose an existing category
-            </label>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-px flex-1 bg-rp-gray-200" />
+              <span className="text-[11px] font-medium uppercase tracking-wider text-rp-gray-400">
+                or choose existing
+              </span>
+              <div className="h-px flex-1 bg-rp-gray-200" />
+            </div>
             <Input
               label=""
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search categories…"
             />
-            <div className="mt-2 max-h-[220px] overflow-y-auto rounded-lg border border-rp-gray-200 divide-y divide-rp-gray-100">
+            <div className="mt-2 max-h-[240px] overflow-y-auto rounded-lg border border-rp-gray-200 divide-y divide-rp-gray-100">
               {filtered.length === 0 ? (
                 <p className="p-3 text-[12px] text-rp-gray-400">No matching categories.</p>
               ) : (
@@ -468,10 +507,13 @@ function AddCategoryModal({
                   <button
                     key={c.id}
                     onClick={() => onPickExisting(c.id)}
-                    className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-rp-gray-50 transition-colors"
+                    className="w-full flex items-center justify-between gap-3 px-3.5 py-3 text-left hover:bg-rp-gold/5 transition-colors group"
                   >
-                    <span className="text-[13px] text-rp-gray-700">{c.display_name}</span>
-                    <span className="text-[10px] font-mono text-rp-gray-400">{c.name}</span>
+                    <span className="flex items-center gap-2.5 min-w-0">
+                      <span className="w-1.5 h-4 rounded-full bg-rp-gold/40 group-hover:bg-rp-gold transition-colors shrink-0" />
+                      <span className="text-[13px] text-rp-gray-700 truncate">{c.display_name}</span>
+                    </span>
+                    <span className="text-[10px] font-mono text-rp-gray-400 shrink-0">{c.name}</span>
                   </button>
                 ))
               )}
