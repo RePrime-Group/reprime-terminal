@@ -145,7 +145,7 @@ const promoteSchema = z
       )
       .min(1)
       .max(MAX_PER_BATCH),
-    status: z.enum(['draft', 'marketplace']),
+    status: z.enum(['draft', 'marketplace', 'investor_only']),
     tabId: z.string().uuid().nullable(),
     mandateId: z.string().uuid().nullable(),
   })

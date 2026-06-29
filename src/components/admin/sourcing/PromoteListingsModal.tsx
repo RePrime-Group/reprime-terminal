@@ -120,6 +120,13 @@ export default function PromoteListingsModal({
                   title={t('statusMarketplaceTitle')}
                   description={t('statusMarketplaceDescription')}
                 />
+                <StatusOption
+                  value="investor_only"
+                  current={status}
+                  onChange={setStatus}
+                  title={t('statusInvestorOnlyTitle')}
+                  description={t('statusInvestorOnlyDescription')}
+                />
               </fieldset>
 
               {/* Group picker */}
@@ -203,7 +210,11 @@ export default function PromoteListingsModal({
                 onClick={submit}
                 className="px-4 py-2 rounded-lg bg-gradient-to-r from-rp-gold to-rp-gold-soft text-white text-sm font-semibold hover:opacity-90 transition-opacity"
               >
-                {status === 'draft' ? t('submitDraft') : t('submitMarketplace')}
+                {status === 'draft'
+                  ? t('submitDraft')
+                  : status === 'marketplace'
+                    ? t('submitMarketplace')
+                    : t('submitInvestorOnly')}
               </button>
             </>
           )}

@@ -27,6 +27,7 @@ export const IMPORT_STATUSES = [
   'draft',
   'coming_soon',
   'marketplace',
+  'investor_only',
   'loi_signed',
   'published',
   'under_review',

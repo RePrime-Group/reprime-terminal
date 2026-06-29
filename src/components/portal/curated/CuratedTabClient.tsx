@@ -11,7 +11,10 @@ import { useActivityTracker } from '@/lib/hooks/useActivityTracker';
 
 // Statuses a member could already see elsewhere. Anything else on a curated tab
 // is only visible through the group assignment → flag it as exclusive.
-const PUBLIC_STATUSES = new Set(['published', 'assigned', 'closed', 'marketplace']);
+// Statuses for which we do NOT render the "Exclusive · Off-Market" pill on
+// curated cards. investor_only deals only ever appear inside a curated tab —
+// the tab context already implies exclusivity, so the pill is visual noise.
+const PUBLIC_STATUSES = new Set(['published', 'assigned', 'closed', 'marketplace', 'investor_only']);
 
 export default function CuratedTabClient({
   tabId,

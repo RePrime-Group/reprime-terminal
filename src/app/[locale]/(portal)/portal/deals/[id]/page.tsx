@@ -83,7 +83,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
       .from('terminal_deals')
       .select(DEAL_COLUMNS)
       .eq('id', id)
-      .in('status', ['coming_soon', 'marketplace', 'loi_signed', 'published', 'assigned', 'closed', 'cancelled'])
+      .in('status', ['coming_soon', 'marketplace', 'investor_only', 'loi_signed', 'published', 'assigned', 'closed', 'cancelled'])
       .single(),
     supabase
       .from('terminal_deal_photos')

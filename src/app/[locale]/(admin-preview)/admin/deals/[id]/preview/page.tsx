@@ -199,7 +199,7 @@ export default async function DealPreviewPage({ params }: DealPreviewPageProps) 
   const { data: navDealsData } = await supabase
     .from('terminal_deals')
     .select('id, name, status, dd_deadline')
-    .in('status', ['draft', 'coming_soon', 'loi_signed', 'published', 'assigned', 'closed', 'cancelled'])
+    .in('status', ['draft', 'coming_soon', 'marketplace', 'investor_only', 'loi_signed', 'published', 'assigned', 'closed', 'cancelled'])
     .order('created_at', { ascending: false });
 
   const navDeals = (navDealsData ?? []).slice().sort((a, b) => {

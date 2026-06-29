@@ -62,6 +62,7 @@ interface DealListClientProps {
 const STATUS_GROUP_ORDER: DealStatus[] = [
   'published',
   'marketplace',
+  'investor_only',
   'coming_soon',
   'loi_signed',
   'under_review',

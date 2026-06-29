@@ -1,6 +1,6 @@
 import type { MatchedListing, PropertySummary } from './types';
 
-export type PromotedDealStatus = 'draft' | 'marketplace';
+export type PromotedDealStatus = 'draft' | 'marketplace' | 'investor_only';
 
 export interface DealInsert {
   name: string;
