@@ -133,7 +133,7 @@ Extract ALL fields. If not found, use null. Return ONLY valid JSON.
   "address": "Street address for single-property deals, null for portfolios",
   "city": "City (for portfolio, pick primary or metro)",
   "state": "State abbreviation (e.g. IL, NY, TX)",
-  "property_type": "One of: Office, Retail, Industrial, Multifamily, Mixed-Use, Hospitality, Medical, Other",
+  "property_type": "One of: Office, Retail, Industrial, Multifamily, Self Storage, Mixed-Use, Hospitality, Medical, Other",
   "square_footage": "Total square footage as string",
   "units": "Number of units (for multifamily) as string, or null",
   "class_type": "A, B, or C",

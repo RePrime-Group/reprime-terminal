@@ -5,6 +5,7 @@ import type {
   TerminalTenantLease,
   CapExItem,
   ExitScenario,
+  DealInsight,
 } from '@/lib/types/database';
 
 export interface DealDetailClientProps {
@@ -27,6 +28,7 @@ export interface DealDetailClientProps {
   tenants?: TerminalTenantLease[];
   capexItems?: CapExItem[];
   exitScenarios?: ExitScenario[];
+  insights?: DealInsight[];
   prevDeal?: { id: string; name: string } | null;
   nextDeal?: { id: string; name: string } | null;
   userNote?: { content: string; updated_at: string } | null;
@@ -58,6 +60,7 @@ export type TabKey =
   | 'deal-structure'
   | 'capex'
   | 'exit-strategy'
+  | 'insights'
   | 'schedule'
   | 'assistant';
 

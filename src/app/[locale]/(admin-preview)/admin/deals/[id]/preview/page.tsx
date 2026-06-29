@@ -17,6 +17,7 @@ import type {
   TerminalTenantLease,
   CapExItem,
   ExitScenario,
+  DealInsight,
   DealWithDetails,
 } from '@/lib/types/database';
 
@@ -181,6 +182,16 @@ export default async function DealPreviewPage({ params }: DealPreviewPageProps) 
 
   const exitScenarios = (exitScenariosData ?? []) as ExitScenario[];
 
+  // ---------- Fetch insights ----------
+  const { data: insightsData } = await supabase
+    .from('terminal_deal_insights')
+    .select('*, category:terminal_insight_categories(id, name, display_name)')
+    .eq('deal_id', id)
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: true });
+
+  const insights = (insightsData ?? []) as DealInsight[];
+
   // ---------- Prev/Next deal navigation (admin preview includes drafts) ----------
   const ADMIN_STATUS_ORDER: Record<string, number> = {
     draft: -1, coming_soon: 0, loi_signed: 1, published: 2, assigned: 3, closed: 4, cancelled: 5,
@@ -260,6 +271,7 @@ export default async function DealPreviewPage({ params }: DealPreviewPageProps) 
         tenants={tenants}
         capexItems={capexItems}
         exitScenarios={exitScenarios}
+        insights={insights}
         prevDeal={prevDeal}
         nextDeal={nextDeal}
         previewMode

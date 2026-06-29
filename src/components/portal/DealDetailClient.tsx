@@ -14,6 +14,7 @@ import DataRoomTab from '@/components/portal/DataRoomTab';
 import RentRollTab from '@/components/portal/RentRollTab';
 import CapExTab from '@/components/portal/CapExTab';
 import ExitStrategyTab from '@/components/portal/ExitStrategyTab';
+import InsightsTab from '@/components/portal/InsightsTab';
 import { parseHoldPeriod } from '@/lib/utils/capex';
 import { parseDealInputs, calculateDeal, calculatePropertyMetrics, calculateTraditionalClose, type DealInputs } from '@/lib/utils/deal-calculator';
 import { useDealAssistantPanelOptional } from '@/components/portal/ai/DealAssistantContext';
@@ -70,6 +71,7 @@ export default function DealDetailClient({
   tenants = [],
   capexItems = [],
   exitScenarios = [],
+  insights = [],
   prevDeal = null,
   nextDeal = null,
   userNote = null,
@@ -136,7 +138,7 @@ export default function DealDetailClient({
   useEffect(() => {
     const qTab = searchParams?.get('tab');
     if (!qTab) return;
-    const valid: TabKey[] = ['overview', 'due-diligence', 'photos', 'rent-roll', 'financial-modeling', 'deal-structure', 'capex', 'exit-strategy', 'schedule'];
+    const valid: TabKey[] = ['overview', 'due-diligence', 'photos', 'rent-roll', 'financial-modeling', 'deal-structure', 'capex', 'exit-strategy', 'insights', 'schedule'];
     if (!valid.includes(qTab as TabKey)) return;
     const rec = deal as unknown as Record<string, unknown>;
     if (qTab === 'rent-roll' && rec.show_rent_roll === false) return;
@@ -536,6 +538,7 @@ export default function DealDetailClient({
   const showRentRoll = dealRecord.show_rent_roll !== false; // default TRUE
   const showCapex = dealRecord.show_capex === true; // default FALSE
   const showExitStrategy = dealRecord.show_exit_strategy === true; // default FALSE
+  const showInsights = insights.length > 0; // hidden until at least one insight exists
 
   const tabs: { key: TabKey; label: string; enabled: boolean }[] = [
     { key: 'overview', label: t('overview'), enabled: true },
@@ -546,6 +549,7 @@ export default function DealDetailClient({
     { key: 'deal-structure', label: t('dealStructure'), enabled: true },
     { key: 'capex', label: 'CapEx & Condition', enabled: showCapex },
     { key: 'exit-strategy', label: 'Exit Strategy', enabled: showExitStrategy },
+    { key: 'insights', label: 'Insights', enabled: showInsights },
     { key: 'schedule', label: t('scheduleContact'), enabled: true },
   ];
 
@@ -727,6 +731,13 @@ export default function DealDetailClient({
                 equityInvested: computed.netEquity,
               }}
             />
+          </div>
+        </div>
+
+        {/* ===== Insights Tab ===== */}
+        <div className="transition-opacity duration-200" style={{ display: activeTab === 'insights' ? 'block' : 'none' }}>
+          <div className="mt-6 md:mt-8 px-4 md:px-8 pb-8 md:pb-10">
+            <InsightsTab insights={insights} />
           </div>
         </div>
 

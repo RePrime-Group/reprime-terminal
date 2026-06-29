@@ -413,6 +413,27 @@ export interface ExitScenario {
   updated_at: string;
 }
 
+export interface InsightCategory {
+  id: string;
+  name: string;          // snake_case slug, immutable after creation
+  display_name: string;  // human label, editable
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DealInsight {
+  id: string;
+  deal_id: string;
+  category_id: string;
+  content: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+  // Present when selected with the joined category (admin + portal reads).
+  category?: Pick<InsightCategory, 'id' | 'name' | 'display_name'> | null;
+}
+
 export interface TerminalDealSubscription {
   id: string;
   deal_id: string;

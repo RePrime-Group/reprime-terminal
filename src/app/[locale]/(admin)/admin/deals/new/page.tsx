@@ -19,6 +19,7 @@ const PROPERTY_TYPES = [
   'Retail',
   'Industrial',
   'Multifamily',
+  'Self Storage',
   'Mixed-Use',
   'Hospitality',
   'Medical',

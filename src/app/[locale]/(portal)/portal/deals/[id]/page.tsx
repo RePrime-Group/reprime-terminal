@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import DealDetailClient from '@/components/portal/DealDetailClient';
-import type { TerminalDeal, TerminalDealPhoto, TerminalTenantLease, CapExItem, ExitScenario } from '@/lib/types/database';
+import type { TerminalDeal, TerminalDealPhoto, TerminalTenantLease, CapExItem, ExitScenario, DealInsight } from '@/lib/types/database';
 import {
   getGlobalFeeDefaults,
   resolveAllFees,
@@ -75,6 +75,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
     { data: tenantsData },
     { data: capexItemsData },
     { data: exitScenariosData },
+    { data: insightsData },
     { data: navDealsData },
     { data: userNoteData },
   ] = await Promise.all([
@@ -141,6 +142,12 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
       .select('*')
       .eq('deal_id', id)
       .order('sort_order', { ascending: true }),
+    supabase
+      .from('terminal_deal_insights')
+      .select('*, category:terminal_insight_categories(id, name, display_name)')
+      .eq('deal_id', id)
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true }),
     supabase
       .from('terminal_deals')
       .select('id, name, status, dd_deadline')
@@ -282,6 +289,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
       tenants={(tenantsData ?? []) as TerminalTenantLease[]}
       capexItems={(capexItemsData ?? []) as CapExItem[]}
       exitScenarios={(exitScenariosData ?? []) as ExitScenario[]}
+      insights={(insightsData ?? []) as DealInsight[]}
       prevDeal={prevDeal}
       nextDeal={nextDeal}
       userNote={userNoteData ?? null}
