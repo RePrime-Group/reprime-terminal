@@ -52,6 +52,8 @@ export default async function DealsPage({
     { data: messages },
     { data: stages },
     { data: tasks },
+    { data: investorGroups },
+    { data: groupAssignments },
   ] = await Promise.all([
     admin
       .from('terminal_deal_photos')
@@ -77,6 +79,16 @@ export default async function DealsPage({
       : supabase
           .from('terminal_deal_tasks')
           .select('deal_id, status')
+          .in('deal_id', dealIds),
+    supabase
+      .from('terminal_investor_tabs')
+      .select('id, name')
+      .order('name', { ascending: true }),
+    dealIds.length === 0
+      ? Promise.resolve({ data: [] })
+      : supabase
+          .from('terminal_deal_tab_assignments')
+          .select('deal_id, tab_id')
           .in('deal_id', dealIds),
   ]);
 
@@ -127,6 +139,19 @@ export default async function DealsPage({
     taskCountsByDeal.set(t.deal_id, counts);
   }
 
+  // Investor group (tab) ids per deal
+  const tabIdsByDeal = new Map<string, string[]>();
+  for (const a of (groupAssignments ?? []) as Array<{ deal_id: string; tab_id: string }>) {
+    const arr = tabIdsByDeal.get(a.deal_id) ?? [];
+    arr.push(a.tab_id);
+    tabIdsByDeal.set(a.deal_id, arr);
+  }
+
+  const groups = ((investorGroups ?? []) as Array<{ id: string; name: string }>).map((g) => ({
+    id: g.id,
+    name: g.name,
+  }));
+
   const items: DealListItem[] = deals.map((deal) => {
     const stage = stageByDeal.get(deal.id) ?? null;
     const counts = taskCountsByDeal.get(deal.id) ?? null;
@@ -143,8 +168,9 @@ export default async function DealsPage({
       photo_url: photoUrlByDeal.get(deal.id) ?? null,
       latest_message: latestMessageByDeal.get(deal.id) ?? null,
       pipeline,
+      tab_ids: tabIdsByDeal.get(deal.id) ?? [],
     };
   });
 
-  return <DealListClient deals={items} locale={locale} />;
+  return <DealListClient deals={items} locale={locale} groups={groups} />;
 }

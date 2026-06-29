@@ -45,11 +45,18 @@ export interface DealListItem {
   photo_url: string | null;
   latest_message: LatestMessage | null;
   pipeline: PipelineSummary | null;
+  tab_ids: string[];
+}
+
+export interface InvestorGroupOption {
+  id: string;
+  name: string;
 }
 
 interface DealListClientProps {
   deals: DealListItem[];
   locale: string;
+  groups: InvestorGroupOption[];
 }
 
 const STATUS_GROUP_ORDER: DealStatus[] = [
@@ -82,7 +89,7 @@ function formatDate(dateStr: string | null): string {
   });
 }
 
-export default function DealListClient({ deals, locale }: DealListClientProps) {
+export default function DealListClient({ deals, locale, groups }: DealListClientProps) {
   const t = useTranslations('admin.dealList');
   const tc = useTranslations('common');
   const router = useRouter();
@@ -95,6 +102,7 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
 
   const [statusFilter, setStatusFilter] = useState<DealStatus | 'all'>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [groupFilter, setGroupFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [view, setView] = useState<ViewMode>(() => {
     if (typeof window === 'undefined') return 'cards';
@@ -184,6 +192,7 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
       .filter((deal) => {
         if (statusFilter !== 'all' && deal.status !== statusFilter) return false;
         if (typeFilter !== 'all' && deal.property_type !== typeFilter) return false;
+        if (groupFilter !== 'all' && !deal.tab_ids.includes(groupFilter)) return false;
         if (q) {
           const searchable = `${deal.name} ${deal.city} ${deal.state}`.toLowerCase();
           if (!searchable.includes(q)) return false;
@@ -195,7 +204,7 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
           ? { ...deal, latest_message: messageOverrides[deal.id] }
           : deal
       );
-  }, [deals, statusFilter, typeFilter, searchQuery, messageOverrides]);
+  }, [deals, statusFilter, typeFilter, groupFilter, searchQuery, messageOverrides]);
 
   const grouped = useMemo(() => {
     const map = new Map<DealStatus, DealListItem[]>();
@@ -317,6 +326,20 @@ export default function DealListClient({ deals, locale }: DealListClientProps) {
             </option>
           ))}
         </select>
+        {groups.length > 0 && (
+          <select
+            value={groupFilter}
+            onChange={(e) => setGroupFilter(e.target.value)}
+            className="px-3.5 py-2.5 border border-rp-gray-300 rounded-lg text-sm text-rp-gray-700 focus:outline-none focus:ring-2 focus:ring-rp-gold/20 focus:border-rp-gold transition-colors bg-white"
+          >
+            <option value="all">All groups</option>
+            {groups.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.name}
+              </option>
+            ))}
+          </select>
+        )}
         <Input
           placeholder={t('searchDeals')}
           value={searchQuery}
