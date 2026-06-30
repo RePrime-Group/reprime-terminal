@@ -74,6 +74,7 @@ export default function DealDetailClient({
   insights = [],
   prevDeal = null,
   nextDeal = null,
+  navContext = null,
   userNote = null,
   previewMode = false,
   globalFeeDefaults = REPRIME_STANDARD_FEES,
@@ -575,6 +576,7 @@ export default function DealDetailClient({
         handleShareDeal={handleShareDeal}
         onExpressInterestClick={() => setShowExpressModal(true)}
         userNote={userNote}
+        navContext={navContext}
       />
 
       {isMarketplaceDeal && <MarketplaceBanner interestCount={marketplaceInterestCount} />}
@@ -587,6 +589,7 @@ export default function DealDetailClient({
           locale={locale}
           previewMode={previewMode}
           activeTab={activeTab}
+          navContext={navContext}
         />
 
         {!previewMode && (

@@ -12,6 +12,7 @@ import {
 
 interface DealDetailPageProps {
   params: Promise<{ locale: string; id: string }>;
+  searchParams: Promise<{ from?: string }>;
 }
 
 export async function generateMetadata({ params }: DealDetailPageProps) {
@@ -45,8 +46,9 @@ const DEAL_COLUMNS = [
   'status', 'cancellation_reason',
 ].join(', ');
 
-export default async function DealDetailPage({ params }: DealDetailPageProps) {
+export default async function DealDetailPage({ params, searchParams }: DealDetailPageProps) {
   const { locale, id } = await params;
+  const { from: navFrom } = await searchParams;
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -148,11 +150,13 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
       .eq('deal_id', id)
       .order('sort_order', { ascending: true })
       .order('created_at', { ascending: true }),
-    supabase
-      .from('terminal_deals')
-      .select('id, name, status, dd_deadline')
-      .in('status', INVESTOR_NAV_STATUSES)
-      .order('created_at', { ascending: false }),
+    navFrom
+      ? Promise.resolve({ data: [] })
+      : supabase
+          .from('terminal_deals')
+          .select('id, name, status, dd_deadline')
+          .in('status', INVESTOR_NAV_STATUSES)
+          .order('created_at', { ascending: false }),
     supabase
       .from('user_deal_notes')
       .select('content, updated_at')
@@ -180,23 +184,93 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
   const investorTerms = (investorTermsResult.data ?? null) as InvestorTerms | null;
   const resolvedInvestorTerms = resolveInvestorTerms(investorTerms, globalFeeDefaults);
 
-  const navDeals = (navDealsData ?? []).slice().sort((a, b) => {
-    const orderA = STATUS_ORDER[a.status] ?? 2;
-    const orderB = STATUS_ORDER[b.status] ?? 2;
-    if (orderA !== orderB) return orderA - orderB;
-    if (a.dd_deadline && b.dd_deadline) {
-      return new Date(a.dd_deadline).getTime() - new Date(b.dd_deadline).getTime();
+  // Prev/Next list, scoped to the page the investor came from (?from=…) so the
+  // arrows only cycle through deals visible on that originating list. Each
+  // branch mirrors its source page's dataset + order; absent context falls back
+  // to the global investor-nav list (deep links).
+  type NavRow = { id: string; name: string };
+  let navOrdered: NavRow[];
+
+  if (navFrom === 'dashboard') {
+    // Mirrors the dashboard's clickable sections, top to bottom:
+    // Active (loi_signed, published) → Assigned → Closed → Cancelled, each
+    // ordered by dd_deadline ascending (no deadline last). coming_soon is
+    // excluded — its card doesn't link to a deal page, so it's never a nav stop.
+    const { data } = await supabase
+      .from('terminal_deals')
+      .select('id, name, status, dd_deadline')
+      .in('status', ['loi_signed', 'published', 'assigned', 'closed', 'cancelled'])
+      .order('created_at', { ascending: false });
+    const DASH_ORDER: Record<string, number> = {
+      loi_signed: 0, published: 1, assigned: 2, closed: 3, cancelled: 4,
+    };
+    navOrdered = (data ?? [])
+      .slice()
+      .sort((a, b) => {
+        const oa = DASH_ORDER[a.status] ?? 99;
+        const ob = DASH_ORDER[b.status] ?? 99;
+        if (oa !== ob) return oa - ob;
+        if (a.dd_deadline && b.dd_deadline) {
+          return new Date(a.dd_deadline).getTime() - new Date(b.dd_deadline).getTime();
+        }
+        if (a.dd_deadline) return -1;
+        if (b.dd_deadline) return 1;
+        return 0;
+      })
+      .map((d) => ({ id: d.id, name: d.name }));
+  } else if (navFrom === 'marketplace') {
+    // Mirrors the marketplace: status='marketplace', newest first, minus deals
+    // curated into an investor group (those surface only in that group's tab).
+    const { data } = await supabase
+      .from('terminal_deals')
+      .select('id, name')
+      .eq('status', 'marketplace')
+      .order('created_at', { ascending: false });
+    let mDeals = (data ?? []) as NavRow[];
+    if (mDeals.length > 0) {
+      const admin = createAdminClient();
+      const { data: assignments } = await admin
+        .from('terminal_deal_tab_assignments')
+        .select('deal_id')
+        .in('deal_id', mDeals.map((d) => d.id));
+      const assigned = new Set((assignments ?? []).map((a) => a.deal_id));
+      mDeals = mDeals.filter((d) => !assigned.has(d.id));
     }
-    if (a.dd_deadline) return -1;
-    if (b.dd_deadline) return 1;
-    return 0;
-  });
-  const currentIdx = navDeals.findIndex((d) => d.id === id);
-  const prevDeal = currentIdx > 0
-    ? { id: navDeals[currentIdx - 1].id, name: navDeals[currentIdx - 1].name }
-    : null;
-  const nextDeal = currentIdx >= 0 && currentIdx < navDeals.length - 1
-    ? { id: navDeals[currentIdx + 1].id, name: navDeals[currentIdx + 1].name }
+    navOrdered = mDeals;
+  } else if (navFrom?.startsWith('curated:')) {
+    // Mirrors a curated tab: active assignments in display_order, no drafts.
+    const tabId = navFrom.slice('curated:'.length);
+    const { data } = await supabase
+      .from('terminal_deal_tab_assignments')
+      .select('display_order, deal:terminal_deals(id, name, status)')
+      .eq('tab_id', tabId)
+      .eq('status', 'active')
+      .order('display_order', { ascending: true });
+    navOrdered = (data ?? [])
+      .map((a) => (Array.isArray(a.deal) ? a.deal[0] : a.deal) as { id: string; name: string; status: string } | null)
+      .filter((d): d is { id: string; name: string; status: string } => !!d && d.status !== 'draft')
+      .map((d) => ({ id: d.id, name: d.name }));
+  } else {
+    navOrdered = (navDealsData ?? [])
+      .slice()
+      .sort((a, b) => {
+        const orderA = STATUS_ORDER[a.status] ?? 2;
+        const orderB = STATUS_ORDER[b.status] ?? 2;
+        if (orderA !== orderB) return orderA - orderB;
+        if (a.dd_deadline && b.dd_deadline) {
+          return new Date(a.dd_deadline).getTime() - new Date(b.dd_deadline).getTime();
+        }
+        if (a.dd_deadline) return -1;
+        if (b.dd_deadline) return 1;
+        return 0;
+      })
+      .map((d) => ({ id: d.id, name: d.name }));
+  }
+
+  const currentIdx = navOrdered.findIndex((d) => d.id === id);
+  const prevDeal = currentIdx > 0 ? navOrdered[currentIdx - 1] : null;
+  const nextDeal = currentIdx >= 0 && currentIdx < navOrdered.length - 1
+    ? navOrdered[currentIdx + 1]
     : null;
 
   // Generate photo URLs (synchronous — no DB call)
@@ -292,6 +366,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
       insights={(insightsData ?? []) as DealInsight[]}
       prevDeal={prevDeal}
       nextDeal={nextDeal}
+      navContext={navFrom ?? null}
       userNote={userNoteData ?? null}
       globalFeeDefaults={globalFeeDefaults}
       resolvedDealFees={resolvedDealFees}

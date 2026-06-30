@@ -14,9 +14,15 @@ interface DealCardProps {
   locale: string;
   index?: number;
   previewMode?: boolean;
+  /**
+   * Source list this card belongs to, carried into the deal page so prev/next
+   * navigation stays scoped to the originating page (e.g. 'dashboard',
+   * 'marketplace', 'curated:<tabId>'). Ignored in preview mode.
+   */
+  from?: string;
 }
 
-export default function DealCard({ deal, locale, index, previewMode = false }: DealCardProps) {
+export default function DealCard({ deal, locale, index, previewMode = false, from }: DealCardProps) {
   const t = useTranslations('portal.dealCard');
   const tPt = useTranslations('portal.propertyTypes');
   const [watched, setWatched] = useState(false);
@@ -69,9 +75,11 @@ export default function DealCard({ deal, locale, index, previewMode = false }: D
 
   const address = [deal.address, deal.city, deal.state].filter(Boolean).join(', ');
 
+  const fromQuery = from ? `?from=${encodeURIComponent(from)}` : '';
+
   return (
     <Link
-      href={previewMode ? `/admin/deals/${deal.id}/preview` : `/portal/deals/${deal.id}`}
+      href={previewMode ? `/admin/deals/${deal.id}/preview` : `/portal/deals/${deal.id}${fromQuery}`}
       locale={locale}
       className="group relative block opacity-0 animate-fade-up"
       style={{ animationDelay: `${(index || 0) * 120}ms` }}

@@ -31,6 +31,8 @@ export interface DealDetailClientProps {
   insights?: DealInsight[];
   prevDeal?: { id: string; name: string } | null;
   nextDeal?: { id: string; name: string } | null;
+  /** Source list (?from=…) so prev/next links stay scoped to the origin page. */
+  navContext?: string | null;
   userNote?: { content: string; updated_at: string } | null;
   /**
    * When true the view renders exactly as an investor sees it, but every write

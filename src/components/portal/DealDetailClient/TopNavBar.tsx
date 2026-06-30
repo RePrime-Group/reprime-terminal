@@ -16,6 +16,8 @@ interface Props {
   handleShareDeal: () => void;
   onExpressInterestClick: () => void;
   userNote?: { content: string; updated_at: string } | null;
+  /** Source list (?from=…) the investor arrived from; drives the back button. */
+  navContext?: string | null;
 }
 
 export function TopNavBar({
@@ -29,17 +31,36 @@ export function TopNavBar({
   handleShareDeal,
   onExpressInterestClick,
   userNote,
+  navContext,
 }: Props) {
   const t = useTranslations('portal.dealDetail');
   const tPt = useTranslations('portal.propertyTypes');
   const router = useRouter();
   const previewTitle = previewMode ? 'Preview mode — read-only' : undefined;
 
+  // Resolve the originating list page from the nav context so the back button
+  // returns there explicitly (deep links / cross-entry have no reliable
+  // history, so router.back() is only the fallback).
+  const backHref = (() => {
+    if (previewMode || !navContext) return null;
+    if (navContext === 'dashboard') return `/${locale}/portal`;
+    if (navContext === 'marketplace') return `/${locale}/portal/marketplace`;
+    if (navContext.startsWith('curated:')) {
+      return `/${locale}/portal/curated/${navContext.slice('curated:'.length)}`;
+    }
+    return null;
+  })();
+
+  function handleBack() {
+    if (backHref) router.push(backHref);
+    else router.back();
+  }
+
   return (
     <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-[#EEF0F4] shadow-[0_1px_3px_rgba(14,52,112,0.04),0_4px_12px_rgba(14,52,112,0.02)]">
       <div className="h-[64px] flex items-center px-4 md:px-8">
         <button
-          onClick={() => router.back()}
+          onClick={handleBack}
           className="hover:bg-[#F7F8FA] rounded-full p-2 transition mr-3 group"
           aria-label="Back to portal"
         >

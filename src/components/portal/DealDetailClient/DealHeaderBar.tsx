@@ -12,9 +12,10 @@ interface Props {
   locale: string;
   previewMode?: boolean;
   activeTab: TabKey;
+  navContext?: string | null;
 }
 
-export function DealHeaderBar({ deal, prevDeal, nextDeal, locale, previewMode, activeTab }: Props) {
+export function DealHeaderBar({ deal, prevDeal, nextDeal, locale, previewMode, activeTab, navContext }: Props) {
   const t = useTranslations('portal.dealDetail');
   const tc = useTranslations('portal.dealCard');
   const tPt = useTranslations('portal.propertyTypes');
@@ -51,6 +52,7 @@ export function DealHeaderBar({ deal, prevDeal, nextDeal, locale, previewMode, a
           locale={locale}
           previewMode={previewMode ?? false}
           activeTab={activeTab}
+          navContext={navContext ?? null}
           prevLabel={t('previousDeal')}
           nextLabel={t('nextDeal')}
         />

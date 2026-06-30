@@ -283,7 +283,7 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-5 md:gap-7">
                     {draftDeals.map((deal, index) => (
-                      <DealCard key={deal.id} deal={deal} locale={locale} index={index} previewMode={previewMode} />
+                      <DealCard key={deal.id} deal={deal} locale={locale} index={index} previewMode={previewMode} from="dashboard" />
                     ))}
                   </div>
                 </div>
@@ -305,7 +305,7 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
                   <div ref={gridRefCallback} className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-5 md:gap-7">
                     {activeDeals.map((deal, index) => (
                       <div key={deal.id} {...(index === 0 ? { 'data-tour': 'first-deal' } : {})}>
-                        <DealCard deal={deal} locale={locale} index={index} previewMode={previewMode} />
+                        <DealCard deal={deal} locale={locale} index={index} previewMode={previewMode} from="dashboard" />
                       </div>
                     ))}
                   </div>
@@ -326,7 +326,7 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
                   </div>
                   <div ref={gridRefCallback} className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-5 md:gap-7">
                     {assignedDeals.map((deal, index) => (
-                      <DealCard key={deal.id} deal={deal} locale={locale} index={index} previewMode={previewMode} />
+                      <DealCard key={deal.id} deal={deal} locale={locale} index={index} previewMode={previewMode} from="dashboard" />
                     ))}
                   </div>
                 </div>
@@ -360,7 +360,7 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
                   </div>
                   <div ref={gridRefCallback} className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-5 md:gap-7">
                     {closedDeals.map((deal, index) => (
-                      <DealCard key={deal.id} deal={deal} locale={locale} index={index} previewMode={previewMode} />
+                      <DealCard key={deal.id} deal={deal} locale={locale} index={index} previewMode={previewMode} from="dashboard" />
                     ))}
                   </div>
                 </div>
@@ -380,7 +380,7 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
                   </div>
                   <div ref={gridRefCallback} className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-5 md:gap-7">
                     {cancelledDeals.map((deal, index) => (
-                      <DealCard key={deal.id} deal={deal} locale={locale} index={index} previewMode={previewMode} />
+                      <DealCard key={deal.id} deal={deal} locale={locale} index={index} previewMode={previewMode} from="dashboard" />
                     ))}
                   </div>
                 </div>

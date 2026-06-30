@@ -73,6 +73,7 @@ export function DealPager({
   locale,
   previewMode,
   activeTab,
+  navContext,
   prevLabel,
   nextLabel,
 }: {
@@ -81,19 +82,25 @@ export function DealPager({
   locale: string;
   previewMode: boolean;
   activeTab: string;
+  navContext?: string | null;
   prevLabel: string;
   nextLabel: string;
 }) {
   const basePath = previewMode
     ? `/${locale}/admin/deals`
     : `/${locale}/portal/deals`;
-  const tabQuery = activeTab && activeTab !== 'overview' ? `?tab=${activeTab}` : '';
+  // Preserve both the active content tab and the source list (?from=…) so
+  // cycling stays within the originating page. `from` is dropped in preview.
+  const params = new URLSearchParams();
+  if (activeTab && activeTab !== 'overview') params.set('tab', activeTab);
+  if (!previewMode && navContext) params.set('from', navContext);
+  const query = params.toString() ? `?${params.toString()}` : '';
 
   function hrefFor(target: { id: string; name: string } | null): string | null {
     if (!target) return null;
     return previewMode
-      ? `${basePath}/${target.id}/preview${tabQuery}`
-      : `${basePath}/${target.id}${tabQuery}`;
+      ? `${basePath}/${target.id}/preview${query}`
+      : `${basePath}/${target.id}${query}`;
   }
 
   const prevHref = hrefFor(prevDeal);

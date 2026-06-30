@@ -113,7 +113,7 @@ export default function CuratedTabClient({
                       {t('exclusive')}
                     </span>
                   )}
-                  <DealCard deal={deal} locale={locale} index={i} previewMode={previewMode} />
+                  <DealCard deal={deal} locale={locale} index={i} previewMode={previewMode} from={`curated:${tabId}`} />
                   {deal.match_reason && (
                     <p className="text-[12px] text-[#BC9C45] leading-snug px-1">{deal.match_reason}</p>
                   )}

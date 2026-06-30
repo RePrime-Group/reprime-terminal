@@ -29,7 +29,7 @@ export default function MarketplaceClient({ deals, locale }: MarketplaceClientPr
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
             {filteredDeals.map((deal, i) => (
-              <DealCard key={deal.id} deal={deal} locale={locale} index={i} />
+              <DealCard key={deal.id} deal={deal} locale={locale} index={i} from="marketplace" />
             ))}
           </div>
         )}
