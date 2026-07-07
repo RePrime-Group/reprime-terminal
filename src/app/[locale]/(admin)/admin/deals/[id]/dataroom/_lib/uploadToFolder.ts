@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { TerminalDDDocument } from '@/lib/types/database';
 import { maybeCompressImage } from '@/lib/utils/imageCompression';
+import { sha256Hex, storageKeyForHash } from '@/lib/utils/sha256';
 
 // Supabase storage keys reject non-ASCII characters (e.g. "×", emoji, accented
 // letters). Replace anything outside [A-Za-z0-9._-] with "_" and collapse runs,
@@ -20,6 +21,7 @@ export function sanitizeStorageName(name: string): string {
 export interface UploadResult {
   document?: TerminalDDDocument;
   error?: string;
+  skipped?: boolean; // true when an identical file (same deal + sha256) already exists
 }
 
 // Upload one file into a folder. Returns the inserted document row.
@@ -36,8 +38,21 @@ export async function uploadFileToFolder(
   },
 ): Promise<UploadResult> {
   const { dealId, folderId, file, uploadedBy } = args;
-  const safeName = sanitizeStorageName(file.name);
-  const storagePath = `${dealId}/${folderId}/${Date.now()}-${safeName}`;
+
+  // sha256 of the ORIGINAL file bytes is the dedup key. Skip if this deal
+  // already holds the same content.
+  const sha256 = await sha256Hex(await file.arrayBuffer());
+  const { data: dup } = await supabase
+    .from('terminal_dd_documents')
+    .select('id')
+    .eq('deal_id', dealId)
+    .eq('sha256', sha256)
+    .limit(1)
+    .maybeSingle();
+  if (dup) return { skipped: true };
+
+  // Content-addressed storage path (deal/sha256.ext) so Storage never dupes.
+  const storagePath = storageKeyForHash(dealId, sha256, file.name);
 
   // Re-encode large images client-side so the stored object is small enough
   // for Supabase's image-render endpoint and so investor page loads aren't
@@ -47,7 +62,7 @@ export async function uploadFileToFolder(
   const { error: storageError } = await supabase.storage
     .from('terminal-dd-documents')
     .upload(storagePath, toUpload, {
-      upsert: false,
+      upsert: true, // identical bytes reuse the same object
       contentType: toUpload.type || file.type || 'application/octet-stream',
     });
 
@@ -75,6 +90,7 @@ export async function uploadFileToFolder(
       file_size: String(toUpload.size),
       file_type: toUpload.type || file.type,
       storage_path: storagePath,
+      sha256,
       uploaded_by: uploadedBy,
       sort_order: nextOrder,
     })
@@ -82,6 +98,10 @@ export async function uploadFileToFolder(
     .single();
 
   if (insertError || !inserted) {
+    // Lost a race to another identical upload (unique deal_id+sha256). The
+    // storage object is content-addressed and shared with the winning row, so
+    // leave it in place and treat this as a skip.
+    if (insertError?.code === '23505') return { skipped: true };
     // Best-effort rollback of the storage object so we don't leak files.
     await supabase.storage.from('terminal-dd-documents').remove([storagePath]);
     return { error: `Failed to save record: ${insertError?.message ?? 'unknown'}` };

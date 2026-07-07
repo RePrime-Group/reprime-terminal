@@ -7,6 +7,7 @@ import Button from '@/components/ui/Button';
 export interface ZipExtractResult {
   foldersCreated: number;
   filesExtracted: number;
+  filesSkipped?: number;
   errors: string[];
   classifications?: { fileName: string; category: string; confidence: string }[];
 }
@@ -70,6 +71,7 @@ export function ZipExtractModal({
         setResult({
           foldersCreated: data.foldersCreated,
           filesExtracted: data.filesUploaded,
+          filesSkipped: data.filesSkipped,
           errors: data.errors ?? [],
           classifications: data.classifications,
         });
@@ -101,6 +103,7 @@ export function ZipExtractModal({
             <p className="text-xs text-green-600/80 mt-1">
               {result.foldersCreated} folder{result.foldersCreated !== 1 ? 's' : ''} created,{' '}
               {result.filesExtracted} file{result.filesExtracted !== 1 ? 's' : ''} organized
+              {result.filesSkipped ? `, ${result.filesSkipped} duplicate${result.filesSkipped !== 1 ? 's' : ''} skipped` : ''}
             </p>
           </div>
           {result.classifications && result.classifications.length > 0 && (

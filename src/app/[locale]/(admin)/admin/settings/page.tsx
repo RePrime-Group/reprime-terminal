@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { REPRIME_STANDARD_FEES } from '@/lib/utils/fee-resolver';
+import { getGoogleDriveStatus, disconnectGoogleDrive } from './actions';
 
 interface ContactInfo {
   contact_name: string;
@@ -72,7 +74,16 @@ function getDefaultSlots(): Record<DayOfWeek, DaySlot> {
 export default function SettingsPage() {
   const t = useTranslations('admin.settings');
   const tc = useTranslations('common');
+  const locale = useLocale();
+  const searchParams = useSearchParams();
   const supabase = createClient();
+
+  // Google Drive connection state
+  const [driveStatus, setDriveStatus] = useState<
+    { connected: false } | { connected: true; email: string } | null
+  >(null);
+  const [driveDisconnecting, setDriveDisconnecting] = useState(false);
+  const gdriveResult = searchParams.get('gdrive'); // set by the OAuth callback
 
   const DAY_LABELS: Record<DayOfWeek, string> = {
     1: t('monday'),
@@ -190,6 +201,19 @@ export default function SettingsPage() {
     loadSettings();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Load Google Drive connection status (re-runs when returning from the OAuth
+  // callback, which appends ?gdrive=... to the URL).
+  useEffect(() => {
+    getGoogleDriveStatus().then(setDriveStatus);
+  }, [gdriveResult]);
+
+  const handleDisconnectDrive = async () => {
+    setDriveDisconnecting(true);
+    const res = await disconnectGoogleDrive();
+    if (res.ok) setDriveStatus({ connected: false });
+    setDriveDisconnecting(false);
+  };
 
   const handleSaveContact = async () => {
     setContactSaving(true);
@@ -557,6 +581,48 @@ export default function SettingsPage() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Section 5: Google Drive */}
+      <div className="bg-white rounded-2xl border border-rp-gray-200 p-6 mt-6">
+        <h2 className="text-[16px] font-semibold text-rp-navy mb-1.5">{t('googleDrive')}</h2>
+        <p className="text-[13px] text-rp-gray-400 mb-5">{t('googleDriveDesc')}</p>
+
+        {gdriveResult === 'connected' && (
+          <div className="mb-4 rounded-lg bg-green-50 border border-green-200 px-4 py-2.5 text-sm text-green-700">
+            {t('googleDriveConnectedToast')}
+          </div>
+        )}
+        {gdriveResult && gdriveResult !== 'connected' && (
+          <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-2.5 text-sm text-red-600">
+            {t('googleDriveErrorToast')}
+          </div>
+        )}
+
+        {driveStatus === null ? (
+          <p className="text-sm text-rp-gray-400">{tc('loading')}</p>
+        ) : driveStatus.connected ? (
+          <div className="flex flex-wrap items-center justify-between gap-4 max-w-lg rounded-xl border border-rp-gray-200 px-4 py-3">
+            <div className="min-w-0">
+              <div className="text-[13px] font-semibold text-rp-navy">
+                {t('googleDriveConnectedAs')}
+              </div>
+              <div className="text-[13px] text-rp-gray-600 truncate">{driveStatus.email}</div>
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              loading={driveDisconnecting}
+              onClick={handleDisconnectDrive}
+            >
+              {t('googleDriveDisconnect')}
+            </Button>
+          </div>
+        ) : (
+          <a href={`/api/integrations/google-drive/connect?locale=${locale}`}>
+            <Button variant="gold">{t('googleDriveConnect')}</Button>
+          </a>
+        )}
       </div>
     </div>
   );

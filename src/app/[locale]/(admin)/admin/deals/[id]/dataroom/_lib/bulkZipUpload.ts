@@ -7,8 +7,8 @@ import {
 } from '@zip.js/zip.js';
 import * as tus from 'tus-js-client';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { sanitizeStorageName } from './uploadToFolder';
 import { maybeCompressImage } from '@/lib/utils/imageCompression';
+import { sha256Hex, storageKeyForHash } from '@/lib/utils/sha256';
 
 // Run zip.js decompression in a Web Worker to keep the UI thread responsive
 // during long extractions. The library bundles its workers but we still need
@@ -304,7 +304,7 @@ export async function bulkZipUpload(opts: BulkUploadOptions): Promise<BulkUpload
       onProgress({ ...progress });
 
       try {
-        const uploaded = await uploadOne({
+        const result = await uploadOne({
           rec,
           folderId,
           dealId,
@@ -323,11 +323,15 @@ export async function bulkZipUpload(opts: BulkUploadOptions): Promise<BulkUpload
           },
           signal,
         });
-        if (uploaded) {
+        if (result === 'uploaded') {
           uploadedNames.push(rec.fileName);
           // Once uploaded, mark the dedup keys so a same-run duplicate is caught.
           dedupSet.add(dedupKey(folderId, rec.fileName, rec.size));
           if (isImage) imageNameSet.add(nameOnlyKey(folderId, rec.fileName));
+        } else if (result === 'skipped') {
+          // Content already on the deal (matched by sha256).
+          filesSkipped++;
+          progress.filesSkipped = filesSkipped;
         }
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
@@ -374,7 +378,7 @@ async function uploadOne(args: {
   onChunkProgress: (delta: number) => void;
   onRetry?: (attempt: number, err: unknown) => void;
   signal?: AbortSignal;
-}): Promise<boolean> {
+}): Promise<'uploaded' | 'skipped'> {
   const {
     rec, folderId, dealId, userId, supabase,
     accessToken, supabaseUrl, supabaseAnonKey, onChunkProgress, onRetry, signal,
@@ -397,26 +401,35 @@ async function uploadOne(args: {
   // in a File since maybeCompressImage keys off file.name.
   const fileForCompress = new File([rawBlob], rec.fileName, { type: contentType });
   const toUpload = await maybeCompressImage(fileForCompress);
+
+  // Dedup on the ORIGINAL entry bytes. Skip if this deal already has the file.
+  const sha256 = await sha256Hex(await rawBlob.arrayBuffer());
+  const { data: dup } = await supabase
+    .from('terminal_dd_documents')
+    .select('id')
+    .eq('deal_id', dealId)
+    .eq('sha256', sha256)
+    .limit(1)
+    .maybeSingle();
+  if (dup) return 'skipped';
   const uploadSize = toUpload.size;
   const uploadType = toUpload.type || contentType;
 
-  // Storage upload with retry on transient errors (504/503/502/network). Each
-  // attempt gets its own storage path so a partial leftover from a failed
-  // attempt doesn't collide on retry. `bytesReportedThisAttempt` lets us roll
-  // back the progress counter before retrying so the bar stays accurate.
+  // Content-addressed path (deal/sha256.ext): identical bytes reuse one object,
+  // so retries and same-content re-uploads are naturally idempotent (upsert).
+  // `bytesReportedThisAttempt` lets us roll back the progress counter before
+  // retrying so the bar stays accurate.
+  const storagePath = storageKeyForHash(dealId, sha256, rec.fileName);
   let bytesReportedThisAttempt = 0;
   const attemptOnChunk = (delta: number) => {
     bytesReportedThisAttempt += delta;
     onChunkProgress(delta);
   };
 
-  let finalStoragePath = '';
+  let uploaded = false;
   let lastErr: unknown = null;
   for (let attempt = 1; attempt <= MAX_UPLOAD_ATTEMPTS; attempt++) {
     if (signal?.aborted) throw new Error('Cancelled');
-
-    const safeName = sanitizeStorageName(rec.fileName);
-    const storagePath = `${dealId}/${folderId}/${Date.now()}-${attempt}-${safeName}`;
     bytesReportedThisAttempt = 0;
 
     try {
@@ -434,11 +447,11 @@ async function uploadOne(args: {
       } else {
         const { error } = await supabase.storage
           .from('terminal-dd-documents')
-          .upload(storagePath, toUpload, { upsert: false, contentType: uploadType });
+          .upload(storagePath, toUpload, { upsert: true, contentType: uploadType });
         if (error) throw error;
         attemptOnChunk(uploadSize);
       }
-      finalStoragePath = storagePath;
+      uploaded = true;
       break;
     } catch (err) {
       lastErr = err;
@@ -456,8 +469,7 @@ async function uploadOne(args: {
     }
   }
 
-  if (!finalStoragePath) throw lastErr ?? new Error('Upload failed');
-  const storagePath = finalStoragePath;
+  if (!uploaded) throw lastErr ?? new Error('Upload failed');
 
   // sort_order: just append. For master uploads we don't try to preserve any
   // ZIP-internal ordering — files land in arrival order.
@@ -480,16 +492,20 @@ async function uploadOne(args: {
       file_size: String(uploadSize),
       file_type: uploadType,
       storage_path: storagePath,
+      sha256,
       uploaded_by: userId,
       sort_order: nextOrder,
     });
 
   if (insertErr) {
+    // Lost a race to an identical upload (unique deal_id+sha256): the shared,
+    // content-addressed object stays; just count this as a skip.
+    if ((insertErr as { code?: string }).code === '23505') return 'skipped';
     await supabase.storage.from('terminal-dd-documents').remove([storagePath]);
     throw new Error(`DB insert failed: ${insertErr.message}`);
   }
 
-  return true;
+  return 'uploaded';
 }
 
 // Resumable upload through Supabase's TUS endpoint. Auth headers carry the
@@ -512,7 +528,7 @@ function tusUpload(args: {
       headers: {
         authorization: `Bearer ${args.accessToken}`,
         apikey: args.supabaseAnonKey,
-        'x-upsert': 'false',
+        'x-upsert': 'true',
       },
       uploadDataDuringCreation: true,
       removeFingerprintOnSuccess: true,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import JSZip from 'jszip';
+import { sha256Hex, storageKeyForHash } from '@/lib/utils/sha256';
 
 const MAX_ZIP_EXTRACT_SIZE = 200 * 1024 * 1024; // 200MB
 
@@ -68,6 +69,7 @@ export async function POST(request: NextRequest) {
   const errors: string[] = [];
   let foldersCreated = 0;
   let filesExtracted = 0;
+  let filesSkipped = 0;
 
   try {
     const zip = await JSZip.loadAsync(await fileData.arrayBuffer());
@@ -185,11 +187,27 @@ export async function POST(request: NextRequest) {
 
       try {
         const content = await zipEntry.async('arraybuffer');
-        const uploadPath = `${dealId}/${folderId}/${Date.now()}-${fileName}`;
+
+        // Dedup on content: skip if this deal already holds the same bytes.
+        const sha256 = await sha256Hex(content);
+        const { data: dup } = await supabase
+          .from('terminal_dd_documents')
+          .select('id')
+          .eq('deal_id', dealId)
+          .eq('sha256', sha256)
+          .limit(1)
+          .maybeSingle();
+        if (dup) {
+          filesSkipped++;
+          continue;
+        }
+
+        const uploadPath = storageKeyForHash(dealId, sha256, fileName);
 
         const { error: uploadError } = await supabase.storage
           .from('terminal-dd-documents')
           .upload(uploadPath, new Blob([content]), {
+            upsert: true,
             contentType: guessMimeType(fileName),
           });
 
@@ -208,10 +226,16 @@ export async function POST(request: NextRequest) {
             file_size: String(content.byteLength),
             file_type: guessMimeType(fileName),
             storage_path: uploadPath,
+            sha256,
             uploaded_by: user.id,
           });
 
         if (insertError) {
+          // Race lost to an identical upload (unique deal_id+sha256): count as skip.
+          if ((insertError as { code?: string }).code === '23505') {
+            filesSkipped++;
+            continue;
+          }
           errors.push(`${fileName}: saved but record creation failed — ${insertError.message}`);
           continue;
         }
@@ -229,6 +253,7 @@ export async function POST(request: NextRequest) {
     success: true,
     foldersCreated,
     filesExtracted,
+    filesSkipped,
     errors,
   });
 }

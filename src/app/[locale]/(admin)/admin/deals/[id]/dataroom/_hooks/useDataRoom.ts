@@ -162,7 +162,7 @@ export function useDataRoom(dealId: string) {
 
   const uploadFile = useCallback(
     async (folderId: string, file: File) => {
-      const { document, error } = await uploadFileToFolder(supabase, {
+      const { document, error, skipped } = await uploadFileToFolder(supabase, {
         dealId,
         folderId,
         file,
@@ -170,12 +170,12 @@ export function useDataRoom(dealId: string) {
       });
       if (error) {
         setError(error);
-        return null;
+        return { document: null, skipped: false };
       }
       if (document) {
         setDocuments((prev) => [...prev, document]);
       }
-      return document ?? null;
+      return { document: document ?? null, skipped: !!skipped };
     },
     [supabase, dealId, userId],
   );

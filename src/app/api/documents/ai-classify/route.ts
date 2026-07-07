@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import JSZip from 'jszip';
 import { classifyDocuments, DD_CATEGORIES } from '@/lib/ai/classify-documents';
+import { sha256Hex, storageKeyForHash } from '@/lib/utils/sha256';
 
 export const maxDuration = 60; // Allow up to 60s for AI classification
 
@@ -127,6 +128,7 @@ export async function POST(request: NextRequest) {
 
   let foldersCreated = 0;
   let filesUploaded = 0;
+  let filesSkipped = 0;
   const errors: string[] = [];
 
   // Create folders and upload files
@@ -165,7 +167,6 @@ export async function POST(request: NextRequest) {
         if (!zipEntry) continue;
 
         const content = await zipEntry.async('arraybuffer');
-        const uploadPath = `${dealId}/${folderId}/${Date.now()}-${file.fileName}`;
 
         const ext = file.fileName.split('.').pop()?.toLowerCase() ?? '';
         const mimeMap: Record<string, string> = {
@@ -175,9 +176,25 @@ export async function POST(request: NextRequest) {
         };
         const mimeType = mimeMap[ext] ?? 'application/octet-stream';
 
+        // Dedup on content: skip if this deal already holds the same bytes.
+        const sha256 = await sha256Hex(content);
+        const { data: dup } = await supabase
+          .from('terminal_dd_documents')
+          .select('id')
+          .eq('deal_id', dealId)
+          .eq('sha256', sha256)
+          .limit(1)
+          .maybeSingle();
+        if (dup) {
+          filesSkipped++;
+          continue;
+        }
+
+        const uploadPath = storageKeyForHash(dealId, sha256, file.fileName);
+
         const { error: uploadErr } = await supabase.storage
           .from('terminal-dd-documents')
-          .upload(uploadPath, new Blob([content]), { contentType: mimeType });
+          .upload(uploadPath, new Blob([content]), { upsert: true, contentType: mimeType });
 
         if (uploadErr) {
           errors.push(`${file.fileName}: upload failed — ${uploadErr.message}`);
@@ -193,16 +210,22 @@ export async function POST(request: NextRequest) {
             file_size: String(content.byteLength),
             file_type: mimeType,
             storage_path: uploadPath,
+            sha256,
             uploaded_by: user.id,
           });
 
         if (insertErr) {
+          // Race lost to an identical upload (unique deal_id+sha256): count as skip.
+          if ((insertErr as { code?: string }).code === '23505') {
+            filesSkipped++;
+            continue;
+          }
           errors.push(`${file.fileName}: record failed — ${insertErr.message}`);
           continue;
         }
 
         filesUploaded++;
-      } catch (err) {
+      } catch {
         errors.push(`${file.fileName}: extraction error`);
       }
     }
@@ -212,6 +235,7 @@ export async function POST(request: NextRequest) {
     success: true,
     foldersCreated,
     filesUploaded,
+    filesSkipped,
     totalFiles: filePaths.length,
     classifications: classifications.map((c) => ({
       fileName: c.fileName,

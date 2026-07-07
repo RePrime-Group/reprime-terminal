@@ -17,6 +17,7 @@ import { useDataRoom } from '../_hooks/useDataRoom';
 import { useSelection } from '../_hooks/useSelection';
 import { DataRoomProvider } from './DataRoomContext';
 import { Toolbar } from './Toolbar';
+import { GoogleDrivePanel } from './GoogleDrivePanel';
 import { BulkBar } from './BulkBar';
 import { FolderNode } from './Nodes';
 import { ContextMenu, type ContextMenuState } from './ContextMenu';
@@ -28,6 +29,7 @@ import {
 } from './Modals';
 import { ZipExtractModal } from './ZipExtractModal';
 import { findNode, flattenFolders, wouldCreateCircle } from '../_lib/tree';
+import type { DataRoomFolderNode } from '@/lib/types/database';
 
 interface Props {
   dealId: string;
@@ -178,9 +180,11 @@ export default function DataRoomClient({ dealId, dealName, locale }: Props) {
       if (list.length === 0) return;
 
       const uploadedNames: string[] = [];
+      let skippedCount = 0;
       for (const file of list) {
-        const doc = await data.uploadFile(folderId, file);
-        if (doc) uploadedNames.push(doc.display_name ?? doc.name);
+        const { document, skipped } = await data.uploadFile(folderId, file);
+        if (skipped) skippedCount++;
+        if (document) uploadedNames.push(document.display_name ?? document.name);
 
         // ZIP files trigger extract modal after the upload finishes.
         const isZip =
@@ -188,9 +192,16 @@ export default function DataRoomClient({ dealId, dealName, locale }: Props) {
           file.type === 'application/x-zip-compressed' ||
           file.type === 'application/x-zip' ||
           file.name.toLowerCase().endsWith('.zip');
-        if (isZip && doc?.storage_path) {
-          setZipModal({ open: true, storagePath: doc.storage_path, targetFolderId: folderId });
+        if (isZip && document?.storage_path) {
+          setZipModal({ open: true, storagePath: document.storage_path, targetFolderId: folderId });
         }
+      }
+
+      if (skippedCount > 0) {
+        setNotifyToast(
+          `Skipped ${skippedCount} duplicate file${skippedCount === 1 ? '' : 's'} already in this deal.`,
+        );
+        setTimeout(() => setNotifyToast(null), 4000);
       }
 
       if (notifyOnUpload && uploadedNames.length > 0) {
@@ -279,6 +290,19 @@ export default function DataRoomClient({ dealId, dealName, locale }: Props) {
 
   const deleteFolderTarget = deleteFolderId ? findNode(data.tree, deleteFolderId) : null;
 
+  // Flat, indented folder list for the Google Drive import destination picker.
+  const driveFolderOptions = useMemo(() => {
+    const out: { id: string; label: string }[] = [];
+    const walk = (nodes: DataRoomFolderNode[], depth: number) => {
+      for (const node of nodes) {
+        out.push({ id: node.id, label: `${'  '.repeat(depth)}${node.name}` });
+        walk(node.children, depth + 1);
+      }
+    };
+    walk(data.tree, 0);
+    return out;
+  }, [data.tree]);
+
   const contextValue = useMemo(
     () => ({
       dealId,
@@ -328,6 +352,15 @@ export default function DataRoomClient({ dealId, dealName, locale }: Props) {
           onToggleNotify={() => setNotifyOnUpload((v) => !v)}
           onNewFolder={() => setCreateFolderParent({ open: true, parentId: null })}
           onRefresh={data.refresh}
+        />
+
+        <GoogleDrivePanel
+          dealId={dealId}
+          locale={locale}
+          folderOptions={driveFolderOptions}
+          onImported={async () => {
+            await data.refresh();
+          }}
         />
 
         {notifyToast && (
