@@ -31,8 +31,9 @@ const DEAL_COLUMNS = [
   'assignment_fee', 'assignment_irr', 'gplp_irr',
   'acq_fee', 'asset_mgmt_fee', 'gp_carry', 'loan_fee',
   'dd_deadline', 'close_deadline', 'extension_deadline', 'timeline_note',
-  'deposit_amount', 'deposit_held_by', 'om_storage_path',
-  'loi_signed_storage_path', 'psa_storage_path', 'full_report_storage_path', 'costar_report_storage_path', 'tenants_report_storage_path', 'lease_summary_storage_path',
+  'deposit_amount', 'deposit_held_by',
+  // Deal-level document slots (OM/LOI/PSA/reports) are sourced from
+  // terminal_dd_documents below, not from terminal_deals columns.
   'neighborhood', 'metro_population', 'job_growth',
   'investment_highlights', 'acquisition_thesis',
   'ltv', 'interest_rate', 'amortization_years', 'loan_fee_points', 'io_period_months',
@@ -108,7 +109,7 @@ export default async function DealDetailPage({ params, searchParams }: DealDetai
       .eq('deal_id', id),
     supabase
       .from('terminal_deal_addresses')
-      .select('id, label, address, city, state, square_footage, units, om_storage_path, display_order')
+      .select('id, label, address, city, state, square_footage, units, display_order')
       .eq('deal_id', id)
       .order('display_order', { ascending: true }),
     supabase
@@ -168,6 +169,33 @@ export default async function DealDetailPage({ params, searchParams }: DealDetai
   if (!dealData) redirect(`/${locale}/portal`);
 
   const deal = dealData as unknown as TerminalDeal;
+
+  // Deal-level + per-address document slots live in terminal_dd_documents (the
+  // single source of truth), keyed by the fixed slot `name`. Overlay the storage
+  // paths back onto the deal + address objects the client already reads.
+  const { data: slotDocs } = await supabase
+    .from('terminal_dd_documents')
+    .select('name, storage_path')
+    .eq('deal_id', id);
+  const slotPathByName = new Map<string, string>(
+    (slotDocs ?? [])
+      .filter((d): d is { name: string; storage_path: string } => !!d.storage_path)
+      .map((d) => [d.name, d.storage_path]),
+  );
+  const dealWithDocs = {
+    ...deal,
+    om_storage_path: slotPathByName.get('offering-memorandum') ?? null,
+    loi_signed_storage_path: slotPathByName.get('loi-signed') ?? null,
+    psa_storage_path: slotPathByName.get('purchase-sale-agreement') ?? null,
+    full_report_storage_path: slotPathByName.get('full-report') ?? null,
+    costar_report_storage_path: slotPathByName.get('costar-report') ?? null,
+    tenants_report_storage_path: slotPathByName.get('tenants-report') ?? null,
+    lease_summary_storage_path: slotPathByName.get('lease-summary') ?? null,
+  } as TerminalDeal;
+  const addressesWithDocs = (addressesData ?? []).map((a) => ({
+    ...a,
+    om_storage_path: slotPathByName.get(`offering-memorandum-${a.id.slice(0, 8)}`) ?? null,
+  }));
 
   const [globalFeeDefaults, investorTermsResult] = await Promise.all([
     getGlobalFeeDefaults(supabase),
@@ -339,7 +367,7 @@ export default async function DealDetailPage({ params, searchParams }: DealDetai
   return (
     <DealDetailClient
       deal={{
-        ...deal,
+        ...dealWithDocs,
         photos: [] as TerminalDealPhoto[],
         dd_folders: [],
         viewing_count: viewingCount ?? 0,
@@ -358,7 +386,7 @@ export default async function DealDetailPage({ params, searchParams }: DealDetai
       hasSignedNDA={hasSignedNDA}
       investorName={investorProfile?.full_name ?? 'Member'}
       investorEmail={investorProfile?.email ?? ''}
-      addresses={addressesData ?? []}
+      addresses={addressesWithDocs}
       pipelineTasks={tasks as { id: string; name: string; status: string; stage: string }[]}
       tenants={(tenantsData ?? []) as TerminalTenantLease[]}
       capexItems={(capexItemsData ?? []) as CapExItem[]}

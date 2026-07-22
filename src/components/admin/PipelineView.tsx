@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
+import { sha256Hex, storageKeyForHash } from '@/lib/utils/sha256';
 import { STAGE_LABELS, STAGE_DURATIONS, STAGE_ORDER } from '@/lib/pipeline/stage-templates';
 import type { PipelineStage } from '@/lib/pipeline/stage-templates';
 import {
@@ -202,9 +203,29 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
         .from('terminal_task_attachments')
         .select('*')
         .eq('task_id', expandedTaskId);
+      const rows = (data ?? []) as TaskAttachment[];
+      // Folder placement is the source of truth on the linked terminal_dd_documents
+      // row (folder_id); terminal_task_attachments.investor_folder_id is being
+      // retired. Overlay the doc row's folder_id onto investor_folder_id so the UI
+      // keeps rendering from that field.
+      const docIds = rows.map((a) => a.attachment_id).filter((id): id is string => !!id);
+      const folderByDocId = new Map<string, string | null>();
+      if (docIds.length > 0) {
+        const { data: docs } = await supabase
+          .from('terminal_dd_documents')
+          .select('id, folder_id')
+          .in('id', docIds);
+        for (const d of docs ?? []) folderByDocId.set(d.id, d.folder_id ?? null);
+      }
+      const overlaid = rows.map((a) => ({
+        ...a,
+        investor_folder_id: a.attachment_id
+          ? (folderByDocId.get(a.attachment_id) ?? null)
+          : a.investor_folder_id,
+      }));
       setTaskAttachments((prev) => ({
         ...prev,
-        [expandedTaskId]: data ?? [],
+        [expandedTaskId]: overlaid,
       }));
     })();
   }, [expandedTaskId]);
@@ -408,124 +429,226 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
 
   async function handleFileUpload(taskId: string, file: File) {
     setUploading(true);
-    const path = `pipeline/${dealId}/${taskId}/${file.name}`;
-    const { error: uploadError } = await supabase.storage
-      .from('terminal-dd-documents')
-      .upload(path, file, { upsert: true });
+    try {
+      // Content-addressed upload; the file's source of truth is a
+      // terminal_dd_documents row (folder_id null = admin-internal until the
+      // attachment is shared with investors). The task attachment references it
+      // via attachment_id — storage_path is no longer written for new rows.
+      const sha256 = await sha256Hex(await file.arrayBuffer());
+      const storagePath = storageKeyForHash(dealId, sha256, file.name);
+      const { error: uploadError } = await supabase.storage
+        .from('terminal-dd-documents')
+        .upload(storagePath, file, { upsert: true });
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        return;
+      }
 
-    if (uploadError) {
-      console.error('Upload error:', uploadError);
+      // Find-or-create the document row. Identical bytes (same deal_id, sha256)
+      // must share one row — the (deal_id, sha256) unique index enforces it — so
+      // reuse an existing match rather than inserting a duplicate.
+      let documentId: string | null = null;
+      const { data: existingDoc } = await supabase
+        .from('terminal_dd_documents')
+        .select('id')
+        .eq('deal_id', dealId)
+        .eq('sha256', sha256)
+        .maybeSingle();
+      if (existingDoc) {
+        documentId = existingDoc.id;
+      } else {
+        const insertDoc = (name: string) =>
+          supabase
+            .from('terminal_dd_documents')
+            .insert({
+              deal_id: dealId,
+              folder_id: null,
+              name,
+              display_name: file.name,
+              file_size: String(file.size),
+              file_type: file.type || null,
+              storage_path: storagePath,
+              sha256,
+              uploaded_by: currentUser?.id ?? null,
+            })
+            .select('id')
+            .single();
+        let res = await insertDoc(file.name);
+        if (res.error?.code === '23505') {
+          // A different file on this deal already claims this name; the content
+          // is new (no sha256 match above), so disambiguate with a hash suffix.
+          const dot = file.name.lastIndexOf('.');
+          const base = dot > 0 ? file.name.slice(0, dot) : file.name;
+          const ext = dot > 0 ? file.name.slice(dot) : '';
+          res = await insertDoc(`${base}-${sha256.slice(0, 8)}${ext}`);
+        }
+        documentId = res.data?.id ?? null;
+      }
+
+      const { data } = await supabase
+        .from('terminal_task_attachments')
+        .insert({
+          task_id: taskId,
+          deal_id: dealId,
+          name: file.name,
+          file_size: String(file.size),
+          file_type: file.type || null,
+          attachment_id: documentId,
+          uploaded_by: currentUser?.id ?? null,
+          show_to_investors: false,
+        })
+        .select()
+        .single();
+
+      if (data) {
+        setTaskAttachments((prev) => ({
+          ...prev,
+          [taskId]: [...(prev[taskId] ?? []), data],
+        }));
+      }
+    } finally {
       setUploading(false);
-      return;
     }
+  }
 
+  // Resolve (or lazily create) the terminal_dd_documents row backing an
+  // attachment. New uploads already carry attachment_id; legacy rows uploaded
+  // before this migration have only storage_path, so mint a document row for
+  // them on first share and remember it.
+  async function ensureAttachmentDocument(attachment: TaskAttachment): Promise<string | null> {
+    if (attachment.attachment_id) return attachment.attachment_id;
+    if (!attachment.storage_path) return null;
     const { data } = await supabase
-      .from('terminal_task_attachments')
+      .from('terminal_dd_documents')
       .insert({
-        task_id: taskId,
         deal_id: dealId,
-        name: file.name,
-        file_size: String(file.size),
-        file_type: file.type || null,
-        storage_path: path,
-        uploaded_by: currentUser?.id ?? null,
-        show_to_investors: false,
-        investor_folder_id: null,
+        folder_id: null,
+        name: attachment.name,
+        display_name: attachment.name,
+        file_size: attachment.file_size,
+        file_type: attachment.file_type,
+        storage_path: attachment.storage_path,
+        uploaded_by: attachment.uploaded_by,
       })
-      .select()
+      .select('id')
       .single();
-
-    if (data) {
-      setTaskAttachments((prev) => ({
-        ...prev,
-        [taskId]: [...(prev[taskId] ?? []), data],
-      }));
+    const id = data?.id ?? null;
+    if (id) {
+      await supabase
+        .from('terminal_task_attachments')
+        .update({ attachment_id: id })
+        .eq('id', attachment.id);
     }
-    setUploading(false);
+    return id;
   }
 
   async function toggleTransparency(attachment: TaskAttachment, value: boolean) {
+    // show_to_investors is kept on the attachment; the folder placement lives on
+    // the linked document row (folder_id). Toggling off clears the folder;
+    // toggling on keeps whatever folder is currently selected (chosen via the
+    // dropdown, which writes folder_id). investor_folder_id is no longer written.
     await supabase
       .from('terminal_task_attachments')
-      .update({ show_to_investors: value, investor_folder_id: value ? attachment.investor_folder_id : null })
+      .update({ show_to_investors: value })
       .eq('id', attachment.id);
 
-    if (value && attachment.investor_folder_id) {
-      // Create a DD document record so investors can see it.
-      // Note: investor notification is NOT fired here. Admins send notifications
-      // explicitly from the data room upload flow via the "Notify investors" toggle.
-      const { data: inserted } = await supabase
-        .from('terminal_dd_documents')
-        .insert({
-          folder_id: attachment.investor_folder_id,
-          deal_id: dealId,
-          name: attachment.name,
-          file_size: attachment.file_size,
-          file_type: attachment.file_type,
-          storage_path: attachment.storage_path,
-          uploaded_by: attachment.uploaded_by,
-        })
-        .select('id')
-        .single();
-      void inserted;
-    } else if (!value) {
-      // Remove the DD document record when hiding from investors
+    // Note: investor notification is NOT fired here. Admins send notifications
+    // explicitly from the data room upload flow via the "Notify investors" toggle.
+    const folderId = value ? (attachment.investor_folder_id ?? null) : null;
+    let attachmentDocId = attachment.attachment_id;
+    if (value && folderId) {
+      attachmentDocId = await ensureAttachmentDocument(attachment);
+      if (attachmentDocId) {
+        await supabase
+          .from('terminal_dd_documents')
+          .update({ folder_id: folderId })
+          .eq('id', attachmentDocId);
+      }
+    } else if (!value && attachmentDocId) {
       await supabase
         .from('terminal_dd_documents')
-        .delete()
-        .eq('deal_id', dealId)
-        .eq('storage_path', attachment.storage_path);
+        .update({ folder_id: null })
+        .eq('id', attachmentDocId);
     }
 
     setTaskAttachments((prev) => ({
       ...prev,
       [attachment.task_id]: (prev[attachment.task_id] ?? []).map((a) =>
-        a.id === attachment.id ? { ...a, show_to_investors: value } : a
+        a.id === attachment.id
+          ? { ...a, show_to_investors: value, investor_folder_id: folderId, attachment_id: attachmentDocId }
+          : a
       ),
     }));
   }
 
-  async function setAttachmentFolder(attachment: TaskAttachment, folderId: string | null) {
-    await supabase
-      .from('terminal_task_attachments')
-      .update({ investor_folder_id: folderId })
-      .eq('id', attachment.id);
+  async function deleteAttachment(attachment: TaskAttachment) {
+    if (!window.confirm(tc('confirmDelete'))) return;
 
-    if (attachment.show_to_investors && folderId) {
-      // Remove old DD document if exists
-      await supabase
-        .from('terminal_dd_documents')
-        .delete()
-        .eq('deal_id', dealId)
-        .eq('storage_path', attachment.storage_path);
-      // Create new one in the correct folder
-      const { data: inserted } = await supabase
-        .from('terminal_dd_documents')
-        .insert({
-          folder_id: folderId,
-          deal_id: dealId,
-          name: attachment.name,
-          file_size: attachment.file_size,
-          file_type: attachment.file_type,
-          storage_path: attachment.storage_path,
-          uploaded_by: attachment.uploaded_by,
-        })
-        .select('id')
-        .single();
-      void inserted;
-    } else if (!folderId) {
-      // Remove DD document if folder deselected
-      await supabase
-        .from('terminal_dd_documents')
-        .delete()
-        .eq('deal_id', dealId)
-        .eq('storage_path', attachment.storage_path);
+    // Remove the attachment row first, then its source-of-truth document row —
+    // but only if no other attachment still points at that document (files can be
+    // deduplicated onto one row). Chunks cascade via FK when the doc row goes.
+    await supabase.from('terminal_task_attachments').delete().eq('id', attachment.id);
+
+    const docId = attachment.attachment_id;
+    if (docId) {
+      const { count } = await supabase
+        .from('terminal_task_attachments')
+        .select('id', { count: 'exact', head: true })
+        .eq('attachment_id', docId);
+      if (!count) {
+        const { data: doc } = await supabase
+          .from('terminal_dd_documents')
+          .select('storage_path')
+          .eq('id', docId)
+          .maybeSingle();
+        await supabase.from('terminal_dd_documents').delete().eq('id', docId);
+
+        // Remove the storage object only if nothing else references the path
+        // (content-addressed files can be shared across rows).
+        if (doc?.storage_path) {
+          const { count: pathRefs } = await supabase
+            .from('terminal_dd_documents')
+            .select('id', { count: 'exact', head: true })
+            .eq('storage_path', doc.storage_path);
+          if (!pathRefs) {
+            await supabase.storage.from('terminal-dd-documents').remove([doc.storage_path]);
+          }
+        }
+      }
+    }
+
+    setTaskAttachments((prev) => ({
+      ...prev,
+      [attachment.task_id]: (prev[attachment.task_id] ?? []).filter((a) => a.id !== attachment.id),
+    }));
+  }
+
+  async function setAttachmentFolder(attachment: TaskAttachment, folderId: string | null) {
+    // Folder placement is stored on the linked document row's folder_id — the
+    // single source of truth. terminal_task_attachments.investor_folder_id is no
+    // longer written.
+    let attachmentDocId = attachment.attachment_id;
+    if (attachment.show_to_investors) {
+      if (folderId) {
+        attachmentDocId = await ensureAttachmentDocument(attachment);
+        if (attachmentDocId) {
+          await supabase
+            .from('terminal_dd_documents')
+            .update({ folder_id: folderId })
+            .eq('id', attachmentDocId);
+        }
+      } else if (attachmentDocId) {
+        await supabase
+          .from('terminal_dd_documents')
+          .update({ folder_id: null })
+          .eq('id', attachmentDocId);
+      }
     }
 
     setTaskAttachments((prev) => ({
       ...prev,
       [attachment.task_id]: (prev[attachment.task_id] ?? []).map((a) =>
-        a.id === attachment.id ? { ...a, investor_folder_id: folderId } : a
+        a.id === attachment.id ? { ...a, investor_folder_id: folderId, attachment_id: attachmentDocId } : a
       ),
     }));
   }
@@ -853,6 +976,16 @@ export default function PipelineView({ dealId, dealName, locale }: PipelineViewP
                                       ))}
                                     </select>
                                   )}
+
+                                  <button
+                                    type="button"
+                                    onClick={() => deleteAttachment(att)}
+                                    title={tc('delete')}
+                                    aria-label={tc('delete')}
+                                    className="p-1 text-[#9CA3AF] hover:text-[#DC2626] transition-colors"
+                                  >
+                                    <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd"/></svg>
+                                  </button>
                                 </div>
                               </div>
                             ))}

@@ -30,12 +30,13 @@ interface PromoteArgs {
   displayName: string;
   fileType: string | null;
   fileSize: number | null;
+  sha256?: string | null;
   addressId?: string | null;
   uploadedBy?: string | null;
 }
 
 export async function promoteDealDocAction(args: PromoteArgs): Promise<void> {
-  const { dealId, storagePath, slot, displayName, fileType, fileSize, addressId, uploadedBy } = args;
+  const { dealId, storagePath, slot, displayName, fileType, fileSize, sha256, addressId, uploadedBy } = args;
   if (!dealId || !storagePath || !slot) return;
 
   const admin = createAdminClient();
@@ -48,6 +49,17 @@ export async function promoteDealDocAction(args: PromoteArgs): Promise<void> {
     .eq('deal_id', dealId)
     .eq('name', name);
 
+  // Dedup: if the same bytes already exist for this deal (e.g. the file was also
+  // uploaded into a data-room folder), the (deal_id, sha256) unique index would
+  // reject our insert. The slot doc wins — delete the other copy first.
+  if (sha256) {
+    await admin
+      .from('terminal_dd_documents')
+      .delete()
+      .eq('deal_id', dealId)
+      .eq('sha256', sha256);
+  }
+
   const { error } = await admin
     .from('terminal_dd_documents')
     .insert({
@@ -58,6 +70,7 @@ export async function promoteDealDocAction(args: PromoteArgs): Promise<void> {
       file_type: fileType,
       file_size: fileSize !== null && fileSize !== undefined ? String(fileSize) : null,
       storage_path: storagePath,
+      sha256: sha256 ?? null,
       uploaded_by: uploadedBy ?? null,
       indexing_status: 'pending',
     });

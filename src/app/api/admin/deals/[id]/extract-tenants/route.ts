@@ -48,17 +48,30 @@ export async function POST(
   // Tenant rosters live in the OM, not the LOI.
   const { data: deal } = await admin
     .from('terminal_deals')
-    .select('id, is_portfolio, om_storage_path')
+    .select('id, is_portfolio')
     .eq('id', dealId)
     .single();
 
   if (!deal) return NextResponse.json({ error: 'Deal not found' }, { status: 404 });
 
+  // OMs are resolved from terminal_dd_documents (single source of truth) by the
+  // slot `name`: 'offering-memorandum' for the deal-level OM,
+  // 'offering-memorandum-<8-char-address-id-prefix>' for a per-building OM.
+  const omPathForSlot = async (name: string): Promise<string | null> => {
+    const { data } = await admin
+      .from('terminal_dd_documents')
+      .select('storage_path')
+      .eq('deal_id', dealId)
+      .eq('name', name)
+      .maybeSingle();
+    return data?.storage_path ?? null;
+  };
+
   // Resolve the OM + tagging target.
-  //  - Single-property deal:  use terminal_deals.om_storage_path, address_id = NULL
-  //  - Portfolio + addressId: use the address's om_storage_path, falling back to
-  //                           the deal-level OM with the building's label as
-  //                           context when the per-building OM is missing
+  //  - Single-property deal:  use the deal-level OM, address_id = NULL
+  //  - Portfolio + addressId: use the per-building OM, falling back to the
+  //                           deal-level OM with the building's label as context
+  //                           when the per-building OM is missing
   //  - Portfolio + no addressId: error — the admin must pick a building
   let omPath: string | null = null;
   let buildingLabel: string | null = null;
@@ -73,7 +86,7 @@ export async function POST(
     }
     const { data: address } = await admin
       .from('terminal_deal_addresses')
-      .select('id, label, om_storage_path')
+      .select('id, label')
       .eq('id', requestedAddressId)
       .eq('deal_id', dealId)
       .single();
@@ -82,15 +95,11 @@ export async function POST(
     }
     targetAddressId = address.id as string;
     buildingLabel = (address.label as string) ?? null;
-    if (address.om_storage_path) {
-      omPath = address.om_storage_path as string;
-    } else if (deal.om_storage_path) {
-      omPath = deal.om_storage_path as string;
-    }
+    omPath =
+      (await omPathForSlot(`offering-memorandum-${targetAddressId.slice(0, 8)}`)) ??
+      (await omPathForSlot('offering-memorandum'));
   } else {
-    if (deal.om_storage_path) {
-      omPath = deal.om_storage_path as string;
-    }
+    omPath = await omPathForSlot('offering-memorandum');
   }
 
   if (!omPath) {

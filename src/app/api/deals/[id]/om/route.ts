@@ -30,27 +30,33 @@ export async function GET(
 
   const addressId = _request.nextUrl.searchParams.get('addressId');
 
-  // Resolve the OM path: per-address when ?addressId= is provided, else the
-  // deal-level OM. Scope the address lookup to this deal so callers can't
-  // fetch another deal's OM by guessing an address id.
+  // Resolve the OM from terminal_dd_documents (the single source of truth),
+  // keyed by the slot `name`: 'offering-memorandum' for the deal-level OM,
+  // 'offering-memorandum-<8-char-address-id-prefix>' for a per-address OM.
   let omStoragePath: string | null = null;
   let fileLabel: string | null = null;
 
   if (addressId) {
+    // Scope the address lookup to this deal so callers can't fetch another
+    // deal's OM by guessing an address id, and grab its label for the filename.
     const { data: addr } = await supabase
       .from('terminal_deal_addresses')
-      .select('om_storage_path, label')
+      .select('label')
       .eq('id', addressId)
       .eq('deal_id', id)
       .single();
-    omStoragePath = addr?.om_storage_path ?? null;
-    fileLabel = addr?.label ?? null;
+    if (!addr) {
+      return NextResponse.json({ error: 'OM not available' }, { status: 404 });
+    }
+    fileLabel = addr.label ?? null;
   }
 
-  // Also need the deal name for the filename (and as fallback path source).
+  const slotName = addressId ? `offering-memorandum-${addressId.slice(0, 8)}` : 'offering-memorandum';
+
+  // Also need the deal name for the filename.
   const { data: deal } = await supabase
     .from('terminal_deals')
-    .select('om_storage_path, name')
+    .select('name')
     .eq('id', id)
     .single();
 
@@ -58,9 +64,13 @@ export async function GET(
     return NextResponse.json({ error: 'Deal not found' }, { status: 404 });
   }
 
-  if (!addressId) {
-    omStoragePath = deal.om_storage_path;
-  }
+  const { data: omDoc } = await supabase
+    .from('terminal_dd_documents')
+    .select('storage_path')
+    .eq('deal_id', id)
+    .eq('name', slotName)
+    .maybeSingle();
+  omStoragePath = omDoc?.storage_path ?? null;
 
   if (!omStoragePath) {
     return NextResponse.json({ error: 'OM not available' }, { status: 404 });

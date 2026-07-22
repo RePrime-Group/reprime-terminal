@@ -38,7 +38,11 @@ export interface TaskAttachment {
   name: string;
   file_size: string | null;
   file_type: string | null;
-  storage_path: string;
+  // Legacy pointer, no longer written for new rows; the file lives in
+  // terminal_dd_documents, referenced by attachment_id.
+  storage_path: string | null;
+  // FK -> terminal_dd_documents(id): the single source of truth for this file.
+  attachment_id: string | null;
   uploaded_by: string | null;
   show_to_investors: boolean;
   investor_folder_id: string | null;

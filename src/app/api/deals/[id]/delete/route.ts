@@ -41,24 +41,24 @@ export async function DELETE(
   // Verify deal exists
   const { data: deal } = await admin
     .from('terminal_deals')
-    .select('id, name, om_storage_path')
+    .select('id, name')
     .eq('id', dealId)
     .single();
 
   if (!deal) return NextResponse.json({ error: 'Deal not found' }, { status: 404 });
 
   // ── 1. Collect all storage paths to delete ──
+  // Deal-level + per-address OMs and reports now live in terminal_dd_documents,
+  // so the dd_documents path list already covers them — no separate OM lookup.
 
   const [
     { data: photos },
     { data: ddDocs },
     { data: taskAttachments },
-    { data: addresses },
   ] = await Promise.all([
     admin.from('terminal_deal_photos').select('storage_path').eq('deal_id', dealId),
     admin.from('terminal_dd_documents').select('storage_path').eq('deal_id', dealId),
     admin.from('terminal_task_attachments').select('storage_path').eq('deal_id', dealId),
-    admin.from('terminal_deal_addresses').select('om_storage_path').eq('deal_id', dealId),
   ]);
 
   // ── 2. Delete files from storage buckets ──
@@ -69,24 +69,17 @@ export async function DELETE(
     await admin.storage.from('terminal-deal-photos').remove(photoPaths);
   }
 
-  // DD documents + task attachments (both in terminal-dd-documents bucket)
+  // DD documents + legacy task attachments (both in terminal-dd-documents
+  // bucket). New task attachments have a null storage_path (the file is a
+  // dd_documents row, already covered above); legacy ones still point here.
   const ddPaths = (ddDocs ?? []).map(d => d.storage_path).filter((p): p is string => !!p);
-  const attachmentPaths = (taskAttachments ?? []).map(a => a.storage_path).filter(Boolean);
-  const allDDPaths = [...ddPaths, ...attachmentPaths];
+  const attachmentPaths = (taskAttachments ?? []).map(a => a.storage_path).filter((p): p is string => !!p);
+  const allDDPaths = [...new Set([...ddPaths, ...attachmentPaths])];
   if (allDDPaths.length > 0) {
     // Supabase storage remove has a limit per call, batch in chunks of 100
     for (let i = 0; i < allDDPaths.length; i += 100) {
       await admin.storage.from('terminal-dd-documents').remove(allDDPaths.slice(i, i + 100));
     }
-  }
-
-  // OM files on deal and addresses
-  const omPaths = [
-    deal.om_storage_path,
-    ...(addresses ?? []).map(a => a.om_storage_path),
-  ].filter((p): p is string => !!p);
-  if (omPaths.length > 0) {
-    await admin.storage.from('terminal-dd-documents').remove(omPaths);
   }
 
   // ── 3. Delete all related database records ──

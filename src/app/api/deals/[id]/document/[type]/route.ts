@@ -5,13 +5,15 @@ import { getInvestorAuth, permissionDenied } from '@/lib/auth/requireInvestor';
 
 type DocType = 'loi' | 'psa' | 'full-report' | 'costar-report' | 'tenants-report' | 'lease-summary';
 
-const DOC_META: Record<DocType, { column: string; logAction: string; filenameSuffix: string; humanName: string }> = {
-  'loi': { column: 'loi_signed_storage_path', logAction: 'loi_downloaded', filenameSuffix: 'Signed_LOI', humanName: 'Signed LOI' },
-  'psa': { column: 'psa_storage_path', logAction: 'psa_downloaded', filenameSuffix: 'PSA', humanName: 'PSA' },
-  'full-report': { column: 'full_report_storage_path', logAction: 'full_report_downloaded', filenameSuffix: 'Full_Report', humanName: 'Full Report' },
-  'costar-report': { column: 'costar_report_storage_path', logAction: 'costar_report_downloaded', filenameSuffix: 'CoStar_Report', humanName: 'CoStar Report' },
-  'tenants-report': { column: 'tenants_report_storage_path', logAction: 'tenants_report_downloaded', filenameSuffix: 'Tenant_Intelligence', humanName: 'Tenant Intelligence' },
-  'lease-summary': { column: 'lease_summary_storage_path', logAction: 'lease_summary_downloaded', filenameSuffix: 'Lease_Summary', humanName: 'Lease Summary' },
+// slotName is the terminal_dd_documents.name for this deal-level doc (the single
+// source of truth); downloads resolve the storage path through that row.
+const DOC_META: Record<DocType, { slotName: string; logAction: string; filenameSuffix: string; humanName: string }> = {
+  'loi': { slotName: 'loi-signed', logAction: 'loi_downloaded', filenameSuffix: 'Signed_LOI', humanName: 'Signed LOI' },
+  'psa': { slotName: 'purchase-sale-agreement', logAction: 'psa_downloaded', filenameSuffix: 'PSA', humanName: 'PSA' },
+  'full-report': { slotName: 'full-report', logAction: 'full_report_downloaded', filenameSuffix: 'Full_Report', humanName: 'Full Report' },
+  'costar-report': { slotName: 'costar-report', logAction: 'costar_report_downloaded', filenameSuffix: 'CoStar_Report', humanName: 'CoStar Report' },
+  'tenants-report': { slotName: 'tenants-report', logAction: 'tenants_report_downloaded', filenameSuffix: 'Tenant_Intelligence', humanName: 'Tenant Intelligence' },
+  'lease-summary': { slotName: 'lease-summary', logAction: 'lease_summary_downloaded', filenameSuffix: 'Lease_Summary', humanName: 'Lease Summary' },
 };
 
 function isDocType(v: string): v is DocType {
@@ -50,11 +52,18 @@ export async function GET(
 
   const { data: deal } = await supabase
     .from('terminal_deals')
-    .select(`${meta.column}, name`)
+    .select('name')
     .eq('id', id)
     .single();
 
-  const path = (deal as Record<string, unknown> | null)?.[meta.column] as string | undefined;
+  const { data: doc } = await supabase
+    .from('terminal_dd_documents')
+    .select('storage_path')
+    .eq('deal_id', id)
+    .eq('name', meta.slotName)
+    .maybeSingle();
+
+  const path = doc?.storage_path ?? undefined;
   if (!deal || !path) {
     return NextResponse.json({ error: `${meta.humanName} not available` }, { status: 404 });
   }

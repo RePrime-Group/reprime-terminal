@@ -16,6 +16,7 @@ import {
 } from '@/lib/utils/fee-resolver';
 import { createClient } from '@/lib/supabase/client';
 import { maybeCompressImage } from '@/lib/utils/imageCompression';
+import { sha256Hex, storageKeyForHash } from '@/lib/utils/sha256';
 import { promoteDealDocAction, removeDealDocAction } from '@/lib/ai/rag/actions';
 import {
   DEAL_STATUS_LABELS,
@@ -393,14 +394,27 @@ export default function EditDealPage() {
         });
       }
       setNewStatus(typedDeal.status);
-      setOmPath(typedDeal.om_storage_path ?? null);
+
+      // Deal-level doc slots are sourced from terminal_dd_documents (the single
+      // source of truth), keyed by the fixed slot `name`. Per-address OMs use
+      // name = 'offering-memorandum-<8-char-address-id-prefix>'.
+      const { data: slotDocs } = await supabase
+        .from('terminal_dd_documents')
+        .select('name, storage_path')
+        .eq('deal_id', dealId);
+      const slotPathByName = new Map<string, string>(
+        (slotDocs ?? [])
+          .filter((d): d is { name: string; storage_path: string } => !!d.storage_path)
+          .map((d) => [d.name, d.storage_path]),
+      );
+      setOmPath(slotPathByName.get('offering-memorandum') ?? null);
       setDocPaths({
-        'loi': typedDeal.loi_signed_storage_path ?? null,
-        'psa': typedDeal.psa_storage_path ?? null,
-        'full-report': typedDeal.full_report_storage_path ?? null,
-        'costar-report': typedDeal.costar_report_storage_path ?? null,
-        'tenants-report': typedDeal.tenants_report_storage_path ?? null,
-        'lease-summary': typedDeal.lease_summary_storage_path ?? null,
+        'loi': slotPathByName.get('loi-signed') ?? null,
+        'psa': slotPathByName.get('purchase-sale-agreement') ?? null,
+        'full-report': slotPathByName.get('full-report') ?? null,
+        'costar-report': slotPathByName.get('costar-report') ?? null,
+        'tenants-report': slotPathByName.get('tenants-report') ?? null,
+        'lease-summary': slotPathByName.get('lease-summary') ?? null,
       });
 
       const { data: photosData } = await supabase
@@ -410,13 +424,20 @@ export default function EditDealPage() {
         .order('display_order', { ascending: true });
       setPhotos((photosData as TerminalDealPhoto[]) ?? []);
 
-      // Fetch addresses
+      // Fetch addresses; overlay each address's OM path from the dd_documents
+      // slot row so the "OM uploaded" state reflects the source of truth.
       const { data: addressData } = await supabase
         .from('terminal_deal_addresses')
         .select('*')
         .eq('deal_id', dealId)
         .order('display_order', { ascending: true });
-      setAddresses((addressData as TerminalDealAddress[]) ?? []);
+      setAddresses(
+        ((addressData as TerminalDealAddress[]) ?? []).map((a) => ({
+          ...a,
+          om_storage_path:
+            slotPathByName.get(`offering-memorandum-${a.id.slice(0, 8)}`) ?? a.om_storage_path,
+        })),
+      );
 
       // Fetch current pipeline stage
       const { data: stageData } = await supabase
@@ -912,7 +933,11 @@ export default function EditDealPage() {
 
     setOmUploading(true);
     try {
-      const path = `${dealId}/om/${Date.now()}-${file.name}`;
+      // Content-addressed path (deal/sha256.ext) — the file lives only in
+      // terminal_dd_documents; the legacy terminal_deals.om_storage_path column
+      // is no longer written.
+      const sha256 = await sha256Hex(await file.arrayBuffer());
+      const path = storageKeyForHash(dealId, sha256, file.name);
       const { error: uploadError } = await supabase.storage
         .from('terminal-dd-documents')
         .upload(path, file, { upsert: true });
@@ -921,12 +946,6 @@ export default function EditDealPage() {
         alert(`Upload failed: ${uploadError.message}`);
         return;
       }
-
-      // Update deal record with OM path
-      await supabase
-        .from('terminal_deals')
-        .update({ om_storage_path: path })
-        .eq('id', dealId);
 
       setOmPath(path);
       await logDocumentUploadActivity('om', file.name);
@@ -938,6 +957,7 @@ export default function EditDealPage() {
         displayName: 'Offering Memorandum',
         fileType: file.type,
         fileSize: file.size,
+        sha256,
       });
     } finally {
       setOmUploading(false);
@@ -948,7 +968,6 @@ export default function EditDealPage() {
   const handleOmRemove = async () => {
     if (!omPath) return;
     await supabase.storage.from('terminal-dd-documents').remove([omPath]);
-    await supabase.from('terminal_deals').update({ om_storage_path: null }).eq('id', dealId);
     setOmPath(null);
     void removeDealDocAction({ dealId, slot: 'offering-memorandum' });
   };
@@ -966,7 +985,10 @@ export default function EditDealPage() {
 
     setDocUploading(docKey);
     try {
-      const path = `${dealId}/${DOC_CONFIG[docKey].pathSegment}/${Date.now()}-${file.name}`;
+      // Content-addressed path (deal/sha256.ext); the deal column is no longer
+      // written — terminal_dd_documents is the source of truth.
+      const sha256 = await sha256Hex(await file.arrayBuffer());
+      const path = storageKeyForHash(dealId, sha256, file.name);
       const { error: uploadError } = await supabase.storage
         .from('terminal-dd-documents')
         .upload(path, file, { upsert: true });
@@ -974,10 +996,6 @@ export default function EditDealPage() {
         alert(`Upload failed: ${uploadError.message}`);
         return;
       }
-      await supabase
-        .from('terminal_deals')
-        .update({ [DOC_CONFIG[docKey].column]: path })
-        .eq('id', dealId);
       setDocPaths((prev) => ({ ...prev, [docKey]: path }));
 
       const docKeyToCategory: Record<
@@ -1016,6 +1034,7 @@ export default function EditDealPage() {
         displayName: RAG_DOC_NAME[docKey],
         fileType: file.type,
         fileSize: file.size,
+        sha256,
       });
     } finally {
       setDocUploading(null);
@@ -1028,10 +1047,6 @@ export default function EditDealPage() {
     const current = docPaths[docKey];
     if (!current) return;
     await supabase.storage.from('terminal-dd-documents').remove([current]);
-    await supabase
-      .from('terminal_deals')
-      .update({ [DOC_CONFIG[docKey].column]: null })
-      .eq('id', dealId);
     setDocPaths((prev) => ({ ...prev, [docKey]: null }));
 
     const RAG_SLOT: Record<Exclude<DocKey, 'om'>, 'loi-signed' | 'purchase-sale-agreement' | 'full-report' | 'costar-report' | 'tenants-report' | 'lease-summary'> = {
@@ -1103,14 +1118,17 @@ export default function EditDealPage() {
     try {
       const update: Record<string, unknown> = { is_portfolio: flipTo };
       let addressToDelete: string | null = null;
+      // When lifting a single building's OM up to the deal level, rename its
+      // dd_documents slot row from the per-address name to 'offering-memorandum'.
+      let liftOmFromAddressId: string | null = null;
 
       // Flipping portfolio -> single with exactly one address: lift its street
-      // (and OM if the deal-level slot is empty) up to terminal_deals.
+      // (and OM if the deal-level slot is empty) up to the deal.
       if (!flipTo && addresses.length === 1) {
         const a = addresses[0];
         update.address = a.address ?? deal.address ?? null;
-        if (!deal.om_storage_path && a.om_storage_path) {
-          update.om_storage_path = a.om_storage_path;
+        if (!omPath && a.om_storage_path) {
+          liftOmFromAddressId = a.id;
         }
         addressToDelete = a.id;
       }
@@ -1130,6 +1148,16 @@ export default function EditDealPage() {
         return;
       }
 
+      if (liftOmFromAddressId) {
+        const liftedPath = addresses.find((a) => a.id === liftOmFromAddressId)?.om_storage_path ?? null;
+        await supabase
+          .from('terminal_dd_documents')
+          .update({ name: 'offering-memorandum', display_name: 'Offering Memorandum' })
+          .eq('deal_id', dealId)
+          .eq('name', `offering-memorandum-${liftOmFromAddressId.slice(0, 8)}`);
+        if (liftedPath) setOmPath(liftedPath);
+      }
+
       if (addressToDelete) {
         await supabase.from('terminal_deal_addresses').delete().eq('id', addressToDelete);
         setAddresses([]);
@@ -1139,11 +1167,9 @@ export default function EditDealPage() {
         ...deal,
         is_portfolio: flipTo,
         address: (update.address as string | null | undefined) ?? deal.address ?? null,
-        om_storage_path: (update.om_storage_path as string | null | undefined) ?? deal.om_storage_path,
       };
       setDeal(updatedDeal);
       setForm((prev) => (prev ? { ...prev, address: updatedDeal.address ?? '' } : prev));
-      if (update.om_storage_path) setOmPath(update.om_storage_path as string);
     } finally {
       setTogglingPortfolio(false);
     }
@@ -1153,17 +1179,15 @@ export default function EditDealPage() {
     const file = e.target.files?.[0];
     if (!file || file.type !== 'application/pdf') return;
 
-    const path = `${dealId}/om/${addressId}-${Date.now()}-${file.name}`;
+    // Content-addressed path (deal/sha256.ext); the per-address OM lives only in
+    // terminal_dd_documents (name = offering-memorandum-<address-id-prefix>).
+    const sha256 = await sha256Hex(await file.arrayBuffer());
+    const path = storageKeyForHash(dealId, sha256, file.name);
     const { error } = await supabase.storage
       .from('terminal-dd-documents')
       .upload(path, file, { upsert: true });
 
     if (!error) {
-      await supabase
-        .from('terminal_deal_addresses')
-        .update({ om_storage_path: path })
-        .eq('id', addressId);
-
       setAddresses((prev) =>
         prev.map((a) => a.id === addressId ? { ...a, om_storage_path: path } : a)
       );
@@ -1178,6 +1202,7 @@ export default function EditDealPage() {
         displayName: `Offering Memorandum — ${addressLabel}`,
         fileType: file.type,
         fileSize: file.size,
+        sha256,
         addressId,
       });
     }

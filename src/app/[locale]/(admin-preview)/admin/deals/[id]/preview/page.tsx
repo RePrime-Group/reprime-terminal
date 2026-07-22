@@ -140,11 +140,23 @@ export default async function DealPreviewPage({ params }: DealPreviewPageProps) 
   // ---------- Fetch portfolio addresses (for Portfolio Properties + OM dropdown) ----------
   const { data: addressesData } = await supabase
     .from('terminal_deal_addresses')
-    .select('id, label, address, city, state, square_footage, units, om_storage_path, display_order')
+    .select('id, label, address, city, state, square_footage, units, display_order')
     .eq('deal_id', id)
     .order('display_order', { ascending: true });
 
-  const addresses = (addressesData ?? []) as {
+  // Deal-level + per-address document slots live in terminal_dd_documents (the
+  // single source of truth), keyed by the fixed slot `name`.
+  const { data: slotDocs } = await supabase
+    .from('terminal_dd_documents')
+    .select('name, storage_path')
+    .eq('deal_id', id);
+  const slotPathByName = new Map<string, string>(
+    (slotDocs ?? [])
+      .filter((d): d is { name: string; storage_path: string } => !!d.storage_path)
+      .map((d) => [d.name, d.storage_path]),
+  );
+
+  const addresses = ((addressesData ?? []) as {
     id: string;
     label: string;
     address: string | null;
@@ -152,8 +164,10 @@ export default async function DealPreviewPage({ params }: DealPreviewPageProps) 
     state: string | null;
     square_footage: string | null;
     units: string | null;
-    om_storage_path: string | null;
-  }[];
+  }[]).map((a) => ({
+    ...a,
+    om_storage_path: slotPathByName.get(`offering-memorandum-${a.id.slice(0, 8)}`) ?? null,
+  }));
 
   // ---------- Fetch tenant rent roll ----------
   const { data: tenantsData } = await supabase
@@ -224,6 +238,14 @@ export default async function DealPreviewPage({ params }: DealPreviewPageProps) 
   // ---------- Build deal with details ----------
   const dealWithDetails: DealWithDetails = {
     ...deal,
+    // Overlay deal-level document slots from terminal_dd_documents.
+    om_storage_path: slotPathByName.get('offering-memorandum') ?? null,
+    loi_signed_storage_path: slotPathByName.get('loi-signed') ?? null,
+    psa_storage_path: slotPathByName.get('purchase-sale-agreement') ?? null,
+    full_report_storage_path: slotPathByName.get('full-report') ?? null,
+    costar_report_storage_path: slotPathByName.get('costar-report') ?? null,
+    tenants_report_storage_path: slotPathByName.get('tenants-report') ?? null,
+    lease_summary_storage_path: slotPathByName.get('lease-summary') ?? null,
     photos,
     dd_folders: foldersWithDocs,
     viewing_count: viewingCount ?? 0,
