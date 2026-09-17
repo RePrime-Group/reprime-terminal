@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useCountdown } from '@/lib/hooks/useCountdown';
@@ -85,10 +86,12 @@ export default function ComingSoonCard({ deal, index, previewMode = false }: Com
         {/* Photo with frosted overlay + lock */}
         <div className="h-[200px] relative overflow-hidden">
           {deal.photo_url ? (
-            <img
+            <Image
               src={deal.photo_url}
               alt={deal.name}
-              className="absolute inset-0 w-full h-full object-cover"
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+              className="object-cover"
             />
           ) : (
             <div

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Image from 'next/image';
 
 export function ImageCarousel({ urls }: { urls: string[] }) {
   const [current, setCurrent] = useState(0);
@@ -64,10 +65,13 @@ export function ImageCarousel({ urls }: { urls: string[] }) {
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        <img
+        <Image
           src={urls[current]}
           alt={`Property photo ${current + 1}`}
-          className={`w-full h-full object-cover cursor-pointer transition-opacity duration-300 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
+          fill
+          priority
+          sizes="(max-width: 768px) 100vw, 66vw"
+          className={`object-cover cursor-pointer transition-opacity duration-300 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
           onClick={() => {
             if (swipedRef.current) { swipedRef.current = false; return; }
             setLightboxLoading(true);

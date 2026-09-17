@@ -3,7 +3,6 @@
 import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { parseDealInputs, calculatePropertyMetrics, type DealInputs } from '@/lib/utils/deal-calculator';
-import { exportDealToExcel } from '@/lib/utils/excel-export';
 import type { DealWithDetails } from '@/lib/types/database';
 
 export function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
@@ -66,7 +65,10 @@ export function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
 
   const exitNOI = baseInputs.noi * Math.pow(1 + (parseFloat(rentGrowth) || 0) / 100, holdNum);
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
+    // Loaded on demand: xlsx-js-style is ~600 KB and is only needed once the
+    // user actually exports, so it must not ship in the deal page bundle.
+    const { exportDealToExcel } = await import('@/lib/utils/excel-export');
     exportDealToExcel(deal, baseInputs, mm, {
       ltv: parseFloat(ltv) || baseInputs.ltv,
       rate: parseFloat(rate) || baseInputs.interestRate,

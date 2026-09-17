@@ -73,11 +73,18 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  // getUser() validates the token server-side and refreshes the session.
-  // The refreshed tokens are written back via setAll above.
-  const { data: { user } } = await supabase.auth.getUser();
+  // getClaims() verifies the access token and refreshes the session; the
+  // refreshed tokens are written back via setAll above. Once the project uses
+  // asymmetric JWT signing keys it verifies the signature locally against the
+  // cached JWKS, with no round trip to the Auth server (~300ms saved on every
+  // navigation). Until that rotation happens it transparently falls back to a
+  // server call, so this is safe to ship ahead of the migration.
+  // Note: a signed-out visitor yields { data: null, error: null }, which is not
+  // an error condition — treat any absent `sub` as unauthenticated.
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const userId = claimsData?.claims.sub;
 
-  if (!user) {
+  if (!userId) {
     const locale = getLocale(pathname);
     const loginUrl = new URL(`/${locale}/login`, request.url);
     loginUrl.searchParams.set('redirect', pathname);
@@ -88,7 +95,7 @@ export async function proxy(request: NextRequest) {
   const { data: terminalUser } = await supabase
     .from('terminal_users')
     .select('role, access_tier')
-    .eq('id', user.id)
+    .eq('id', userId)
     .single();
 
   if (!terminalUser) {

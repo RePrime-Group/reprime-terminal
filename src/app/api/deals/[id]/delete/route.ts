@@ -54,11 +54,9 @@ export async function DELETE(
   const [
     { data: photos },
     { data: ddDocs },
-    { data: taskAttachments },
   ] = await Promise.all([
     admin.from('terminal_deal_photos').select('storage_path').eq('deal_id', dealId),
     admin.from('terminal_dd_documents').select('storage_path').eq('deal_id', dealId),
-    admin.from('terminal_task_attachments').select('storage_path').eq('deal_id', dealId),
   ]);
 
   // ── 2. Delete files from storage buckets ──
@@ -69,16 +67,16 @@ export async function DELETE(
     await admin.storage.from('terminal-deal-photos').remove(photoPaths);
   }
 
-  // DD documents + legacy task attachments (both in terminal-dd-documents
-  // bucket). New task attachments have a null storage_path (the file is a
-  // dd_documents row, already covered above); legacy ones still point here.
-  const ddPaths = (ddDocs ?? []).map(d => d.storage_path).filter((p): p is string => !!p);
-  const attachmentPaths = (taskAttachments ?? []).map(a => a.storage_path).filter((p): p is string => !!p);
-  const allDDPaths = [...new Set([...ddPaths, ...attachmentPaths])];
-  if (allDDPaths.length > 0) {
+  // All deal files (data-room docs, deal-level slots, and task attachments) are
+  // terminal_dd_documents rows, so this path list covers everything in the
+  // terminal-dd-documents bucket.
+  const ddPaths = [...new Set(
+    (ddDocs ?? []).map(d => d.storage_path).filter((p): p is string => !!p),
+  )];
+  if (ddPaths.length > 0) {
     // Supabase storage remove has a limit per call, batch in chunks of 100
-    for (let i = 0; i < allDDPaths.length; i += 100) {
-      await admin.storage.from('terminal-dd-documents').remove(allDDPaths.slice(i, i + 100));
+    for (let i = 0; i < ddPaths.length; i += 100) {
+      await admin.storage.from('terminal-dd-documents').remove(ddPaths.slice(i, i + 100));
     }
   }
 

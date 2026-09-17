@@ -12,7 +12,6 @@ import {
   type BulkCommitResult,
   type ConflictAction,
 } from '@/app/[locale]/(admin)/admin/crm/actions';
-import { buildTemplateXlsxBase64 } from '@/lib/crm/parseInvestorsXlsx';
 
 type Phase = 'input' | 'preview' | 'committed' | 'sent';
 
@@ -45,7 +44,10 @@ export default function CrmImportClient({ locale }: { locale: string }) {
   const [sendTargets, setSendTargets] = useState<string[]>([]);
   const [sendResult, setSendResult] = useState<{ sent: number; failed: number } | null>(null);
 
-  const downloadTemplate = () => {
+  const downloadTemplate = async () => {
+    // Loaded on demand: xlsx-js-style is ~600 KB and is only needed when the
+    // user actually downloads the template, so it must not ship in the bundle.
+    const { buildTemplateXlsxBase64 } = await import('@/lib/crm/parseInvestorsXlsx');
     const b64 = buildTemplateXlsxBase64();
     const a = document.createElement('a');
     a.href = `data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,${b64}`;
