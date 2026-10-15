@@ -6,6 +6,8 @@ import { formatPriceCompact, formatPercent } from '@/lib/utils/format';
 import { getTranslations } from 'next-intl/server';
 import PortfolioList from '@/components/portal/PortfolioList';
 import { getHouseholdUserIds } from '@/lib/auth/household';
+import { ACTIVE_DEAL_STATUSES } from '@/lib/constants';
+import type { DealStatus } from '@/lib/types/database';
 
 export const metadata = { title: 'Portfolio — RePrime Terminal Beta' };
 
@@ -85,7 +87,7 @@ export default async function PortfolioPage({
   (committedDeals ?? []).forEach((d) => { if (!dealMap.has(d.id)) dealMap.set(d.id, d); });
   const deals = Array.from(dealMap.values());
 
-  const activeDealCount = deals.filter((d) => ['published', 'assigned', 'coming_soon', 'loi_signed'].includes(d.status)).length;
+  const activeDealCount = deals.filter((d) => [...ACTIVE_DEAL_STATUSES, 'assigned', 'coming_soon'].includes(d.status as DealStatus)).length;
 
   const avgIrr =
     deals && deals.length > 0

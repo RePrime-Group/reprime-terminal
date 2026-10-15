@@ -7,6 +7,7 @@ import {
   resolveAllFees,
   resolveInvestorTerms,
 } from '@/lib/utils/fee-resolver';
+import { ACTIVE_DEAL_STATUSES } from '@/lib/constants';
 import type {
   TerminalDeal,
   TerminalDealPhoto,
@@ -208,17 +209,19 @@ export default async function DealPreviewPage({ params }: DealPreviewPageProps) 
 
   // ---------- Prev/Next deal navigation (admin preview includes drafts) ----------
   const ADMIN_STATUS_ORDER: Record<string, number> = {
-    draft: -1, coming_soon: 0, loi_signed: 1, published: 2, assigned: 3, closed: 4, cancelled: 5,
+    draft: -1, coming_soon: 0,
+    psa_signed: 1, loi_signed: 2, pending_final_loi: 3, published: 4,
+    assigned: 5, closed: 6, cancelled: 7,
   };
   const { data: navDealsData } = await supabase
     .from('terminal_deals')
     .select('id, name, status, dd_deadline')
-    .in('status', ['draft', 'coming_soon', 'marketplace', 'investor_only', 'loi_signed', 'published', 'assigned', 'closed', 'cancelled'])
+    .in('status', [...ACTIVE_DEAL_STATUSES, 'draft', 'coming_soon', 'marketplace', 'investor_only', 'assigned', 'closed', 'cancelled'])
     .order('created_at', { ascending: false });
 
   const navDeals = (navDealsData ?? []).slice().sort((a, b) => {
-    const orderA = ADMIN_STATUS_ORDER[a.status] ?? 2;
-    const orderB = ADMIN_STATUS_ORDER[b.status] ?? 2;
+    const orderA = ADMIN_STATUS_ORDER[a.status] ?? 4;
+    const orderB = ADMIN_STATUS_ORDER[b.status] ?? 4;
     if (orderA !== orderB) return orderA - orderB;
     if (a.dd_deadline && b.dd_deadline) {
       return new Date(a.dd_deadline).getTime() - new Date(b.dd_deadline).getTime();

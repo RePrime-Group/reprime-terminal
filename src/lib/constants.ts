@@ -1,3 +1,5 @@
+import type { DealStatus } from './types/database';
+
 export const BRAND = {
   colors: {
     navy: '#0E3470',
@@ -40,6 +42,8 @@ export const DEAL_STATUS_LABELS: Record<string, string> = {
   marketplace: 'Marketplace',
   investor_only: 'Investor Only',
   loi_signed: 'LOI Signed',
+  pending_final_loi: 'Pending Final LOI',
+  psa_signed: 'PSA Signed',
   published: 'Published',
   under_review: 'Under Review',
   assigned: 'Assigned',
@@ -53,12 +57,26 @@ const ALL_DEAL_STATUSES = [
   'marketplace',
   'investor_only',
   'loi_signed',
+  'pending_final_loi',
+  'psa_signed',
   'published',
   'under_review',
   'assigned',
   'closed',
   'cancelled',
 ] as const;
+
+// A deal that is live in front of investors. `published` was originally the
+// only "active" status; loi_signed → pending_final_loi → psa_signed are later
+// stages of the same deal, so anywhere that used to mean `published` — hero
+// metrics, portfolio counts, portal queries — means all four.
+// Ordered to match the investor dashboard sections.
+export const ACTIVE_DEAL_STATUSES: DealStatus[] = [
+  'psa_signed',
+  'loi_signed',
+  'pending_final_loi',
+  'published',
+];
 
 // Admins can move a deal to any status regardless of the current status.
 export const DEAL_STATUS_TRANSITIONS: Record<string, { roles: string[]; to: string[] }> =

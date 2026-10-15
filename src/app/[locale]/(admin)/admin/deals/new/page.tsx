@@ -33,6 +33,8 @@ const STATUS_OPTIONS: { value: DealStatus; label: string }[] = [
   { value: 'coming_soon', label: 'Coming Soon' },
   { value: 'marketplace', label: 'Marketplace' },
   { value: 'loi_signed', label: 'LOI Signed' },
+  { value: 'pending_final_loi', label: 'Pending Final LOI' },
+  { value: 'psa_signed', label: 'PSA Signed' },
   { value: 'published', label: 'Published' },
   { value: 'under_review', label: 'Under Review' },
   { value: 'assigned', label: 'Assigned' },

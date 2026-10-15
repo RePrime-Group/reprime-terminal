@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import DealDetailClient from '@/components/portal/DealDetailClient';
+import { ACTIVE_DEAL_STATUSES } from '@/lib/constants';
 import type { TerminalDeal, TerminalDealPhoto, TerminalTenantLease, CapExItem, ExitScenario, DealInsight } from '@/lib/types/database';
 import {
   getGlobalFeeDefaults,
@@ -59,9 +60,10 @@ export default async function DealDetailPage({ params, searchParams }: DealDetai
   // from the nav list (they're still shown on the dashboard, but investors
   // shouldn't auto-cycle into them via ◀/▶). Same sort as the browse page for
   // the included statuses.
-  const INVESTOR_NAV_STATUSES = ['loi_signed', 'published', 'assigned', 'closed', 'cancelled'] as const;
+  const INVESTOR_NAV_STATUSES = [...ACTIVE_DEAL_STATUSES, 'assigned', 'closed', 'cancelled'];
   const STATUS_ORDER: Record<string, number> = {
-    loi_signed: 1, published: 2, assigned: 3, closed: 4, cancelled: 5,
+    psa_signed: 1, loi_signed: 2, pending_final_loi: 3, published: 4,
+    assigned: 5, closed: 6, cancelled: 7,
   };
 
   // Parallel batch 1: deal + photos + counts + pipeline + addresses + investor + NDA + tenants + nav list
@@ -86,7 +88,7 @@ export default async function DealDetailPage({ params, searchParams }: DealDetai
       .from('terminal_deals')
       .select(DEAL_COLUMNS)
       .eq('id', id)
-      .in('status', ['coming_soon', 'marketplace', 'investor_only', 'loi_signed', 'published', 'assigned', 'closed', 'cancelled'])
+      .in('status', [...ACTIVE_DEAL_STATUSES, 'coming_soon', 'marketplace', 'investor_only', 'assigned', 'closed', 'cancelled'])
       .single(),
     supabase
       .from('terminal_deal_photos')
@@ -221,16 +223,18 @@ export default async function DealDetailPage({ params, searchParams }: DealDetai
 
   if (navFrom === 'dashboard') {
     // Mirrors the dashboard's clickable sections, top to bottom:
-    // Active (loi_signed, published) → Assigned → Closed → Cancelled, each
-    // ordered by dd_deadline ascending (no deadline last). coming_soon is
-    // excluded — its card doesn't link to a deal page, so it's never a nav stop.
+    // PSA Signed → LOI Signed → Pending Final LOI → Active Negotiations →
+    // Assigned → Closed → Cancelled, each ordered by dd_deadline ascending
+    // (no deadline last). coming_soon is excluded — its card doesn't link to a
+    // deal page, so it's never a nav stop. Same set as INVESTOR_NAV_STATUSES.
     const { data } = await supabase
       .from('terminal_deals')
       .select('id, name, status, dd_deadline')
-      .in('status', ['loi_signed', 'published', 'assigned', 'closed', 'cancelled'])
+      .in('status', INVESTOR_NAV_STATUSES)
       .order('created_at', { ascending: false });
     const DASH_ORDER: Record<string, number> = {
-      loi_signed: 0, published: 1, assigned: 2, closed: 3, cancelled: 4,
+      psa_signed: 0, loi_signed: 1, pending_final_loi: 2, published: 3,
+      assigned: 4, closed: 5, cancelled: 6,
     };
     navOrdered = (data ?? [])
       .slice()
@@ -282,8 +286,8 @@ export default async function DealDetailPage({ params, searchParams }: DealDetai
     navOrdered = (navDealsData ?? [])
       .slice()
       .sort((a, b) => {
-        const orderA = STATUS_ORDER[a.status] ?? 2;
-        const orderB = STATUS_ORDER[b.status] ?? 2;
+        const orderA = STATUS_ORDER[a.status] ?? 4;
+        const orderB = STATUS_ORDER[b.status] ?? 4;
         if (orderA !== orderB) return orderA - orderB;
         if (a.dd_deadline && b.dd_deadline) {
           return new Date(a.dd_deadline).getTime() - new Date(b.dd_deadline).getTime();

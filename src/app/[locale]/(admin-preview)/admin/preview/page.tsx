@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { parseDealInputs, calculatePropertyMetrics } from '@/lib/utils/deal-calculator';
 import PortalDashboardClient from '@/components/portal/PortalDashboardClient';
+import { ACTIVE_DEAL_STATUSES } from '@/lib/constants';
 
 // Sidebar-free layout is provided by (admin-preview)/admin/layout.tsx.
 // This mirrors the data fetch in /[locale]/(portal)/portal/page.tsx so the
@@ -28,7 +29,7 @@ export default async function AdminDashboardPreviewPage({
   const { data: deals } = await supabase
     .from('terminal_deals')
     .select('id, name, address, city, state, property_type, purchase_price, noi, cap_rate, irr, coc, dscr, equity_required, occupancy, seller_financing, note_sale, special_terms, dd_deadline, close_deadline, status, assigned_to, quarter_release, square_footage, units, class_type, year_renovated, psa_draft_start, loi_signed_at, teaser_description, ltv, interest_rate, amortization_years, loan_fee_points, io_period_months, mezz_percent, mezz_rate, mezz_term_months, seller_credit, assignment_fee, acq_fee, asset_mgmt_fee, gp_carry, pref_return, hold_period_years, exit_cap_rate, rent_growth, area_cap_rate, asking_cap_rate')
-    .in('status', ['draft', 'coming_soon', 'loi_signed', 'published', 'assigned', 'closed', 'cancelled'])
+    .in('status', [...ACTIVE_DEAL_STATUSES, 'draft', 'coming_soon', 'assigned', 'closed', 'cancelled'])
     .order('created_at', { ascending: false });
 
   const Banner = (
@@ -174,10 +175,12 @@ export default async function AdminDashboardPreviewPage({
 
   const sorted = enrichedDeals.sort((a, b) => {
     const statusOrder: Record<string, number> = {
-      draft: -1, coming_soon: 0, loi_signed: 1, published: 2, assigned: 3, closed: 4,
+      draft: -1, coming_soon: 0,
+      psa_signed: 1, loi_signed: 2, pending_final_loi: 3, published: 4,
+      assigned: 5, closed: 6,
     };
-    const orderA = statusOrder[a.status] ?? 2;
-    const orderB = statusOrder[b.status] ?? 2;
+    const orderA = statusOrder[a.status] ?? 4;
+    const orderB = statusOrder[b.status] ?? 4;
     if (orderA !== orderB) return orderA - orderB;
 
     if (a.dd_deadline && b.dd_deadline) {

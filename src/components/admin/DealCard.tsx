@@ -17,6 +17,8 @@ const STATUS_BORDER: Record<string, string> = {
   marketplace: '#0EA5E9',
   coming_soon: '#C5A55A',
   loi_signed: '#1B365D',
+  pending_final_loi: '#D97706',
+  psa_signed: '#0E3470',
   under_review: '#D97706',
   draft: '#9CA3AF',
   assigned: '#C5A55A',

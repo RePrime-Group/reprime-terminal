@@ -10,6 +10,8 @@ import { formatPrice } from '@/lib/utils/format';
 import { useTranslations } from 'next-intl';
 import { useDealFilters } from '@/components/portal/deal-filters/useDealFilters';
 import DealFilterBar from '@/components/portal/deal-filters/DealFilterBar';
+import { ACTIVE_DEAL_STATUSES } from '@/lib/constants';
+import type { DealStatus } from '@/lib/types/database';
 
 // Initial page size used until the grid's column count is measured from the DOM
 // (which happens immediately after mount via ResizeObserver).
@@ -153,13 +155,27 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
   // data can never leak into the public dashboard.
   const draftDeals = previewMode ? visibleDeals.filter((d) => d.status === 'draft') : [];
   const upcomingDeals = visibleDeals.filter((d) => d.status === 'coming_soon');
-  const activeDeals = visibleDeals.filter((d) => d.status === 'published' || d.status === 'loi_signed');
+  const activeDeals = visibleDeals.filter((d) => d.status === 'published');
+  const loiSignedDeals = visibleDeals.filter((d) => d.status === 'loi_signed');
+  const pendingFinalLoiDeals = visibleDeals.filter((d) => d.status === 'pending_final_loi');
+  const psaSignedDeals = visibleDeals.filter((d) => d.status === 'psa_signed');
+  // The gold rule separates sections, so a section draws one only when
+  // something above it actually rendered. Sections appear in this order:
+  // Drafts (admin preview) → PSA Signed → LOI Signed → Pending Final LOI →
+  // Active Negotiations → Assigned → Coming Soon → Closed → Cancelled.
+  const psaHasSectionAbove = previewMode && draftDeals.length > 0;
+  const loiHasSectionAbove = psaHasSectionAbove || psaSignedDeals.length > 0;
+  const pendingHasSectionAbove = loiHasSectionAbove || loiSignedDeals.length > 0;
+  const activeHasSectionAbove = pendingHasSectionAbove || pendingFinalLoiDeals.length > 0;
+
   const assignedDeals = visibleDeals.filter((d) => d.status === 'assigned');
   const cancelledDeals = visibleDeals.filter((d) => d.status === 'cancelled');
   const closedDeals = visibleDeals.filter((d) => d.status === 'closed');
 
-  // Hero metrics use ALL deals (not just visible) for accurate totals
-  const allActiveDeals = deals.filter((d) => d.status === 'published');
+  // Hero metrics use ALL deals (not just visible) for accurate totals.
+  // The LOI → PSA stages are later stages of a published deal, so they count
+  // toward the same totals.
+  const allActiveDeals = deals.filter((d) => ACTIVE_DEAL_STATUSES.includes(d.status as DealStatus));
   const totalDealVolume = allActiveDeals.reduce((sum, d) => sum + (d.purchase_price || 0), 0);
   const totalEquity = allActiveDeals.reduce((sum, d) => sum + (d.equity_required || 0), 0);
   const totalDeposits = allActiveDeals.reduce((sum, d) => sum + (d.deposit_amount || 0), 0);
@@ -289,15 +305,67 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
                 </div>
               )}
 
-              {/* ── 1. Active Deals Section ── */}
+              {/* ── 1. PSA Signed Section ── */}
+              {psaSignedDeals.length > 0 && (
+                <div>
+                  {psaHasSectionAbove && <div className="h-[2px] w-full bg-gradient-to-r from-[#BC9C45] via-[#D4B96A] to-[#BC9C45]" />}
+                  <div className="mt-5 mb-5">
+                    <h2 className="font-[family-name:var(--font-playfair)] text-[24px] md:text-[28px] font-semibold text-[#0E3470] tracking-[-0.01em]">
+                      {t('psaSignedDeals')}
+                    </h2>
+                  </div>
+                  <div ref={gridRefCallback} className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-5 md:gap-7">
+                    {psaSignedDeals.map((deal, index) => (
+                      <DealCard key={deal.id} deal={deal} locale={locale} index={index} previewMode={previewMode} from="dashboard" />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── 2. LOI Signed Section ── */}
+              {loiSignedDeals.length > 0 && (
+                <div>
+                  {loiHasSectionAbove && <div className="h-[2px] w-full bg-gradient-to-r from-[#BC9C45] via-[#D4B96A] to-[#BC9C45]" />}
+                  <div className="mt-5 mb-5">
+                    <h2 className="font-[family-name:var(--font-playfair)] text-[24px] md:text-[28px] font-semibold text-[#0E3470] tracking-[-0.01em]">
+                      {t('loiSignedDeals')}
+                    </h2>
+                  </div>
+                  <div ref={gridRefCallback} className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-5 md:gap-7">
+                    {loiSignedDeals.map((deal, index) => (
+                      <DealCard key={deal.id} deal={deal} locale={locale} index={index} previewMode={previewMode} from="dashboard" />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── 3. Pending Final LOI Section ── */}
+              {pendingFinalLoiDeals.length > 0 && (
+                <div>
+                  {pendingHasSectionAbove && <div className="h-[2px] w-full bg-gradient-to-r from-[#BC9C45] via-[#D4B96A] to-[#BC9C45]" />}
+                  <div className="mt-5 mb-5">
+                    <h2 className="font-[family-name:var(--font-playfair)] text-[24px] md:text-[28px] font-semibold text-[#0E3470] tracking-[-0.01em]">
+                      {t('pendingFinalLoiDeals')}
+                    </h2>
+                  </div>
+                  <div ref={gridRefCallback} className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(380px,1fr))] gap-5 md:gap-7">
+                    {pendingFinalLoiDeals.map((deal, index) => (
+                      <DealCard key={deal.id} deal={deal} locale={locale} index={index} previewMode={previewMode} from="dashboard" />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── 4. Active Negotiations Section ── */}
               {activeDeals.length > 0 && (
                 <div>
-                  {(upcomingDeals.length > 0 || assignedDeals.length > 0 || cancelledDeals.length > 0 || closedDeals.length > 0) && (
+                  {activeHasSectionAbove && <div className="h-[2px] w-full bg-gradient-to-r from-[#BC9C45] via-[#D4B96A] to-[#BC9C45]" />}
+                  {(upcomingDeals.length > 0 || psaSignedDeals.length > 0 || loiSignedDeals.length > 0 || pendingFinalLoiDeals.length > 0 || assignedDeals.length > 0 || cancelledDeals.length > 0 || closedDeals.length > 0) && (
                     <>
 
                       <div className="mt-5 mb-5">
                         <h2 className="font-[family-name:var(--font-playfair)] text-[24px] md:text-[28px] font-semibold text-[#0E3470] tracking-[-0.01em]">
-                          {t('activeDeals')}
+                          {t('activeNegotiations')}
                         </h2>
                       </div>
                     </>
@@ -312,7 +380,7 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
                 </div>
               )}
 
-              {/* ── 2. Assigned Deals Section ── */}
+              {/* ── 5. Assigned Deals Section ── */}
               {assignedDeals.length > 0 && (
                 <div>
                   <div className="h-[2px] w-full bg-gradient-to-r from-[#BC9C45] via-[#D4B96A] to-[#BC9C45]" />
@@ -332,7 +400,7 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
                 </div>
               )}
 
-              {/* ── 3. Coming Soon Section ── */}
+              {/* ── 6. Coming Soon Section ── */}
               {upcomingDeals.length > 0 && (
                 <div>
                   <div className="h-[2px] w-full bg-gradient-to-r from-[#BC9C45] via-[#D4B96A] to-[#BC9C45]" />
@@ -349,7 +417,7 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
                 </div>
               )}
 
-              {/* ── 4. Closed Deals Section ── */}
+              {/* ── 7. Closed Deals Section ── */}
               {closedDeals.length > 0 && (
                 <div>
                   <div className="h-[2px] w-full bg-gradient-to-r from-[#BC9C45] via-[#D4B96A] to-[#BC9C45]" />
@@ -366,7 +434,7 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
                 </div>
               )}
 
-              {/* ── 5. Cancelled Deals Section ── */}
+              {/* ── 8. Cancelled Deals Section ── */}
               {cancelledDeals.length > 0 && (
                 <div>
                   <div className="h-[2px] w-full bg-gradient-to-r from-[#BC9C45] via-[#D4B96A] to-[#BC9C45]" />

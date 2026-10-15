@@ -29,6 +29,8 @@ export const IMPORT_STATUSES = [
   'marketplace',
   'investor_only',
   'loi_signed',
+  'pending_final_loi',
+  'psa_signed',
   'published',
   'under_review',
   'assigned',

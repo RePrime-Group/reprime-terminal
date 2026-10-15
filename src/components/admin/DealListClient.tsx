@@ -65,6 +65,8 @@ const STATUS_GROUP_ORDER: DealStatus[] = [
   'investor_only',
   'coming_soon',
   'loi_signed',
+  'pending_final_loi',
+  'psa_signed',
   'under_review',
   'draft',
   'assigned',
