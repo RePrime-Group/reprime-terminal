@@ -45,7 +45,6 @@ export async function POST(request: NextRequest) {
   const email: unknown = body?.email;
   const fullName: unknown = body?.full_name;
   const permissionsIn: unknown = body?.permissions;
-  const locale: string = typeof body?.locale === 'string' ? body.locale : 'en';
 
   if (typeof email !== 'string' || !email.includes('@')) {
     return NextResponse.json({ error: 'A valid email is required.' }, { status: 400 });
@@ -134,7 +133,9 @@ export async function POST(request: NextRequest) {
 
   // Send invite email (best-effort — invite row is already created)
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://reprimeterminal.com';
-  const inviteUrl = `${baseUrl}/${locale}/invite/${token.token}`;
+  // No locale prefix: the invitee's own cookie / browser language picks it,
+  // not the inviter's UI language.
+  const inviteUrl = `${baseUrl}/invite/${token.token}`;
   let emailSent = false;
   let emailError: string | null = null;
   try {

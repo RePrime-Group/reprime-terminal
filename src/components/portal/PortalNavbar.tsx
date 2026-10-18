@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Link, usePathname } from '@/i18n/navigation';
 import Image from 'next/image';
 import RePrimeLogo from '@/components/RePrimeLogo';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 import CuratedNavTabs, { type CuratedNavGroup } from '@/components/portal/CuratedNavTabs';
 import { SHOW_CURATED_TABS_FOR_MARKETPLACE_ONLY } from '@/lib/constants';
 
@@ -317,6 +318,15 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
             )}
           </div>
 
+          {/* Inline only at 2xl — below that the nav row (with curated tabs)
+              has no room, so the switcher lives in the member menu (md–2xl)
+              or the mobile drawer. */}
+          {!previewMode && (
+            <div className="hidden 2xl:block">
+              <LanguageSwitcher />
+            </div>
+          )}
+
           <div className="hidden md:block h-5 w-px bg-white/10" />
 
           {/* Member menu (desktop) */}
@@ -353,7 +363,7 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
             {userMenuOpen && (
               <div
                 role="menu"
-                className="absolute right-0 top-[calc(100%+10px)] w-[280px] bg-[#0F1419] rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/[0.08] animate-slide-down z-50 overflow-hidden"
+                className="absolute end-0 top-[calc(100%+10px)] w-[280px] bg-[#0F1419] rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/[0.08] animate-slide-down z-50 overflow-hidden"
               >
                 {/* Header: avatar + name + email */}
                 <div className="px-5 py-4 bg-gradient-to-br from-white/[0.03] to-transparent border-b border-white/[0.06]">
@@ -390,6 +400,12 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
                       <polyline points="9 18 15 12 9 6" />
                     </svg>
                   </Link>
+                  {!previewMode && (
+                    <div className="2xl:hidden flex items-center justify-between gap-3 px-5 py-3">
+                      <span className="text-[13px] text-white/60">{tc('language')}</span>
+                      <LanguageSwitcher labels="full" />
+                    </div>
+                  )}
                 </div>
 
                 <div className="h-px bg-white/[0.06]" hidden={previewMode} />
@@ -462,6 +478,13 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
             <CuratedNavTabs groups={curatedGroups} locale={locale} variant="mobile" />
 
             <div className="h-px bg-white/[0.08] my-3" />
+
+            {!previewMode && (
+              <div className="px-4 min-h-[44px] flex items-center justify-between gap-3">
+                <span className="text-[13px] font-medium text-white/60">{tc('language')}</span>
+                <LanguageSwitcher labels="full" />
+              </div>
+            )}
 
             <Link
               href="/portal/settings"

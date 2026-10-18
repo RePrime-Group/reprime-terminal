@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { createBrowserClient } from '@supabase/ssr';
 import { friendlyAuthError, friendlyFetchError } from '@/lib/utils/friendly-error';
 import RePrimeLogo from '@/components/RePrimeLogo';
+import { takePickedLocale } from '@/components/LanguageSwitcher';
 
 interface LoginCardProps {
   locale: string;
@@ -86,6 +87,14 @@ export default function LoginCard({ locale }: LoginCardProps) {
         setError('We couldn\u2019t find your profile. Please contact RePrime to finish setting up your account.');
         setLoading(false);
         return;
+      }
+
+      // A language picked on this page before signing in is saved to the
+      // account now, so src/proxy.ts keeps the user in it from here on.
+      const picked = takePickedLocale();
+      if (picked && data.session.user.user_metadata?.locale !== picked) {
+        const { error: saveError } = await supabase.auth.updateUser({ data: { locale: picked } });
+        if (!saveError) await supabase.auth.refreshSession();
       }
 
       const loc = locale || 'en';

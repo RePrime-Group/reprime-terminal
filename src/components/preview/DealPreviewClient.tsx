@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { formatPrice, formatPercent, formatDSCR, formatSqFt } from '@/lib/utils/format';
 import RePrimeLogo from '@/components/RePrimeLogo';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 interface PreviewDeal {
   id: string;
@@ -85,6 +86,9 @@ export default function DealPreviewClient({
           </Link>
           
           <div className="flex items-center gap-2">
+            <div className="hidden sm:block">
+              <LanguageSwitcher variant="light" />
+            </div>
             <Link
               href="/login"
               locale={locale}
@@ -100,6 +104,10 @@ export default function DealPreviewClient({
               {t('joinNow')}
             </Link>
           </div>
+        </div>
+        {/* No room beside the logo on phones — give the switcher its own row. */}
+        <div className="sm:hidden flex justify-end px-5 pb-3">
+          <LanguageSwitcher variant="light" />
         </div>
       </header>
 

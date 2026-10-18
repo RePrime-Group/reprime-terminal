@@ -39,6 +39,8 @@ export interface ChatRequest {
   deal_id: string;
   conversation_id?: string;
   message: string;
+  /** UI language, forwarded to n8n so the agent can reply in it. */
+  locale?: 'en' | 'he';
 }
 
 export interface ChatResponse {

@@ -91,6 +91,27 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  // Account language: LanguageSwitcher saves the user's choice in
+  // user_metadata.locale. Keep them in it on every page, device and emailed
+  // link (e.g. /en/... deal notifications). Users who never chose have no
+  // value and stay on whatever locale the URL carries. Admin pages have no
+  // switcher, so they keep following the URL.
+  const preferredLocale = claimsData?.claims.user_metadata?.locale;
+  if (
+    !pathWithoutLocale.startsWith('/admin') &&
+    routing.locales.includes(preferredLocale) &&
+    preferredLocale !== getLocale(pathname)
+  ) {
+    const localeUrl = request.nextUrl.clone();
+    localeUrl.pathname = `/${preferredLocale}${pathWithoutLocale === '/' ? '' : pathWithoutLocale}`;
+    const redirect = NextResponse.redirect(localeUrl);
+    // Keep any refreshed Supabase session cookies, and point next-intl's
+    // cookie at the preferred locale instead of the one from the old URL.
+    response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+    redirect.cookies.set('NEXT_LOCALE', preferredLocale, { path: '/', maxAge: 31536000, sameSite: 'lax' });
+    return redirect;
+  }
+
   // Fetch user role + tier
   const { data: terminalUser } = await supabase
     .from('terminal_users')
