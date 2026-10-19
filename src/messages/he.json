@@ -39,7 +39,8 @@
     "uploading": "מעלה...",
     "page": "עמוד",
     "of": "מתוך",
-    "total": "סה\"כ"
+    "total": "סה\"כ",
+    "language": "שפה"
   },
   "auth": {
     "loginTitle": "כניסה ל-RePrime Terminal Beta",
@@ -66,6 +67,7 @@
     "applyForMembership": "הגש בקשת חברות",
     "createYourAccount": "צור את החשבון שלך",
     "completeRegistration": "השלם את ההרשמה כדי לגשת ל-RePrime Terminal Beta",
+    "invitedToTeam": "קיבלת הזמנה להצטרף לצוות של <highlight>{name}</highlight> ב-RePrime.",
     "enterFullName": "הזן את שמך המלא",
     "companyNameOptional": "שם חברה (אופציונלי)",
     "enterCompanyName": "הזן את שם החברה",
@@ -1824,7 +1826,25 @@
     "placeholderPdf": "תצוגת PDF תופעל בשלב הבא",
     "placeholderPdfPage": "עמוד {page} מתוך {document}",
     "disabledNotice": "העוזר מושבת בסביבה זו.",
-    "messages": "הודעות"
+    "messages": "הודעות",
+    "statusRotation": [
+      "חושב",
+      "מחפש נתוני עסקה",
+      "מחשב את המספרים",
+      "מנסח תשובה",
+      "מלטש את הניסוח",
+      "בודק את העובדות",
+      "מוסיף נגיעות אחרונות",
+      "מסכם את הנתונים",
+      "מריץ תרחישים",
+      "ממפה את ההיגיון",
+      "מזהה דפוסים"
+    ],
+    "errorForbidden": "אין לך גישה לעסקה זו.",
+    "errorUnauthorized": "אינך מחובר. רענן את הדף ונסה שוב.",
+    "errorNotFound": "השיחה לא נמצאה.",
+    "errorTimeout": "לעוזר לקח יותר מדי זמן להגיב. נסה שוב.",
+    "errorUpstream": "העוזר לא הצליח לעבד את הבקשה. נסה שוב."
   },
   "errors": {
     "notFound": "הדף לא נמצא",

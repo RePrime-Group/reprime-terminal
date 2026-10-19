@@ -5,6 +5,7 @@ import { Link } from '@/i18n/navigation';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import RePrimeLogo from '@/components/RePrimeLogo';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 const tiers = [
   {
@@ -122,14 +123,23 @@ export default function JoinPage() {
               Beta
             </span>
         </div>
-        <Link
-          href="/login"
-          locale={locale}
-          className="shrink-0 px-3.5 md:px-5 py-2 border border-white/15 text-white/70 text-[12px] font-medium rounded-lg hover:bg-white/5 transition-colors whitespace-nowrap"
-        >
-          {t('investorLogin')}
-        </Link>
+        <div className="flex items-center gap-2 md:gap-3 shrink-0">
+          <div className="hidden sm:block">
+            <LanguageSwitcher />
+          </div>
+          <Link
+            href="/login"
+            locale={locale}
+            className="shrink-0 px-3.5 md:px-5 py-2 border border-white/15 text-white/70 text-[12px] font-medium rounded-lg hover:bg-white/5 transition-colors whitespace-nowrap"
+          >
+            {t('investorLogin')}
+          </Link>
+        </div>
       </nav>
+      {/* No room beside the logo on phones — give the switcher its own row. */}
+      <div className="sm:hidden flex justify-end px-5">
+        <LanguageSwitcher />
+      </div>
 
       {/* Hero */}
       <div className="max-w-[1200px] mx-auto px-5 md:px-10 pt-4 md:pt-6 pb-5 md:pb-7 text-center">

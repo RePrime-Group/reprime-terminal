@@ -97,6 +97,9 @@ export default function InviteRegistrationPage() {
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: validation.email,
         password,
+        // Save the language they registered in to the new account; the
+        // switcher on every page changes it later.
+        options: { data: { locale } },
       });
 
       if (signUpError) {
@@ -230,8 +233,10 @@ export default function InviteRegistrationPage() {
           <h1 className="text-white text-xl font-semibold">{t('createYourAccount')}</h1>
           {validation.parent_investor_id && validation.parent_name ? (
             <p className="text-white/60 text-sm text-center px-4">
-              <span className="text-[#C9A54E] font-medium">{validation.parent_name}</span>
-              {' '}invited you to join their RePrime team.
+              {t.rich('invitedToTeam', {
+                name: validation.parent_name,
+                highlight: (chunks) => <span className="text-[#C9A54E] font-medium">{chunks}</span>,
+              })}
             </p>
           ) : (
             <p className="text-white/40 text-sm">{t('completeRegistration')}</p>

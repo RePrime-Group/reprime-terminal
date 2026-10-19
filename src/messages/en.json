@@ -39,7 +39,8 @@
     "uploading": "Uploading...",
     "page": "Page",
     "of": "of",
-    "total": "total"
+    "total": "total",
+    "language": "Language"
   },
   "auth": {
     "loginTitle": "Sign In to RePrime Terminal Beta",
@@ -66,6 +67,7 @@
     "applyForMembership": "Apply for Membership",
     "createYourAccount": "Create Your Account",
     "completeRegistration": "Complete your registration to access RePrime Terminal Beta",
+    "invitedToTeam": "<highlight>{name}</highlight> invited you to join their RePrime team.",
     "enterFullName": "Enter your full name",
     "companyNameOptional": "Company Name (optional)",
     "enterCompanyName": "Enter your company name",
@@ -1824,7 +1826,25 @@
     "placeholderPdf": "PDF preview enabled in the next phase",
     "placeholderPdfPage": "Page {page} of {document}",
     "disabledNotice": "The assistant is disabled in this environment.",
-    "messages": "Messages"
+    "messages": "Messages",
+    "statusRotation": [
+      "Thinking",
+      "Looking up deal data",
+      "Crunching the numbers",
+      "Drafting a response",
+      "Polishing the wording",
+      "Checking the facts",
+      "Adding finishing touches",
+      "Synthesizing the data",
+      "Running the scenarios",
+      "Mapping the logic",
+      "Spotting patterns"
+    ],
+    "errorForbidden": "You do not have access to this deal.",
+    "errorUnauthorized": "You are not signed in. Please refresh and try again.",
+    "errorNotFound": "Conversation not found.",
+    "errorTimeout": "The assistant took too long to respond. Please try again.",
+    "errorUpstream": "The assistant could not process your request. Please try again."
   },
   "errors": {
     "notFound": "Page Not Found",

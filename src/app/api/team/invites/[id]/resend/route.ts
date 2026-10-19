@@ -24,9 +24,6 @@ export async function POST(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const body = await request.json().catch(() => ({}));
-  const locale: string = typeof body?.locale === 'string' ? body.locale : 'en';
-
   const admin = createAdminClient();
 
   const { data: invite } = await admin
@@ -59,7 +56,8 @@ export async function POST(
     .eq('id', id);
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://reprimeterminal.com';
-  const inviteUrl = `${baseUrl}/${locale}/invite/${invite.token}`;
+  // No locale prefix: the invitee's own cookie / browser language picks it.
+  const inviteUrl = `${baseUrl}/invite/${invite.token}`;
 
   try {
     const { error } = await sendTeamInviteEmail(invite.email, {

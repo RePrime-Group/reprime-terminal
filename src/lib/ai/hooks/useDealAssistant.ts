@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { AiClientError, getConversation, sendMessage } from '../client';
 import type { Message } from '../types';
 
@@ -14,21 +14,8 @@ export interface UseDealAssistantState {
   freshAssistantId: string | null;
 }
 
-const STATUS_ROTATION = [
-  'Thinking',
-  'Looking up deal data',
-  'Crunching the numbers',
-  'Drafting a response',
-  'Polishing the wording',
-  'Checking the facts',
-  'Adding finishing touches',
-  'Synthesizing the data',
-  'Running the scenarios',
-  'Mapping the logic',
-  'Spotting patterns',
-] as const;
-
 export function useDealAssistant(dealId: string) {
+  const t = useTranslations('ai');
   // Portal UI language, forwarded as the assistant's DEFAULT reply language.
   // A message written in another language overrides it (see the workflow's
   // # Language prompt section).
@@ -76,6 +63,30 @@ export function useDealAssistant(dealId: string) {
     }));
   }, []);
 
+  // The API's error messages are English-only; show them in the user's
+  // language by error code instead.
+  const errorText = useCallback(
+    (err: unknown): string => {
+      if (err instanceof AiClientError) {
+        if (err.status === 504) return t('errorTimeout');
+        switch (err.code) {
+          case 'forbidden':
+            return t('errorForbidden');
+          case 'unauthorized':
+            return t('errorUnauthorized');
+          case 'not_found':
+            return t('errorNotFound');
+          case 'service_disabled':
+            return t('disabledNotice');
+          case 'upstream_error':
+            return t('errorUpstream');
+        }
+      }
+      return t('errorGeneric');
+    },
+    [t],
+  );
+
   const loadConversation = useCallback(async (conversationId: string) => {
     abortRef.current?.abort();
     const ctrl = new AbortController();
@@ -93,10 +104,9 @@ export function useDealAssistant(dealId: string) {
       });
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') return;
-      const message = err instanceof Error ? err.message : 'Failed to load conversation';
-      setState((s) => ({ ...s, status: 'error', error: message }));
+      setState((s) => ({ ...s, status: 'error', error: errorText(err) }));
     }
-  }, []);
+  }, [errorText]);
 
   const send = useCallback(
     async (text: string) => {
@@ -114,20 +124,22 @@ export function useDealAssistant(dealId: string) {
         created_at: new Date().toISOString(),
       };
 
+      const statusRotation = t.raw('statusRotation') as string[];
+
       setState((s) => ({
         ...s,
         messages: [...s.messages, optimistic],
         status: 'sending',
-        statusText: STATUS_ROTATION[0],
+        statusText: statusRotation[0],
         error: null,
       }));
 
       let i = 0;
       if (rotationRef.current) clearInterval(rotationRef.current);
       rotationRef.current = setInterval(() => {
-        i = (i + 1) % STATUS_ROTATION.length;
+        i = (i + 1) % statusRotation.length;
         setState((s) =>
-          s.status === 'sending' ? { ...s, statusText: STATUS_ROTATION[i] } : s,
+          s.status === 'sending' ? { ...s, statusText: statusRotation[i] } : s,
         );
       }, 1500);
 
@@ -153,22 +165,16 @@ export function useDealAssistant(dealId: string) {
       } catch (err) {
         if (err instanceof DOMException && err.name === 'AbortError') return;
         if (rotationRef.current) clearInterval(rotationRef.current);
-        const message =
-          err instanceof AiClientError
-            ? err.message
-            : err instanceof Error
-              ? err.message
-              : 'Failed to send message';
         setState((s) => ({
           ...s,
           messages: s.messages.filter((m) => m.id !== optimistic.id),
           status: 'error',
           statusText: null,
-          error: message,
+          error: errorText(err),
         }));
       }
     },
-    [dealId, state.conversationId, locale],
+    [dealId, state.conversationId, t, locale, errorText],
   );
 
   return {

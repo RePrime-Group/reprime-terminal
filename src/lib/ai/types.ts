@@ -42,10 +42,10 @@ export interface ChatRequest {
   conversation_id?: string;
   message: string;
   /**
-   * Portal UI language, forwarded to the assistant as the DEFAULT reply
+   * Portal UI language, forwarded to n8n as the assistant's DEFAULT reply
    * language. The language the user actually writes in overrides it, so a
    * Hebrew question on an `en` portal still gets a Hebrew answer.
-   * Optional: the n8n workflow falls back to 'en' when it is absent.
+   * Optional: the workflow falls back to 'en' when it is absent.
    */
   locale?: Locale;
 }
