@@ -29,10 +29,10 @@ async function applyOptOut(token: string) {
 
 export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get('t');
-  if (!token) return NextResponse.redirect(new URL('/en/unsubscribe?status=invalid', request.url));
+  if (!token) return NextResponse.redirect(new URL('/unsubscribe?status=invalid', request.url));
 
   const result = await applyOptOut(token);
-  const url = new URL('/en/unsubscribe', request.url);
+  const url = new URL('/unsubscribe', request.url);
   if (result.ok) {
     url.searchParams.set('status', 'ok');
     url.searchParams.set('cat', result.cat);
