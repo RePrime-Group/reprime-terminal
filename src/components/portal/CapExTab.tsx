@@ -103,13 +103,13 @@ export default function CapExTab({
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-[11px] uppercase tracking-wide text-rp-gray-500 border-b border-rp-gray-200 bg-rp-gray-50/50">
-                  <th className="py-3 px-6">{t('colComponent')}</th>
-                  <th className="py-3 px-3">{t('colCondition')}</th>
-                  <th className="py-3 px-3">{t('colLastReplaced')}</th>
-                  <th className="py-3 px-3">{t('colLifeRemaining')}</th>
-                  <th className="py-3 px-3 text-right">{t('colReplacementCost')}</th>
-                  <th className="py-3 px-3">{t('colPriority')}</th>
+                <tr className="text-[11px] uppercase tracking-wide text-rp-gray-500 border-b border-rp-gray-200 bg-rp-gray-50/50">
+                  <th className="py-3 px-6 text-start">{t('colComponent')}</th>
+                  <th className="py-3 px-3 text-start">{t('colCondition')}</th>
+                  <th className="py-3 px-3 text-start">{t('colLastReplaced')}</th>
+                  <th className="py-3 px-3 text-start">{t('colLifeRemaining')}</th>
+                  <th className="py-3 px-3 text-end">{t('colReplacementCost')}</th>
+                  <th className="py-3 px-3 text-start">{t('colPriority')}</th>
                   <th className="py-3 px-6 w-10"></th>
                 </tr>
               </thead>
@@ -124,7 +124,7 @@ export default function CapExTab({
                         className={`border-b border-rp-gray-100 ${hasNotes ? 'cursor-pointer hover:bg-rp-gray-50/50' : ''}`}
                         onClick={() => hasNotes && toggle(item.id)}
                       >
-                        <td dir="auto" className="py-3 px-6 font-medium text-rp-navy">{item.component_name}</td>
+                        <td className="py-3 px-6 font-medium text-rp-navy"><bdi>{item.component_name}</bdi></td>
                         <td className="py-3 px-3">
                           <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${cc.bg} ${cc.text}`}>
                             <span className={`w-1.5 h-1.5 rounded-full ${cc.dot}`} />
@@ -133,9 +133,9 @@ export default function CapExTab({
                               : item.current_condition}
                           </span>
                         </td>
-                        <td dir="auto" className="py-3 px-3 text-rp-gray-600">{item.year_last_replaced ?? '—'}</td>
-                        <td dir="auto" className="py-3 px-3 text-rp-gray-600">{item.useful_life_remaining ?? '—'}</td>
-                        <td className="py-3 px-3 text-right tabular-nums">{formatMoney(item.estimated_replacement_cost)}</td>
+                        <td className="py-3 px-3 text-rp-gray-600"><bdi>{item.year_last_replaced ?? '—'}</bdi></td>
+                        <td className="py-3 px-3 text-rp-gray-600"><bdi>{item.useful_life_remaining ?? '—'}</bdi></td>
+                        <td className="py-3 px-3 text-end tabular-nums">{formatMoney(item.estimated_replacement_cost)}</td>
                         <td className="py-3 px-3 text-rp-gray-600">
                           {t.has(`priorities.${String(item.priority).replace(/[^A-Za-z0-9]/g, '')}`)
                             ? t(`priorities.${String(item.priority).replace(/[^A-Za-z0-9]/g, '')}`)

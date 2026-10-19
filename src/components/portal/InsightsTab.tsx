@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import type { DealInsight } from '@/lib/types/database';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -21,6 +21,8 @@ interface Group {
 
 export default function InsightsTab({ insights }: InsightsTabProps) {
   const t = useTranslations('portal.insights');
+  // Explicit collation locale so SSR (Node) and the browser sort identically.
+  const sortLocale = useLocale() === 'he' ? 'he' : 'en';
   const groups = useMemo<Group[]>(() => {
     const byCategory = new Map<string, Group>();
     for (const ins of insights) {
@@ -37,9 +39,9 @@ export default function InsightsTab({ insights }: InsightsTabProps) {
       }
     }
     return Array.from(byCategory.values()).sort((a, b) =>
-      a.displayName.localeCompare(b.displayName),
+      a.displayName.localeCompare(b.displayName, sortLocale),
     );
-  }, [insights, t]);
+  }, [insights, t, sortLocale]);
 
   // All sections start expanded; collapsing tracks the closed set.
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());

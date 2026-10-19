@@ -62,6 +62,7 @@ export function ImageCarousel({ urls }: { urls: string[] }) {
   return (
     <>
       <div
+        dir="ltr"
         className="relative w-full h-[45vh] md:h-[65vh] rounded-2xl overflow-hidden group"
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
@@ -127,6 +128,7 @@ export function ImageCarousel({ urls }: { urls: string[] }) {
 
       {lightboxOpen && (
         <div
+          dir="ltr"
           className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center"
           onClick={() => setLightboxOpen(false)}
         >

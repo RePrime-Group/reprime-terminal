@@ -188,15 +188,15 @@ export default function RentRollTab({
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-[11px] uppercase tracking-wide text-[#6B7280] bg-[#F7F8FA]">
-                <th className="px-4 py-2.5 font-semibold">{t('colTenant')}</th>
-                <th className="px-3 py-2.5 font-semibold">{t('colSuite')}</th>
-                <th className="px-3 py-2.5 font-semibold text-right">{t('colSf')}</th>
-                <th className="px-3 py-2.5 font-semibold text-right">{t('colRentPerSf')}</th>
-                <th className="px-3 py-2.5 font-semibold text-right">{t('colAnnualRent')}</th>
-                <th className="px-3 py-2.5 font-semibold">{t('colType')}</th>
-                <th className="px-3 py-2.5 font-semibold">{t('colLeaseEnd')}</th>
-                <th className="px-3 py-2.5 font-semibold">{t('escalations')}</th>
+              <tr className="text-[11px] uppercase tracking-wide text-[#6B7280] bg-[#F7F8FA]">
+                <th className="px-4 py-2.5 font-semibold text-start">{t('colTenant')}</th>
+                <th className="px-3 py-2.5 font-semibold text-start">{t('colSuite')}</th>
+                <th className="px-3 py-2.5 font-semibold text-end">{t('colSf')}</th>
+                <th className="px-3 py-2.5 font-semibold text-end">{t('colRentPerSf')}</th>
+                <th className="px-3 py-2.5 font-semibold text-end">{t('colAnnualRent')}</th>
+                <th className="px-3 py-2.5 font-semibold text-start">{t('colType')}</th>
+                <th className="px-3 py-2.5 font-semibold text-start">{t('colLeaseEnd')}</th>
+                <th className="px-3 py-2.5 font-semibold text-start">{t('escalations')}</th>
               </tr>
             </thead>
             <tbody>
@@ -213,7 +213,7 @@ export default function RentRollTab({
                     >
                       <td className="px-4 py-3 font-medium text-[#0E3470]">
                         <div className="flex items-center gap-2">
-                          <span className="text-[#6B7280] text-xs">
+                          <span className="text-[#6B7280] text-xs rtl:-scale-x-100">
                             {expanded ? '▼' : '▶'}
                           </span>
                           {lease.is_anchor && (
@@ -238,13 +238,13 @@ export default function RentRollTab({
                         </div>
                       </td>
                       <td className="px-3 py-3"><bdi>{lease.suite_unit ?? '—'}</bdi></td>
-                      <td className="px-3 py-3 text-right">
+                      <td className="px-3 py-3 text-end">
                         {lease.leased_sf ? lease.leased_sf.toLocaleString() : '—'}
                       </td>
-                      <td className="px-3 py-3 text-right">
+                      <td className="px-3 py-3 text-end">
                         {lease.is_vacant ? '—' : formatRentPerSf(lease.rent_per_sf)}
                       </td>
-                      <td className="px-3 py-3 text-right">
+                      <td className="px-3 py-3 text-end">
                         {lease.is_vacant ? '—' : formatMoney(lease.annual_base_rent)}
                       </td>
                       <td className="px-3 py-3">
@@ -274,11 +274,11 @@ export default function RentRollTab({
               <tr className="border-t-2 border-[#0E3470] bg-[#F7F8FA] font-semibold text-[#0E3470]">
                 <td className="px-4 py-3">{t('total')}</td>
                 <td className="px-3 py-3"></td>
-                <td className="px-3 py-3 text-right">{totalAllSf.toLocaleString()}</td>
-                <td className="px-3 py-3 text-right">
+                <td className="px-3 py-3 text-end">{totalAllSf.toLocaleString()}</td>
+                <td className="px-3 py-3 text-end">
                   {avgRentPerSf !== null ? t('avgRentPerSf', { value: `$${avgRentPerSf.toFixed(2)}` }) : '—'}
                 </td>
-                <td className="px-3 py-3 text-right">{formatMoney(totalRent)}</td>
+                <td className="px-3 py-3 text-end">{formatMoney(totalRent)}</td>
                 <td className="px-3 py-3"></td>
                 <td className="px-3 py-3"></td>
                 <td className="px-3 py-3"></td>

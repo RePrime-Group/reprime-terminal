@@ -125,7 +125,7 @@ export function OverviewTab({
                   <div
                     key={idx}
                     className="bg-white border border-[#EEF0F4] rounded-xl p-4 rp-card-shadow"
-                    style={{ borderLeft: '2px solid #BC9C45' }}
+                    style={{ borderInlineStart: '2px solid #BC9C45' }}
                   >
                     <div className="flex gap-3 items-start">
                       <div className="w-7 h-7 rounded-full bg-[#ECFDF5] flex items-center justify-center shrink-0">
@@ -380,7 +380,7 @@ export function OverviewTab({
 
           const fmtBps = (bps: number) => {
             const sign = bps >= 0 ? '+' : '';
-            return `${sign}${bps} ${t('bps')}`;
+            return <span><bdi dir="ltr">{`${sign}${bps}`}</bdi> {t('bps')}</span>;
           };
           const arrow = (bps: number) => (bps >= 0 ? '▲' : '▼');
           const tone = (bps: number) =>
@@ -409,7 +409,7 @@ export function OverviewTab({
                   </div>
                   <span className="text-sm font-semibold text-[#0E3470] tabular-nums shrink-0">{askingCap.toFixed(2)}%</span>
                 </div>
-                <div className="flex justify-between items-center py-2 px-2 bg-[#FDF8ED] rounded border-l-[3px] border-[#BC9C45]">
+                <div className="flex justify-between items-center py-2 px-2 bg-[#FDF8ED] rounded border-s-[3px] border-[#BC9C45]">
                   <span className="text-[11px] font-semibold uppercase tracking-[1.5px] text-[#BC9C45]">{t('negotiatedCapRate')}</span>
                   <span className="text-base font-bold text-[#0E3470] tabular-nums">{negotiatedCap.toFixed(2)}%</span>
                 </div>

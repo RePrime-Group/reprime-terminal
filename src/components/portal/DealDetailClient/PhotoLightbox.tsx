@@ -33,6 +33,7 @@ export function PhotoLightbox({ photoDocs, photoLightboxIndex, photoLightboxLoad
 
   return (
     <div
+      dir="ltr"
       className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center"
       onClick={() => setPhotoLightboxIndex(null)}
     >

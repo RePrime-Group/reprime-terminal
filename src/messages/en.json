@@ -1480,7 +1480,8 @@
       "expand": "Expand",
       "collapse": "Collapse",
       "viewDocumentAria": "View {name}",
-      "downloadDocumentAria": "Download {name}"
+      "downloadDocumentAria": "Download {name}",
+      "packageFailedGeneric": "an unexpected error occurred. Please try again."
     },
     "compare": {
       "title": "Deal Comparison",
@@ -2117,6 +2118,10 @@
       "enterPhone": "Enter your phone number.",
       "invalidNumber": "That doesn’t look like a valid {country} number.",
       "fullNumber": "Full number: <num>{number}</num>"
+    },
+    "activity": {
+      "commitmentWithdrawn": "Commitment withdrawn",
+      "dealActivity": "Deal activity"
     }
   },
   "join": {

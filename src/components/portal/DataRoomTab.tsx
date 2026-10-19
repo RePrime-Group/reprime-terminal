@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import type { TerminalDDFolder, TerminalDDDocument, DataRoomFolderNode } from '@/lib/types/database';
 import { FolderIcon, FileIcon } from '@/components/ui/DataRoomIcons';
@@ -123,8 +123,9 @@ function toPackageDocs(docs: DocWithPath[]): PackageDoc[] {
   }));
 }
 
-// Breadcrumb path to a folder: "Leases → Five Star Grocery"
-function pathLabelFor(roots: DataRoomFolderNode[], folderId: string): string {
+// Breadcrumb trail to a folder: ["Leases", "Five Star Grocery"] (rendered with a
+// direction-aware arrow between isolated segments).
+function pathLabelFor(roots: DataRoomFolderNode[], folderId: string): string[] {
   const walk = (nodes: DataRoomFolderNode[], trail: string[]): string[] | null => {
     for (const n of nodes) {
       const nextTrail = [...trail, n.name];
@@ -135,7 +136,7 @@ function pathLabelFor(roots: DataRoomFolderNode[], folderId: string): string {
     return null;
   };
   const trail = walk(roots, []);
-  return (trail ?? []).join(' → ');
+  return trail ?? [];
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -196,7 +197,7 @@ export default function DataRoomTab({
   const searchHits = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return null;
-    const hits: Array<{ doc: TerminalDDDocument; path: string }> = [];
+    const hits: Array<{ doc: TerminalDDDocument; path: string[] }> = [];
     const walk = (nodes: DataRoomFolderNode[]) => {
       for (const n of nodes) {
         const path = pathLabelFor(tree, n.id);
@@ -239,7 +240,8 @@ export default function DataRoomTab({
       }
     } catch (err) {
       if ((err as DOMException)?.name !== 'AbortError') {
-        setPackageError(err instanceof Error ? err.message : t('downloadFailed'));
+        console.error('[DataRoomTab] package download failed:', err instanceof Error ? err.message : err);
+        setPackageError(t('packageFailedGeneric'));
       }
     } finally {
       abortRef.current = null;
@@ -437,7 +439,7 @@ export default function DataRoomTab({
       <div className="px-4 md:px-6 pb-2 flex items-center gap-2">
         <div className="flex-1 relative">
           <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]"
+            className="absolute start-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]"
             width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
             strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
           >
@@ -448,7 +450,7 @@ export default function DataRoomTab({
             placeholder={t('searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full py-[8px] pl-9 pr-3 rounded-lg border border-[#E5E7EB] bg-white text-[13px] text-[#0F1B2D] placeholder:text-[#9CA3AF] outline-none focus:ring-2 focus:ring-[#C8A951]/20 focus:border-[#C8A951] transition-all"
+            className="w-full py-[8px] ps-9 pe-3 rounded-lg border border-[#E5E7EB] bg-white text-[13px] text-[#0F1B2D] placeholder:text-[#9CA3AF] outline-none focus:ring-2 focus:ring-[#C8A951]/20 focus:border-[#C8A951] transition-all"
           />
         </div>
         {hasSelection && (
@@ -589,7 +591,7 @@ function InvestorFolderNode({
           {isExpanded ? (
             <svg width="10" height="10" viewBox="0 0 10 10"><path d="M1 3l4 4 4-4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
           ) : (
-            <svg width="10" height="10" viewBox="0 0 10 10"><path d="M3 1l4 4-4 4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            <svg width="10" height="10" viewBox="0 0 10 10" className="rtl:-scale-x-100"><path d="M3 1l4 4-4 4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
           )}
         </button>
         <FolderIcon />
@@ -645,7 +647,7 @@ function InvestorFileRow({
 }: {
   doc: TerminalDDDocument;
   depth?: number;
-  subpath?: string;
+  subpath?: string[];
   isSelected: boolean;
   onToggleSelect: () => void;
   onView: (url: string, name: string, storagePath?: string) => void;
@@ -686,17 +688,24 @@ function InvestorFileRow({
         >
           <bdi>{displayName}</bdi>
         </button>
-        {subpath && (
-          <div className="text-[11px] text-[#9CA3AF] truncate"><bdi>{subpath}</bdi></div>
+        {subpath && subpath.length > 0 && (
+          <div className="text-[11px] text-[#9CA3AF] truncate">
+            {subpath.map((seg, i) => (
+              <Fragment key={i}>
+                {i > 0 && <>{' '}<span className="inline-block rtl:-scale-x-100">→</span>{' '}</>}
+                <bdi>{seg}</bdi>
+              </Fragment>
+            ))}
+          </div>
         )}
         <div className="md:hidden mt-0.5 text-[11px] text-[#9CA3AF] truncate">
-          {formatFileSize(doc.file_size)} · {formatDate(doc.created_at, dateLocale)}
+          <bdi>{formatFileSize(doc.file_size)}</bdi> · {formatDate(doc.created_at, dateLocale)}
         </div>
       </div>
-      <span className="hidden md:block w-16 text-right text-[12px] text-[#9CA3AF] shrink-0">
-        {formatFileSize(doc.file_size)}
+      <span className="hidden md:block w-16 text-end text-[12px] text-[#9CA3AF] shrink-0">
+        <bdi>{formatFileSize(doc.file_size)}</bdi>
       </span>
-      <span className="hidden md:block w-20 text-right text-[12px] text-[#9CA3AF] shrink-0">
+      <span className="hidden md:block w-20 text-end text-[12px] text-[#9CA3AF] shrink-0">
         {formatDate(doc.created_at, dateLocale)}
       </span>
       <a

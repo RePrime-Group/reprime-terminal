@@ -25,7 +25,7 @@ export function CommitmentSection({ deal, previewMode, contactName, contactTitle
 
       <div className="bg-white rounded-xl p-8 rp-card-shadow border border-[#EEF0F4] mb-6">
         <div className="text-[11px] font-semibold text-[#0E3470] uppercase tracking-[2px] mb-7">{t('dealTimeline')}</div>
-        <div className="flex justify-around items-center">
+        <div className="flex justify-around items-center gap-2 flex-wrap sm:flex-nowrap">
           <CountdownRing label={t('dueDiligence')} targetDate={deal.dd_deadline} accentColor="#0E3470" />
           <CountdownRing label={t('closing')} targetDate={deal.close_deadline} accentColor="#BC9C45" />
           {deal.extension_deadline && (
@@ -33,8 +33,8 @@ export function CommitmentSection({ deal, previewMode, contactName, contactTitle
           )}
         </div>
         {deal.timeline_note && (
-          <div className="mt-6 px-4 py-3 bg-[#FDF8ED] border-l-[3px] border-[#BC9C45] rounded-md text-[13px] text-[#6B7280] leading-[1.6]">
-            <span className="font-bold text-[#BC9C45] mr-2 tracking-[1px]">
+          <div className="mt-6 px-4 py-3 bg-[#FDF8ED] border-s-[3px] border-[#BC9C45] rounded-md text-[13px] text-[#6B7280] leading-[1.6]">
+            <span className="font-bold text-[#BC9C45] me-2 tracking-[1px]">
               ℹ {t('timelineNoteLabel')}
             </span>
             <bdi>{deal.timeline_note}</bdi>

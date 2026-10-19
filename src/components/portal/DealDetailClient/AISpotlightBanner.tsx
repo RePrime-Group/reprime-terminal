@@ -97,7 +97,7 @@ export function AISpotlightBanner({ dealId, dealName }: Props) {
         </svg>
         <span className="relative tracking-[0.2px]">{t('askAiAssistant')}</span>
         <svg
-          className="relative opacity-70 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-150"
+          className="relative opacity-70 group-hover:opacity-100 group-hover:translate-x-0.5 rtl:-scale-x-100 rtl:group-hover:-translate-x-0.5 transition-all duration-150"
           width="11"
           height="11"
           viewBox="0 0 24 24"

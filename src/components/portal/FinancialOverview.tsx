@@ -367,7 +367,7 @@ function CapitalStackVisual({ inputs, metrics, isEstimated }: { inputs: DealInpu
         </div>
         <div className="flex justify-between items-center text-[14px]">
           <span className="text-[#6B7280]">{t('totalCapitalRequired')}</span>
-          <span className="font-bold text-[#0E3470] tabular-nums">{fmtFull(totalCapital)}{metrics.closingCosts === 0 ? '+' : ''}</span>
+          <span className="font-bold text-[#0E3470] tabular-nums"><bdi dir="ltr">{fmtFull(totalCapital)}{metrics.closingCosts === 0 ? '+' : ''}</bdi></span>
         </div>
         {metrics.closingCosts === 0 && (
           <p className="text-[11px] text-[#9CA3AF] leading-relaxed pt-1">
@@ -433,10 +433,10 @@ function ReturnComparison({ inputs, metrics, traditional }: { inputs: DealInputs
       <h4 className="text-[17px] font-semibold text-[#0E3470] mb-3">{t('returnComparison')}</h4>
       <div className="grid grid-cols-3 gap-0 rounded-lg overflow-hidden border border-[#EEF0F4]">
         <div className="p-2.5 bg-[#F7F8FA]" />
-        <div className="p-2.5 bg-[#F7F8FA] text-center border-l border-[#EEF0F4]">
+        <div className="p-2.5 bg-[#F7F8FA] text-center border-s border-[#EEF0F4]">
           <span className="text-[11px] font-bold text-[#6B7280] uppercase tracking-[1.5px]">{t('traditionalClose')}</span>
         </div>
-        <div className="p-2.5 text-center border-l border-[#EEF0F4]" style={{ backgroundColor: 'rgba(188,156,69,0.08)' }}>
+        <div className="p-2.5 text-center border-s border-[#EEF0F4]" style={{ backgroundColor: 'rgba(188,156,69,0.08)' }}>
           <span className="text-[11px] font-bold text-[#BC9C45] uppercase tracking-[1.5px]">{t('withSellerMezz')}</span>
         </div>
         {rows.map((row, i) => (
@@ -444,10 +444,10 @@ function ReturnComparison({ inputs, metrics, traditional }: { inputs: DealInputs
             <div className="p-2.5 border-t border-[#EEF0F4] flex items-center bg-[#F7F8FA]">
               <span className="text-[14px] font-medium text-[#6B7280]">{row.label}</span>
             </div>
-            <div className="p-2.5 border-t border-l border-[#EEF0F4] text-center">
+            <div className="p-2.5 border-t border-s border-[#EEF0F4] text-center">
               <span className="text-[14px] text-[#374151] tabular-nums">{row.t}</span>
             </div>
-            <div className={`p-2.5 border-t border-l border-[#EEF0F4] text-center ${row.greenIfBetter ? 'bg-[#ECFDF5]' : ''}`} style={{ backgroundColor: row.greenIfBetter ? undefined : 'rgba(188,156,69,0.04)' }}>
+            <div className={`p-2.5 border-t border-s border-[#EEF0F4] text-center ${row.greenIfBetter ? 'bg-[#ECFDF5]' : ''}`} style={{ backgroundColor: row.greenIfBetter ? undefined : 'rgba(188,156,69,0.04)' }}>
               <span className={`text-[14px] tabular-nums ${row.bold ? 'font-bold' : 'font-semibold'} ${row.greenIfBetter ? 'text-[#0B8A4D]' : 'text-[#0E3470]'}`}>{row.m}</span>
             </div>
           </div>

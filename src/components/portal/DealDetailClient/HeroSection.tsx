@@ -89,8 +89,8 @@ export function HeroSection({
               <CountdownRing label={t('extension')} targetDate={deal.extension_deadline} accentColor="#1D5FB8" />
             </div>
             {deal.timeline_note && (
-              <div className="mt-4 px-4 py-3 bg-[#FDF8ED] border-l-[3px] border-[#BC9C45] rounded-md text-[13px] text-[#6B7280] leading-[1.6]">
-                <span className="font-bold text-[#BC9C45] mr-2 tracking-[1px]">
+              <div className="mt-4 px-4 py-3 bg-[#FDF8ED] border-s-[3px] border-[#BC9C45] rounded-md text-[13px] text-[#6B7280] leading-[1.6]">
+                <span className="font-bold text-[#BC9C45] me-2 tracking-[1px]">
                   ℹ {t('timelineNoteLabel')}
                 </span>
                 <bdi>{deal.timeline_note}</bdi>
@@ -242,7 +242,7 @@ export function HeroSection({
                             setOmMenuOpen(false);
                             handleViewDocument(`/api/deals/${deal.id}/om?addressId=${a.id}&view=true`, `${a.label} — ${t('offeringMemorandum')}`);
                           }}
-                          className="w-full px-3 py-2.5 text-left text-[11px] font-medium text-[#0E3470] hover:bg-[#FDF8ED] transition-colors border-b border-[#EEF0F4] last:border-b-0"
+                          className="w-full px-3 py-2.5 text-start text-[11px] font-medium text-[#0E3470] hover:bg-[#FDF8ED] transition-colors border-b border-[#EEF0F4] last:border-b-0"
                         >
                           <bdi>{a.label}</bdi>
                         </button>

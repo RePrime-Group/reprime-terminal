@@ -48,10 +48,10 @@ const TYPE_LABEL: Record<ExitScenarioType, string> = {
 };
 
 const TYPE_COLOR: Record<ExitScenarioType, { chip: string; accent: string }> = {
-  conservative: { chip: 'bg-[#0E3470]/10 text-[#0E3470]', accent: 'border-l-[#0E3470]' },
-  moderate: { chip: 'bg-[#BC9C45]/15 text-[#BC9C45]', accent: 'border-l-[#BC9C45]' },
-  aggressive: { chip: 'bg-[#0B8A4D]/10 text-[#0B8A4D]', accent: 'border-l-[#0B8A4D]' },
-  refinance: { chip: 'bg-[#6D28D9]/10 text-[#6D28D9]', accent: 'border-l-[#6D28D9]' },
+  conservative: { chip: 'bg-[#0E3470]/10 text-[#0E3470]', accent: 'border-s-[#0E3470]' },
+  moderate: { chip: 'bg-[#BC9C45]/15 text-[#BC9C45]', accent: 'border-s-[#BC9C45]' },
+  aggressive: { chip: 'bg-[#0B8A4D]/10 text-[#0B8A4D]', accent: 'border-s-[#0B8A4D]' },
+  refinance: { chip: 'bg-[#6D28D9]/10 text-[#6D28D9]', accent: 'border-s-[#6D28D9]' },
 };
 
 function toNum(v: string | number | null | undefined): number {
@@ -198,7 +198,7 @@ function ScenarioCard({
     : live.result.cashOut > 0;
 
   return (
-    <div className={`bg-white rounded-2xl border border-rp-gray-200 border-l-4 ${color.accent} p-5 space-y-4`}>
+    <div className={`bg-white rounded-2xl border border-rp-gray-200 border-s-4 ${color.accent} p-5 space-y-4`}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <span className={`text-[9px] font-bold tracking-[1.5px] uppercase px-2 py-1 rounded ${color.chip}`}>
@@ -273,7 +273,7 @@ function ScenarioCard({
 
       {/* Narrative */}
       {scenario.strategy_narrative && (
-        <p dir="auto" className="text-[12px] text-rp-gray-600 leading-relaxed italic border-l-2 border-rp-gray-200 pl-3">
+        <p dir="auto" className="text-[12px] text-rp-gray-600 leading-relaxed italic border-s-2 border-rp-gray-200 ps-3">
           {scenario.strategy_narrative}
         </p>
       )}
@@ -332,7 +332,7 @@ function MetricBlock({ label, value, strong = false }: { label: string; value: s
       <div
         className={`mt-0.5 tabular-nums ${strong ? 'text-[16px] font-semibold text-rp-navy' : 'text-[13px] font-medium text-rp-gray-800'}`}
       >
-        {value}
+        <bdi>{value}</bdi>
       </div>
     </div>
   );
@@ -344,11 +344,11 @@ function SaleSensitivity({ inputs }: { inputs: SaleScenarioInputs }) {
   return (
     <table className="w-full text-[12px]">
       <thead>
-        <tr className="text-left text-[10px] uppercase tracking-wider text-rp-gray-500">
-          <th className="py-1.5">{t('exitCap')}</th>
-          <th className="py-1.5 text-right">{t('exitValue')}</th>
-          <th className="py-1.5 text-right">{t('multiple')}</th>
-          <th className="py-1.5 text-right">IRR</th>
+        <tr className="text-[10px] uppercase tracking-wider text-rp-gray-500">
+          <th className="py-1.5 text-start">{t('exitCap')}</th>
+          <th className="py-1.5 text-end">{t('exitValue')}</th>
+          <th className="py-1.5 text-end">{t('multiple')}</th>
+          <th className="py-1.5 text-end">IRR</th>
         </tr>
       </thead>
       <tbody>
@@ -357,9 +357,9 @@ function SaleSensitivity({ inputs }: { inputs: SaleScenarioInputs }) {
           return (
             <tr key={i} className={`border-t border-rp-gray-200 ${r.isBase ? 'font-semibold text-rp-navy' : 'text-rp-gray-700'}`}>
               <td className="py-1.5">{fmtPct(r.capRatePct, 2)}</td>
-              <td className="py-1.5 text-right tabular-nums">{fmtMoney(r.result.exitValue)}</td>
-              <td className="py-1.5 text-right tabular-nums">{fmtMultiple(r.result.equityMultiple, positive).replace('N/A', t('na'))}</td>
-              <td className="py-1.5 text-right tabular-nums">{fmtIRR(r.result.irr, positive).replace('N/A', t('na'))}</td>
+              <td className="py-1.5 text-end tabular-nums"><bdi>{fmtMoney(r.result.exitValue)}</bdi></td>
+              <td className="py-1.5 text-end tabular-nums"><bdi>{fmtMultiple(r.result.equityMultiple, positive).replace('N/A', t('na'))}</bdi></td>
+              <td className="py-1.5 text-end tabular-nums"><bdi>{fmtIRR(r.result.irr, positive).replace('N/A', t('na'))}</bdi></td>
             </tr>
           );
         })}
@@ -374,21 +374,21 @@ function RefiSensitivity({ inputs }: { inputs: RefiScenarioInputs }) {
   return (
     <table className="w-full text-[12px]">
       <thead>
-        <tr className="text-left text-[10px] uppercase tracking-wider text-rp-gray-500">
-          <th className="py-1.5">{t('refiLtv')}</th>
-          <th className="py-1.5 text-right">{t('cashOut')}</th>
-          <th className="py-1.5 text-right">{t('postRefiCf')}</th>
-          <th className="py-1.5 text-right">{t('cashOnRemaining')}</th>
+        <tr className="text-[10px] uppercase tracking-wider text-rp-gray-500">
+          <th className="py-1.5 text-start">{t('refiLtv')}</th>
+          <th className="py-1.5 text-end">{t('cashOut')}</th>
+          <th className="py-1.5 text-end">{t('postRefiCf')}</th>
+          <th className="py-1.5 text-end">{t('cashOnRemaining')}</th>
         </tr>
       </thead>
       <tbody>
         {rows.map((r, i) => (
           <tr key={i} className={`border-t border-rp-gray-200 ${r.isBase ? 'font-semibold text-rp-navy' : 'text-rp-gray-700'}`}>
             <td className="py-1.5">{r.ltvPct}%</td>
-            <td className="py-1.5 text-right tabular-nums">{fmtMoney(r.result.cashOut)}</td>
-            <td className="py-1.5 text-right tabular-nums">{fmtMoney(r.result.postRefiCF)}</td>
-            <td className="py-1.5 text-right tabular-nums">
-              {r.result.cashOnRemainingPct !== null ? fmtPct(r.result.cashOnRemainingPct) : '—'}
+            <td className="py-1.5 text-end tabular-nums"><bdi>{fmtMoney(r.result.cashOut)}</bdi></td>
+            <td className="py-1.5 text-end tabular-nums"><bdi>{fmtMoney(r.result.postRefiCF)}</bdi></td>
+            <td className="py-1.5 text-end tabular-nums">
+              <bdi>{r.result.cashOnRemainingPct !== null ? fmtPct(r.result.cashOnRemainingPct) : '—'}</bdi>
             </td>
           </tr>
         ))}
@@ -485,7 +485,7 @@ function Line({ label, value, muted, bold }: { label: string; value: string; mut
     <div className="flex items-center justify-between">
       <span className={muted ? 'text-rp-gray-500' : 'text-rp-gray-700'}>{label}</span>
       <span className={`tabular-nums ${bold ? 'font-semibold text-rp-navy' : muted ? 'text-rp-gray-500' : 'text-rp-gray-800'}`}>
-        {value}
+        <bdi>{value}</bdi>
       </span>
     </div>
   );
@@ -570,10 +570,10 @@ function ComparisonTable({
       <div className="overflow-x-auto">
         <table className="w-full text-[12px]">
           <thead>
-            <tr className="text-left text-[10px] uppercase tracking-wider text-rp-gray-500 bg-rp-gray-50/50">
-              <th className="py-2.5 px-5">{t('metric')}</th>
+            <tr className="text-[10px] uppercase tracking-wider text-rp-gray-500 bg-rp-gray-50/50">
+              <th className="py-2.5 px-5 text-start">{t('metric')}</th>
               {rows.map((r) => (
-                <th key={r.scenario.id} className="py-2.5 px-3 text-right">
+                <th key={r.scenario.id} className="py-2.5 px-3 text-end">
                   {t.has(`types.${r.scenario.scenario_type}`) ? t(`types.${r.scenario.scenario_type}`) : TYPE_LABEL[r.scenario.scenario_type]}
                 </th>
               ))}
@@ -602,9 +602,9 @@ function CompRow({ label, cells, strong = false }: { label: string; cells: strin
       {cells.map((c, i) => (
         <td
           key={i}
-          className={`py-2 px-3 text-right tabular-nums ${strong ? 'font-semibold text-rp-navy' : 'text-rp-gray-700'}`}
+          className={`py-2 px-3 text-end tabular-nums ${strong ? 'font-semibold text-rp-navy' : 'text-rp-gray-700'}`}
         >
-          {c}
+          <bdi>{c}</bdi>
         </td>
       ))}
     </tr>

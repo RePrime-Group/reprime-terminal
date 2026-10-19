@@ -44,7 +44,7 @@ export function DealNavArrow({
         title={titleText}
         className={`${sharedClass} border-[#EEF0F4] bg-white opacity-40 cursor-not-allowed shadow-[0_4px_14px_rgba(14,52,112,0.08)]`}
       >
-        <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="rtl:-scale-x-100">
           <path d={iconPath} />
         </svg>
       </span>
@@ -58,7 +58,7 @@ export function DealNavArrow({
       title={titleText}
       className={`${sharedClass} border-[#BC9C45]/40 bg-white text-[#0E3470] shadow-[0_4px_14px_rgba(14,52,112,0.12)] hover:border-[#BC9C45] hover:bg-[#BC9C45] hover:text-white hover:shadow-[0_6px_20px_rgba(188,156,69,0.35)] hover:-translate-y-0.5`}
     >
-      <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="rtl:-scale-x-100">
         <path d={iconPath} />
       </svg>
     </a>

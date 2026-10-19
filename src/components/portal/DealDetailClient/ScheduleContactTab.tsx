@@ -124,7 +124,7 @@ export function ScheduleContactTab({
               <div className="data-label mb-1">{t('notificationPreferences')}</div>
               <div className="text-[12px] text-[#6B7280]">{t('manageInSettings')}</div>
             </div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-[#9CA3AF] group-hover:text-[#BC9C45] transition-colors">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-[#9CA3AF] group-hover:text-[#BC9C45] transition-colors rtl:-scale-x-100">
               <polyline points="9 18 15 12 9 6" />
             </svg>
           </div>

@@ -54,7 +54,7 @@ export function MetricCard({
   return (
     <div
       className="group relative h-full bg-white rounded-xl p-3 md:p-3.5 border border-[#EEF0F4] rp-card-shadow hover:shadow-[0_6px_24px_rgba(14,52,112,0.08)] hover:-translate-y-[1px] transition-all duration-200"
-      style={{ borderLeft: `4px solid ${borderColor}` }}
+      style={{ borderInlineStart: `4px solid ${borderColor}` }}
     >
       <div className="data-label mb-1.5">
         {label}

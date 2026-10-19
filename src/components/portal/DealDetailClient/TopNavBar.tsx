@@ -62,7 +62,7 @@ export function TopNavBar({
       <div className="h-[64px] flex items-center px-4 md:px-8">
         <button
           onClick={handleBack}
-          className="hover:bg-[#F7F8FA] rounded-full p-2 transition mr-3 group"
+          className="hover:bg-[#F7F8FA] rounded-full p-2 transition me-3 group"
           aria-label={tn('backToPortal')}
         >
           <svg
@@ -74,12 +74,12 @@ export function TopNavBar({
             strokeWidth="1.5"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="text-[#9CA3AF] group-hover:text-[#0E3470] transition-colors"
+            className="text-[#9CA3AF] group-hover:text-[#0E3470] transition-colors rtl:-scale-x-100"
           >
             <path d="M10 12L6 8l4-4" />
           </svg>
         </button>
-        <div className="hidden md:block h-5 w-px bg-[#EEF0F4] mr-4" />
+        <div className="hidden md:block h-5 w-px bg-[#EEF0F4] me-4" />
         <div className="flex-1 min-w-0">
           <h1 className="font-[family-name:var(--font-playfair)] text-[18px] font-semibold text-[#0E3470] truncate">
             <bdi>{deal.name}</bdi>

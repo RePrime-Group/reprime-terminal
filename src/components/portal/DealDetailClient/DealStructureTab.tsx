@@ -62,7 +62,7 @@ export function DealStructureTab({
 
       {deal.special_terms && deal.special_terms !== 'None' && (
         <FadeInOnScroll delay={0.05}>
-          <div className="mt-6 bg-[#FDF8ED] border-l-4 border-[#BC9C45] p-4 rounded-r-lg">
+          <div className="mt-6 bg-[#FDF8ED] border-s-4 border-[#BC9C45] p-4 rounded-e-lg">
             <div className="text-[12px] font-semibold text-[#BC9C45] uppercase tracking-wider mb-1">
               {t('specialTerms')}
             </div>
@@ -81,7 +81,7 @@ export function DealStructureTab({
               setStructurePhoneError(null);
               setStructureModal('assignment');
             }}
-            className={`w-full h-full bg-white rounded-xl border-2 p-5 text-left cursor-pointer transition-all relative flex flex-col ${
+            className={`w-full h-full bg-white rounded-xl border-2 p-5 text-start cursor-pointer transition-all relative flex flex-col ${
               selectedStructure === 'assignment'
                 ? 'border-[#BC9C45] shadow-[0_0_0_3px_#FDF8ED,0_0_20px_rgba(188,156,69,0.15)]'
                 : 'border-[#EEF0F4] hover:border-[#D1D5DB]'
@@ -129,7 +129,7 @@ export function DealStructureTab({
               setStructurePhoneError(null);
               setStructureModal('gplp');
             }}
-            className={`w-full h-full bg-white rounded-xl border-2 p-5 text-left cursor-pointer transition-all flex flex-col ${
+            className={`w-full h-full bg-white rounded-xl border-2 p-5 text-start cursor-pointer transition-all flex flex-col ${
               selectedStructure === 'gplp'
                 ? 'border-[#BC9C45] shadow-[0_0_0_3px_#FDF8ED,0_0_20px_rgba(188,156,69,0.15)]'
                 : 'border-[#EEF0F4] hover:border-[#D1D5DB]'

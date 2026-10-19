@@ -113,6 +113,7 @@ export function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
               </div>
               <input
                 type="range"
+                dir="ltr"
                 min={inp.min}
                 max={inp.max}
                 step={inp.step}
@@ -129,7 +130,7 @@ export function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
         <div className="mt-3 p-3 bg-[#FDF8ED] rounded-lg border border-[#ECD9A0]/30">
           <div className="text-[10px] font-semibold text-[#BC9C45] uppercase tracking-[2px] mb-1">{t('basis')}</div>
           <div className="text-[12px] text-[#4B5563]">
-            {t('purchase')} {fmt(mm.netBasis)} · {t('cap')} {mm.capRate.toFixed(2)}% · {t('noi')} {fmt(baseInputs.noi)}
+            <bdi>{t('purchase')} {fmt(mm.netBasis)}</bdi> · <bdi>{t('cap')} {mm.capRate.toFixed(2)}%</bdi> · <bdi>{t('noi')} {fmt(baseInputs.noi)}</bdi>
           </div>
         </div>
       </div>
@@ -141,7 +142,7 @@ export function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
             <div
               key={i}
               className="bg-white rounded-xl p-3.5 border border-[#EEF0F4] rp-card-shadow"
-              style={{ borderLeft: `3px solid ${m.c}` }}
+              style={{ borderInlineStart: `3px solid ${m.c}` }}
             >
               <div className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-[2px]">{m.l}</div>
               <div className="text-[22px] font-bold tabular-nums mt-1.5" style={{ color: m.c }}>{m.v}</div>
@@ -176,7 +177,7 @@ export function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
                       return (
                         <span
                           key={tick}
-                          className="absolute right-1 text-[8px] text-[#9CA3AF] tabular-nums leading-none whitespace-nowrap"
+                          className="absolute end-1 text-[8px] text-[#9CA3AF] tabular-nums leading-none whitespace-nowrap"
                           style={{ bottom: `${bottom}%`, transform: 'translateY(50%)' }}
                         >
                           {yLabel(tick)}
@@ -218,7 +219,7 @@ export function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
                     </div>
                   </div>
                 </div>
-                <div className="flex" style={{ marginLeft: 44 }}>
+                <div className="flex" style={{ marginInlineStart: 44 }}>
                   <div className="flex-1 flex gap-1.5 md:gap-3 px-1 md:px-2">
                     {cashFlows.map((_, i) => (
                       <div key={i} className="flex-1 text-center">

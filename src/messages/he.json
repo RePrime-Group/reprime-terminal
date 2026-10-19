@@ -1480,7 +1480,8 @@
       "expand": "הרחב",
       "collapse": "כווץ",
       "viewDocumentAria": "צפה ב-{name}",
-      "downloadDocumentAria": "הורד את {name}"
+      "downloadDocumentAria": "הורד את {name}",
+      "packageFailedGeneric": "אירעה שגיאה בלתי צפויה. נסה שוב."
     },
     "compare": {
       "title": "השוואת עסקאות",
@@ -1786,7 +1787,7 @@
       "daysAgo": "{count, plural, one {לפני יום} two {לפני יומיים} other {לפני # ימים}}"
     },
     "photos": {
-      "rangeOf": "{start}–{end} מתוך {total}",
+      "rangeOf": "⁦{start}–{end}⁩ מתוך {total}",
       "previousPage": "העמוד הקודם",
       "nextPage": "העמוד הבא",
       "closeLightbox": "סגור תצוגת תמונה",
@@ -2117,6 +2118,10 @@
       "enterPhone": "הזן את מספר הטלפון שלך.",
       "invalidNumber": "זה לא נראה כמו מספר תקין ב{country}.",
       "fullNumber": "מספר מלא: <num>{number}</num>"
+    },
+    "activity": {
+      "commitmentWithdrawn": "התחייבות בוטלה",
+      "dealActivity": "פעילות בעסקה"
     }
   },
   "join": {
