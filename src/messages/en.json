@@ -2309,7 +2309,8 @@
     "networkError": "Network error — please check your connection.",
     "tryAgain": "Please try again.",
     "networkTryAgain": "Network error. Please try again.",
-    "saveSignatureFailed": "Failed to save signature. Please try again."
+    "saveSignatureFailed": "Failed to save signature. Please try again.",
+    "pageMissing": "This page doesn't exist or has been moved."
   },
   "unsubscribe": {
     "successTitle": "You've been unsubscribed",
