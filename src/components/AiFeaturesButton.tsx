@@ -9,8 +9,12 @@ function dealIdFromPath(pathname: string): string | null {
 }
 
 export default function AiFeaturesButton() {
-  const { isOpen, open, close } = useDealAssistantPanel();
+  const { isOpen, open, close, assistantEnabled } = useDealAssistantPanel();
   const pathname = usePathname();
+
+  // On a deal the assistant does not cover, do not offer it. The close button
+  // still renders while the panel is open so it can never get stuck open.
+  if (!isOpen && !assistantEnabled) return null;
 
   if (isOpen) {
     return (

@@ -74,6 +74,9 @@ export async function POST(request: NextRequest) {
       deal_id: body.deal_id,
       conversation_id: body.conversation_id ?? null,
       message: body.message.trim(),
+      // Whitelisted here as well as in the workflow, so a crafted body cannot
+      // push arbitrary text into the assistant's prompt.
+      locale: body.locale === 'he' ? 'he' : 'en',
     },
     session,
   );

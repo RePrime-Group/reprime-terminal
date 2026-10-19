@@ -33,6 +33,8 @@ import { FinancialModelingTab } from './DealDetailClient/FinancialModelingTab';
 import { TopNavBar } from './DealDetailClient/TopNavBar';
 import { DealHeaderBar } from './DealDetailClient/DealHeaderBar';
 import { AISpotlightBanner } from './DealDetailClient/AISpotlightBanner';
+import { AI_ASSISTANT_STATUSES } from '@/lib/constants';
+import type { DealStatus } from '@/lib/types/database';
 import { CancelledDealBanner } from './DealDetailClient/CancelledDealBanner';
 import { HeroSection } from './DealDetailClient/HeroSection';
 import { DepositInfoCard } from './DealDetailClient/DepositInfoCard';
@@ -557,6 +559,20 @@ export default function DealDetailClient({
   // Social proof visibility
   const showSocialProof = (deal.viewing_count ?? 0) > 0 || (deal.meetings_count ?? 0) > 0;
 
+  // Whether the assistant covers this deal's status. Mirrors the allowlist in
+  // the n8n chat workflow's `Load Deal & Access` node, which is the real gate;
+  // this just stops us offering a button that would come back 403. Told to the
+  // context so the floating button and the Cmd+K shortcut hide too, and
+  // restored on unmount so other portal pages are unaffected.
+  const assistantPanel = useDealAssistantPanelOptional();
+  const aiCoversThisDeal = AI_ASSISTANT_STATUSES.includes(deal.status as DealStatus);
+  const setAssistantEnabled = assistantPanel?.setAssistantEnabled;
+  useEffect(() => {
+    if (!setAssistantEnabled) return;
+    setAssistantEnabled(aiCoversThisDeal);
+    return () => setAssistantEnabled(true);
+  }, [aiCoversThisDeal, setAssistantEnabled]);
+
   return (
     <div
       className="min-h-dvh rp-page-texture font-[family-name:var(--font-poppins)]"
@@ -592,7 +608,7 @@ export default function DealDetailClient({
           navContext={navContext}
         />
 
-        {!previewMode && (
+        {!previewMode && aiCoversThisDeal && (
           <AISpotlightBanner dealId={deal.id} dealName={deal.name} />
         )}
 

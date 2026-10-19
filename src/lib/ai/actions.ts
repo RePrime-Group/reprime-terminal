@@ -2,6 +2,54 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { AI_ASSISTANT_STATUSES } from '@/lib/constants';
+
+export interface DealSearchResult {
+  id: string;
+  name: string;
+}
+
+/**
+ * Search the deals the signed-in user may ask the assistant about.
+ *
+ * Runs on the server so the WHOLE set is searchable. The picker used to fetch
+ * one page of deals and filter it in the browser, which meant a deal outside
+ * that page produced "No deals found" rather than simply being further down
+ * the list: indistinguishable, to the user, from the deal not existing.
+ *
+ * Rows are scoped by RLS to what this user may see; the status filter then
+ * removes deals the chat workflow refuses, so the picker cannot offer
+ * something that would come back 403 on the first message.
+ */
+export async function searchDeals(
+  query: string,
+  limit = 50,
+): Promise<DealSearchResult[]> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('Sign in required.');
+
+  let q = supabase
+    .from('terminal_deals')
+    .select('id, name')
+    .in('status', AI_ASSISTANT_STATUSES)
+    .order('updated_at', { ascending: false })
+    .limit(Math.min(Math.max(limit, 1), 100));
+
+  const term = query.trim();
+  if (term) {
+    // Escape the LIKE metacharacters, so typing % or _ searches for that
+    // literal character instead of silently matching everything.
+    const escaped = term.replace(/[\\%_]/g, (c) => `\\${c}`);
+    q = q.ilike('name', `%${escaped}%`);
+  }
+
+  const { data, error } = await q;
+  if (error) throw new Error(error.message);
+  return (data ?? []) as DealSearchResult[];
+}
 
 /**
  * Permanently delete a conversation and its messages.

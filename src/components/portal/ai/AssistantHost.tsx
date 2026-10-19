@@ -11,7 +11,7 @@ function dealIdFromPath(pathname: string): string | null {
 }
 
 function GlobalShortcut() {
-  const { isOpen, open, close } = useDealAssistantPanel();
+  const { isOpen, open, close, assistantEnabled } = useDealAssistantPanel();
   const pathname = usePathname();
 
   useEffect(() => {
@@ -27,12 +27,14 @@ function GlobalShortcut() {
       }
       const dealId = dealIdFromPath(pathname ?? '');
       if (!dealId) return;
+      // Deal whose status the assistant does not cover: no shortcut either.
+      if (!assistantEnabled) return;
       const el = document.querySelector<HTMLElement>('[data-deal-name]');
       open({ dealId, dealName: el?.dataset.dealName });
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [isOpen, open, close, pathname]);
+  }, [isOpen, open, close, pathname, assistantEnabled]);
 
   return null;
 }

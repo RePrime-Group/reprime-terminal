@@ -1,3 +1,5 @@
+import type { Locale } from '@/lib/types/database';
+
 export type Role = 'user' | 'assistant' | 'tool' | 'system';
 
 export type CitationKind = 'document' | 'tenant' | 'deal_field' | 'computed';
@@ -39,6 +41,13 @@ export interface ChatRequest {
   deal_id: string;
   conversation_id?: string;
   message: string;
+  /**
+   * Portal UI language, forwarded to the assistant as the DEFAULT reply
+   * language. The language the user actually writes in overrides it, so a
+   * Hebrew question on an `en` portal still gets a Hebrew answer.
+   * Optional: the n8n workflow falls back to 'en' when it is absent.
+   */
+  locale?: Locale;
 }
 
 export interface ChatResponse {

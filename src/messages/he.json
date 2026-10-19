@@ -1784,6 +1784,8 @@
     "voiceInput": "קלט קולי",
     "voiceInputUnsupported": "הדפדפן לא תומך בקלט קולי",
     "editMessage": "ערוך הודעה",
+    "copyMessage": "העתק",
+    "copied": "הועתק",
     "deleteThread": "מחק שיחה",
     "deleteThreadTitle": "למחוק את השיחה?",
     "deleteThreadBody": "“{title}” וההודעות שלה יימחקו לצמיתות. לא ניתן לבטל פעולה זו.",

@@ -78,6 +78,26 @@ export const ACTIVE_DEAL_STATUSES: DealStatus[] = [
   'published',
 ];
 
+// Deal statuses on which the AI assistant may be offered and will answer.
+// MUST stay in step with the `Load Deal & Access` node in the n8n chat
+// workflow 6hz22YdBC500tHxg, which is the authoritative gate; this constant
+// only decides whether the UI offers the affordance. If the two drift, the
+// symptom is silent: the button appears and the request comes back 403.
+// Excluded on purpose: draft, coming_soon, cancelled, under_review.
+// NOTE: `investor_only` is allowed here but the workflow additionally requires
+// the caller to be a member of a group the deal is assigned to. The UI needs
+// no equivalent check, because a non-member cannot open the page at all.
+export const AI_ASSISTANT_STATUSES: DealStatus[] = [
+  'marketplace',
+  'investor_only',
+  'loi_signed',
+  'pending_final_loi',
+  'psa_signed',
+  'published',
+  'assigned',
+  'closed',
+];
+
 // Admins can move a deal to any status regardless of the current status.
 export const DEAL_STATUS_TRANSITIONS: Record<string, { roles: string[]; to: string[] }> =
   Object.fromEntries(

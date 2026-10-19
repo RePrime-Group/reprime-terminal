@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useLocale } from 'next-intl';
 import { AiClientError, getConversation, sendMessage } from '../client';
 import type { Message } from '../types';
 
@@ -28,6 +29,10 @@ const STATUS_ROTATION = [
 ] as const;
 
 export function useDealAssistant(dealId: string) {
+  // Portal UI language, forwarded as the assistant's DEFAULT reply language.
+  // A message written in another language overrides it (see the workflow's
+  // # Language prompt section).
+  const locale = useLocale();
   const [state, setState] = useState<UseDealAssistantState>({
     conversationId: null,
     messages: [],
@@ -132,6 +137,7 @@ export function useDealAssistant(dealId: string) {
             deal_id: dealId,
             conversation_id: state.conversationId ?? undefined,
             message: trimmed,
+            locale: locale === 'he' ? 'he' : 'en',
           },
           ctrl.signal,
         );
@@ -162,7 +168,7 @@ export function useDealAssistant(dealId: string) {
         }));
       }
     },
-    [dealId, state.conversationId],
+    [dealId, state.conversationId, locale],
   );
 
   return {

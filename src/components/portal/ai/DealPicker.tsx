@@ -2,12 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { createClient } from '@/lib/supabase/client';
-
-interface DealEntry {
-  id: string;
-  name: string;
-}
+import { searchDeals, type DealSearchResult } from '@/lib/ai/actions';
 
 interface Props {
   onSelect: (id: string, name: string) => void;
@@ -16,33 +11,37 @@ interface Props {
 export default function DealPicker({ onSelect }: Props) {
   const t = useTranslations('ai');
   const [query, setQuery] = useState('');
-  const [deals, setDeals] = useState<DealEntry[] | null>(null);
+  const [deals, setDeals] = useState<DealSearchResult[] | null>(null);
 
+  // Search runs on the server against the full set the user may ask about.
+  // Filtering a fetched page in the browser is what made a deal further down
+  // the list report "No deals found", which reads as "that deal does not
+  // exist". Results are left on screen while a new search is in flight, so
+  // typing does not flash the list between keystrokes.
   useEffect(() => {
     let cancelled = false;
-    const supabase = createClient();
-    supabase
-      .from('terminal_deals')
-      .select('id, name')
-      .order('updated_at', { ascending: false })
-      .limit(50)
-      .then(({ data }) => {
-        if (cancelled) return;
-        setDeals((data as DealEntry[] | null) ?? []);
-      });
+    const term = query.trim();
+    const handle = setTimeout(
+      () => {
+        searchDeals(term)
+          .then((rows) => {
+            if (!cancelled) setDeals(rows);
+          })
+          .catch(() => {
+            if (!cancelled) setDeals([]);
+          });
+      },
+      term ? 220 : 0,
+    );
     return () => {
       cancelled = true;
+      clearTimeout(handle);
     };
-  }, []);
-
-  const list = deals ?? [];
-  const filtered = query.trim()
-    ? list.filter((d) => d.name.toLowerCase().includes(query.toLowerCase()))
-    : list;
+  }, [query]);
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="px-4 pt-4 pb-3 border-b border-white/[0.06]">
+    <div className="flex flex-1 min-h-0 flex-col">
+      <div className="shrink-0 px-4 pt-4 pb-3 border-b border-white/[0.06]">
         <div className="text-[11px] font-semibold tracking-[1.5px] uppercase text-[#BC9C45] mb-2">
           {t('selectDealPrompt')}
         </div>
@@ -56,7 +55,7 @@ export default function DealPicker({ onSelect }: Props) {
           className="w-full px-3.5 py-2.5 rounded-lg bg-white/[0.04] border border-white/[0.08] text-[13px] text-white placeholder:text-white/30 outline-none focus:border-[#BC9C45]/45 focus:bg-white/[0.06] transition-colors"
         />
       </div>
-      <div className="flex-1 overflow-y-auto py-2">
+      <div className="flex-1 min-h-0 overflow-y-auto py-2">
         {deals === null ? (
           <div className="px-5 py-8 flex justify-center">
             <span className="inline-flex gap-1" aria-label="Loading">
@@ -65,12 +64,12 @@ export default function DealPicker({ onSelect }: Props) {
               <span className="w-1.5 h-1.5 rounded-full bg-[#BC9C45]/70 animate-pulse [animation-delay:240ms]" />
             </span>
           </div>
-        ) : filtered.length === 0 ? (
+        ) : deals.length === 0 ? (
           <div className="px-5 py-8 text-center text-[12px] text-white/40">
             {t('noDealsFound')}
           </div>
         ) : (
-          filtered.map((d) => (
+          deals.map((d) => (
             <button
               key={d.id}
               type="button"

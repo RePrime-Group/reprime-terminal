@@ -1784,6 +1784,8 @@
     "voiceInput": "Voice input",
     "voiceInputUnsupported": "Voice input is not supported in this browser",
     "editMessage": "Edit message",
+    "copyMessage": "Copy",
+    "copied": "Copied",
     "deleteThread": "Delete conversation",
     "deleteThreadTitle": "Delete conversation?",
     "deleteThreadBody": "“{title}” and its messages will be permanently deleted. This can't be undone.",
