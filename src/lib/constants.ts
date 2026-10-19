@@ -83,7 +83,11 @@ export const ACTIVE_DEAL_STATUSES: DealStatus[] = [
 // workflow 6hz22YdBC500tHxg, which is the authoritative gate; this constant
 // only decides whether the UI offers the affordance. If the two drift, the
 // symptom is silent: the button appears and the request comes back 403.
-// Excluded on purpose: draft, coming_soon, cancelled, under_review.
+// Excluded on purpose: draft, coming_soon, under_review.
+// `cancelled` was excluded at first, then allowed (Ali, 2026-10-19): two
+// investors were still researching cancelled deals weekly, since a dead deal
+// is a comp and its dataroom records why it fell through. Note their documents
+// are NOT indexed, so document search comes back empty on them.
 // NOTE: `investor_only` is allowed here but the workflow additionally requires
 // the caller to be a member of a group the deal is assigned to. The UI needs
 // no equivalent check, because a non-member cannot open the page at all.
@@ -96,6 +100,7 @@ export const AI_ASSISTANT_STATUSES: DealStatus[] = [
   'published',
   'assigned',
   'closed',
+  'cancelled',
 ];
 
 // Admins can move a deal to any status regardless of the current status.
