@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { getCurrentAuthUser, getCurrentProfile } from '@/lib/supabase/currentUser';
 import OnboardingSignOutButton from '@/components/onboarding/OnboardingSignOutButton';
 import RePrimeLogo from '@/components/RePrimeLogo';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 export default async function OnboardingLayout({
   children,
@@ -27,13 +28,16 @@ export default async function OnboardingLayout({
       {/* Gold accent strip — matches portal navbar */}
       <div className="h-[2px] bg-gradient-to-r from-[#BC9C45] via-[#D4B96A] to-[#BC9C45] shrink-0" />
 
-      {/* Minimal top bar — logo + sign out only */}
+      {/* Minimal top bar — logo + language + sign out only */}
       <header className="shrink-0 border-b border-[#EEF0F4] bg-white">
         <div className="max-w-[1200px] mx-auto px-6 h-[56px] flex items-center justify-between">
           <div className="flex items-center">
             <RePrimeLogo width={140} variant="navy" />
           </div>
-          <OnboardingSignOutButton locale={locale} />
+          <div className="flex items-center gap-4">
+            <LanguageSwitcher variant="light" />
+            <OnboardingSignOutButton locale={locale} />
+          </div>
         </div>
       </header>
 

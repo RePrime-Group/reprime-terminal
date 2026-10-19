@@ -74,6 +74,7 @@ export async function POST(request: NextRequest) {
       deal_id: body.deal_id,
       conversation_id: body.conversation_id ?? null,
       message: body.message.trim(),
+      locale: body.locale === 'he' ? 'he' : 'en',
     },
     session,
   );
