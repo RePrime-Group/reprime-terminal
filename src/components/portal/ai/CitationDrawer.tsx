@@ -87,7 +87,9 @@ export default function CitationDrawer({ citation, onClose }: Props) {
     : fileKind === 'pdf'
       ? `${signedUrl}#page=1`
       : fileKind === 'office'
-        ? `https://docs.google.com/viewer?url=${encodeURIComponent(signedUrl)}&embedded=true`
+        // Same viewer the data room uses (DealDetailClient): Google's viewer
+        // fails on these spreadsheets ("Could not preview the file").
+        ? `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(signedUrl)}`
         : signedUrl;
 
   const kindIcon: Record<FileKind, React.ReactNode> = {

@@ -12,8 +12,14 @@
 --                                 admin.rpc() (service role), plus n8n (service role).
 --     replace_doc_chunks       -> no application call sites at all; n8n only.
 --     terminal_ai_usage_increment -> no application call sites; n8n only.
---     terminal_users           -> only written by /api/auth/create-profile, which
+--     terminal_users           -> INSERTED only by /api/auth/create-profile, which
 --                                 uses the service-role client and bypasses RLS.
+--                                 Also UPDATED by /api/user/profile on the user's
+--                                 own session -- but only full_name, phone and
+--                                 company_name, none of which the F63 guard below
+--                                 covers. (Corrected after this was applied: the
+--                                 original comment missed that route. Verified
+--                                 live: profile saves still return 200.)
 --     terminal_invite_tokens   -> /api/invite/validate uses the service-role
 --                                 client; the admin UI delete is covered by the
 --                                 existing "Owners can manage invites" policy.

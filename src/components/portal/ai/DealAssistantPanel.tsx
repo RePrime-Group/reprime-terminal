@@ -195,13 +195,17 @@ export default function DealAssistantPanel() {
       role="dialog"
       aria-label={t('title')}
       aria-modal={false}
-      className={`fixed ${animClass} z-[55] bg-[#0A1628] text-white border border-white/[0.02] flex flex-col overflow-hidden`}
+      className={`fixed ${animClass} z-[55] bg-[#0A1628] text-white border border-white/[0.02] flex flex-col`}
       style={{
         ...dimStyle,
         boxShadow: isSidebar ? sidebarShadow : floatingShadow,
         transition: `width 340ms ${easing}, height 340ms ${easing}, bottom 340ms ${easing}, ${sideKey} 340ms ${easing}, border-radius 340ms ${easing}, box-shadow 340ms ${easing}`,
       }}
     >
+      {/* Clipping lives on this inner wrapper, not the panel itself: the
+          CitationDrawer sits OUTSIDE the panel's box (end-full), so clipping
+          the panel hid the drawer entirely. */}
+      <div className="relative flex flex-1 min-h-0 flex-col overflow-hidden rounded-[inherit]">
       <DealAssistantHeader
         dealName={dealName}
         conversations={conversations}
@@ -272,8 +276,6 @@ export default function DealAssistantPanel() {
         />
       )}
 
-      <CitationDrawer citation={activeCitation} onClose={() => setActiveCitation(null)} />
-
       {pendingDelete && (
         <DeleteConversationDialog
           title={pendingDelete.title}
@@ -281,6 +283,9 @@ export default function DealAssistantPanel() {
           onCancel={() => setPendingDelete(null)}
         />
       )}
+      </div>
+
+      <CitationDrawer citation={activeCitation} onClose={() => setActiveCitation(null)} />
     </div>
   );
 }
