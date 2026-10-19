@@ -61,8 +61,17 @@ export default function DealAssistantHeader({
             className="block w-full text-start text-[10px] text-white/45 hover:text-[#D4B96A] disabled:hover:text-white/45 disabled:cursor-not-allowed cursor-pointer truncate transition-colors leading-tight"
             title={dealName ? t('subtitle', { deal: `\u2068${dealName}\u2069` }) : ''}
           >
-            {/* \u2068…\u2069 (FSI/PDI) isolate the deal name's direction inside the localized text */}
-            {dealName ? t('subtitle', { deal: `\u2068${dealName}\u2069` }) : t('selectDealPrompt')}
+            {/* The deal name gets its own truncating <bdi> so an ellipsis cuts the end of the name, not its start */}
+            {dealName ? (
+              <span className="flex min-w-0 whitespace-pre">
+                {t.rich('scopedTo', {
+                  deal: dealName,
+                  name: (chunks) => <bdi dir="auto" className="min-w-0 truncate">{chunks}</bdi>,
+                })}
+              </span>
+            ) : (
+              t('selectDealPrompt')
+            )}
           </button>
         </div>
       </div>

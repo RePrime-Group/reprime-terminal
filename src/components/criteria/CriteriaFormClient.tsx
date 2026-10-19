@@ -66,7 +66,7 @@ export default function CriteriaFormClient({ locale, initial }: Props) {
       return;
     }
     for (let i = 0; i < mandates.length; i++) {
-      const v = validateMandate(mandates[i]);
+      const v = validateMandate(mandates[i], (key) => t(`mandate.errors.${key}`));
       if (v) {
         setError(`${t('errors.mandatePrefix', { num: i + 1 })} ${v}`);
         return;
@@ -298,11 +298,11 @@ function CriteriaThankYou({
           {outcome.isRegistered ? (
             outcome.isLoggedIn ? (
               <Link href={outcome.terminalUrl} locale={locale} className={`${primaryBtn} w-full sm:w-auto`}>
-                {t('btnGoToTerminal')} →
+                <span>{t('btnGoToTerminal')} <span aria-hidden className="inline-block rtl:-scale-x-100">→</span></span>
               </Link>
             ) : (
               <Link href={outcome.loginUrl} locale={locale} className={`${primaryBtn} w-full sm:w-auto`}>
-                {t('btnLogin')} →
+                <span>{t('btnLogin')} <span aria-hidden className="inline-block rtl:-scale-x-100">→</span></span>
               </Link>
             )
           ) : (
@@ -325,7 +325,7 @@ function CriteriaThankYou({
                 locale={locale}
                 className={`${primaryBtn} w-full ${outcome.whatsappUrl ? '' : 'sm:col-span-2'}`}
               >
-                {t('btnApplyMembership')} →
+                <span>{t('btnApplyMembership')} <span aria-hidden className="inline-block rtl:-scale-x-100">→</span></span>
               </Link>
             </div>
           )}

@@ -299,6 +299,8 @@ export default function DealNotepad({
               onChange={onChange}
               rows={textareaRows}
               placeholder={t('placeholder')}
+              // dir="auto" on an empty textarea resolves to LTR, which would left-align the Hebrew placeholder
+              dir={content ? 'auto' : undefined}
               className="w-full resize-none text-[13px] text-[#0A1628] placeholder:text-[#9CA3AF] border border-[#E5E7EB] rounded-[8px] px-3 py-2 focus:outline-none focus:border-[#BC9C45] focus:ring-2 focus:ring-[#BC9C45]/20 leading-relaxed"
             />
           </div>

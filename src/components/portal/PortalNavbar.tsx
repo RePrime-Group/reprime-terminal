@@ -191,7 +191,7 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
             </button>
 
             {showNotifications && (
-              <div className="absolute top-full md:top-[42px] left-2 right-2 md:left-auto md:right-0 mt-1 md:mt-0 w-auto md:w-[320px] bg-[#0F1419] rounded-xl shadow-2xl border border-white/[0.08] animate-slide-down z-50">
+              <div className="absolute top-full md:top-[42px] start-2 end-2 md:start-auto md:end-0 mt-1 md:mt-0 w-auto md:w-[320px] bg-[#0F1419] rounded-xl shadow-2xl border border-white/[0.08] animate-slide-down z-50">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
                   <span className="text-[13px] font-medium text-white">{tn('notifications')}</span>
                   {hasUnread && (
@@ -397,7 +397,7 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
                       <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
                     </svg>
                     <span className="flex-1">{tn('settings')}</span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/30 group-hover:text-white/60 transition-colors">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/30 group-hover:text-white/60 transition-colors rtl:-scale-x-100">
                       <polyline points="9 18 15 12 9 6" />
                     </svg>
                   </Link>
@@ -501,7 +501,7 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
                 <div className="text-[14px] font-medium text-white truncate"><bdi>{firstName || tn('member')}</bdi></div>
                 <div className="text-[9px] font-semibold text-[#D4A843] uppercase tracking-[2px]">{tn('settings')}</div>
               </div>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/40">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/40 rtl:-scale-x-100">
                 <polyline points="9 18 15 12 9 6" />
               </svg>
             </Link>
@@ -509,7 +509,7 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
             <button
               onClick={handleSignOut}
               disabled={signingOut}
-              className="min-h-[44px] px-4 text-[13px] text-left text-white/60 hover:text-[#DC2626] hover:bg-white/[0.04] rounded-md transition-colors font-medium disabled:opacity-50 inline-flex items-center gap-2"
+              className="min-h-[44px] px-4 text-[13px] text-start text-white/60 hover:text-[#DC2626] hover:bg-white/[0.04] rounded-md transition-colors font-medium disabled:opacity-50 inline-flex items-center gap-2"
             >
               {signingOut && <div className="w-3 h-3 border-[1.5px] border-white/30 border-t-transparent rounded-full animate-spin" />}
               {signingOut ? tc('signingOut') : tc('signOut')}

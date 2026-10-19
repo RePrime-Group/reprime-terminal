@@ -174,7 +174,7 @@ export default function LoginCard({ locale }: LoginCardProps) {
             onChange={(e) => setPassword(e.target.value)}
             placeholder={t('password')}
             required
-            className="rounded-lg px-4 py-3.5 pr-12 text-white text-sm focus:outline-none transition-colors w-full"
+            className="rounded-lg px-4 py-3.5 pe-12 text-white text-sm focus:outline-none transition-colors w-full"
             style={{
               background: 'rgba(255,255,255,0.04)',
               border: '1px solid rgba(255,255,255,0.08)',
@@ -184,7 +184,7 @@ export default function LoginCard({ locale }: LoginCardProps) {
             type="button"
             onClick={() => setShowPassword((v) => !v)}
             aria-label={showPassword ? t('hidePassword') : t('showPassword')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-white/40 hover:text-white/80 transition-colors"
+            className="absolute end-3 top-1/2 -translate-y-1/2 p-1.5 text-white/40 hover:text-white/80 transition-colors"
           >
             {showPassword ? (
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -266,7 +266,7 @@ export default function LoginCard({ locale }: LoginCardProps) {
             href={`/${locale}/join`}
             className="text-[12px] text-[#BC9C45] hover:text-[#D4B96A] font-medium transition-colors"
           >
-            {t('applyForMembership')} →
+            {t('applyForMembership')} <span aria-hidden className="inline-block rtl:-scale-x-100">→</span>
           </a>
         </div>
       </div>

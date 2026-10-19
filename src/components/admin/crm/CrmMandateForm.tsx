@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import type { CrmStrategy, CrmTenantCreditPref } from '@/lib/types/database';
 import {
   PROPERTY_TYPES,
@@ -60,6 +61,14 @@ export default function CrmMandateForm({
   showLabelField = true,
 }: CrmMandateFormProps) {
   const cls = theme === 'dark' ? DARK : LIGHT;
+  const t = useTranslations('criteria.mandate');
+  // Translate display labels only — option values stay as stored. Falls back
+  // to the constant's English label when no translation key exists.
+  const tOpts = (group: string, list: { value: string; label: string }[]) =>
+    list.map((o) => {
+      const key = `options.${group}.${o.value}`;
+      return { value: o.value, label: t.has(key) ? t(key) : o.label };
+    });
 
   const set = <K extends keyof MandateInput>(key: K, v: MandateInput[K]) =>
     onChange({ ...value, [key]: v });
@@ -98,21 +107,21 @@ export default function CrmMandateForm({
   return (
     <div className="flex flex-col gap-4">
       {showLabelField && (
-        <Field label="Mandate Label" cls={cls}>
+        <Field label={t('labels.mandateLabel')} cls={cls}>
           <input
             type="text"
             value={value.label ?? ''}
             onChange={(e) => set('label', e.target.value)}
-            placeholder='e.g. "Self-Storage — Midwest"'
+            placeholder={t('placeholders.label')}
             className={cls.input}
           />
         </Field>
       )}
 
       {/* Property types */}
-      <Field label="Property Types *" cls={cls}>
+      <Field label={t('labels.propertyTypes')} cls={cls}>
         <ChipRow
-          options={PROPERTY_TYPES}
+          options={tOpts('propertyTypes', PROPERTY_TYPES)}
           selected={value.property_types}
           onToggle={(v) => toggleInList('property_types', v)}
           cls={cls}
@@ -120,9 +129,9 @@ export default function CrmMandateForm({
       </Field>
 
       {/* Listing types */}
-      <Field label="On / Off Market" cls={cls}>
+      <Field label={t('labels.listingTypes')} cls={cls}>
         <ChipRow
-          options={LISTING_TYPES}
+          options={tOpts('listingTypes', LISTING_TYPES)}
           selected={value.listing_types}
           onToggle={(v) => toggleInList('listing_types', v)}
           cls={cls}
@@ -130,9 +139,9 @@ export default function CrmMandateForm({
       </Field>
 
       {/* Markets */}
-      <Field label="Target Markets *" cls={cls}>
+      <Field label={t('labels.markets')} cls={cls}>
         <ChipRow
-          options={MARKETS.map((m) => ({ value: m, label: m }))}
+          options={tOpts('markets', MARKETS.map((m) => ({ value: m, label: m })))}
           selected={value.states}
           onToggle={(v) => toggleInList('states', v)}
           cls={cls}
@@ -141,7 +150,7 @@ export default function CrmMandateForm({
 
       {/* Price range */}
       <div className="grid grid-cols-2 gap-3">
-        <Field label="Price Minimum ($) *" cls={cls}>
+        <Field label={t('labels.priceMin')} cls={cls}>
           <input
             type="text"
             inputMode="numeric"
@@ -150,7 +159,7 @@ export default function CrmMandateForm({
             className={cls.input}
           />
         </Field>
-        <Field label="Price Maximum ($) *" cls={cls}>
+        <Field label={t('labels.priceMax')} cls={cls}>
           <input
             type="text"
             inputMode="numeric"
@@ -163,23 +172,23 @@ export default function CrmMandateForm({
 
       {/* Returns */}
       <div className="grid grid-cols-2 gap-3">
-        <Field label="Target Cap Rate Min (%)" cls={cls}>
+        <Field label={t('labels.minCap')} cls={cls}>
           <input type="number" step="0.1" value={numField(value.min_cap)} onChange={onNumChange('min_cap')} className={cls.input} />
         </Field>
-        <Field label="Target Cash-on-Cash Min (%)" cls={cls}>
+        <Field label={t('labels.minCoc')} cls={cls}>
           <input type="number" step="0.1" value={numField(value.min_coc)} onChange={onNumChange('min_coc')} className={cls.input} />
         </Field>
       </div>
 
       {/* Strategy */}
-      <Field label="Strategy" cls={cls}>
+      <Field label={t('labels.strategy')} cls={cls}>
         <select
           value={value.strategy ?? ''}
           onChange={(e) => set('strategy', (e.target.value || null) as CrmStrategy | null)}
           className={cls.input}
         >
-          <option value="">— Not specified —</option>
-          {STRATEGIES.map((s) => (
+          <option value="">{t('notSpecified')}</option>
+          {tOpts('strategies', STRATEGIES).map((s) => (
             <option key={s.value} value={s.value}>
               {s.label}
             </option>
@@ -189,21 +198,21 @@ export default function CrmMandateForm({
 
       {/* Occupancy range */}
       <div className="grid grid-cols-2 gap-3">
-        <Field label="Min Occupancy (%)" cls={cls}>
+        <Field label={t('labels.minOccupancy')} cls={cls}>
           <input type="number" step="1" value={numField(value.min_occupancy)} onChange={onNumChange('min_occupancy')} className={cls.input} />
         </Field>
-        <Field label="Max Occupancy (%)" cls={cls}>
+        <Field label={t('labels.maxOccupancy')} cls={cls}>
           <input type="number" step="1" value={numField(value.max_occupancy)} onChange={onNumChange('max_occupancy')} className={cls.input} />
         </Field>
       </div>
       <p className={cls.helperText}>
-        Open to high-vacancy plays? Set Max Occupancy to e.g. 60 to surface 40%+ vacancy opportunities.
+        {t('occupancyHelper')}
       </p>
 
       {/* Property class */}
-      <Field label="Property Class" cls={cls}>
+      <Field label={t('labels.propertyClass')} cls={cls}>
         <ChipRow
-          options={PROPERTY_CLASSES}
+          options={tOpts('propertyClasses', PROPERTY_CLASSES)}
           selected={value.property_class}
           onToggle={(v) => toggleInList('property_class', v)}
           cls={cls}
@@ -212,16 +221,16 @@ export default function CrmMandateForm({
 
       {/* Size */}
       <div className="grid grid-cols-2 gap-3">
-        <Field label="Min Square Footage" cls={cls}>
+        <Field label={t('labels.minSqft')} cls={cls}>
           <input type="number" value={numField(value.min_sqft)} onChange={onNumChange('min_sqft')} className={cls.input} />
         </Field>
-        <Field label="Max Square Footage" cls={cls}>
+        <Field label={t('labels.maxSqft')} cls={cls}>
           <input type="number" value={numField(value.max_sqft)} onChange={onNumChange('max_sqft')} className={cls.input} />
         </Field>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <Field label="Price per SF Ceiling ($)" cls={cls}>
+        <Field label={t('labels.pricePerSfMax')} cls={cls}>
           <input
             type="text"
             inputMode="numeric"
@@ -230,20 +239,20 @@ export default function CrmMandateForm({
             className={cls.input}
           />
         </Field>
-        <Field label="Min Lease Term (years)" cls={cls}>
+        <Field label={t('labels.minLeaseTerm')} cls={cls}>
           <input type="number" step="0.5" value={numField(value.min_lease_term_years)} onChange={onNumChange('min_lease_term_years')} className={cls.input} />
         </Field>
       </div>
 
       {/* Tenant credit */}
-      <Field label="Tenant Credit" cls={cls}>
+      <Field label={t('labels.tenantCredit')} cls={cls}>
         <select
           value={value.tenant_credit_pref ?? ''}
           onChange={(e) => set('tenant_credit_pref', (e.target.value || null) as CrmTenantCreditPref | null)}
           className={cls.input}
         >
-          <option value="">— Not specified —</option>
-          {TENANT_CREDIT_PREFS.map((s) => (
+          <option value="">{t('notSpecified')}</option>
+          {tOpts('tenantCredit', TENANT_CREDIT_PREFS).map((s) => (
             <option key={s.value} value={s.value}>
               {s.label}
             </option>
@@ -252,9 +261,9 @@ export default function CrmMandateForm({
       </Field>
 
       {/* Structures */}
-      <Field label="Open to Creative Structures" cls={cls}>
+      <Field label={t('labels.structures')} cls={cls}>
         <ChipRow
-          options={STRUCTURE_PREFERENCES}
+          options={tOpts('structures', STRUCTURE_PREFERENCES)}
           selected={value.structure_prefs}
           onToggle={(v) => toggleInList('structure_prefs', v)}
           cls={cls}
@@ -262,12 +271,12 @@ export default function CrmMandateForm({
       </Field>
 
       {/* Notes */}
-      <Field label="Ideal Deal (free text)" cls={cls}>
+      <Field label={t('labels.notes')} cls={cls}>
         <textarea
           value={value.notes ?? ''}
           onChange={(e) => set('notes', e.target.value)}
           rows={3}
-          placeholder="What are they really after? Any color we should know."
+          placeholder={t('placeholders.notes')}
           className={cls.input}
         />
       </Field>

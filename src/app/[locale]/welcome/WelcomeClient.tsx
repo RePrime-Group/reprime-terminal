@@ -115,7 +115,7 @@ export default function WelcomeClient() {
                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: l.color }} />
                     <div className="flex-1">
                       <span className="text-[12px] font-semibold text-white">{l.lane}</span>
-                      <span className="text-[11px] text-white/30 ml-2">{l.desc}</span>
+                      <span className="text-[11px] text-white/30 ms-2">{l.desc}</span>
                     </div>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0B8A4D" strokeWidth="2.5">
                       <polyline points="20 6 9 17 4 12" />

@@ -68,7 +68,7 @@ export default function ForgotPasswordPage() {
                 href={`/${locale}/login`}
                 className="mt-4 text-[13px] text-[#BC9C45] hover:text-[#D4B96A] font-medium transition-colors"
               >
-                ← {t('backToSignIn')}
+                <span aria-hidden className="inline-block rtl:-scale-x-100">←</span> {t('backToSignIn')}
               </a>
             </div>
           ) : (
@@ -108,7 +108,7 @@ export default function ForgotPasswordPage() {
                   href={`/${locale}/login`}
                   className="text-[13px] text-[#BC9C45] hover:text-[#D4B96A] font-medium transition-colors"
                 >
-                  ← {t('backToSignIn')}
+                  <span aria-hidden className="inline-block rtl:-scale-x-100">←</span> {t('backToSignIn')}
                 </a>
               </div>
             </form>

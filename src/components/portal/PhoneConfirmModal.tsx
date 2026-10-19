@@ -181,7 +181,7 @@ export default function PhoneConfirmModal({
             />
 
             {pickerOpen && (
-              <div className="absolute left-0 right-0 sm:right-auto top-[52px] z-20 sm:w-[320px] max-h-[340px] bg-white rounded-xl border border-[#EEF0F4] shadow-[0_16px_48px_rgba(14,52,112,0.18)] overflow-hidden flex flex-col">
+              <div className="absolute start-0 end-0 sm:end-auto top-[52px] z-20 sm:w-[320px] max-h-[340px] bg-white rounded-xl border border-[#EEF0F4] shadow-[0_16px_48px_rgba(14,52,112,0.18)] overflow-hidden flex flex-col">
                 <div className="p-2 border-b border-[#EEF0F4]">
                   <input
                     autoFocus
@@ -205,7 +205,7 @@ export default function PhoneConfirmModal({
                             setPickerOpen(false);
                             setQuery('');
                           }}
-                          className={`w-full inline-flex items-center gap-3 px-3 py-2 text-left text-[13px] hover:bg-[#F9FAFB] ${c.iso === country.iso ? 'bg-[#FDF8ED]' : ''}`}
+                          className={`w-full inline-flex items-center gap-3 px-3 py-2 text-start text-[13px] hover:bg-[#F9FAFB] ${c.iso === country.iso ? 'bg-[#FDF8ED]' : ''}`}
                         >
                           <span className="inline-flex items-center justify-center w-9 h-5 rounded bg-[#F3F4F6] text-[10px] font-bold tracking-wide text-[#374151] shrink-0">
                             {c.iso}

@@ -108,7 +108,7 @@ export default function BetaLaunchBanner() {
           type="button"
           onClick={() => setCollapsed(true)}
           aria-label={t('minimizeCountdown')}
-          className="absolute top-2.5 right-2.5 z-10 w-5 h-5 rounded-full flex items-center justify-center text-white/30 hover:text-[#D4A843] hover:bg-white/[0.04] transition-colors"
+          className="absolute top-2.5 end-2.5 z-10 w-5 h-5 rounded-full flex items-center justify-center text-white/30 hover:text-[#D4A843] hover:bg-white/[0.04] transition-colors"
         >
           <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
             <line x1="2" y1="2" x2="10" y2="10" />

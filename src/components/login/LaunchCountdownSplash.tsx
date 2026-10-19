@@ -128,7 +128,7 @@ export default function LaunchCountdownSplash({ locale }: LaunchCountdownSplashP
           {/* CTA — luxury gold button */}
           <Link
             href={`/${locale}/login`}
-            className="group relative inline-flex items-center gap-3 pl-7 pr-6 py-3.5 sm:py-4 rounded-full overflow-hidden transition-all duration-300 shadow-[0_10px_30px_rgba(188,156,69,0.28)] hover:shadow-[0_16px_40px_rgba(188,156,69,0.4)] hover:-translate-y-[1px]"
+            className="group relative inline-flex items-center gap-3 ps-7 pe-6 py-3.5 sm:py-4 rounded-full overflow-hidden transition-all duration-300 shadow-[0_10px_30px_rgba(188,156,69,0.28)] hover:shadow-[0_16px_40px_rgba(188,156,69,0.4)] hover:-translate-y-[1px]"
             style={{
               background: 'linear-gradient(135deg, #D4B96A 0%, #BC9C45 50%, #A88A3D 100%)',
             }}
@@ -144,7 +144,7 @@ export default function LaunchCountdownSplash({ locale }: LaunchCountdownSplashP
               {t('enterTerminalBeta')}
             </span>
             <svg
-              className="relative text-[#07090F] transition-transform duration-300 group-hover:translate-x-1"
+              className="relative text-[#07090F] transition-transform duration-300 group-hover:translate-x-1 rtl:-scale-x-100 rtl:group-hover:-translate-x-1"
               width="16"
               height="16"
               viewBox="0 0 24 24"

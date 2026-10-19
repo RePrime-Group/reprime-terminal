@@ -299,13 +299,13 @@ export default function InviteRegistrationPage() {
                   required
                   minLength={8}
                   placeholder={t('minimumChars')}
-                  className="w-full rounded-lg border border-white/[0.06] bg-white/[0.03] px-4 py-3 pr-12 text-white text-sm placeholder:text-white/20 outline-none focus:border-[#C9A54E]/40 transition-colors"
+                  className="w-full rounded-lg border border-white/[0.06] bg-white/[0.03] px-4 py-3 pe-12 text-white text-sm placeholder:text-white/20 outline-none focus:border-[#C9A54E]/40 transition-colors"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
                   aria-label={showPassword ? t('hidePassword') : t('showPassword')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-white/40 hover:text-white/80 transition-colors"
+                  className="absolute end-3 top-1/2 -translate-y-1/2 p-1.5 text-white/40 hover:text-white/80 transition-colors"
                 >
                   {showPassword ? (
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -336,13 +336,13 @@ export default function InviteRegistrationPage() {
                   required
                   minLength={8}
                   placeholder={t('reenterPassword')}
-                  className="w-full rounded-lg border border-white/[0.06] bg-white/[0.03] px-4 py-3 pr-12 text-white text-sm placeholder:text-white/20 outline-none focus:border-[#C9A54E]/40 transition-colors"
+                  className="w-full rounded-lg border border-white/[0.06] bg-white/[0.03] px-4 py-3 pe-12 text-white text-sm placeholder:text-white/20 outline-none focus:border-[#C9A54E]/40 transition-colors"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirm((v) => !v)}
                   aria-label={showConfirm ? t('hidePassword') : t('showPassword')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-white/40 hover:text-white/80 transition-colors"
+                  className="absolute end-3 top-1/2 -translate-y-1/2 p-1.5 text-white/40 hover:text-white/80 transition-colors"
                 >
                   {showConfirm ? (
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

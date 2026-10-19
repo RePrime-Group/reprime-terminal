@@ -230,8 +230,8 @@ export default function CompareClient({ dealOptions, locale }: CompareClientProp
               <select
                 value={selectedId ?? ''}
                 onChange={(e) => handleSelectDeal(colIndex, e.target.value || null)}
-                className="w-full px-3 py-2.5 rounded-lg border border-[#EEF0F4] bg-[#F7F8FA] text-[13px] text-[#0E3470] font-medium focus:outline-none focus:border-[#BC9C45] focus:ring-1 focus:ring-[#BC9C45]/20 transition-colors appearance-none cursor-pointer"
-                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center' }}
+                className="w-full ps-3 pe-8 py-2.5 rounded-lg border border-[#EEF0F4] bg-[#F7F8FA] text-[13px] text-[#0E3470] font-medium focus:outline-none focus:border-[#BC9C45] focus:ring-1 focus:ring-[#BC9C45]/20 transition-colors appearance-none cursor-pointer bg-[position:right_12px_center] rtl:bg-[position:left_12px_center]"
+                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat' }}
               >
                 <option value="">{t('chooseDeal')}</option>
                 {dealOptions.map((opt) => (
@@ -437,6 +437,7 @@ export default function CompareClient({ dealOptions, locale }: CompareClientProp
                   </span>
                   <input
                     type="range"
+                    dir="ltr"
                     min="-100"
                     max="100"
                     step="25"

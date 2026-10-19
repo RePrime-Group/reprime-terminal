@@ -55,7 +55,8 @@ export default function CitationDrawer({ citation, onClose }: Props) {
 
       if (cancelled) return;
       if (docErr || !doc?.storage_path) {
-        setError(docErr?.message ?? t('sourceNotFound'));
+        if (docErr) console.error('citation source lookup failed:', docErr.message);
+        setError(t('sourceNotFound'));
         setLoading(false);
         return;
       }
@@ -66,7 +67,8 @@ export default function CitationDrawer({ citation, onClose }: Props) {
 
       if (cancelled) return;
       if (signErr || !signed?.signedUrl) {
-        setError(signErr?.message ?? t('signedUrlError'));
+        if (signErr) console.error('citation signed URL failed:', signErr.message);
+        setError(t('signedUrlError'));
         setLoading(false);
         return;
       }

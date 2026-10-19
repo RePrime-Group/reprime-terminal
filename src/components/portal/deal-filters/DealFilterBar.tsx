@@ -45,7 +45,7 @@ export default function DealFilterBar({ controller }: { controller: DealFilterCo
         <div className="bg-white rounded-xl border border-[#EEF0F4] rp-card-shadow px-4 md:px-5 py-3.5 flex flex-wrap items-center gap-3">
           {/* Search */}
           <div className="relative w-full md:flex-1 md:w-auto md:max-w-[340px]">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg className="absolute start-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
             </svg>
             <input
@@ -53,10 +53,10 @@ export default function DealFilterBar({ controller }: { controller: DealFilterCo
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('searchDealsPlaceholder')}
-              className="w-full pl-9 pr-3 py-2 text-[13px] text-[#0E3470] bg-[#F7F8FA] border border-[#D1D5DB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BC9C45]/20 focus:border-[#BC9C45]/40 placeholder:text-[#6B7280] transition-all"
+              className="w-full ps-9 pe-8 py-2 text-[13px] text-[#0E3470] bg-[#F7F8FA] border border-[#D1D5DB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#BC9C45]/20 focus:border-[#BC9C45]/40 placeholder:text-[#6B7280] transition-all"
             />
             {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#0E3470] transition-colors">
+              <button onClick={() => setSearchQuery('')} className="absolute end-2.5 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#0E3470] transition-colors">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             )}
@@ -114,7 +114,7 @@ export default function DealFilterBar({ controller }: { controller: DealFilterCo
                 const dir = val.slice(lastUnderscore + 1) as SortDir;
                 setSort(key, dir);
               }}
-              className="appearance-none pl-3 pr-7 py-2 rounded-lg text-[11px] font-semibold bg-[#F7F8FA] text-[#6B7280] border border-[#D1D5DB] hover:border-[#BC9C45]/30 focus:outline-none focus:ring-2 focus:ring-[#BC9C45]/20 cursor-pointer transition-all"
+              className="appearance-none ps-3 pe-7 py-2 rounded-lg text-[11px] font-semibold bg-[#F7F8FA] text-[#6B7280] border border-[#D1D5DB] hover:border-[#BC9C45]/30 focus:outline-none focus:ring-2 focus:ring-[#BC9C45]/20 cursor-pointer transition-all"
             >
               <option value="">{t('sortBy')}</option>
               <option value="name_asc">{t('sortNameAZ')}</option>
@@ -130,7 +130,7 @@ export default function DealFilterBar({ controller }: { controller: DealFilterCo
               <option value="equity_required_desc">{t('sortEquityHigh')}</option>
               <option value="equity_required_asc">{t('sortEquityLow')}</option>
             </select>
-            <svg className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-[#9CA3AF]" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m6 9 6 6 6-6"/></svg>
+            <svg className="absolute end-2 top-1/2 -translate-y-1/2 pointer-events-none text-[#9CA3AF]" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m6 9 6 6 6-6"/></svg>
           </div>
 
           {hasActiveFilters && (
@@ -185,9 +185,9 @@ export default function DealFilterBar({ controller }: { controller: DealFilterCo
                       value={irrMin || ''}
                       onChange={(e) => setIrrMin(Number(e.target.value) || 0)}
                       placeholder="0"
-                      className="w-full px-3 py-2 pr-7 text-[12px] border border-[#EEF0F4] rounded-lg bg-[#F7F8FA] focus:outline-none focus:ring-2 focus:ring-[#BC9C45]/20 focus:border-[#BC9C45]/40 text-[#0E3470]"
+                      className="w-full px-3 py-2 pe-7 text-[12px] border border-[#EEF0F4] rounded-lg bg-[#F7F8FA] focus:outline-none focus:ring-2 focus:ring-[#BC9C45]/20 focus:border-[#BC9C45]/40 text-[#0E3470]"
                     />
-                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[11px] text-[#9CA3AF]">%</span>
+                    <span className="absolute end-2.5 top-1/2 -translate-y-1/2 text-[11px] text-[#9CA3AF]">%</span>
                   </div>
                 </div>
                 <div>
@@ -199,9 +199,9 @@ export default function DealFilterBar({ controller }: { controller: DealFilterCo
                       value={cocMin || ''}
                       onChange={(e) => setCocMin(Number(e.target.value) || 0)}
                       placeholder="0"
-                      className="w-full px-3 py-2 pr-7 text-[12px] border border-[#EEF0F4] rounded-lg bg-[#F7F8FA] focus:outline-none focus:ring-2 focus:ring-[#BC9C45]/20 focus:border-[#BC9C45]/40 text-[#0E3470]"
+                      className="w-full px-3 py-2 pe-7 text-[12px] border border-[#EEF0F4] rounded-lg bg-[#F7F8FA] focus:outline-none focus:ring-2 focus:ring-[#BC9C45]/20 focus:border-[#BC9C45]/40 text-[#0E3470]"
                     />
-                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[11px] text-[#9CA3AF]">%</span>
+                    <span className="absolute end-2.5 top-1/2 -translate-y-1/2 text-[11px] text-[#9CA3AF]">%</span>
                   </div>
                 </div>
               </div>
@@ -234,7 +234,7 @@ export default function DealFilterBar({ controller }: { controller: DealFilterCo
         {/* Active filter summary */}
         {hasActiveFilters && (
           <div className="mt-2 flex items-center gap-2 flex-wrap">
-            <span className="text-[10px] text-[#9CA3AF] font-medium">{resultsCount} {t('resultsFound')}</span>
+            <span className="text-[10px] text-[#9CA3AF] font-medium">{t('resultsFoundCount', { count: resultsCount })}</span>
             {searchQuery && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#EFF6FF] text-[#1D5FB8] rounded-md text-[10px] font-semibold">
                 <bdi>&quot;{searchQuery}&quot;</bdi>

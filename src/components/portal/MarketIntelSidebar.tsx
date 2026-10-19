@@ -110,7 +110,7 @@ export default function MarketIntelSidebar() {
           {t('marketCycle')}
         </h3>
 
-        <div className="relative mt-2 mb-3">
+        <div dir="ltr" className="relative mt-2 mb-3">
           <div
             className="h-2 rounded-full w-full"
             style={{
@@ -133,7 +133,7 @@ export default function MarketIntelSidebar() {
           </div>
         </div>
 
-        <div className="flex justify-between items-center mt-1">
+        <div dir="ltr" className="flex justify-between items-center mt-1">
           <span
             className="uppercase font-[600]"
             style={{ fontSize: '9px', color: '#0B8A4D', letterSpacing: '1px' }}

@@ -2122,7 +2122,8 @@
     "activity": {
       "commitmentWithdrawn": "Commitment withdrawn",
       "dealActivity": "Deal activity"
-    }
+    },
+    "resultsFoundCount": "{count, plural, one {# deal found} other {# deals found}}"
   },
   "join": {
     "investorLogin": "Investor Login",
@@ -2303,7 +2304,8 @@
       "hours": "{count}h",
       "days": "{count}d",
       "weeks": "{count}w"
-    }
+    },
+    "scopedTo": "Scoped to <name>{deal}</name>"
   },
   "errors": {
     "notFound": "Page Not Found",
@@ -2419,6 +2421,91 @@
         "<3mo": "Within 3 months",
         "3-6mo": "3 – 6 months",
         "6mo+": "6+ months"
+      }
+    },
+    "mandate": {
+      "labels": {
+        "mandateLabel": "Mandate Label",
+        "propertyTypes": "Property Types *",
+        "listingTypes": "On / Off Market",
+        "markets": "Target Markets *",
+        "priceMin": "Price Minimum ($) *",
+        "priceMax": "Price Maximum ($) *",
+        "minCap": "Target Cap Rate Min (%)",
+        "minCoc": "Target Cash-on-Cash Min (%)",
+        "strategy": "Strategy",
+        "minOccupancy": "Min Occupancy (%)",
+        "maxOccupancy": "Max Occupancy (%)",
+        "propertyClass": "Property Class",
+        "minSqft": "Min Square Footage",
+        "maxSqft": "Max Square Footage",
+        "pricePerSfMax": "Price per SF Ceiling ($)",
+        "minLeaseTerm": "Min Lease Term (years)",
+        "tenantCredit": "Tenant Credit",
+        "structures": "Open to Creative Structures",
+        "notes": "Ideal Deal (free text)"
+      },
+      "placeholders": {
+        "label": "e.g. \"Self-Storage — Midwest\"",
+        "notes": "What are they really after? Any color we should know."
+      },
+      "occupancyHelper": "Open to high-vacancy plays? Set Max Occupancy to e.g. 60 to surface 40%+ vacancy opportunities.",
+      "notSpecified": "— Not specified —",
+      "options": {
+        "propertyTypes": {
+          "multifamily": "Multifamily",
+          "retail": "Retail",
+          "office": "Office",
+          "industrial": "Industrial",
+          "specialty": "Specialty",
+          "mixed_use": "Mixed-Use",
+          "nnn": "NNN",
+          "medical": "Medical",
+          "self_storage": "Self Storage"
+        },
+        "listingTypes": {
+          "on_market": "On-Market",
+          "off_market": "Off-Market"
+        },
+        "markets": {
+          "Southeast": "Southeast",
+          "Texas": "Texas",
+          "Midwest": "Midwest",
+          "Northeast": "Northeast",
+          "West Coast": "West Coast",
+          "Florida": "Florida",
+          "Nationwide": "Nationwide"
+        },
+        "strategies": {
+          "value_add": "Value-Add",
+          "stabilized": "Stabilized",
+          "opportunistic": "Opportunistic",
+          "either": "Either"
+        },
+        "propertyClasses": {
+          "A": "Class A",
+          "B": "Class B",
+          "C": "Class C"
+        },
+        "tenantCredit": {
+          "investment_grade": "Investment-Grade Required",
+          "mixed": "Mixed OK",
+          "not_important": "Not Important"
+        },
+        "structures": {
+          "seller_financing": "Seller Financing",
+          "seller_mezzanine": "Seller Mezzanine",
+          "assumable": "Assumable Loan",
+          "subject_to": "Subject-To",
+          "none": "None"
+        }
+      },
+      "errors": {
+        "propertyTypes": "Pick at least one property type.",
+        "markets": "Pick at least one target market.",
+        "price": "Enter a price minimum or maximum.",
+        "priceOrder": "Price minimum cannot exceed maximum.",
+        "occupancyOrder": "Min occupancy cannot exceed max occupancy."
       }
     }
   },
