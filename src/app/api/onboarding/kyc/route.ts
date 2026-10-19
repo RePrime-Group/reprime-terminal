@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { encryptSSNForDb } from '@/lib/kyc/encryption';
 import {
   isAccredited,
@@ -71,6 +72,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
+  // The KYC row is read and written with the service role, not the caller's
+  // session. The accreditation decision below is computed here on the server,
+  // but it used to be written under the investor's own RLS grant — which meant
+  // they could skip this route and set approved = true on themselves directly.
+  // Authorisation stays above: the session decides WHO this is, and user_id
+  // below is always user.id, never anything from the request body.
+  const admin = createAdminClient();
+
   const body = (await request.json().catch(() => null)) as KYCSubmitPayload | null;
   if (!body || typeof body !== 'object' || !body.data) {
     return NextResponse.json({ error: 'Invalid payload.' }, { status: 400 });
@@ -82,7 +91,7 @@ export async function POST(request: NextRequest) {
   // Look up whether this user already has an encrypted SSN on file. Used
   // both for validation (treat empty SSN as satisfied if saved) and so we
   // know not to overwrite the column when the user kept the saved value.
-  const { data: existingKyc } = await supabase
+  const { data: existingKyc } = await admin
     .from('terminal_user_kyc')
     .select('ssn_encrypted')
     .eq('user_id', user.id)
@@ -131,7 +140,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const { error } = await supabase
+  const { error } = await admin
     .from('terminal_user_kyc')
     .upsert(row, { onConflict: 'user_id' });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

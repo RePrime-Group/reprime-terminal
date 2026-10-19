@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
   // Verify the invite token is valid
   const { data: invite } = await supabase
     .from('terminal_invite_tokens')
-    .select('email, role, accepted_at, parent_investor_id, permissions, access_tier')
+    .select('email, role, accepted_at, expires_at, parent_investor_id, permissions, access_tier')
     .eq('token', token)
     .single();
 
@@ -27,6 +27,14 @@ export async function POST(request: NextRequest) {
 
   if (invite.accepted_at) {
     return NextResponse.json({ error: 'Invite already used' }, { status: 400 });
+  }
+
+  // /api/invite/validate checks expiry too, but that only guards the UI path.
+  // This is the route that actually creates the account, so it has to enforce
+  // expiry itself — otherwise an expired token stays redeemable by posting here
+  // directly, which is how 40 long-dead invites were still live.
+  if (!invite.expires_at || new Date(invite.expires_at) < new Date()) {
+    return NextResponse.json({ error: 'Invite has expired' }, { status: 400 });
   }
 
   if (invite.email.toLowerCase() !== email.toLowerCase()) {
