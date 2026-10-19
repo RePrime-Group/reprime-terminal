@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 
 interface OnboardingOverlayProps {
@@ -28,6 +28,7 @@ type Stage = 'welcome' | 'tour' | null;
 
 export default function OnboardingOverlay({ firstName, userId }: OnboardingOverlayProps) {
   const t = useTranslations('portal.onboarding');
+  const isRtl = useLocale() === 'he';
   const [stage, setStage] = useState<Stage>(null);
   const [dismissed, setDismissed] = useState(false);
   const [finishing, setFinishing] = useState(false);
@@ -122,7 +123,7 @@ export default function OnboardingOverlay({ firstName, userId }: OnboardingOverl
             onClick={handleStartTour}
             className="px-10 py-4 rounded-xl bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] text-[15px] font-bold shadow-[0_8px_32px_rgba(188,156,69,0.3)] hover:shadow-[0_12px_40px_rgba(188,156,69,0.4)] transition-all hover:-translate-y-0.5"
           >
-            {t('letsStart')} →
+            {t('letsStart')} <span className="inline-block rtl:-scale-x-100">→</span>
           </button>
 
           <button
@@ -147,27 +148,33 @@ export default function OnboardingOverlay({ firstName, userId }: OnboardingOverl
     if (!spotlight) return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
 
     const gap = 16;
+    const edge = 16;
     const style: React.CSSProperties = { position: 'fixed' };
+    // Tooltip width mirrors the w-[min(320px,calc(100vw-32px))] class below.
+    const tipWidth = Math.min(320, window.innerWidth - 2 * edge);
+    // Keeps the tooltip's left edge inside the viewport.
+    const clampLeft = (x: number) => Math.max(edge, Math.min(x, window.innerWidth - edge - tipWidth));
+    // 'left'/'right' are authored for LTR; the layout mirrors in RTL, so swap them.
+    const position =
+      isRtl && step.position === 'left' ? 'right' : isRtl && step.position === 'right' ? 'left' : step.position;
 
-    switch (step.position) {
+    switch (position) {
       case 'bottom':
         style.top = spotlight.bottom + gap;
-        style.left = spotlight.left + spotlight.width / 2;
-        style.transform = 'translateX(-50%)';
+        style.left = clampLeft(spotlight.left + spotlight.width / 2 - tipWidth / 2);
         break;
       case 'top':
         style.bottom = window.innerHeight - spotlight.top + gap;
-        style.left = spotlight.left + spotlight.width / 2;
-        style.transform = 'translateX(-50%)';
+        style.left = clampLeft(spotlight.left + spotlight.width / 2 - tipWidth / 2);
         break;
       case 'left':
         style.top = spotlight.top + spotlight.height / 2;
-        style.right = window.innerWidth - spotlight.left + gap;
+        style.left = clampLeft(spotlight.left - gap - tipWidth);
         style.transform = 'translateY(-50%)';
         break;
       case 'right':
         style.top = spotlight.top + spotlight.height / 2;
-        style.left = spotlight.right + gap;
+        style.left = clampLeft(spotlight.right + gap);
         style.transform = 'translateY(-50%)';
         break;
     }
@@ -226,7 +233,7 @@ export default function OnboardingOverlay({ firstName, userId }: OnboardingOverl
                 }`}
               />
             ))}
-            <span className="ml-auto text-[10px] text-white/25">{tourStep + 1}/{TOUR_STEP_DEFS.length}</span>
+            <span className="ms-auto text-[10px] text-white/25">{tourStep + 1}/{TOUR_STEP_DEFS.length}</span>
           </div>
 
           <h3 className="text-[15px] font-semibold text-white mb-1.5">{t(step.titleKey)}</h3>
@@ -246,7 +253,7 @@ export default function OnboardingOverlay({ firstName, userId }: OnboardingOverl
               className="px-5 py-2 rounded-lg bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] text-[12px] font-bold hover:opacity-90 transition-opacity disabled:opacity-60 flex items-center gap-1.5"
             >
               {isLast && finishing && <div className="w-3 h-3 border-2 border-[#0E3470] border-t-transparent rounded-full animate-spin" />}
-              {isLast ? t('done') : `${t('nextStep')} →`}
+              {isLast ? t('done') : <span>{t('nextStep')} <span className="inline-block rtl:-scale-x-100">→</span></span>}
             </button>
           </div>
         </div>

@@ -52,6 +52,9 @@ export function DealStructureTab({
   onSliderChange,
 }: Props) {
   const t = useTranslations('portal.dealDetail');
+  const th = useTranslations('portal.dealHero');
+  const tf = useTranslations('portal.financial');
+  const tDr = useTranslations('portal.dataRoom');
 
   return (
     <div className="mt-4 md:mt-5 px-4 md:px-8 pb-6 md:pb-8">
@@ -59,11 +62,11 @@ export function DealStructureTab({
 
       {deal.special_terms && deal.special_terms !== 'None' && (
         <FadeInOnScroll delay={0.05}>
-          <div className="mt-6 bg-[#FDF8ED] border-l-4 border-[#BC9C45] p-4 rounded-r-lg">
+          <div className="mt-6 bg-[#FDF8ED] border-s-4 border-[#BC9C45] p-4 rounded-e-lg">
             <div className="text-[12px] font-semibold text-[#BC9C45] uppercase tracking-wider mb-1">
               {t('specialTerms')}
             </div>
-            <p className="text-[15px] text-[#4B5563]">{deal.special_terms}</p>
+            <p className="text-[15px] text-[#4B5563]" dir="auto">{deal.special_terms}</p>
           </div>
         </FadeInOnScroll>
       )}
@@ -78,7 +81,7 @@ export function DealStructureTab({
               setStructurePhoneError(null);
               setStructureModal('assignment');
             }}
-            className={`w-full h-full bg-white rounded-xl border-2 p-5 text-left cursor-pointer transition-all relative flex flex-col ${
+            className={`w-full h-full bg-white rounded-xl border-2 p-5 text-start cursor-pointer transition-all relative flex flex-col ${
               selectedStructure === 'assignment'
                 ? 'border-[#BC9C45] shadow-[0_0_0_3px_#FDF8ED,0_0_20px_rgba(188,156,69,0.15)]'
                 : 'border-[#EEF0F4] hover:border-[#D1D5DB]'
@@ -104,12 +107,12 @@ export function DealStructureTab({
               </div>
               <div className="text-2xl font-bold text-[#0B8A4D]">
                 {computed.netEquity <= 0
-                  ? (computed.distributableCashFlow > 0 ? '∞' : 'N/A')
+                  ? (computed.distributableCashFlow > 0 ? '∞' : tDr('na'))
                   : (feeAdjustedMetrics.assignmentIRR !== null ? feeAdjustedMetrics.assignmentIRR.toFixed(2) + '%' : '--')}
               </div>
               {computed.netEquity > 0 && (
                 <div className="text-[10px] text-[#9CA3AF] mt-1 leading-tight">
-                  {buildIrrAssumptions(deal as unknown as { exit_cap_rate?: string | null; hold_period_years?: string | null; rent_growth?: string | null }, computed)}
+                  {buildIrrAssumptions(deal as unknown as { exit_cap_rate?: string | null; hold_period_years?: string | null; rent_growth?: string | null }, computed, th)}
                 </div>
               )}
               <div className="text-[11px] text-[#6B7280] mt-1">
@@ -126,7 +129,7 @@ export function DealStructureTab({
               setStructurePhoneError(null);
               setStructureModal('gplp');
             }}
-            className={`w-full h-full bg-white rounded-xl border-2 p-5 text-left cursor-pointer transition-all flex flex-col ${
+            className={`w-full h-full bg-white rounded-xl border-2 p-5 text-start cursor-pointer transition-all flex flex-col ${
               selectedStructure === 'gplp'
                 ? 'border-[#BC9C45] shadow-[0_0_0_3px_#FDF8ED,0_0_20px_rgba(188,156,69,0.15)]'
                 : 'border-[#EEF0F4] hover:border-[#D1D5DB]'
@@ -141,8 +144,8 @@ export function DealStructureTab({
             <div className="space-y-1.5 mb-3">
               {[
                 { label: t('acquisitionFee'), value: `${formatFeePct(effectiveDealFees.acqFee)} ($${Math.round(feeAdjustedMetrics.acqFeeDollar).toLocaleString()})` },
-                { label: t('assetMgmtFee'), value: `${formatFeePct(effectiveDealFees.assetMgmtFee)} ($${Math.round(feeAdjustedMetrics.assetMgmtFeeDollar).toLocaleString()}/yr)` },
-                { label: t('gpCarry'), value: `${formatFeePct(effectiveDealFees.gpCarry)} above ${formatFeePct(effectiveDealFees.prefReturn)} pref` },
+                { label: t('assetMgmtFee'), value: `${formatFeePct(effectiveDealFees.assetMgmtFee)} ($${Math.round(feeAdjustedMetrics.assetMgmtFeeDollar).toLocaleString()}${tf('yr')})` },
+                { label: t('gpCarry'), value: `${formatFeePct(effectiveDealFees.gpCarry)} ${tf('above')} ${formatFeePct(effectiveDealFees.prefReturn)} ${tf('pref')}` },
                 { label: t('equityRequired'), value: formatPrice(deal.equity_required) },
               ].map((row) => (
                 <div
@@ -164,12 +167,12 @@ export function DealStructureTab({
               </div>
               <div className="text-2xl font-bold text-[#0B8A4D]">
                 {computed.netEquity <= 0
-                  ? (computed.distributableCashFlow > 0 ? '∞' : 'N/A')
+                  ? (computed.distributableCashFlow > 0 ? '∞' : tDr('na'))
                   : (feeAdjustedMetrics.irr !== null ? feeAdjustedMetrics.irr.toFixed(2) + '%' : '--')}
               </div>
               {computed.netEquity > 0 && (
                 <div className="text-[10px] text-[#9CA3AF] mt-1 leading-tight">
-                  {buildIrrAssumptions(deal as unknown as { exit_cap_rate?: string | null; hold_period_years?: string | null; rent_growth?: string | null }, computed)}
+                  {buildIrrAssumptions(deal as unknown as { exit_cap_rate?: string | null; hold_period_years?: string | null; rent_growth?: string | null }, computed, th)}
                 </div>
               )}
               <div className="text-[11px] text-[#6B7280] mt-1">

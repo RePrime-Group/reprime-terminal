@@ -1,6 +1,7 @@
 'use client';
 
 import { Fragment, useState } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 import {
   sortTenantsForDisplay,
   computeWALT,
@@ -10,10 +11,9 @@ import {
   computeTopTenant,
   computeNearTermRollover,
   computeExpirationSchedule,
-  formatYears,
   formatMoney,
   formatRentPerSf,
-  formatLeaseDate,
+  parseLooseDate,
   creditRatingColor,
 } from '@/lib/utils/rent-roll';
 import type { TerminalTenantLease } from '@/lib/types/database';
@@ -33,6 +33,13 @@ interface RentRollTabProps {
 
 const ALL_BUILDINGS = '__all__';
 
+function formatLeaseDateLocalized(value: string | null | undefined, intlLocale: string): string {
+  if (!value) return '—';
+  const d = parseLooseDate(value);
+  if (!d) return value;
+  return d.toLocaleDateString(intlLocale, { month: 'short', year: 'numeric' });
+}
+
 export default function RentRollTab({
   tenants,
   dealTotalSf,
@@ -41,6 +48,9 @@ export default function RentRollTab({
 }: RentRollTabProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [selectedBuildingId, setSelectedBuildingId] = useState<string>(ALL_BUILDINGS);
+  const t = useTranslations('portal.rentRoll');
+  const tDd = useTranslations('portal.dealDetail');
+  const intlLocale = useLocale() === 'he' ? 'he-IL' : 'en-US';
 
   // Filter tenants by the selected building for portfolios. Single-property
   // deals skip the dropdown and always use the full set.
@@ -87,7 +97,7 @@ export default function RentRollTab({
   if (tenants.length === 0) {
     return (
       <div className="rounded-xl border border-[#EEF0F4] bg-white p-10 text-center">
-        <p className="text-sm text-[#6B7280]">Full Rent Roll Analysis Coming Soon</p>
+        <p className="text-sm text-[#6B7280]">{t('comingSoon')}</p>
       </div>
     );
   }
@@ -98,14 +108,14 @@ export default function RentRollTab({
       {isPortfolio && buildings.length > 0 && (
         <div className="flex items-center gap-3 flex-wrap">
           <label className="text-[11px] font-semibold tracking-[1.5px] uppercase text-[#9CA3AF]">
-            Building
+            {t('building')}
           </label>
           <select
             value={selectedBuildingId}
             onChange={(e) => setSelectedBuildingId(e.target.value)}
             className="px-3 py-2 border border-[#E5E7EB] rounded-lg text-[13px] text-[#0E3470] bg-white focus:outline-none focus:ring-2 focus:ring-[#BC9C45]/20 focus:border-[#BC9C45]"
           >
-            <option value={ALL_BUILDINGS}>All Buildings (portfolio total)</option>
+            <option value={ALL_BUILDINGS}>{t('allBuildings')}</option>
             {buildings.map((b) => (
               <option key={b.id} value={b.id}>
                 {b.label}
@@ -113,7 +123,7 @@ export default function RentRollTab({
             ))}
           </select>
           <span className="text-[11px] text-[#9CA3AF]">
-            {filtered.length} tenant{filtered.length === 1 ? '' : 's'}
+            {t('tenantCount', { count: filtered.length })}
           </span>
         </div>
       )}
@@ -121,7 +131,7 @@ export default function RentRollTab({
       {filtered.length === 0 ? (
         <div className="rounded-xl border border-[#EEF0F4] bg-white p-10 text-center">
           <p className="text-sm text-[#6B7280]">
-            No tenants recorded for this building yet.
+            {t('noTenantsForBuilding')}
           </p>
         </div>
       ) : (
@@ -130,34 +140,40 @@ export default function RentRollTab({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <MetricCard
           label="WALT"
-          value={formatYears(walt)}
-          sublabel="weighted by rent"
+          value={walt === null || !Number.isFinite(walt) ? '—' : t('years', { value: walt.toFixed(1) })}
+          sublabel={t('waltSublabel')}
         />
         <MetricCard
-          label="Occupancy"
+          label={tDd('occupancy')}
           value={occupancyPct !== null ? `${occupancyPct.toFixed(1)}%` : '—'}
           sublabel={
             totalAllSf > 0
-              ? `${totalLeasedSf.toLocaleString()} / ${(dealTotalSf && dealTotalSf > 0 ? dealTotalSf : totalAllSf).toLocaleString()} SF`
+              ? t('occupancySf', {
+                  leased: totalLeasedSf.toLocaleString(),
+                  total: (dealTotalSf && dealTotalSf > 0 ? dealTotalSf : totalAllSf).toLocaleString(),
+                })
               : undefined
           }
         />
         <MetricCard
-          label="Top Tenant"
+          label={t('topTenant')}
           value={topTenant ? `${topTenant.tenant.tenant_name}` : '—'}
-          sublabel={topTenant ? `${topTenant.pctOfRent.toFixed(0)}% of rent` : undefined}
+          sublabel={topTenant ? t('pctOfRent', { pct: topTenant.pctOfRent.toFixed(0) }) : undefined}
         />
         <MetricCard
-          label="Near-term Rollover"
+          label={t('nearTermRollover')}
           value={
             rollover.length === 0
-              ? 'None < 3 yrs'
+              ? t('noneUnder3Yrs')
               : `${rollover[0].tenant.tenant_name}`
           }
           sublabel={
             rollover.length === 0
-              ? 'All leases secure'
-              : `${rollover[0].pctOfRent.toFixed(0)}% · expires ${formatLeaseDate(rollover[0].tenant.lease_end_date)}`
+              ? t('allLeasesSecure')
+              : t('rolloverExpires', {
+                  pct: rollover[0].pctOfRent.toFixed(0),
+                  date: formatLeaseDateLocalized(rollover[0].tenant.lease_end_date, intlLocale),
+                })
           }
           accent={rollover.length === 0 ? 'green' : 'amber'}
         />
@@ -166,21 +182,21 @@ export default function RentRollTab({
       {/* Tenant table */}
       <div className="bg-white rounded-xl border border-[#EEF0F4] overflow-hidden">
         <div className="px-5 py-4 border-b border-[#EEF0F4] flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-[#0E3470]">Tenant Roster</h3>
-          <span className="text-[11px] text-[#6B7280]">Click a row to expand</span>
+          <h3 className="text-sm font-semibold text-[#0E3470]">{t('tenantRoster')}</h3>
+          <span className="text-[11px] text-[#6B7280]">{t('clickToExpand')}</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-[11px] uppercase tracking-wide text-[#6B7280] bg-[#F7F8FA]">
-                <th className="px-4 py-2.5 font-semibold">Tenant</th>
-                <th className="px-3 py-2.5 font-semibold">Suite</th>
-                <th className="px-3 py-2.5 font-semibold text-right">SF</th>
-                <th className="px-3 py-2.5 font-semibold text-right">Rent/SF</th>
-                <th className="px-3 py-2.5 font-semibold text-right">Annual Rent</th>
-                <th className="px-3 py-2.5 font-semibold">Type</th>
-                <th className="px-3 py-2.5 font-semibold">Lease End</th>
-                <th className="px-3 py-2.5 font-semibold">Escalations</th>
+              <tr className="text-[11px] uppercase tracking-wide text-[#6B7280] bg-[#F7F8FA]">
+                <th className="px-4 py-2.5 font-semibold text-start">{t('colTenant')}</th>
+                <th className="px-3 py-2.5 font-semibold text-start">{t('colSuite')}</th>
+                <th className="px-3 py-2.5 font-semibold text-end">{t('colSf')}</th>
+                <th className="px-3 py-2.5 font-semibold text-end">{t('colRentPerSf')}</th>
+                <th className="px-3 py-2.5 font-semibold text-end">{t('colAnnualRent')}</th>
+                <th className="px-3 py-2.5 font-semibold text-start">{t('colType')}</th>
+                <th className="px-3 py-2.5 font-semibold text-start">{t('colLeaseEnd')}</th>
+                <th className="px-3 py-2.5 font-semibold text-start">{t('escalations')}</th>
               </tr>
             </thead>
             <tbody>
@@ -197,14 +213,14 @@ export default function RentRollTab({
                     >
                       <td className="px-4 py-3 font-medium text-[#0E3470]">
                         <div className="flex items-center gap-2">
-                          <span className="text-[#6B7280] text-xs">
+                          <span className="text-[#6B7280] text-xs rtl:-scale-x-100">
                             {expanded ? '▼' : '▶'}
                           </span>
                           {lease.is_anchor && (
-                            <span className="text-[#BC9C45]" title="Anchor tenant">★</span>
+                            <span className="text-[#BC9C45]" title={t('anchorTenant')}>★</span>
                           )}
-                          <span className={lease.is_vacant ? 'italic' : ''}>
-                            {lease.is_vacant ? 'Vacant' : lease.tenant_name}
+                          <span className={lease.is_vacant ? 'italic' : ''} dir="auto">
+                            {lease.is_vacant ? t('vacant') : lease.tenant_name}
                           </span>
                           {lease.tenant_credit_rating && !lease.is_vacant && (
                             <span
@@ -214,29 +230,35 @@ export default function RentRollTab({
                                 backgroundColor: `${creditRatingColor(lease.tenant_credit_rating)}14`,
                               }}
                             >
-                              {lease.tenant_credit_rating}
+                              {t.has(`creditRatings.${lease.tenant_credit_rating}`)
+                                ? t(`creditRatings.${lease.tenant_credit_rating}`)
+                                : lease.tenant_credit_rating}
                             </span>
                           )}
                         </div>
                       </td>
-                      <td className="px-3 py-3">{lease.suite_unit ?? '—'}</td>
-                      <td className="px-3 py-3 text-right">
+                      <td className="px-3 py-3"><bdi>{lease.suite_unit ?? '—'}</bdi></td>
+                      <td className="px-3 py-3 text-end">
                         {lease.leased_sf ? lease.leased_sf.toLocaleString() : '—'}
                       </td>
-                      <td className="px-3 py-3 text-right">
+                      <td className="px-3 py-3 text-end">
                         {lease.is_vacant ? '—' : formatRentPerSf(lease.rent_per_sf)}
                       </td>
-                      <td className="px-3 py-3 text-right">
+                      <td className="px-3 py-3 text-end">
                         {lease.is_vacant ? '—' : formatMoney(lease.annual_base_rent)}
                       </td>
                       <td className="px-3 py-3">
-                        {lease.is_vacant ? '—' : lease.lease_type}
+                        {lease.is_vacant
+                          ? '—'
+                          : t.has(`leaseTypes.${lease.lease_type}`)
+                            ? t(`leaseTypes.${lease.lease_type}`)
+                            : lease.lease_type}
                       </td>
                       <td className="px-3 py-3">
-                        {lease.is_vacant ? '—' : formatLeaseDate(lease.lease_end_date)}
+                        {lease.is_vacant ? '—' : formatLeaseDateLocalized(lease.lease_end_date, intlLocale)}
                       </td>
                       <td className="px-3 py-3">
-                        {lease.is_vacant ? '—' : (lease.escalation_structure ?? '—')}
+                        <bdi>{lease.is_vacant ? '—' : (lease.escalation_structure ?? '—')}</bdi>
                       </td>
                     </tr>
                     {expanded && !lease.is_vacant && (
@@ -250,13 +272,13 @@ export default function RentRollTab({
                 );
               })}
               <tr className="border-t-2 border-[#0E3470] bg-[#F7F8FA] font-semibold text-[#0E3470]">
-                <td className="px-4 py-3">TOTAL</td>
+                <td className="px-4 py-3">{t('total')}</td>
                 <td className="px-3 py-3"></td>
-                <td className="px-3 py-3 text-right">{totalAllSf.toLocaleString()}</td>
-                <td className="px-3 py-3 text-right">
-                  {avgRentPerSf !== null ? `$${avgRentPerSf.toFixed(2)} avg` : '—'}
+                <td className="px-3 py-3 text-end">{totalAllSf.toLocaleString()}</td>
+                <td className="px-3 py-3 text-end">
+                  {avgRentPerSf !== null ? t('avgRentPerSf', { value: `$${avgRentPerSf.toFixed(2)}` }) : '—'}
                 </td>
-                <td className="px-3 py-3 text-right">{formatMoney(totalRent)}</td>
+                <td className="px-3 py-3 text-end">{formatMoney(totalRent)}</td>
                 <td className="px-3 py-3"></td>
                 <td className="px-3 py-3"></td>
                 <td className="px-3 py-3"></td>
@@ -268,7 +290,7 @@ export default function RentRollTab({
 
       {/* Lease Expiration Schedule */}
       <div className="bg-white rounded-xl border border-[#EEF0F4] p-5">
-        <h3 className="text-sm font-semibold text-[#0E3470] mb-4">Lease Expiration Schedule</h3>
+        <h3 className="text-sm font-semibold text-[#0E3470] mb-4">{t('expirationSchedule')}</h3>
         <div className="space-y-1.5">
           {schedule.map((bucket) => {
             const pct = maxBarPct > 0 ? (bucket.pctOfRent / maxBarPct) * 100 : 0;
@@ -293,7 +315,11 @@ export default function RentRollTab({
                   <div className="absolute inset-0 flex items-center px-3 text-[11px] font-medium text-[#0E3470]">
                     {bucket.leases.length === 0
                       ? ''
-                      : `${bucket.leases.map((l) => l.tenant.tenant_name).join(', ')} (${bucket.pctOfRent.toFixed(0)}% of rent)`}
+                      : <span>{t.rich('bucketLabel', {
+                          tenants: bucket.leases.map((l) => l.tenant.tenant_name).join(', '),
+                          pct: bucket.pctOfRent.toFixed(0),
+                          bdi: (chunks) => <bdi>{chunks}</bdi>,
+                        })}</span>}
                   </div>
                 </div>
               </div>
@@ -301,12 +327,12 @@ export default function RentRollTab({
           })}
         </div>
         <p className="text-[11px] text-[#6B7280] mt-3">
-          Bar color reflects tenant credit quality (green = investment / national, gold = regional, gray = local / unrated).
+          {t('creditLegend')}
         </p>
       </div>
 
       <p className="text-[11px] text-[#9CA3AF] text-center">
-        Rent roll is informational only — headline deal metrics (cap rate, CoC, IRR, DSCR) are unaffected.
+        {t('disclaimer')}
       </p>
       </>
       )}
@@ -337,7 +363,7 @@ function MetricCard({
         style={{ color: accentColor }}
         title={value}
       >
-        {value}
+        <bdi>{value}</bdi>
       </div>
       {sublabel && <div className="text-[11px] text-[#6B7280] mt-0.5">{sublabel}</div>}
     </div>
@@ -345,71 +371,84 @@ function MetricCard({
 }
 
 function TenantDetails({ lease }: { lease: TerminalTenantLease }) {
+  const t = useTranslations('portal.rentRoll');
+  const intlLocale = useLocale() === 'he' ? 'he-IL' : 'en-US';
   const row: { label: string; value: string | null }[] = [];
 
   if (lease.lease_start_date || lease.lease_end_date) {
     const parts: string[] = [];
-    if (lease.lease_start_date) parts.push(`Started ${formatLeaseDate(lease.lease_start_date)}`);
-    if (lease.lease_end_date) parts.push(`Expires ${formatLeaseDate(lease.lease_end_date)}`);
-    row.push({ label: 'Lease', value: parts.join(' · ') });
+    if (lease.lease_start_date) parts.push(t('leaseStarted', { date: formatLeaseDateLocalized(lease.lease_start_date, intlLocale) }));
+    if (lease.lease_end_date) parts.push(t('leaseExpires', { date: formatLeaseDateLocalized(lease.lease_end_date, intlLocale) }));
+    row.push({ label: t('lease'), value: parts.join(' · ') });
   }
   if (lease.rent_commencement_date) {
-    row.push({ label: 'Rent commencement', value: formatLeaseDate(lease.rent_commencement_date) });
+    row.push({ label: t('rentCommencement'), value: formatLeaseDateLocalized(lease.rent_commencement_date, intlLocale) });
   }
   if (lease.option_renewals) {
-    row.push({ label: 'Options', value: lease.option_renewals });
+    row.push({ label: t('options'), value: lease.option_renewals });
   }
   if (lease.escalation_structure) {
-    row.push({ label: 'Escalations', value: lease.escalation_structure });
+    row.push({ label: t('escalations'), value: lease.escalation_structure });
   }
 
   const reimbursements: string[] = [];
-  if (lease.lease_type === 'NNN') reimbursements.push('NNN — tenant pays CAM, taxes, insurance');
-  if (lease.cam_reimbursement) reimbursements.push(`CAM: ${formatMoney(lease.cam_reimbursement)}`);
-  if (lease.tax_reimbursement) reimbursements.push(`Tax: ${formatMoney(lease.tax_reimbursement)}`);
-  if (lease.insurance_reimbursement) reimbursements.push(`Insurance: ${formatMoney(lease.insurance_reimbursement)}`);
+  if (lease.lease_type === 'NNN') reimbursements.push(t('nnnReimbursement'));
+  if (lease.cam_reimbursement) reimbursements.push(t('reimbCam', { amount: formatMoney(lease.cam_reimbursement) }));
+  if (lease.tax_reimbursement) reimbursements.push(t('reimbTax', { amount: formatMoney(lease.tax_reimbursement) }));
+  if (lease.insurance_reimbursement) reimbursements.push(t('reimbInsurance', { amount: formatMoney(lease.insurance_reimbursement) }));
   if (reimbursements.length > 0) {
-    row.push({ label: 'Reimbursements', value: reimbursements.join(' · ') });
+    row.push({ label: t('reimbursements'), value: reimbursements.join(' · ') });
   }
 
   if (lease.percentage_rent) {
-    row.push({ label: 'Percentage Rent', value: lease.percentage_rent });
+    row.push({ label: t('percentageRent'), value: lease.percentage_rent });
   }
   if (lease.security_deposit) {
-    row.push({ label: 'Security Deposit', value: formatMoney(lease.security_deposit) });
+    row.push({ label: t('securityDeposit'), value: formatMoney(lease.security_deposit) });
   }
   if (lease.guarantor) {
-    row.push({ label: 'Guarantor', value: lease.guarantor });
+    row.push({
+      label: t('guarantor'),
+      value: t.has(`guarantorTypes.${lease.guarantor}`) ? t(`guarantorTypes.${lease.guarantor}`) : lease.guarantor,
+    });
   }
   if (lease.tenant_industry) {
-    row.push({ label: 'Industry', value: lease.tenant_industry });
+    row.push({ label: t('industry'), value: lease.tenant_industry });
   }
   if (lease.tenant_credit_rating) {
-    row.push({ label: 'Credit', value: lease.tenant_credit_rating });
+    row.push({
+      label: t('credit'),
+      value: t.has(`creditRatings.${lease.tenant_credit_rating}`)
+        ? t(`creditRatings.${lease.tenant_credit_rating}`)
+        : lease.tenant_credit_rating,
+    });
   }
   if (lease.status && lease.status !== 'Active') {
-    row.push({ label: 'Status', value: lease.status });
+    row.push({
+      label: t('status'),
+      value: t.has(`leaseStatuses.${lease.status}`) ? t(`leaseStatuses.${lease.status}`) : lease.status,
+    });
   }
 
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2 text-sm font-semibold text-[#0E3470]">
         {lease.is_anchor && <span className="text-[#BC9C45]">★</span>}
-        {lease.tenant_name}
-        {lease.is_anchor && <span className="text-[11px] font-medium text-[#BC9C45]">Anchor Tenant</span>}
+        <bdi>{lease.tenant_name}</bdi>
+        {lease.is_anchor && <span className="text-[11px] font-medium text-[#BC9C45]">{t('anchorTenant')}</span>}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1 text-[13px]">
         {row.map((r) => (
           <div key={r.label} className="flex gap-2">
             <span className="text-[#6B7280] w-36 shrink-0">{r.label}</span>
-            <span className="text-[#0E3470] font-medium">{r.value}</span>
+            <span className="text-[#0E3470] font-medium" dir="auto">{r.value}</span>
           </div>
         ))}
       </div>
       {lease.notes && (
         <div className="pt-2 mt-2 border-t border-[#EEF0F4] text-[13px] text-[#4B5563]">
-          <span className="font-medium text-[#6B7280]">Notes: </span>
-          {lease.notes}
+          <span className="font-medium text-[#6B7280]">{t('notes')} </span>
+          <bdi>{lease.notes}</bdi>
         </div>
       )}
     </div>

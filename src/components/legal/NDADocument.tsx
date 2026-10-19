@@ -16,8 +16,10 @@ export default function NDADocument({
 }: NDADocumentProps) {
   const paragraphs = getNDABody({ date, receivingPartyName }).split(/\n\n+/);
 
+  // The NDA is a legal document that exists only in English, so keep it
+  // left-to-right even inside the Hebrew UI.
   return (
-    <div className={`text-[12px] text-[#4B5563] leading-relaxed ${className}`}>
+    <div lang="en" dir="ltr" className={`text-[12px] text-[#4B5563] leading-relaxed ${className}`}>
       {showTitle && (
         <h2 className="text-[14px] font-bold text-[#0E3470] tracking-[0.5px] text-center mb-5">
           {NDA_TITLE}

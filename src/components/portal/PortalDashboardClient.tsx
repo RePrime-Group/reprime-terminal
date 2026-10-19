@@ -220,7 +220,7 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
                 <div className="flex items-center gap-2.5 mb-3">
                   <div className="w-1.5 h-1.5 rounded-full bg-[#0B8A4D] live-dot" />
                   <span className="text-[10px] font-medium tracking-[3px] uppercase text-[#D4A843]">
-                    {quarterLabel} {t('release')}
+                    {t('dashboard.quarterRelease', { quarter: quarterLabel })}
                   </span>
                 </div>
               )}
@@ -290,10 +290,10 @@ export default function PortalDashboardClient({ deals, locale, previewMode = fal
                   <div className="mt-5 mb-5">
                     <div className="flex items-center gap-3">
                       <h2 className="font-[family-name:var(--font-playfair)] text-[24px] md:text-[28px] font-semibold text-[#0E3470] tracking-[-0.01em]">
-                        Drafts
+                        {t('dashboard.drafts')}
                       </h2>
                       <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-[1.5px] bg-[#0E3470]/10 text-[#0E3470]">
-                        Admin only
+                        {t('dashboard.adminOnly')}
                       </span>
                     </div>
                   </div>

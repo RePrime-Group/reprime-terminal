@@ -14,6 +14,7 @@ interface WatchlistModalProps {
 export default function WatchlistModal({ dealName, dealId, onClose, onConfirm }: WatchlistModalProps) {
   const t = useTranslations('portal.watchlist');
   const tc = useTranslations('common');
+  const tErr = useTranslations('auth.friendlyErrors');
   const [freq, setFreq] = useState<'every' | 'daily' | 'weekly'>('every');
   const [channels, setChannels] = useState({ email: true, whatsapp: false, sms: false });
   const [types, setTypes] = useState({ docs: true, deadlines: true, price: true, competing: true });
@@ -33,13 +34,13 @@ export default function WatchlistModal({ dealName, dealId, onClose, onConfirm }:
         body: JSON.stringify({ frequency: freq, channels, alert_types: types }),
       });
       if (!res.ok) {
-        setError(await readApiError(res, 'We couldn\u2019t save your alert preferences. Please try again.'));
+        setError(await readApiError(res, t('saveFailed')));
         return;
       }
       onConfirm();
     } catch (err) {
       console.error('watchlist save failed:', err);
-      setError(friendlyFetchError(err, 'We couldn\u2019t save your alert preferences. Please try again.'));
+      setError(friendlyFetchError(err, t('saveFailed'), tErr));
     } finally {
       setSaving(false);
     }
@@ -57,7 +58,8 @@ export default function WatchlistModal({ dealName, dealId, onClose, onConfirm }:
       >
         <div className="rp-dark-gradient px-5 md:px-7 py-5">
           <div className="text-[16px] font-semibold text-white font-[family-name:var(--font-playfair)]">
-            {t('setAlerts', { dealName })}
+            {/* \u2068…\u2069 (FSI/PDI) isolates the deal name like <bdi> so it isn't reordered in RTL. */}
+            {t('setAlerts', { dealName: `\u2068${dealName}\u2069` })}
           </div>
           <div className="text-[11px] text-white/40 mt-1">{t('getNotified')}</div>
         </div>

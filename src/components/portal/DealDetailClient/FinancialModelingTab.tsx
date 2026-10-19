@@ -7,6 +7,7 @@ import type { DealWithDetails } from '@/lib/types/database';
 
 export function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
   const t = useTranslations('portal.dealDetail');
+  const tDr = useTranslations('portal.dataRoom');
 
   const baseInputs = useMemo(
     () => parseDealInputs(deal as unknown as Record<string, unknown>),
@@ -52,13 +53,13 @@ export function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
 
   const mmFullyFinanced = mm.netEquity <= 0;
   const mmHasPositiveCF = mm.distributableCashFlow > 0;
-  const mmInfReturn = mmFullyFinanced ? (mmHasPositiveCF ? '∞' : 'N/A') : null;
+  const mmInfReturn = mmFullyFinanced ? (mmHasPositiveCF ? '∞' : tDr('na')) : null;
   const greenOrDefault = mmFullyFinanced ? '#0B8A4D' : undefined;
   const results = [
     { l: t('exitValue'), v: fmt(mm.exitPrice), c: '#0E3470' },
     { l: t('totalProfit'), v: fmt(totalProfit), c: totalProfit > 0 ? '#0B8A4D' : '#DC2626' },
     { l: t('equityMultiple'), v: mmInfReturn ?? (mm.equityMultiple !== null ? mm.equityMultiple.toFixed(2) + 'x' : '—'), c: greenOrDefault ?? '#BC9C45' },
-    { l: t('estLeveredIrr'), v: mmInfReturn ?? (mm.irr !== null ? mm.irr.toFixed(2) + '%' : 'N/A'), c: '#0B8A4D' },
+    { l: t('estLeveredIrr'), v: mmInfReturn ?? (mm.irr !== null ? mm.irr.toFixed(2) + '%' : tDr('na')), c: '#0B8A4D' },
     { l: t('annualDebtService'), v: fmt(mm.headlineSeniorDS + mm.annualMezzPayment), c: '#0E3470' },
     { l: t('equityRequired'), v: mmFullyFinanced ? '$0' : fmt(mm.netEquity), c: greenOrDefault ?? '#BC9C45' },
   ];
@@ -107,11 +108,12 @@ export function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
               <div className="flex justify-between mb-1.5">
                 <span className="text-[13px] font-medium text-[#4B5563]">{inp.label}</span>
                 <span className="text-[14px] font-semibold text-[#0E3470] tabular-nums">
-                  {inp.val}{inp.label.includes('years') ? '' : '%'}
+                  {inp.val}{inp.label === t('holdPeriod') ? '' : '%'}
                 </span>
               </div>
               <input
                 type="range"
+                dir="ltr"
                 min={inp.min}
                 max={inp.max}
                 step={inp.step}
@@ -128,7 +130,7 @@ export function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
         <div className="mt-3 p-3 bg-[#FDF8ED] rounded-lg border border-[#ECD9A0]/30">
           <div className="text-[10px] font-semibold text-[#BC9C45] uppercase tracking-[2px] mb-1">{t('basis')}</div>
           <div className="text-[12px] text-[#4B5563]">
-            {t('purchase')} {fmt(mm.netBasis)} · {t('cap')} {mm.capRate.toFixed(2)}% · {t('noi')} {fmt(baseInputs.noi)}
+            <bdi>{t('purchase')} {fmt(mm.netBasis)}</bdi> · <bdi>{t('cap')} {mm.capRate.toFixed(2)}%</bdi> · <bdi>{t('noi')} {fmt(baseInputs.noi)}</bdi>
           </div>
         </div>
       </div>
@@ -140,7 +142,7 @@ export function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
             <div
               key={i}
               className="bg-white rounded-xl p-3.5 border border-[#EEF0F4] rp-card-shadow"
-              style={{ borderLeft: `3px solid ${m.c}` }}
+              style={{ borderInlineStart: `3px solid ${m.c}` }}
             >
               <div className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-[2px]">{m.l}</div>
               <div className="text-[22px] font-bold tabular-nums mt-1.5" style={{ color: m.c }}>{m.v}</div>
@@ -175,7 +177,7 @@ export function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
                       return (
                         <span
                           key={tick}
-                          className="absolute right-1 text-[8px] text-[#9CA3AF] tabular-nums leading-none whitespace-nowrap"
+                          className="absolute end-1 text-[8px] text-[#9CA3AF] tabular-nums leading-none whitespace-nowrap"
                           style={{ bottom: `${bottom}%`, transform: 'translateY(50%)' }}
                         >
                           {yLabel(tick)}
@@ -217,7 +219,7 @@ export function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
                     </div>
                   </div>
                 </div>
-                <div className="flex" style={{ marginLeft: 44 }}>
+                <div className="flex" style={{ marginInlineStart: 44 }}>
                   <div className="flex-1 flex gap-1.5 md:gap-3 px-1 md:px-2">
                     {cashFlows.map((_, i) => (
                       <div key={i} className="flex-1 text-center">

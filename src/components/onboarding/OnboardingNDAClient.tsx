@@ -10,6 +10,7 @@ import { formatNDADate } from '@/lib/legal/nda-text';
 
 export default function OnboardingNDAClient({ locale }: { locale: string }) {
   const t = useTranslations('portal.nda');
+  const te = useTranslations('errors');
   const router = useRouter();
 
   const [values, setValues] = useState<NDASignatureValues>({
@@ -22,6 +23,11 @@ export default function OnboardingNDAClient({ locale }: { locale: string }) {
   const [error, setError] = useState('');
 
   const today = formatNDADate();
+  const todayDisplay = new Date().toLocaleDateString(locale === 'he' ? 'he-IL' : 'en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
 
   const handleSign = async () => {
     setError('');
@@ -46,14 +52,14 @@ export default function OnboardingNDAClient({ locale }: { locale: string }) {
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        setError(body?.error ?? 'Failed to save signature. Please try again.');
+        setError(body?.error ?? te('saveSignatureFailed'));
         setSubmitting(false);
         return;
       }
       router.replace(`/${locale}/portal`);
       router.refresh();
     } catch {
-      setError('Network error. Please try again.');
+      setError(te('networkTryAgain'));
       setSubmitting(false);
     }
   };
@@ -83,7 +89,7 @@ export default function OnboardingNDAClient({ locale }: { locale: string }) {
 
       {/* Signature card */}
       <div className="bg-white rounded-2xl border border-[#EEF0F4] rp-card-shadow p-6 md:p-8">
-        <NDASignaturePanel values={values} onChange={setValues} date={today} />
+        <NDASignaturePanel values={values} onChange={setValues} date={todayDisplay} />
 
         {error && (
           <div className="mb-4 p-3 bg-[#FEF2F2] border border-[#FECACA] rounded-lg text-[12px] text-[#DC2626] font-medium">

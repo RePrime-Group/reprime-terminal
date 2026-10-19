@@ -22,7 +22,7 @@ export function CancelledDealBanner({ deal }: Props) {
             {t('dealCancelled')}
           </div>
           {(deal as unknown as { cancellation_reason?: string | null }).cancellation_reason ? (
-            <p className="text-[14px] text-[#7F1D1D] leading-relaxed">
+            <p className="text-[14px] text-[#7F1D1D] leading-relaxed" dir="auto">
               {(deal as unknown as { cancellation_reason: string }).cancellation_reason}
             </p>
           ) : (

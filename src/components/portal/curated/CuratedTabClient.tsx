@@ -66,10 +66,10 @@ export default function CuratedTabClient({
             </span>
           </div>
           <h1 className="font-[family-name:var(--font-playfair)] text-[28px] md:text-[42px] font-semibold text-white leading-[1.1] tracking-[-0.02em]">
-            {tabName}
+            <bdi>{tabName}</bdi>
           </h1>
           <p className="text-[12px] md:text-[13px] text-white/40 mt-3 font-light tracking-wide leading-relaxed max-w-2xl">
-            {heroNote && heroNote.trim() !== '' ? heroNote : t('subtitle')}
+            {heroNote && heroNote.trim() !== '' ? <bdi>{heroNote}</bdi> : t('subtitle')}
           </p>
         </div>
         <div className="h-20" style={{ background: 'linear-gradient(180deg, rgba(26,74,138,0) 0%, #F8F6F1 100%)' }} />
@@ -115,7 +115,7 @@ export default function CuratedTabClient({
                   )}
                   <DealCard deal={deal} locale={locale} index={i} previewMode={previewMode} from={`curated:${tabId}`} />
                   {deal.match_reason && (
-                    <p className="text-[12px] text-[#BC9C45] leading-snug px-1">{deal.match_reason}</p>
+                    <p dir="auto" className="text-[12px] text-[#BC9C45] leading-snug px-1">{deal.match_reason}</p>
                   )}
                 </div>
               );

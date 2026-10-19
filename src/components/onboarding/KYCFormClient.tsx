@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 import {
   ANNUAL_INCOME_OPTIONS,
@@ -86,6 +87,13 @@ export default function KYCFormClient({
   savedSSNMask,
 }: KYCFormClientProps) {
   const router = useRouter();
+  const t = useTranslations('kyc');
+  const tc = useTranslations('common');
+  const te = useTranslations('errors');
+  const rangeLabel = (o: string) =>
+    o.startsWith('Under ') ? t('rangeUnder', { amount: o.slice('Under '.length) }) : o;
+  const fundsLabel = (o: string) =>
+    t.has(`sourceOfFundsOptions.${o}`) ? t(`sourceOfFundsOptions.${o}`) : o;
   const [form, setForm] = useState<KYCFormData>(() =>
     mergeInitial(initialData, defaultLegalName, userEmail),
   );
@@ -138,7 +146,7 @@ export default function KYCFormClient({
       });
       const body = (await res.json().catch(() => ({}))) as { error?: string; approved?: boolean };
       if (!res.ok) {
-        setError(body.error ?? 'Failed to submit. Please try again.');
+        setError(body.error ?? t('submitFailed'));
         return;
       }
       if (partial) {
@@ -153,7 +161,7 @@ export default function KYCFormClient({
       router.replace(body.approved ? `/${locale}/portal` : `/${locale}/onboarding/pending`);
       router.refresh();
     } catch {
-      setError('Network error. Please try again.');
+      setError(te('networkTryAgain'));
     } finally {
       setSubmitting(false);
       setSavingPartial(false);
@@ -164,29 +172,30 @@ export default function KYCFormClient({
     <div className="w-full max-w-[860px] mx-auto">
       <div className="text-center mb-6">
         <h1 className="font-[family-name:var(--font-playfair)] text-[24px] md:text-[28px] font-semibold text-[#0E3470] mb-2">
-          Investor Verification
+          {t('title')}
         </h1>
         <p className="text-[13px] text-[#6B7280] leading-relaxed max-w-[600px] mx-auto">
-          Complete this form to verify your investor status. All information is confidential and used solely for compliance purposes.
+          {t('subtitle')}
         </p>
       </div>
 
       <div className="bg-white rounded-2xl border border-[#EEF0F4] rp-card-shadow p-6 md:p-8 space-y-8">
         {/* Personal Information */}
         <section>
-          <div className={sectionTitleCls}>Personal Information</div>
+          <div className={sectionTitleCls}>{t('sections.personal')}</div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className={labelCls}>Full Legal Name *</label>
+              <label className={labelCls}>{t('fields.legalName')}</label>
               <input
                 type="text"
+                dir="auto"
                 className={inputCls}
                 value={form.personal.legalName}
                 onChange={(e) => updatePersonal((p) => ({ ...p, legalName: e.target.value }))}
               />
             </div>
             <div>
-              <label className={labelCls}>Date of Birth *</label>
+              <label className={labelCls}>{t('fields.dob')}</label>
               <input
                 type="date"
                 className={inputCls}
@@ -195,11 +204,12 @@ export default function KYCFormClient({
               />
             </div>
             <div>
-              <label className={labelCls}>Social Security / Tax ID *</label>
+              <label className={labelCls}>{t('fields.ssn')}</label>
               {editingSSN ? (
                 <>
                   <input
                     type="text"
+                    dir="auto"
                     inputMode="numeric"
                     placeholder="XXX-XX-XXXX"
                     className={inputCls}
@@ -216,7 +226,7 @@ export default function KYCFormClient({
                       }}
                       className="mt-1 text-[11px] text-[#6B7280] hover:text-[#0E3470]"
                     >
-                      Cancel — keep saved SSN
+                      {t('cancelKeepSsn')}
                     </button>
                   )}
                 </>
@@ -226,32 +236,34 @@ export default function KYCFormClient({
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0B8A4D" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
-                    <span className="font-medium">SSN on file</span>
-                    <span className="text-[#6B7280] tabular-nums">{savedSSNMask}</span>
+                    <span className="font-medium">{t('ssnOnFile')}</span>
+                    <span className="text-[#6B7280] tabular-nums" dir="ltr">{savedSSNMask}</span>
                   </div>
                   <button
                     type="button"
                     onClick={() => setEditingSSN(true)}
                     className="text-[12px] font-medium text-[#0E3470] hover:underline"
                   >
-                    Change
+                    {t('changeSsn')}
                   </button>
                 </div>
               )}
             </div>
             <div>
-              <label className={labelCls}>Driver&apos;s License #</label>
+              <label className={labelCls}>{t('fields.driversLicense')}</label>
               <input
                 type="text"
+                dir="auto"
                 className={inputCls}
                 value={form.personal.driversLicense ?? ''}
                 onChange={(e) => updatePersonal((p) => ({ ...p, driversLicense: e.target.value }))}
               />
             </div>
             <div className="md:col-span-2">
-              <label className={labelCls}>Address *</label>
+              <label className={labelCls}>{t('fields.address')}</label>
               <input
                 type="text"
+                dir="auto"
                 className={inputCls}
                 value={form.personal.address.street}
                 onChange={(e) => updateAddress('street', e.target.value)}
@@ -259,27 +271,30 @@ export default function KYCFormClient({
             </div>
             <div className="grid grid-cols-3 gap-3 md:col-span-2">
               <div>
-                <label className={labelCls}>City *</label>
+                <label className={labelCls}>{t('fields.city')}</label>
                 <input
                   type="text"
+                  dir="auto"
                   className={inputCls}
                   value={form.personal.address.city}
                   onChange={(e) => updateAddress('city', e.target.value)}
                 />
               </div>
               <div>
-                <label className={labelCls}>State *</label>
+                <label className={labelCls}>{t('fields.state')}</label>
                 <input
                   type="text"
+                  dir="auto"
                   className={inputCls}
                   value={form.personal.address.state}
                   onChange={(e) => updateAddress('state', e.target.value)}
                 />
               </div>
               <div>
-                <label className={labelCls}>Zip *</label>
+                <label className={labelCls}>{t('fields.zip')}</label>
                 <input
                   type="text"
+                  dir="auto"
                   className={inputCls}
                   value={form.personal.address.zip}
                   onChange={(e) => updateAddress('zip', e.target.value)}
@@ -287,27 +302,30 @@ export default function KYCFormClient({
               </div>
             </div>
             <div>
-              <label className={labelCls}>Country</label>
+              <label className={labelCls}>{t('fields.country')}</label>
               <input
                 type="text"
+                dir="auto"
                 className={inputCls}
                 value={form.personal.address.country}
                 onChange={(e) => updateAddress('country', e.target.value)}
               />
             </div>
             <div>
-              <label className={labelCls}>Phone Number *</label>
+              <label className={labelCls}>{t('fields.phone')}</label>
               <input
                 type="tel"
+                dir="auto"
                 className={inputCls}
                 value={form.personal.phone}
                 onChange={(e) => updatePersonal((p) => ({ ...p, phone: e.target.value }))}
               />
             </div>
             <div className="md:col-span-2">
-              <label className={labelCls}>Email Address</label>
+              <label className={labelCls}>{t('fields.email')}</label>
               <input
                 type="email"
+                dir="auto"
                 className={inputCls}
                 value={form.personal.email}
                 onChange={(e) => updatePersonal((p) => ({ ...p, email: e.target.value }))}
@@ -320,67 +338,71 @@ export default function KYCFormClient({
 
         {/* Employment & Income */}
         <section>
-          <div className={sectionTitleCls}>Employment &amp; Income</div>
+          <div className={sectionTitleCls}>{t('sections.employment')}</div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className={labelCls}>Occupation *</label>
+              <label className={labelCls}>{t('fields.occupation')}</label>
               <input
                 type="text"
+                dir="auto"
                 className={inputCls}
                 value={form.employment.occupation}
                 onChange={(e) => updateEmployment((p) => ({ ...p, occupation: e.target.value }))}
               />
             </div>
             <div>
-              <label className={labelCls}>Employer Name *</label>
+              <label className={labelCls}>{t('fields.employer')}</label>
               <input
                 type="text"
+                dir="auto"
                 className={inputCls}
                 value={form.employment.employer}
                 onChange={(e) => updateEmployment((p) => ({ ...p, employer: e.target.value }))}
               />
             </div>
             <div className="md:col-span-2">
-              <label className={labelCls}>Employer Address</label>
+              <label className={labelCls}>{t('fields.employerAddress')}</label>
               <input
                 type="text"
+                dir="auto"
                 className={inputCls}
                 value={form.employment.employerAddress ?? ''}
                 onChange={(e) => updateEmployment((p) => ({ ...p, employerAddress: e.target.value }))}
               />
             </div>
             <div>
-              <label className={labelCls}>Type of Business / Industry</label>
+              <label className={labelCls}>{t('fields.industry')}</label>
               <input
                 type="text"
+                dir="auto"
                 className={inputCls}
                 value={form.employment.industry ?? ''}
                 onChange={(e) => updateEmployment((p) => ({ ...p, industry: e.target.value }))}
               />
             </div>
             <div>
-              <label className={labelCls}>Annual Income *</label>
+              <label className={labelCls}>{t('fields.annualIncome')}</label>
               <select
                 className={inputCls}
                 value={form.employment.annualIncome}
                 onChange={(e) => updateEmployment((p) => ({ ...p, annualIncome: e.target.value }))}
               >
-                <option value="">Select…</option>
+                <option value="">{t('selectPlaceholder')}</option>
                 {ANNUAL_INCOME_OPTIONS.map((o) => (
-                  <option key={o} value={o}>{o}</option>
+                  <option key={o} value={o}>{rangeLabel(o)}</option>
                 ))}
               </select>
             </div>
             <div className="md:col-span-2">
-              <label className={labelCls}>Source of Funds *</label>
+              <label className={labelCls}>{t('fields.sourceOfFunds')}</label>
               <select
                 className={inputCls}
                 value={form.employment.sourceOfFunds}
                 onChange={(e) => updateEmployment((p) => ({ ...p, sourceOfFunds: e.target.value }))}
               >
-                <option value="">Select…</option>
+                <option value="">{t('selectPlaceholder')}</option>
                 {SOURCE_OF_FUNDS_OPTIONS.map((o) => (
-                  <option key={o} value={o}>{o}</option>
+                  <option key={o} value={o}>{fundsLabel(o)}</option>
                 ))}
               </select>
             </div>
@@ -391,40 +413,40 @@ export default function KYCFormClient({
 
         {/* Financial Profile */}
         <section>
-          <div className={sectionTitleCls}>Financial Profile</div>
+          <div className={sectionTitleCls}>{t('sections.financial')}</div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className={labelCls}>Estimated Net Worth *</label>
+              <label className={labelCls}>{t('fields.netWorth')}</label>
               <select
                 className={inputCls}
                 value={form.financial.netWorth}
                 onChange={(e) => updateFinancial((p) => ({ ...p, netWorth: e.target.value }))}
               >
-                <option value="">Select…</option>
+                <option value="">{t('selectPlaceholder')}</option>
                 {NET_WORTH_OPTIONS.map((o) => (
-                  <option key={o} value={o}>{o}</option>
+                  <option key={o} value={o}>{rangeLabel(o)}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className={labelCls}>Expected Investment Range</label>
+              <label className={labelCls}>{t('fields.investmentRange')}</label>
               <select
                 className={inputCls}
                 value={form.financial.investmentRange ?? ''}
                 onChange={(e) => updateFinancial((p) => ({ ...p, investmentRange: e.target.value }))}
               >
-                <option value="">Select…</option>
+                <option value="">{t('selectPlaceholder')}</option>
                 {INVESTMENT_RANGE_OPTIONS.map((o) => (
-                  <option key={o} value={o}>{o}</option>
+                  <option key={o} value={o}>{rangeLabel(o)}</option>
                 ))}
               </select>
             </div>
             <div className="md:col-span-2">
-              <label className={labelCls}>Do you have investment accounts at other institutions? *</label>
+              <label className={labelCls}>{t('fields.otherInstitutions')}</label>
               <div className="flex gap-3 mt-1">
                 {[
-                  { v: true, label: 'Yes' },
-                  { v: false, label: 'No' },
+                  { v: true, label: tc('yes') },
+                  { v: false, label: tc('no') },
                 ].map((opt) => (
                   <button
                     type="button"
@@ -448,9 +470,10 @@ export default function KYCFormClient({
             </div>
             {form.financial.otherInstitutions.hasAccounts && (
               <div className="md:col-span-2">
-                <label className={labelCls}>Institution name</label>
+                <label className={labelCls}>{t('fields.institutionName')}</label>
                 <input
                   type="text"
+                  dir="auto"
                   className={inputCls}
                   value={form.financial.otherInstitutions.institutionName ?? ''}
                   onChange={(e) =>
@@ -469,19 +492,19 @@ export default function KYCFormClient({
 
         {/* Accreditation */}
         <section>
-          <div className={sectionTitleCls}>Accredited Investor Certification</div>
+          <div className={sectionTitleCls}>{t('sections.accreditation')}</div>
           <p className="text-[12px] text-[#6B7280] mb-4">
-            I certify that I meet at least one of the following criteria (check all that apply):
+            {t('accreditation.intro')}
           </p>
           <div className="space-y-2">
             {[
-              { key: 'individualIncome', label: 'Individual income exceeding $200,000 in each of the two most recent years, with reasonable expectation of the same in the current year' },
-              { key: 'jointIncome', label: 'Joint income with spouse/partner exceeding $300,000 in each of the two most recent years, with reasonable expectation of the same in the current year' },
-              { key: 'netWorthExceeds1M', label: 'Net worth exceeding $1,000,000 (individually or jointly with spouse/partner), excluding primary residence' },
-              { key: 'licensedProfessional', label: 'Licensed securities professional holding Series 7, 65, or 82 in good standing' },
-              { key: 'knowledgeableEmployee', label: 'Knowledgeable employee of a private fund' },
-              { key: 'entityAssets', label: 'Entity with assets exceeding $5,000,000' },
-              { key: 'notAccredited', label: 'None of the above — I am not an accredited investor' },
+              { key: 'individualIncome', label: t('accreditation.individualIncome') },
+              { key: 'jointIncome', label: t('accreditation.jointIncome') },
+              { key: 'netWorthExceeds1M', label: t('accreditation.netWorthExceeds1M') },
+              { key: 'licensedProfessional', label: t('accreditation.licensedProfessional') },
+              { key: 'knowledgeableEmployee', label: t('accreditation.knowledgeableEmployee') },
+              { key: 'entityAssets', label: t('accreditation.entityAssets') },
+              { key: 'notAccredited', label: t('accreditation.notAccredited') },
             ].map((opt) => {
               const checked = form.accreditation[opt.key as keyof KYCFormData['accreditation']];
               return (
@@ -533,7 +556,7 @@ export default function KYCFormClient({
             )}
           </div>
           <span className="text-[12px] text-[#4B5563] leading-relaxed">
-            I certify that the information provided above is true and accurate to the best of my knowledge. *
+            {t('certify')}
           </span>
         </label>
 
@@ -549,14 +572,14 @@ export default function KYCFormClient({
             disabled={submitting || savingPartial}
             className="flex-1 py-3.5 rounded-xl bg-[#BC9C45] hover:bg-[#A88A3D] text-[#0E3470] text-[13px] font-bold transition-colors disabled:opacity-50"
           >
-            {submitting ? 'Submitting…' : 'Submit Verification'}
+            {submitting ? t('submitting') : t('submit')}
           </button>
           <button
             onClick={() => submit(true)}
             disabled={submitting || savingPartial}
             className="px-6 py-3.5 rounded-xl border border-[#EEF0F4] text-[#6B7280] text-[12px] font-medium hover:bg-[#F7F8FA] transition-colors disabled:opacity-50"
           >
-            {savingPartial ? 'Saving…' : 'Save & Continue Later'}
+            {savingPartial ? tc('saving') : t('saveContinueLater')}
           </button>
         </div>
       </div>

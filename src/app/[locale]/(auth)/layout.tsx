@@ -1,7 +1,12 @@
+import { getTranslations } from 'next-intl/server';
 import BetaLaunchBanner from '@/components/BetaLaunchBanner';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
-export const metadata = { title: 'Sign In — RePrime Terminal Beta' };
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'auth' });
+  return { title: t('metaTitle') };
+}
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 import {
   COUNTRIES,
   Country,
@@ -30,14 +31,31 @@ export default function PhoneConfirmModal({
   initialE164,
   submitting = false,
   error,
-  title = 'Confirm your phone number',
-  description = 'Our team will use this number to contact you about wire instructions and next steps. Your number will be saved to your profile.',
-  confirmLabel = 'Confirm & commit',
-  confirmingLabel = 'Confirming…',
+  title: titleProp,
+  description: descriptionProp,
+  confirmLabel: confirmLabelProp,
+  confirmingLabel: confirmingLabelProp,
   confirmTone = 'gold',
   onCancel,
   onConfirm,
 }: Props) {
+  const t = useTranslations('portal.phoneConfirm');
+  const tc = useTranslations('common');
+  const locale = useLocale();
+  const title = titleProp ?? t('title');
+  const description = descriptionProp ?? t('description');
+  const confirmLabel = confirmLabelProp ?? t('confirmLabel');
+  const confirmingLabel = confirmingLabelProp ?? t('confirmingLabel');
+  // Localized country names (Hebrew via Intl); English keeps the names from COUNTRIES.
+  const regionNames = useMemo(() => {
+    if (locale !== 'he') return null;
+    try {
+      return new Intl.DisplayNames(['he-IL'], { type: 'region' });
+    } catch {
+      return null;
+    }
+  }, [locale]);
+  const countryName = (c: Country): string => regionNames?.of(c.iso) || c.name;
   const [country, setCountry] = useState<Country>(findCountryByIso('US')!);
   const [national, setNational] = useState('');
   const [touched, setTouched] = useState(false);
@@ -83,10 +101,11 @@ export default function PhoneConfirmModal({
     return COUNTRIES.filter(
       (c) =>
         c.name.toLowerCase().includes(q) ||
+        (regionNames?.of(c.iso) ?? '').toLowerCase().includes(q) ||
         c.iso.toLowerCase().includes(q) ||
         c.dial.includes(q.replace(/^\+/, '')),
     );
-  }, [query]);
+  }, [query, regionNames]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
@@ -126,7 +145,7 @@ export default function PhoneConfirmModal({
 
         <div className="px-6 pb-5">
           <label className="block text-[11px] font-semibold tracking-[1.5px] uppercase text-[#BC9C45] mb-2">
-            Phone number
+            {t('phoneNumber')}
           </label>
           <div className="relative flex gap-2" ref={pickerRef}>
             <button
@@ -138,7 +157,7 @@ export default function PhoneConfirmModal({
               <span className="inline-flex items-center justify-center h-5 px-1.5 rounded bg-[#F3F4F6] text-[10px] font-bold tracking-wide text-[#374151]">
                 {country.iso}
               </span>
-              <span className="tabular-nums leading-none">+{country.dial}</span>
+              <span dir="ltr" className="tabular-nums leading-none">+{country.dial}</span>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polyline points="6 9 12 15 18 9" />
               </svg>
@@ -146,6 +165,7 @@ export default function PhoneConfirmModal({
 
             <input
               type="tel"
+              dir="ltr"
               inputMode="numeric"
               autoComplete="tel-national"
               value={displayValue}
@@ -161,19 +181,20 @@ export default function PhoneConfirmModal({
             />
 
             {pickerOpen && (
-              <div className="absolute left-0 right-0 sm:right-auto top-[52px] z-20 sm:w-[320px] max-h-[340px] bg-white rounded-xl border border-[#EEF0F4] shadow-[0_16px_48px_rgba(14,52,112,0.18)] overflow-hidden flex flex-col">
+              <div className="absolute start-0 end-0 sm:end-auto top-[52px] z-20 sm:w-[320px] max-h-[340px] bg-white rounded-xl border border-[#EEF0F4] shadow-[0_16px_48px_rgba(14,52,112,0.18)] overflow-hidden flex flex-col">
                 <div className="p-2 border-b border-[#EEF0F4]">
                   <input
                     autoFocus
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Search country or code"
+                    dir="auto"
+                    placeholder={t('searchPlaceholder')}
                     className="w-full px-3 py-2 text-[13px] rounded-lg border border-[#EEF0F4] focus:outline-none focus:border-[#BC9C45]"
                   />
                 </div>
                 <ul className="flex-1 overflow-y-auto py-1">
                   {filteredCountries.length === 0 ? (
-                    <li className="px-3 py-3 text-[12px] text-[#9CA3AF]">No match</li>
+                    <li className="px-3 py-3 text-[12px] text-[#9CA3AF]">{t('noMatch')}</li>
                   ) : (
                     filteredCountries.map((c) => (
                       <li key={c.iso}>
@@ -184,13 +205,13 @@ export default function PhoneConfirmModal({
                             setPickerOpen(false);
                             setQuery('');
                           }}
-                          className={`w-full inline-flex items-center gap-3 px-3 py-2 text-left text-[13px] hover:bg-[#F9FAFB] ${c.iso === country.iso ? 'bg-[#FDF8ED]' : ''}`}
+                          className={`w-full inline-flex items-center gap-3 px-3 py-2 text-start text-[13px] hover:bg-[#F9FAFB] ${c.iso === country.iso ? 'bg-[#FDF8ED]' : ''}`}
                         >
                           <span className="inline-flex items-center justify-center w-9 h-5 rounded bg-[#F3F4F6] text-[10px] font-bold tracking-wide text-[#374151] shrink-0">
                             {c.iso}
                           </span>
-                          <span className="flex-1 text-[#0F1B2D] truncate">{c.name}</span>
-                          <span className="text-[#6B7280] tabular-nums shrink-0">+{c.dial}</span>
+                          <span className="flex-1 text-[#0F1B2D] truncate">{countryName(c)}</span>
+                          <span dir="ltr" className="text-[#6B7280] tabular-nums shrink-0">+{c.dial}</span>
                         </button>
                       </li>
                     ))
@@ -203,13 +224,16 @@ export default function PhoneConfirmModal({
           {touched && !isValid && (
             <p className="text-[12px] text-[#DC2626] mt-2">
               {digits.length === 0
-                ? 'Enter your phone number.'
-                : `That doesn't look like a valid ${country.name} number.`}
+                ? t('enterPhone')
+                : t('invalidNumber', { country: countryName(country) })}
             </p>
           )}
           {isValid && e164 && (
             <p className="text-[12px] text-[#6B7280] mt-2 tabular-nums">
-              Full number: {e164}
+              {t.rich('fullNumber', {
+                number: e164,
+                num: (chunks) => <bdi dir="ltr">{chunks}</bdi>,
+              })}
             </p>
           )}
           {error && (
@@ -224,7 +248,7 @@ export default function PhoneConfirmModal({
             disabled={submitting}
             className="px-5 py-2.5 rounded-xl text-[13px] font-medium text-[#6B7280] hover:bg-white transition-colors disabled:opacity-50"
           >
-            Cancel
+            {tc('cancel')}
           </button>
           <button
             type="button"

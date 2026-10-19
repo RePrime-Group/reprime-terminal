@@ -17,6 +17,7 @@ export function DDFolderCard({
   onViewDocument: (url: string, name: string, storagePath?: string) => void;
 }) {
   const t = useTranslations('portal.dealDetail');
+  const tDataRoom = useTranslations('portal.dataRoom');
   const [expanded, setExpanded] = useState(false);
   const docCount = folder.documents.length;
 
@@ -31,7 +32,7 @@ export function DDFolderCard({
         </div>
         <div className="flex-1 min-w-0">
           <div className="font-semibold text-sm text-[#0E3470] truncate">
-            {folder.name}
+            <bdi>{folder.name}</bdi>
           </div>
           <div className="text-[11px] text-[#9CA3AF]">
             {t('documentsCount', { count: docCount })}
@@ -63,7 +64,7 @@ export function DDFolderCard({
               <FileTypeBadge fileType={doc.file_type} />
               <div className="flex-1 min-w-0">
                 <div className="text-sm text-[#0E3470] font-medium truncate">
-                  {doc.name}
+                  <bdi>{doc.name}</bdi>
                 </div>
                 <div className="text-[11px] text-[#9CA3AF]">
                   {doc.file_size ?? t('unknownSize')}
@@ -76,7 +77,7 @@ export function DDFolderCard({
                     onViewDocument(`/api/documents/${doc.id}/download?view=true`, doc.name, doc.storage_path ?? undefined);
                   }}
                   className="text-[#BC9C45] hover:text-[#A88A3D] transition-colors"
-                  aria-label={`View ${doc.name}`}
+                  aria-label={tDataRoom('viewDocumentAria', { name: doc.name })}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
@@ -88,7 +89,7 @@ export function DDFolderCard({
                 href={`/api/documents/${doc.id}/download`}
                 onClick={() => onDocumentDownload(doc.id)}
                 className="text-[#1D5FB8] hover:text-[#0E3470] transition-colors"
-                aria-label={`Download ${doc.name}`}
+                aria-label={tDataRoom('downloadDocumentAria', { name: doc.name })}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />

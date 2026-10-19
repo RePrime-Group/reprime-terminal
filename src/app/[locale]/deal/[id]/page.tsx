@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
+import { getTranslations } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import DealPreviewClient from '@/components/preview/DealPreviewClient';
@@ -25,7 +26,9 @@ const SUGGESTED_DEAL_COLUMNS = [
 ].join(', ');
 
 export async function generateMetadata({ params }: DealPreviewPageProps): Promise<Metadata> {
-  const { id } = await params;
+  const { locale, id } = await params;
+  const t = await getTranslations({ locale, namespace: 'preview' });
+  const tPt = await getTranslations({ locale, namespace: 'portal.propertyTypes' });
   const admin = createAdminClient();
 
   const { data: deal } = await admin
@@ -36,7 +39,7 @@ export async function generateMetadata({ params }: DealPreviewPageProps): Promis
     .maybeSingle();
 
   if (!deal) {
-    return { title: 'Deal — RePrime Terminal' };
+    return { title: t('metaTitleFallback') };
   }
 
   const { data: photo } = await admin
@@ -59,7 +62,9 @@ export async function generateMetadata({ params }: DealPreviewPageProps): Promis
   const descParts = [
     deal.purchase_price ? formatPrice(deal.purchase_price) : null,
     deal.cap_rate ? `${formatPercent(deal.cap_rate)} Cap Rate` : null,
-    deal.property_type,
+    deal.property_type
+      ? (tPt.has(deal.property_type) ? tPt(deal.property_type) : deal.property_type)
+      : null,
     [deal.city, deal.state].filter(Boolean).join(', ') || null,
   ].filter(Boolean);
   const description = descParts.join(' · ');

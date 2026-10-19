@@ -29,6 +29,7 @@ export default function MessageBubble({ message, onOpenCitation, stream = false,
     >
       <div className={`flex items-center gap-1.5 max-w-[88%] ${isUser ? 'flex-row-reverse' : ''}`}>
         <div
+          dir={isUser ? 'auto' : undefined}
           className={`rounded-2xl px-4 py-2.5 text-[15px] leading-[1.6] break-words ${
             isUser
               ? 'bg-gradient-to-br from-[#BC9C45] to-[#A88A3D] text-white shadow-[0_2px_8px_rgba(188,156,69,0.25)] whitespace-pre-wrap'

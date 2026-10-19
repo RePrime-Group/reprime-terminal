@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { History, Plus, ChevronDown, Trash2 } from 'lucide-react';
 import type { Conversation } from '@/lib/ai/types';
 
@@ -13,26 +13,32 @@ interface Props {
   onDelete?: (conversation: Conversation) => void;
 }
 
-function formatRelative(iso: string): string {
+function formatRelative(
+  iso: string,
+  t: (key: string, values?: { count: number }) => string,
+  dateLocale: string,
+): string {
   const ts = new Date(iso).getTime();
   if (Number.isNaN(ts)) return '';
   const diff = Date.now() - ts;
   const m = Math.floor(diff / 60_000);
-  if (m < 1) return 'now';
-  if (m < 60) return `${m}m`;
+  if (m < 1) return t('relative.now');
+  if (m < 60) return t('relative.minutes', { count: m });
   const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h`;
+  if (h < 24) return t('relative.hours', { count: h });
   const d = Math.floor(h / 24);
-  if (d < 7) return `${d}d`;
+  if (d < 7) return t('relative.days', { count: d });
   const w = Math.floor(d / 7);
-  if (w < 5) return `${w}w`;
-  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  if (w < 5) return t('relative.weeks', { count: w });
+  return new Date(iso).toLocaleDateString(dateLocale, { month: 'short', day: 'numeric' });
 }
 
 const CLOSE_MS = 150;
 
 export default function ThreadSwitcher({ conversations, activeId, onSelect, onNew, onDelete }: Props) {
   const t = useTranslations('ai');
+  const locale = useLocale();
+  const dateLocale = locale === 'he' ? 'he-IL' : 'en-US';
   const [present, setPresent] = useState(false); // mounted in the DOM
   const [open, setOpen] = useState(false); // drives the enter/exit transition
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -141,6 +147,7 @@ export default function ThreadSwitcher({ conversations, activeId, onSelect, onNe
                           closeMenu();
                           onSelect(c.id);
                         }}
+                        dir="auto"
                         className={`flex-1 min-w-0 truncate text-start text-[12.5px] leading-tight cursor-pointer ${
                           isActive ? 'text-white font-medium' : 'text-white/80 group-hover/row:text-white'
                         }`}
@@ -149,7 +156,7 @@ export default function ThreadSwitcher({ conversations, activeId, onSelect, onNe
                       </button>
 
                       <span className="shrink-0 text-[10px] text-white/35 tabular-nums group-hover/row:opacity-0 transition-opacity">
-                        {formatRelative(c.updated_at)}
+                        {formatRelative(c.updated_at, t, dateLocale)}
                       </span>
 
                       {onDelete && (

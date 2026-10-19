@@ -57,7 +57,7 @@ export default function CuratedNavTabs({
                 : 'text-white/60 hover:text-white hover:bg-white/[0.04]'
             }`}
           >
-            {g.name}
+            <bdi>{g.name}</bdi>
           </Link>
         ))}
       </>
@@ -80,7 +80,7 @@ export default function CuratedNavTabs({
             locale={locale}
             className={`${pillBase} ${isActive(g.id) ? pillActive : pillIdle}`}
           >
-            {g.name}
+            <bdi>{g.name}</bdi>
           </Link>
         ))}
       </>
@@ -124,7 +124,7 @@ export default function CuratedNavTabs({
                   : 'text-white/75 hover:text-white hover:bg-white/[0.05]'
               }`}
             >
-              {g.name}
+              <bdi>{g.name}</bdi>
             </Link>
           ))}
         </div>

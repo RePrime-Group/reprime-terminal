@@ -15,6 +15,7 @@ interface Props {
 
 export default function DealPicker({ onSelect }: Props) {
   const t = useTranslations('ai');
+  const tc = useTranslations('common');
   const [query, setQuery] = useState('');
   const [deals, setDeals] = useState<DealEntry[] | null>(null);
 
@@ -59,7 +60,7 @@ export default function DealPicker({ onSelect }: Props) {
       <div className="flex-1 overflow-y-auto py-2">
         {deals === null ? (
           <div className="px-5 py-8 flex justify-center">
-            <span className="inline-flex gap-1" aria-label="Loading">
+            <span className="inline-flex gap-1" aria-label={tc('loading')}>
               <span className="w-1.5 h-1.5 rounded-full bg-[#BC9C45]/70 animate-pulse" />
               <span className="w-1.5 h-1.5 rounded-full bg-[#BC9C45]/70 animate-pulse [animation-delay:120ms]" />
               <span className="w-1.5 h-1.5 rounded-full bg-[#BC9C45]/70 animate-pulse [animation-delay:240ms]" />
@@ -83,7 +84,7 @@ export default function DealPicker({ onSelect }: Props) {
               >
                 {d.name.charAt(0).toUpperCase()}
               </span>
-              <span className="truncate">{d.name}</span>
+              <span dir="auto" className="truncate">{d.name}</span>
             </button>
           ))
         )}

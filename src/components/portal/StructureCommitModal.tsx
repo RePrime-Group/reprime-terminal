@@ -50,10 +50,14 @@ export default function StructureCommitModal({
   onCommit,
 }: Props) {
   const t = useTranslations('portal.dealDetail');
+  const tx = useTranslations('portal.commitment');
+  const tDp = useTranslations('portal.dealPage');
+  const tDr = useTranslations('portal.dataRoom');
+  const tDc = useTranslations('portal.dealCard');
 
   if (!open) return null;
 
-  const inf = fullyFinanced ? (hasPositiveCashFlow ? '∞' : 'N/A') : null;
+  const inf = fullyFinanced ? (hasPositiveCashFlow ? '∞' : tDr('na')) : null;
 
   const title =
     structure === 'assignment'
@@ -81,11 +85,11 @@ export default function StructureCommitModal({
           },
           {
             label: t('assetMgmtFee'),
-            value: `${fmtPct(fees.assetMgmtFee)}/yr (${fmtDollars(assetMgmtFeeDollarPerYear)}/yr)`,
+            value: tx('perYearPair', { pct: fmtPct(fees.assetMgmtFee), amount: fmtDollars(assetMgmtFeeDollarPerYear) }),
           },
           {
             label: t('gpCarry'),
-            value: `${fmtPct(fees.gpCarry)} above ${fmtPct(fees.prefReturn)} pref`,
+            value: tx('carryAbovePref', { carry: fmtPct(fees.gpCarry), pref: fmtPct(fees.prefReturn) }),
           },
           { label: t('preferredReturn'), value: fmtPct(fees.prefReturn) },
         ];
@@ -127,7 +131,7 @@ export default function StructureCommitModal({
           {/* Deal-level figures */}
           <div className="space-y-2">
             <div className="flex justify-between py-2 border-b border-[#EEF0F4]">
-              <span className="text-[12px] text-[#6B7280]">{t('purchasePrice')}</span>
+              <span className="text-[12px] text-[#6B7280]">{tDc('purchasePrice')}</span>
               <span className="text-[13px] font-semibold text-[#0E3470] tabular-nums">
                 {fmtDollars(purchasePrice)}
               </span>
@@ -175,7 +179,7 @@ export default function StructureCommitModal({
             type="button"
             onClick={onCommit}
             disabled={previewMode}
-            title={previewMode ? 'Preview mode — read-only' : undefined}
+            title={previewMode ? tDp('previewReadOnly') : undefined}
             className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] text-[13px] font-bold shadow-[0_4px_16px_rgba(188,156,69,0.3)] hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {t('commitToDeal')}

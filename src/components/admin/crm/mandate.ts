@@ -101,20 +101,31 @@ export function mandateRowToInput(row: {
   };
 }
 
-/** Validate per the plan's "minimum required set". */
-export function validateMandate(m: MandateInput): string | null {
-  if (m.property_types.length === 0) return 'Pick at least one property type.';
-  if (m.states.length === 0) return 'Pick at least one target market.';
-  if (m.min_price == null && m.max_price == null) return 'Enter a price minimum or maximum.';
+/** Message keys returned by validateMandate (criteria.mandate.errors.*). */
+export type MandateErrorKey = 'propertyTypes' | 'markets' | 'price' | 'priceOrder' | 'occupancyOrder';
+
+/**
+ * Validate per the plan's "minimum required set". Pass `translate` to get a
+ * localized message (public criteria form); without it the English text is
+ * returned (admin CRM).
+ */
+export function validateMandate(
+  m: MandateInput,
+  translate?: (key: MandateErrorKey) => string,
+): string | null {
+  const msg = (key: MandateErrorKey, en: string) => (translate ? translate(key) : en);
+  if (m.property_types.length === 0) return msg('propertyTypes', 'Pick at least one property type.');
+  if (m.states.length === 0) return msg('markets', 'Pick at least one target market.');
+  if (m.min_price == null && m.max_price == null) return msg('price', 'Enter a price minimum or maximum.');
   if (m.min_price != null && m.max_price != null && m.min_price > m.max_price) {
-    return 'Price minimum cannot exceed maximum.';
+    return msg('priceOrder', 'Price minimum cannot exceed maximum.');
   }
   if (
     m.min_occupancy != null &&
     m.max_occupancy != null &&
     m.min_occupancy > m.max_occupancy
   ) {
-    return 'Min occupancy cannot exceed max occupancy.';
+    return msg('occupancyOrder', 'Min occupancy cannot exceed max occupancy.');
   }
   return null;
 }

@@ -25,6 +25,7 @@ function safeRedirectForRole(raw: string | null, role: string): string | null {
 
 export default function LoginCard({ locale }: LoginCardProps) {
   const t = useTranslations('auth');
+  const tErr = useTranslations('auth.friendlyErrors');
   const searchParams = useSearchParams();
   // ?email=… prefill (used by the criteria → smart-routing flow).
   const prefilledEmail = searchParams.get('email')?.trim();
@@ -49,7 +50,7 @@ export default function LoginCard({ locale }: LoginCardProps) {
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!url || !key) {
-      setError('Sign-in is temporarily unavailable. Please try again shortly.');
+      setError(t('signInUnavailable'));
       setLoading(false);
       return;
     }
@@ -65,13 +66,13 @@ export default function LoginCard({ locale }: LoginCardProps) {
       });
 
       if (authError) {
-        setError(friendlyAuthError(authError.message, 'We couldn\u2019t sign you in. Please check your email and password and try again.'));
+        setError(friendlyAuthError(authError.message, t('signInFailed'), tErr));
         setLoading(false);
         return;
       }
 
       if (!data?.session) {
-        setError('Your email hasn\u2019t been confirmed yet. Please check your inbox for the confirmation link, or contact RePrime if you need help.');
+        setError(t('emailNotConfirmedHelp'));
         setLoading(false);
         return;
       }
@@ -84,7 +85,7 @@ export default function LoginCard({ locale }: LoginCardProps) {
 
       if (userError || !userData) {
         console.error('terminal_users lookup failed:', userError, data.session.user.id);
-        setError('We couldn\u2019t find your profile. Please contact RePrime to finish setting up your account.');
+        setError(t('profileNotFound'));
         setLoading(false);
         return;
       }
@@ -118,7 +119,7 @@ export default function LoginCard({ locale }: LoginCardProps) {
       }
     } catch (err) {
       console.error('login failed:', err);
-      setError(friendlyFetchError(err, 'Something went wrong while signing in. Please try again.'));
+      setError(friendlyFetchError(err, t('signInError'), tErr));
       setLoading(false);
       return;
     }
@@ -173,7 +174,7 @@ export default function LoginCard({ locale }: LoginCardProps) {
             onChange={(e) => setPassword(e.target.value)}
             placeholder={t('password')}
             required
-            className="rounded-lg px-4 py-3.5 pr-12 text-white text-sm focus:outline-none transition-colors w-full"
+            className="rounded-lg px-4 py-3.5 pe-12 text-white text-sm focus:outline-none transition-colors w-full"
             style={{
               background: 'rgba(255,255,255,0.04)',
               border: '1px solid rgba(255,255,255,0.08)',
@@ -183,7 +184,7 @@ export default function LoginCard({ locale }: LoginCardProps) {
             type="button"
             onClick={() => setShowPassword((v) => !v)}
             aria-label={showPassword ? t('hidePassword') : t('showPassword')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-white/40 hover:text-white/80 transition-colors"
+            className="absolute end-3 top-1/2 -translate-y-1/2 p-1.5 text-white/40 hover:text-white/80 transition-colors"
           >
             {showPassword ? (
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -265,7 +266,7 @@ export default function LoginCard({ locale }: LoginCardProps) {
             href={`/${locale}/join`}
             className="text-[12px] text-[#BC9C45] hover:text-[#D4B96A] font-medium transition-colors"
           >
-            {t('applyForMembership')} →
+            {t('applyForMembership')} <span aria-hidden className="inline-block rtl:-scale-x-100">→</span>
           </a>
         </div>
       </div>

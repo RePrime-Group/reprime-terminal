@@ -11,15 +11,17 @@ const maturityData = [
   { year: '2029', amount: '$310B', width: '44%' },
 ];
 
-function timeAgo(dateStr: string): string {
+type CountTranslator = (key: string, values?: { count: number }) => string;
+
+function timeAgo(dateStr: string, tdd: CountTranslator, t: CountTranslator): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins} min ago`;
+  if (mins < 1) return tdd('justNow');
+  if (mins < 60) return tdd('minAgo', { count: mins });
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs} hr${hrs > 1 ? 's' : ''} ago`;
+  if (hrs < 24) return hrs > 1 ? tdd('hrsAgo', { count: hrs }) : tdd('hrAgo', { count: hrs });
   const days = Math.floor(hrs / 24);
-  return `${days}d ago`;
+  return t('daysAgo', { count: days });
 }
 
 interface ActivityRow {
@@ -45,6 +47,7 @@ const ACTION_COLOR: Record<string, string> = {
 export default function MarketIntelSidebar() {
   const t = useTranslations('portal.marketIntel');
   const ta = useTranslations('admin.activity');
+  const tdd = useTranslations('portal.dealDetail');
 
   const actionTitles: Record<string, string> = {
     deal_created: ta('dealCreated'),
@@ -107,7 +110,7 @@ export default function MarketIntelSidebar() {
           {t('marketCycle')}
         </h3>
 
-        <div className="relative mt-2 mb-3">
+        <div dir="ltr" className="relative mt-2 mb-3">
           <div
             className="h-2 rounded-full w-full"
             style={{
@@ -130,7 +133,7 @@ export default function MarketIntelSidebar() {
           </div>
         </div>
 
-        <div className="flex justify-between items-center mt-1">
+        <div dir="ltr" className="flex justify-between items-center mt-1">
           <span
             className="uppercase font-[600]"
             style={{ fontSize: '9px', color: '#0B8A4D', letterSpacing: '1px' }}
@@ -231,7 +234,7 @@ export default function MarketIntelSidebar() {
                       style={{ fontSize: '11px', color: '#0E3470' }}
                     >
                       {typeof dealName === 'string' && dealName
-                        ? `${title}: ${dealName}`
+                        ? <>{title}: <bdi>{dealName}</bdi></>
                         : title}
                     </p>
                     {detail && (
@@ -246,7 +249,7 @@ export default function MarketIntelSidebar() {
                       className="mt-0.5"
                       style={{ fontSize: '10px', color: '#94A3B8' }}
                     >
-                      {timeAgo(item.created_at)}
+                      {timeAgo(item.created_at, tdd, t)}
                     </p>
                   </div>
                 </div>

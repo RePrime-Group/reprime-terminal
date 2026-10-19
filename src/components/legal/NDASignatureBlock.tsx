@@ -12,7 +12,7 @@ export default function NDASignatureBlock({
   receivingPartyCompany,
 }: NDASignatureBlockProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 mt-6 border-t border-[#E5E7EB]">
+    <div lang="en" dir="ltr" className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 mt-6 border-t border-[#E5E7EB]">
       {/* Disclosing party — fixed */}
       <div>
         <div className="text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-[1.5px] mb-2">

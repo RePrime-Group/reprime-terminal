@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 import type { TerminalDDFolder, TerminalDDDocument, DataRoomFolderNode } from '@/lib/types/database';
 import { FolderIcon, FileIcon } from '@/components/ui/DataRoomIcons';
 import { buildAndDownloadZip, type PackageDoc, type PackageFailure, type PackageProgress } from '@/lib/utils/clientZipPackage';
@@ -38,9 +38,9 @@ function formatFileSize(size: string | null): string {
   return `${n} B`;
 }
 
-function formatDate(dateStr: string): string {
+function formatDate(dateStr: string, locale: string): string {
   const d = new Date(dateStr);
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return d.toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 // ── Tree construction ────────────────────────────────────────────────────────
@@ -123,8 +123,9 @@ function toPackageDocs(docs: DocWithPath[]): PackageDoc[] {
   }));
 }
 
-// Breadcrumb path to a folder: "Leases → Five Star Grocery"
-function pathLabelFor(roots: DataRoomFolderNode[], folderId: string): string {
+// Breadcrumb trail to a folder: ["Leases", "Five Star Grocery"] (rendered with a
+// direction-aware arrow between isolated segments).
+function pathLabelFor(roots: DataRoomFolderNode[], folderId: string): string[] {
   const walk = (nodes: DataRoomFolderNode[], trail: string[]): string[] | null => {
     for (const n of nodes) {
       const nextTrail = [...trail, n.name];
@@ -135,7 +136,7 @@ function pathLabelFor(roots: DataRoomFolderNode[], folderId: string): string {
     return null;
   };
   const trail = walk(roots, []);
-  return (trail ?? []).join(' → ');
+  return trail ?? [];
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -196,7 +197,7 @@ export default function DataRoomTab({
   const searchHits = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return null;
-    const hits: Array<{ doc: TerminalDDDocument; path: string }> = [];
+    const hits: Array<{ doc: TerminalDDDocument; path: string[] }> = [];
     const walk = (nodes: DataRoomFolderNode[]) => {
       for (const n of nodes) {
         const path = pathLabelFor(tree, n.id);
@@ -239,7 +240,8 @@ export default function DataRoomTab({
       }
     } catch (err) {
       if ((err as DOMException)?.name !== 'AbortError') {
-        setPackageError(err instanceof Error ? err.message : 'Download failed');
+        console.error('[DataRoomTab] package download failed:', err instanceof Error ? err.message : err);
+        setPackageError(t('packageFailedGeneric'));
       }
     } finally {
       abortRef.current = null;
@@ -281,7 +283,7 @@ export default function DataRoomTab({
       <div className="px-4 md:px-6 pt-2 pb-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <p className="text-[12px] text-[#9CA3AF] truncate">
           {t('watermarked')}{' '}
-          <span className="font-semibold text-[#0E3470]">{investorName}</span> · {investorEmail}
+          <span dir="auto" className="font-semibold text-[#0E3470]">{investorName}</span> · <bdi>{investorEmail}</bdi>
         </p>
         <button
           type="button"
@@ -350,7 +352,7 @@ export default function DataRoomTab({
                     </div>
                     {packaging.currentFile && (
                       <div className="mt-0.5 text-[11px] text-[#9CA3AF] truncate">
-                        {packaging.currentFile}
+                        <bdi>{packaging.currentFile}</bdi>
                       </div>
                     )}
                     <div className="mt-2 h-1.5 w-full bg-[#F3F4F6] rounded-full overflow-hidden">
@@ -437,7 +439,7 @@ export default function DataRoomTab({
       <div className="px-4 md:px-6 pb-2 flex items-center gap-2">
         <div className="flex-1 relative">
           <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]"
+            className="absolute start-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]"
             width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
             strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
           >
@@ -448,7 +450,7 @@ export default function DataRoomTab({
             placeholder={t('searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full py-[8px] pl-9 pr-3 rounded-lg border border-[#E5E7EB] bg-white text-[13px] text-[#0F1B2D] placeholder:text-[#9CA3AF] outline-none focus:ring-2 focus:ring-[#C8A951]/20 focus:border-[#C8A951] transition-all"
+            className="w-full py-[8px] ps-9 pe-3 rounded-lg border border-[#E5E7EB] bg-white text-[13px] text-[#0F1B2D] placeholder:text-[#9CA3AF] outline-none focus:ring-2 focus:ring-[#C8A951]/20 focus:border-[#C8A951] transition-all"
           />
         </div>
         {hasSelection && (
@@ -512,7 +514,7 @@ export default function DataRoomTab({
         {/* Footer — count on left, "Missing a document? Request from Team" inline on right */}
         <div className="mt-2 px-1 flex items-center justify-between gap-3 text-[12px] text-[#9CA3AF]">
           <span>
-            {uploadedDocs.length} {t('document')}{uploadedDocs.length !== 1 ? 's' : ''}
+            {t('documentCount', { count: uploadedDocs.length })}
           </span>
           <div className="flex items-center gap-2">
             <span>{t('missingDocument')}</span>
@@ -554,6 +556,7 @@ function InvestorFolderNode({
   onViewDocument: (url: string, name: string, storagePath?: string) => void;
   onDocumentDownload: (docId: string) => void;
 }) {
+  const t = useTranslations('portal.dataRoom');
   const count = countUploadedDocs(node);
   // Hide empty folders in investor view (per spec §3A).
   if (count === 0) return null;
@@ -583,17 +586,17 @@ function InvestorFolderNode({
         <button
           onClick={(e) => { e.stopPropagation(); onToggleExpanded(node.id); }}
           className="w-4 h-4 flex items-center justify-center text-[#9CA3AF] shrink-0"
-          aria-label={isExpanded ? 'Collapse' : 'Expand'}
+          aria-label={isExpanded ? t('collapse') : t('expand')}
         >
           {isExpanded ? (
             <svg width="10" height="10" viewBox="0 0 10 10"><path d="M1 3l4 4 4-4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
           ) : (
-            <svg width="10" height="10" viewBox="0 0 10 10"><path d="M3 1l4 4-4 4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            <svg width="10" height="10" viewBox="0 0 10 10" className="rtl:-scale-x-100"><path d="M3 1l4 4-4 4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
           )}
         </button>
         <FolderIcon />
         <span className="flex-1 min-w-0 truncate text-[15px] font-medium text-[#0F1B2D]">
-          {node.name}
+          <bdi>{node.name}</bdi>
         </span>
         <span className="text-[13px] text-[#9CA3AF] tabular-nums shrink-0">{count}</span>
       </div>
@@ -644,12 +647,14 @@ function InvestorFileRow({
 }: {
   doc: TerminalDDDocument;
   depth?: number;
-  subpath?: string;
+  subpath?: string[];
   isSelected: boolean;
   onToggleSelect: () => void;
   onView: (url: string, name: string, storagePath?: string) => void;
   onDownload: (docId: string) => void;
 }) {
+  const t = useTranslations('portal.dataRoom');
+  const dateLocale = useLocale() === 'he' ? 'he-IL' : 'en-US';
   const displayName = doc.display_name ?? doc.name;
 
   return (
@@ -681,20 +686,27 @@ function InvestorFileRow({
           }}
           className="block w-full text-start text-[15px] text-[#0F1B2D] truncate hover:text-[#BC9C45] hover:underline cursor-pointer"
         >
-          {displayName}
+          <bdi>{displayName}</bdi>
         </button>
-        {subpath && (
-          <div className="text-[11px] text-[#9CA3AF] truncate">{subpath}</div>
+        {subpath && subpath.length > 0 && (
+          <div className="text-[11px] text-[#9CA3AF] truncate">
+            {subpath.map((seg, i) => (
+              <Fragment key={i}>
+                {i > 0 && <>{' '}<span className="inline-block rtl:-scale-x-100">→</span>{' '}</>}
+                <bdi>{seg}</bdi>
+              </Fragment>
+            ))}
+          </div>
         )}
         <div className="md:hidden mt-0.5 text-[11px] text-[#9CA3AF] truncate">
-          {formatFileSize(doc.file_size)} · {formatDate(doc.created_at)}
+          <bdi>{formatFileSize(doc.file_size)}</bdi> · {formatDate(doc.created_at, dateLocale)}
         </div>
       </div>
-      <span className="hidden md:block w-16 text-right text-[12px] text-[#9CA3AF] shrink-0">
-        {formatFileSize(doc.file_size)}
+      <span className="hidden md:block w-16 text-end text-[12px] text-[#9CA3AF] shrink-0">
+        <bdi>{formatFileSize(doc.file_size)}</bdi>
       </span>
-      <span className="hidden md:block w-20 text-right text-[12px] text-[#9CA3AF] shrink-0">
-        {formatDate(doc.created_at)}
+      <span className="hidden md:block w-20 text-end text-[12px] text-[#9CA3AF] shrink-0">
+        {formatDate(doc.created_at, dateLocale)}
       </span>
       <a
         href={`/api/documents/${doc.id}/download`}
@@ -703,8 +715,8 @@ function InvestorFileRow({
           onDownload(doc.id);
         }}
         className="opacity-0 group-hover:opacity-100 w-6 h-6 rounded hover:bg-[#E5E7EB] flex items-center justify-center text-[#6B7280] shrink-0 transition-opacity"
-        aria-label="Download"
-        title="Download"
+        aria-label={t('download')}
+        title={t('download')}
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />

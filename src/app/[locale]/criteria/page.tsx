@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import CriteriaFormClient, {
   type CriteriaFormInitialValue,
@@ -12,7 +13,11 @@ import type {
   TerminalCrmMandate,
 } from '@/lib/types/database';
 
-export const metadata = { title: 'Investor Criteria — RePrime' };
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'criteria' });
+  return { title: t('metaTitle') };
+}
 // Token-gated form; the response varies per token + must never be cached.
 export const dynamic = 'force-dynamic';
 

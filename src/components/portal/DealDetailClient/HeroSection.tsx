@@ -53,11 +53,13 @@ export function HeroSection({
 }: Props) {
   const t = useTranslations('portal.dealDetail');
   const tc = useTranslations('portal.dealCard');
+  const th = useTranslations('portal.dealHero');
+  const tDr = useTranslations('portal.dataRoom');
 
   const fullyFinanced = computed.netEquity <= 0;
   const hasPositiveCF = computed.distributableCashFlow > 0;
-  const infReturn = fullyFinanced ? (hasPositiveCF ? '∞' : 'N/A') : null;
-  const irrNote = fullyFinanced ? undefined : buildIrrAssumptions(deal, computed);
+  const infReturn = fullyFinanced ? (hasPositiveCF ? '∞' : tDr('na')) : null;
+  const irrNote = fullyFinanced ? undefined : buildIrrAssumptions(deal, computed, th);
 
   const metrics = [
     { label: tc('purchasePrice'), value: formatPrice(deal.purchase_price), borderColor: '#0E3470', span: 'col-span-2', size: 'headline' },
@@ -87,11 +89,11 @@ export function HeroSection({
               <CountdownRing label={t('extension')} targetDate={deal.extension_deadline} accentColor="#1D5FB8" />
             </div>
             {deal.timeline_note && (
-              <div className="mt-4 px-4 py-3 bg-[#FDF8ED] border-l-[3px] border-[#BC9C45] rounded-md text-[13px] text-[#6B7280] leading-[1.6]">
-                <span className="font-bold text-[#BC9C45] mr-2 tracking-[1px]">
+              <div className="mt-4 px-4 py-3 bg-[#FDF8ED] border-s-[3px] border-[#BC9C45] rounded-md text-[13px] text-[#6B7280] leading-[1.6]">
+                <span className="font-bold text-[#BC9C45] me-2 tracking-[1px]">
                   ℹ {t('timelineNoteLabel')}
                 </span>
-                {deal.timeline_note}
+                <bdi>{deal.timeline_note}</bdi>
               </div>
             )}
           </div>
@@ -135,6 +137,7 @@ export function HeroSection({
               <p
                 ref={thesisRef}
                 className={`text-[13px] text-[#4B5563] leading-[1.7] ${thesisExpanded ? '' : 'line-clamp-4'}`}
+                dir="auto"
               >
                 {deal.acquisition_thesis ? deal.acquisition_thesis : ''}
               </p>
@@ -239,9 +242,9 @@ export function HeroSection({
                             setOmMenuOpen(false);
                             handleViewDocument(`/api/deals/${deal.id}/om?addressId=${a.id}&view=true`, `${a.label} — ${t('offeringMemorandum')}`);
                           }}
-                          className="w-full px-3 py-2.5 text-left text-[11px] font-medium text-[#0E3470] hover:bg-[#FDF8ED] transition-colors border-b border-[#EEF0F4] last:border-b-0"
+                          className="w-full px-3 py-2.5 text-start text-[11px] font-medium text-[#0E3470] hover:bg-[#FDF8ED] transition-colors border-b border-[#EEF0F4] last:border-b-0"
                         >
-                          {a.label}
+                          <bdi>{a.label}</bdi>
                         </button>
                       ))}
                     </div>

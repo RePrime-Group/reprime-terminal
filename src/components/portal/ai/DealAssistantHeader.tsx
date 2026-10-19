@@ -59,9 +59,19 @@ export default function DealAssistantHeader({
             onClick={onSwitchDeal}
             disabled={!dealName || !onSwitchDeal}
             className="block w-full text-start text-[10px] text-white/45 hover:text-[#D4B96A] disabled:hover:text-white/45 disabled:cursor-not-allowed cursor-pointer truncate transition-colors leading-tight"
-            title={dealName ? t('subtitle', { deal: dealName }) : ''}
+            title={dealName ? t('subtitle', { deal: `\u2068${dealName}\u2069` }) : ''}
           >
-            {dealName ? t('subtitle', { deal: dealName }) : t('selectDealPrompt')}
+            {/* The deal name gets its own truncating <bdi> so an ellipsis cuts the end of the name, not its start */}
+            {dealName ? (
+              <span className="flex min-w-0 whitespace-pre">
+                {t.rich('scopedTo', {
+                  deal: dealName,
+                  name: (chunks) => <bdi dir="auto" className="min-w-0 truncate">{chunks}</bdi>,
+                })}
+              </span>
+            ) : (
+              t('selectDealPrompt')
+            )}
           </button>
         </div>
       </div>
@@ -78,8 +88,8 @@ export default function DealAssistantHeader({
           <button
             type="button"
             onClick={onToggleDock}
-            aria-label={docked ? 'Undock sidebar' : 'Dock to side'}
-            title={docked ? 'Undock sidebar' : 'Dock to side'}
+            aria-label={docked ? t('undockSidebar') : t('dockToSide')}
+            title={docked ? t('undockSidebar') : t('dockToSide')}
             className={`hidden md:flex w-8 h-8 rounded-lg active:scale-95 items-center justify-center cursor-pointer transition-all duration-150 ${
               docked
                 ? 'bg-[#D4B96A]/15 text-[#E8C977] hover:bg-[#D4B96A]/25'

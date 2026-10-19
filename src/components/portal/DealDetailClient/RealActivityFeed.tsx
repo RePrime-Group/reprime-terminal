@@ -7,6 +7,8 @@ import { createClient } from '@/lib/supabase/client';
 export function RealActivityFeed({ dealId }: { dealId: string }) {
   const t = useTranslations('portal.dealDetail');
   const tcom = useTranslations('common');
+  const ta = useTranslations('admin.activity');
+  const tact = useTranslations('portal.activity');
   const [activities, setActivities] = useState<{ action: string; created_at: string }[]>([]);
   const [loaded, setLoaded] = useState(false);
 
@@ -34,6 +36,11 @@ export function RealActivityFeed({ dealId }: { dealId: string }) {
     irr_calculator_used: { text: t('irrCalculatorUsed'), dot: 'bg-[#1D5FB8]' },
     structure_viewed: { text: t('dealStructureViewed'), dot: 'bg-[#6B7280]' },
     portal_viewed: { text: t('portalAccessed'), dot: 'bg-[#9CA3AF]' },
+    deal_created: { text: ta('dealCreated'), dot: 'bg-[#0B8A4D]' },
+    deal_published: { text: ta('dealPublished'), dot: 'bg-[#BC9C45]' },
+    deal_updated: { text: ta('dealUpdated'), dot: 'bg-[#1D5FB8]' },
+    deal_document_uploaded: { text: ta('dealDocumentUploaded'), dot: 'bg-[#0E3470]' },
+    commitment_withdrawn: { text: tact('commitmentWithdrawn'), dot: 'bg-[#DC2626]' },
   };
 
   function timeAgo(dateStr: string): string {
@@ -59,7 +66,7 @@ export function RealActivityFeed({ dealId }: { dealId: string }) {
           <div className="text-xs text-[#9CA3AF]">{t('noActivityYet')}</div>
         ) : (
           activities.map((item, idx) => {
-            const info = actionLabels[item.action] ?? { text: item.action, dot: 'bg-[#9CA3AF]' };
+            const info = actionLabels[item.action] ?? { text: tact('dealActivity'), dot: 'bg-[#9CA3AF]' };
             return (
               <div
                 key={idx}

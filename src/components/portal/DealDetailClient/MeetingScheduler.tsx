@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import type { TerminalAvailabilitySlot } from '@/lib/types/database';
 
 export function MeetingScheduler({
@@ -18,6 +18,8 @@ export function MeetingScheduler({
   previewMode?: boolean;
 }) {
   const t = useTranslations('portal.dealDetail');
+  const tm = useTranslations('portal.meetings');
+  const dateLocale = useLocale() === 'he' ? 'he-IL' : 'en-US';
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -95,11 +97,8 @@ export function MeetingScheduler({
           });
 
           if (!isBooked && !isGcalBusy(iso)) {
-            const ampm = h >= 12 ? t('pm') : t('am');
-            const displayH = h > 12 ? h - 12 : h === 0 ? 12 : h;
-            const displayMin = String(min).padStart(2, '0');
             result.push({
-              label: `${displayH}:${displayMin} ${ampm}`,
+              label: dateObj.toLocaleTimeString(dateLocale, { hour: 'numeric', minute: '2-digit' }),
               isoString: iso,
             });
           }
@@ -113,7 +112,7 @@ export function MeetingScheduler({
         return true;
       });
     },
-    [slotsByDay, bookedTimes, isGcalBusy]
+    [slotsByDay, bookedTimes, isGcalBusy, dateLocale]
   );
 
   const handleConfirm = async () => {
@@ -222,14 +221,16 @@ export function MeetingScheduler({
         <div className="mt-4 p-3 bg-[#FDF8ED] border border-[#ECD9A0]/30 rounded-xl">
           <div className="text-[11px] text-[#6B7280] mb-2">
             {t('selected')} <span className="font-semibold text-[#0E3470]">
-              {new Date(selectedSlot).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} {t('at')}{' '}
-              {new Date(selectedSlot).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+              {tm('slotDateTime', {
+                date: new Date(selectedSlot).toLocaleDateString(dateLocale, { weekday: 'short', month: 'short', day: 'numeric' }),
+                time: new Date(selectedSlot).toLocaleTimeString(dateLocale, { hour: 'numeric', minute: '2-digit' }),
+              })}
             </span>
           </div>
           <button
             onClick={handleConfirm}
             disabled={confirming || previewMode}
-            title={previewMode ? 'Preview mode — read-only' : undefined}
+            title={previewMode ? tm('previewReadOnly') : undefined}
             className="w-full py-3 bg-[#BC9C45] hover:bg-[#A88A3D] text-white font-semibold text-sm rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {confirming ? t('scheduling') : t('confirmMeeting')}

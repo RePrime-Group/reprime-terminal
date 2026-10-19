@@ -27,7 +27,7 @@ export default function CitationChip({ citation, onOpen }: Props) {
       <span aria-hidden className="text-[9px] opacity-80 group-hover:opacity-100 transition-opacity">
         {KIND_GLYPH[citation.kind]}
       </span>
-      <span className="truncate">{citation.label}</span>
+      <span dir="auto" className="truncate">{citation.label}</span>
     </button>
   );
 }

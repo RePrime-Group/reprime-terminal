@@ -38,6 +38,7 @@ type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 export default function SettingsClient({ initialProfile, initialPrefs, isSubUser, parentName, locale, initialInvestmentTerms, globalFeeDefaults }: SettingsClientProps) {
   const t = useTranslations('portal.settings');
   const td = useTranslations('portal.dealDetail');
+  const tErr = useTranslations('auth.friendlyErrors');
 
   // ---- Profile ----
   const [profile, setProfile] = useState<Profile>(initialProfile);
@@ -75,7 +76,7 @@ export default function SettingsClient({ initialProfile, initialPrefs, isSubUser
       }
     } catch (err) {
       console.error('profile save failed:', err);
-      setProfileError(friendlyFetchError(err, t('saveFailed')));
+      setProfileError(friendlyFetchError(err, t('saveFailed'), tErr));
       setProfileSave('error');
     }
   }
@@ -124,7 +125,7 @@ export default function SettingsClient({ initialProfile, initialPrefs, isSubUser
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (error) {
       console.error('password update failed:', error);
-      setPasswordError(friendlyAuthError(error.message, t('saveFailed')));
+      setPasswordError(friendlyAuthError(error.message, t('saveFailed'), tErr));
       setPasswordSave('error');
       return;
     }
@@ -175,7 +176,7 @@ export default function SettingsClient({ initialProfile, initialPrefs, isSubUser
       }
     } catch (err) {
       console.error('notif prefs save failed:', err);
-      setPrefsError(friendlyFetchError(err, t('saveFailed')));
+      setPrefsError(friendlyFetchError(err, t('saveFailed'), tErr));
       setPrefsSave('error');
     }
   }
@@ -248,6 +249,7 @@ export default function SettingsClient({ initialProfile, initialPrefs, isSubUser
           <Field label={t('fullName')}>
             <input
               type="text"
+              dir="auto"
               value={profile.full_name}
               onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
               className={inputStyle}
@@ -256,6 +258,7 @@ export default function SettingsClient({ initialProfile, initialPrefs, isSubUser
           <Field label={t('email')} hint={t('emailReadOnly')}>
             <input
               type="email"
+              dir="auto"
               value={profile.email}
               readOnly
               className={`${inputStyle} bg-[#F9FAFB] text-[#6B7280] cursor-not-allowed`}
@@ -264,6 +267,7 @@ export default function SettingsClient({ initialProfile, initialPrefs, isSubUser
           <Field label={t('phone')}>
             <input
               type="tel"
+              dir="auto"
               value={profile.phone}
               onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
               className={inputStyle}
@@ -273,6 +277,7 @@ export default function SettingsClient({ initialProfile, initialPrefs, isSubUser
           <Field label={t('company')}>
             <input
               type="text"
+              dir="auto"
               value={profile.company_name}
               onChange={(e) => setProfile({ ...profile, company_name: e.target.value })}
               className={inputStyle}
@@ -498,10 +503,14 @@ export default function SettingsClient({ initialProfile, initialPrefs, isSubUser
       {/* Sub-user info panel */}
       {isSubUser && (
         <section className="bg-white rounded-xl border border-[#EEF0F4] p-5 md:p-7 mb-5 md:mb-6 rp-card-shadow">
-          <h2 className="text-[17px] md:text-[19px] font-semibold text-[#0E3470]">Team Access</h2>
+          <h2 className="text-[17px] md:text-[19px] font-semibold text-[#0E3470]">{t('teamAccessTitle')}</h2>
           <p className="text-[13px] text-[#4B5563] mt-2 leading-relaxed">
-            You&rsquo;re a team member{parentName ? <> on <strong>{parentName}</strong>&rsquo;s</> : null} RePrime account.
-            They control what actions you can perform. Contact them if you need access to more features.
+            {parentName
+              ? t.rich('teamAccessBodyWithParent', {
+                  parentName,
+                  strong: (chunks) => <strong dir="auto">{chunks}</strong>,
+                })
+              : t('teamAccessBody')}
           </p>
         </section>
       )}
@@ -579,7 +588,7 @@ function Toggle({
     >
       <span
         className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform duration-200 ${
-          checked ? 'translate-x-[22px]' : 'translate-x-[2px]'
+          checked ? 'translate-x-[22px] rtl:-translate-x-[22px]' : 'translate-x-[2px] rtl:-translate-x-[2px]'
         }`}
       />
     </button>

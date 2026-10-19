@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 import type { DealInsight } from '@/lib/types/database';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -19,10 +20,13 @@ interface Group {
 }
 
 export default function InsightsTab({ insights }: InsightsTabProps) {
+  const t = useTranslations('portal.insights');
+  // Explicit collation locale so SSR (Node) and the browser sort identically.
+  const sortLocale = useLocale() === 'he' ? 'he' : 'en';
   const groups = useMemo<Group[]>(() => {
     const byCategory = new Map<string, Group>();
     for (const ins of insights) {
-      const displayName = ins.category?.display_name ?? 'Uncategorized';
+      const displayName = ins.category?.display_name ?? t('uncategorized');
       const existing = byCategory.get(ins.category_id);
       if (existing) {
         existing.items.push(ins);
@@ -35,9 +39,9 @@ export default function InsightsTab({ insights }: InsightsTabProps) {
       }
     }
     return Array.from(byCategory.values()).sort((a, b) =>
-      a.displayName.localeCompare(b.displayName),
+      a.displayName.localeCompare(b.displayName, sortLocale),
     );
-  }, [insights]);
+  }, [insights, t, sortLocale]);
 
   // All sections start expanded; collapsing tracks the closed set.
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
@@ -57,10 +61,10 @@ export default function InsightsTab({ insights }: InsightsTabProps) {
     <div className="max-w-[920px] mx-auto">
       <div className="mb-6">
         <h2 className="text-[22px] font-semibold text-rp-navy font-[family-name:var(--font-playfair)]">
-          Deal Insights
+          {t('title')}
         </h2>
         <p className="text-[13px] text-rp-gray-500 mt-1">
-          Context and color from the deal team, organized by theme.
+          {t('subtitle')}
         </p>
       </div>
 
@@ -80,7 +84,7 @@ export default function InsightsTab({ insights }: InsightsTabProps) {
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <span className="w-1.5 h-6 rounded-full bg-rp-gold shrink-0" />
-                  <span className="text-[15px] font-semibold text-rp-navy truncate">
+                  <span dir="auto" className="text-[15px] font-semibold text-rp-navy truncate">
                     {group.displayName}
                   </span>
                   <span className="text-[11px] font-semibold text-rp-gray-500 bg-rp-gray-100 rounded-full px-2 py-0.5 shrink-0">
@@ -110,7 +114,7 @@ export default function InsightsTab({ insights }: InsightsTabProps) {
                     {group.items.map((ins) => (
                       <li key={ins.id} className="flex items-start gap-3">
                         <span className="mt-[7px] w-1.5 h-1.5 rounded-full bg-rp-gold shrink-0" />
-                        <p className="text-[13.5px] leading-relaxed text-rp-gray-700 whitespace-pre-wrap">
+                        <p dir="auto" className="text-[13.5px] leading-relaxed text-rp-gray-700 whitespace-pre-wrap">
                           {ins.content}
                         </p>
                       </li>

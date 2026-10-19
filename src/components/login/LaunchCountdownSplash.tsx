@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import RePrimeLogo from '../RePrimeLogo';
 
 // Official launch: 90 days from April 19, 2026 = July 18, 2026 (00:00 UTC).
@@ -12,6 +13,8 @@ interface LaunchCountdownSplashProps {
 }
 
 export default function LaunchCountdownSplash({ locale }: LaunchCountdownSplashProps) {
+  const t = useTranslations('common.launch');
+  const tCd = useTranslations('portal.countdown');
   const [now, setNow] = useState<number | null>(null);
 
   useEffect(() => {
@@ -28,10 +31,10 @@ export default function LaunchCountdownSplash({ locale }: LaunchCountdownSplashP
   const seconds = Math.floor((diff % 60_000) / 1000);
 
   const cells = [
-    { value: days, label: 'Days' },
-    { value: hours, label: 'Hours' },
-    { value: minutes, label: 'Minutes' },
-    { value: seconds, label: 'Seconds' },
+    { value: days, label: tCd('days') },
+    { value: hours, label: tCd('hours') },
+    { value: minutes, label: tCd('minutes') },
+    { value: seconds, label: tCd('seconds') },
   ];
 
   const year = new Date().getFullYear();
@@ -91,9 +94,9 @@ export default function LaunchCountdownSplash({ locale }: LaunchCountdownSplashP
         {/* Headline + countdown + CTA */}
         <div className="flex-1 flex flex-col items-center justify-center gap-8 sm:gap-10 md:gap-12 w-full">
           <h1 className="font-[family-name:var(--font-playfair)] text-[#D4A843] text-[32px] sm:text-[44px] md:text-[58px] lg:text-[68px] font-semibold uppercase leading-[1.05] tracking-[0.01em]">
-            The Official Launch
+            {t('headlineLine1')}
             <br />
-            Is Imminent.
+            {t('headlineLine2')}
           </h1>
 
           <div className="flex items-end justify-center gap-3 sm:gap-5 md:gap-7">
@@ -117,15 +120,15 @@ export default function LaunchCountdownSplash({ locale }: LaunchCountdownSplashP
           </div>
 
           <p className="font-[family-name:var(--font-playfair)] italic text-white/65 text-[13px] sm:text-[15px] md:text-[16px] leading-relaxed max-w-[620px]">
-            Experience the Future of Commercial Real Estate Investment.
+            {t('taglineLine1')}
             <br />
-            Exclusive Access.
+            {t('taglineLine2')}
           </p>
 
           {/* CTA — luxury gold button */}
           <Link
             href={`/${locale}/login`}
-            className="group relative inline-flex items-center gap-3 pl-7 pr-6 py-3.5 sm:py-4 rounded-full overflow-hidden transition-all duration-300 shadow-[0_10px_30px_rgba(188,156,69,0.28)] hover:shadow-[0_16px_40px_rgba(188,156,69,0.4)] hover:-translate-y-[1px]"
+            className="group relative inline-flex items-center gap-3 ps-7 pe-6 py-3.5 sm:py-4 rounded-full overflow-hidden transition-all duration-300 shadow-[0_10px_30px_rgba(188,156,69,0.28)] hover:shadow-[0_16px_40px_rgba(188,156,69,0.4)] hover:-translate-y-[1px]"
             style={{
               background: 'linear-gradient(135deg, #D4B96A 0%, #BC9C45 50%, #A88A3D 100%)',
             }}
@@ -138,10 +141,10 @@ export default function LaunchCountdownSplash({ locale }: LaunchCountdownSplashP
               aria-hidden
             />
             <span className="relative text-[#07090F] text-[12px] sm:text-[13px] font-bold uppercase tracking-[2.5px]">
-              Enter Terminal Beta
+              {t('enterTerminalBeta')}
             </span>
             <svg
-              className="relative text-[#07090F] transition-transform duration-300 group-hover:translate-x-1"
+              className="relative text-[#07090F] transition-transform duration-300 group-hover:translate-x-1 rtl:-scale-x-100 rtl:group-hover:-translate-x-1"
               width="16"
               height="16"
               viewBox="0 0 24 24"
@@ -162,7 +165,7 @@ export default function LaunchCountdownSplash({ locale }: LaunchCountdownSplashP
         <div className="w-full flex flex-col items-center max-w-[900px]">
           <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-[#BC9C45]/30 to-transparent mb-4" aria-hidden />
           <div className="text-[10px] sm:text-[11px] font-medium uppercase tracking-[2.5px] text-white/40">
-            &copy; {year} REPRIME. All Rights Reserved.
+            {t('copyright', { year })}
           </div>
         </div>
       </div>

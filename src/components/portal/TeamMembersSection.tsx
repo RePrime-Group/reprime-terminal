@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { PERMISSION_KEYS, APPROVAL_REQUIRED_KEYS } from '@/lib/auth/permissions';
 import type { TeamPermissionKey, TeamPermissions } from '@/lib/types/database';
 import { friendlyFetchError, readApiError } from '@/lib/utils/friendly-error';
@@ -48,15 +49,18 @@ interface ApiPayload {
   requests: TeamRequest[];
 }
 
+// Values are next-intl message keys under `portal.team`.
 const PERMISSION_LABELS: Record<TeamPermissionKey, { label: string; description: string }> = {
-  view_deals: { label: 'View deals', description: 'Always on. Sub-users can browse all deals.' },
-  manage_watchlist: { label: 'Manage watchlist', description: 'Add deals to watchlist and set notification preferences.' },
-  commit_withdraw: { label: 'Commit to deals', description: 'Submit and withdraw commitments on the parent investor’s behalf.' },
-  download_documents: { label: 'Download documents', description: 'Download DD files and the Offering Memorandum.' },
-  schedule_meetings: { label: 'Schedule meetings', description: 'Book meetings with the RePrime acquisitions team.' },
+  view_deals: { label: 'permissions.viewDeals.label', description: 'permissions.viewDeals.description' },
+  manage_watchlist: { label: 'permissions.manageWatchlist.label', description: 'permissions.manageWatchlist.description' },
+  commit_withdraw: { label: 'permissions.commitWithdraw.label', description: 'permissions.commitWithdraw.description' },
+  download_documents: { label: 'permissions.downloadDocuments.label', description: 'permissions.downloadDocuments.description' },
+  schedule_meetings: { label: 'permissions.scheduleMeetings.label', description: 'permissions.scheduleMeetings.description' },
 };
 
 export default function TeamMembersSection({ locale }: { locale: string }) {
+  const t = useTranslations('portal.team');
+  const tErr = useTranslations('auth.friendlyErrors');
   const [data, setData] = useState<ApiPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -70,17 +74,17 @@ export default function TeamMembersSection({ locale }: { locale: string }) {
     try {
       const res = await fetch('/api/team/members');
       if (!res.ok) {
-        setError(await readApiError(res, 'We couldn\u2019t load your team. Please try again.'));
+        setError(await readApiError(res, t('loadFailed')));
         return;
       }
       const body = (await res.json()) as ApiPayload;
       setData(body);
     } catch (err) {
-      setError(friendlyFetchError(err, 'We couldn\u2019t load your team. Please try again.'));
+      setError(friendlyFetchError(err, t('loadFailed'), tErr));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t, tErr]);
 
   useEffect(() => {
     load();
@@ -102,23 +106,24 @@ export default function TeamMembersSection({ locale }: { locale: string }) {
     <section className="bg-white rounded-xl border border-[#EEF0F4] p-5 md:p-7 mb-5 md:mb-6 rp-card-shadow">
       <div className="flex items-start justify-between gap-3 mb-4 flex-wrap">
         <div>
-          <h2 className="text-[17px] md:text-[19px] font-semibold text-[#0E3470]">Team Members</h2>
+          <h2 className="text-[17px] md:text-[19px] font-semibold text-[#0E3470]">{t('title')}</h2>
           <p className="text-[12px] text-[#6B7280] mt-1">
-            Invite colleagues, employees, or partners to use RePrime on your behalf. You control what each can do.
+            {t('subtitle')}
           </p>
         </div>
         {data && (
           <div className="text-[12px] text-[#6B7280] bg-[#F9FAFB] border border-[#EEF0F4] rounded-lg px-3 py-1.5 shrink-0">
-            <span className="font-semibold text-[#0F1B2D]">{data.used}</span>
-            <span className="mx-1">of</span>
-            <span className="font-semibold text-[#0F1B2D]">{data.limit}</span>
-            <span className="ml-1">invites used</span>
+            {t.rich('invitesUsed', {
+              used: data.used,
+              limit: data.limit,
+              num: (chunks) => <span className="font-semibold text-[#0F1B2D]">{chunks}</span>,
+            })}
           </div>
         )}
       </div>
 
       {loading && (
-        <div className="py-10 text-center text-[13px] text-[#6B7280]">Loading your team…</div>
+        <div className="py-10 text-center text-[13px] text-[#6B7280]">{t('loading')}</div>
       )}
 
       {!loading && error && (
@@ -137,16 +142,16 @@ export default function TeamMembersSection({ locale }: { locale: string }) {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 5v14M5 12h14" />
               </svg>
-              Invite team member
+              {t('inviteMember')}
             </button>
             <button
               type="button"
               onClick={() => setShowRequestMoreModal(true)}
               disabled={!!pendingInviteLimitRequest}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-transparent border border-[#BC9C45]/40 text-[#BC9C45] text-[13px] font-semibold hover:bg-[#BC9C45]/5 transition-colors disabled:opacity-50"
-              title={pendingInviteLimitRequest ? 'You already have a pending request.' : 'Ask RePrime to raise your invite limit'}
+              title={pendingInviteLimitRequest ? t('pendingRequestHint') : t('requestMoreHint')}
             >
-              {pendingInviteLimitRequest ? 'Request pending…' : 'Request more'}
+              {pendingInviteLimitRequest ? t('requestPending') : t('requestMore')}
             </button>
           </div>
 
@@ -154,7 +159,7 @@ export default function TeamMembersSection({ locale }: { locale: string }) {
           {data.members.length > 0 && (
             <div className="mb-5">
               <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#6B7280] mb-2">
-                Your team
+                {t('yourTeam')}
               </div>
               <div className="border border-[#EEF0F4] rounded-xl overflow-hidden">
                 {data.members.map((m, i) => {
@@ -168,18 +173,18 @@ export default function TeamMembersSection({ locale }: { locale: string }) {
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className={`text-[14px] font-semibold ${m.is_active ? 'text-[#0F1B2D]' : 'text-[#9CA3AF] line-through'}`}>
+                          <span dir="auto" className={`text-[14px] font-semibold ${m.is_active ? 'text-[#0F1B2D]' : 'text-[#9CA3AF] line-through'}`}>
                             {m.full_name}
                           </span>
                           {!m.is_active && (
                             <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#6B7280] bg-[#F3F4F6] rounded px-1.5 py-0.5">
-                              Revoked
+                              {t('revoked')}
                             </span>
                           )}
                         </div>
-                        <div className="text-[12px] text-[#6B7280] truncate">{m.email}</div>
+                        <div dir="auto" className="text-[12px] text-[#6B7280] truncate">{m.email}</div>
                         <div className="text-[11px] text-[#9CA3AF] mt-0.5">
-                          {enabledCount} permission{enabledCount === 1 ? '' : 's'} enabled
+                          {t('permissionsEnabled', { count: enabledCount })}
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
@@ -190,7 +195,7 @@ export default function TeamMembersSection({ locale }: { locale: string }) {
                               onClick={() => setEditingMember(m)}
                               className="px-3 py-1.5 text-[12px] font-semibold text-[#0E3470] hover:bg-[#F3F4F6] rounded-md transition-colors"
                             >
-                              Edit access
+                              {t('editAccess')}
                             </button>
                             <RevokeButton memberId={m.id} onDone={load} />
                           </>
@@ -209,7 +214,7 @@ export default function TeamMembersSection({ locale }: { locale: string }) {
           {data.invites.length > 0 && (
             <div className="mb-3">
               <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#6B7280] mb-2">
-                Pending invites
+                {t('pendingInvites')}
               </div>
               <div className="border border-[#EEF0F4] rounded-xl overflow-hidden">
                 {data.invites.map((inv, i) => (
@@ -220,9 +225,9 @@ export default function TeamMembersSection({ locale }: { locale: string }) {
                     }`}
                   >
                     <div className="flex-1 min-w-0">
-                      <div className="text-[14px] font-semibold text-[#0F1B2D] truncate">{inv.email}</div>
+                      <div dir="auto" className="text-[14px] font-semibold text-[#0F1B2D] truncate">{inv.email}</div>
                       <div className="text-[11px] text-[#9CA3AF] mt-0.5">
-                        Expires {new Date(inv.expires_at).toLocaleDateString()}
+                        {t('expires', { date: new Date(inv.expires_at).toLocaleDateString(locale === 'he' ? 'he-IL' : 'en-US') })}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
@@ -237,7 +242,7 @@ export default function TeamMembersSection({ locale }: { locale: string }) {
 
           {data.members.length === 0 && data.invites.length === 0 && (
             <div className="py-8 text-center text-[13px] text-[#9CA3AF]">
-              You haven&rsquo;t invited any team members yet.
+              {t('noMembers')}
             </div>
           )}
         </>
@@ -291,6 +296,10 @@ function InviteTeamMemberModal({
   onSuccess: () => void;
   locale: string;
 }) {
+  const t = useTranslations('portal.team');
+  const ts = useTranslations('portal.settings');
+  const tc = useTranslations('common');
+  const tErr = useTranslations('auth.friendlyErrors');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [permissions, setPermissions] = useState<TeamPermissions>({
@@ -306,11 +315,11 @@ function InviteTeamMemberModal({
   async function submit() {
     setError(null);
     if (!fullName.trim()) {
-      setError('Please enter a name.');
+      setError(t('nameRequired'));
       return;
     }
     if (!email.includes('@')) {
-      setError('Please enter a valid email.');
+      setError(t('emailInvalid'));
       return;
     }
     setSubmitting(true);
@@ -323,25 +332,25 @@ function InviteTeamMemberModal({
       if (res.ok) {
         onSuccess();
       } else {
-        setError(await readApiError(res, 'We couldn\u2019t send the invite. Please try again.'));
+        setError(await readApiError(res, t('inviteFailed')));
       }
     } catch (err) {
-      setError(friendlyFetchError(err, 'We couldn\u2019t send the invite. Please try again.'));
+      setError(friendlyFetchError(err, t('inviteFailed'), tErr));
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <ModalShell title="Invite team member" onClose={onClose}>
+    <ModalShell title={t('inviteMember')} onClose={onClose}>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <LabeledInput label="Full name" value={fullName} onChange={setFullName} placeholder="Jane Doe" />
-        <LabeledInput label="Email" type="email" value={email} onChange={setEmail} placeholder="jane@example.com" />
+        <LabeledInput label={ts('fullName')} value={fullName} onChange={setFullName} placeholder={t('namePlaceholder')} />
+        <LabeledInput label={ts('email')} type="email" value={email} onChange={setEmail} placeholder={t('emailPlaceholder')} />
       </div>
 
       <div className="mt-5">
         <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#6B7280] mb-2">
-          Initial permissions
+          {t('initialPermissions')}
         </div>
         <div className="space-y-1">
           {PERMISSION_KEYS.map((key) => {
@@ -349,9 +358,9 @@ function InviteTeamMemberModal({
             const checked = permissions[key] ?? false;
             const disabledReason =
               key === 'view_deals'
-                ? 'Always enabled'
+                ? t('alwaysEnabled')
                 : APPROVAL_REQUIRED_KEYS.includes(key)
-                  ? 'Requires admin approval — request after invite is accepted'
+                  ? t('requiresApprovalAfterInvite')
                   : '';
             return (
               <div
@@ -368,9 +377,9 @@ function InviteTeamMemberModal({
                   className="mt-0.5 h-4 w-4 rounded border-[#D1D5DB] text-[#0E3470] focus:ring-[#BC9C45]/30"
                 />
                 <div className="flex-1">
-                  <div className="text-[13px] font-medium text-[#0F1B2D]">{PERMISSION_LABELS[key].label}</div>
+                  <div className="text-[13px] font-medium text-[#0F1B2D]">{t(PERMISSION_LABELS[key].label)}</div>
                   <div className="text-[11px] text-[#6B7280]">
-                    {disabledReason || PERMISSION_LABELS[key].description}
+                    {disabledReason || t(PERMISSION_LABELS[key].description)}
                   </div>
                 </div>
               </div>
@@ -391,7 +400,7 @@ function InviteTeamMemberModal({
           onClick={onClose}
           className="px-4 py-2 rounded-lg border border-[#E5E7EB] text-[13px] font-semibold text-[#4B5563] hover:bg-[#F9FAFB] transition-colors"
         >
-          Cancel
+          {tc('cancel')}
         </button>
         <button
           type="button"
@@ -399,7 +408,7 @@ function InviteTeamMemberModal({
           disabled={submitting}
           className="px-4 py-2 rounded-lg bg-[#0E3470] text-white text-[13px] font-semibold hover:bg-[#0a2856] transition-colors disabled:opacity-40"
         >
-          {submitting ? 'Sending…' : 'Send invite'}
+          {submitting ? t('sending') : t('sendInvite')}
         </button>
       </ModalActions>
     </ModalShell>
@@ -417,6 +426,10 @@ function EditPermissionsModal({
   onClose: () => void;
   onSuccess: () => void;
 }) {
+  const t = useTranslations('portal.team');
+  const ts = useTranslations('portal.settings');
+  const tc = useTranslations('common');
+  const tErr = useTranslations('auth.friendlyErrors');
   const [permissions, setPermissions] = useState<TeamPermissions>({ ...member.permissions });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -434,10 +447,10 @@ function EditPermissionsModal({
       if (res.ok) {
         onSuccess();
       } else {
-        setError(await readApiError(res, 'We couldn\u2019t update permissions. Please try again.'));
+        setError(await readApiError(res, t('updateFailed')));
       }
     } catch (err) {
-      setError(friendlyFetchError(err, 'We couldn\u2019t update permissions. Please try again.'));
+      setError(friendlyFetchError(err, t('updateFailed'), tErr));
     } finally {
       setSubmitting(false);
     }
@@ -455,17 +468,18 @@ function EditPermissionsModal({
       if (res.ok) {
         onSuccess();
       } else {
-        setError(await readApiError(res, 'We couldn\u2019t submit your request.'));
+        setError(await readApiError(res, t('requestFailed')));
       }
     } catch (err) {
-      setError(friendlyFetchError(err, 'We couldn\u2019t submit your request.'));
+      setError(friendlyFetchError(err, t('requestFailed'), tErr));
     } finally {
       setRequestingKey(null);
     }
   }
 
+  // \u2068…\u2069 (FSI/PDI) isolates the member name like <bdi> so it isn't reordered in RTL.
   return (
-    <ModalShell title={`Edit access — ${member.full_name}`} onClose={onClose}>
+    <ModalShell title={t('editAccessTitle', { name: `\u2068${member.full_name}\u2069` })} onClose={onClose}>
       <div className="space-y-1">
         {PERMISSION_KEYS.map((key) => {
           const alwaysOn = key === 'view_deals';
@@ -488,10 +502,10 @@ function EditPermissionsModal({
               />
               <div className="flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[13px] font-medium text-[#0F1B2D]">{PERMISSION_LABELS[key].label}</span>
+                  <span className="text-[13px] font-medium text-[#0F1B2D]">{t(PERMISSION_LABELS[key].label)}</span>
                   {alwaysOn && (
                     <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#6B7280] bg-[#F3F4F6] rounded px-1.5 py-0.5">
-                      Always
+                      {t('always')}
                     </span>
                   )}
                   {needsRequestToEnable && !hasPending && (
@@ -501,16 +515,16 @@ function EditPermissionsModal({
                       disabled={requestingKey === key}
                       className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#BC9C45] hover:text-[#A6883C] underline decoration-dotted underline-offset-2 disabled:opacity-50"
                     >
-                      {requestingKey === key ? 'Requesting…' : 'Request approval'}
+                      {requestingKey === key ? t('requesting') : t('requestApproval')}
                     </button>
                   )}
                   {hasPending && (
                     <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#92400E] bg-[#FEF3C7] rounded px-1.5 py-0.5">
-                      Pending admin approval
+                      {t('pendingAdminApproval')}
                     </span>
                   )}
                 </div>
-                <div className="text-[11px] text-[#6B7280] mt-0.5">{PERMISSION_LABELS[key].description}</div>
+                <div className="text-[11px] text-[#6B7280] mt-0.5">{t(PERMISSION_LABELS[key].description)}</div>
               </div>
             </div>
           );
@@ -529,7 +543,7 @@ function EditPermissionsModal({
           onClick={onClose}
           className="px-4 py-2 rounded-lg border border-[#E5E7EB] text-[13px] font-semibold text-[#4B5563] hover:bg-[#F9FAFB] transition-colors"
         >
-          Cancel
+          {tc('cancel')}
         </button>
         <button
           type="button"
@@ -537,7 +551,7 @@ function EditPermissionsModal({
           disabled={submitting}
           className="px-4 py-2 rounded-lg bg-[#0E3470] text-white text-[13px] font-semibold hover:bg-[#0a2856] transition-colors disabled:opacity-40"
         >
-          {submitting ? 'Saving…' : 'Save changes'}
+          {submitting ? tc('saving') : ts('saveChanges')}
         </button>
       </ModalActions>
     </ModalShell>
@@ -553,6 +567,9 @@ function RequestMoreModal({
   onClose: () => void;
   onSuccess: () => void;
 }) {
+  const t = useTranslations('portal.team');
+  const tc = useTranslations('common');
+  const tErr = useTranslations('auth.friendlyErrors');
   const [requestedTotal, setRequestedTotal] = useState(currentLimit + 5);
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -561,7 +578,7 @@ function RequestMoreModal({
   async function submit() {
     setError(null);
     if (requestedTotal <= currentLimit) {
-      setError(`Please request a total higher than your current limit (${currentLimit}).`);
+      setError(t('limitTooLow', { limit: currentLimit }));
       return;
     }
     setSubmitting(true);
@@ -574,23 +591,26 @@ function RequestMoreModal({
       if (res.ok) {
         onSuccess();
       } else {
-        setError(await readApiError(res, 'We couldn\u2019t submit your request.'));
+        setError(await readApiError(res, t('requestFailed')));
       }
     } catch (err) {
-      setError(friendlyFetchError(err, 'We couldn\u2019t submit your request.'));
+      setError(friendlyFetchError(err, t('requestFailed'), tErr));
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <ModalShell title="Request more invites" onClose={onClose}>
+    <ModalShell title={t('requestMoreTitle')} onClose={onClose}>
       <p className="text-[13px] text-[#4B5563] mb-4">
-        Your current limit is <strong>{currentLimit}</strong>. Ask RePrime to raise it and let us know why.
+        {t.rich('currentLimitIntro', {
+          limit: currentLimit,
+          strong: (chunks) => <strong>{chunks}</strong>,
+        })}
       </p>
 
       <LabeledInput
-        label="Requested total"
+        label={t('requestedTotal')}
         type="number"
         value={String(requestedTotal)}
         onChange={(v) => setRequestedTotal(Math.max(currentLimit + 1, Number(v) || currentLimit + 1))}
@@ -598,13 +618,13 @@ function RequestMoreModal({
 
       <div className="mt-4">
         <label className="block text-[12px] font-semibold uppercase tracking-[0.12em] text-[#6B7280] mb-1.5">
-          Reason (optional)
+          {t('reasonOptional')}
         </label>
         <textarea
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           rows={3}
-          placeholder="Briefly, why do you need more?"
+          placeholder={t('reasonPlaceholder')}
           className="w-full px-3.5 py-2.5 rounded-lg border border-[#E5E7EB] bg-white text-[13px] text-[#0F1B2D] placeholder:text-[#9CA3AF] outline-none focus:ring-2 focus:ring-[#C8A951]/20 focus:border-[#C8A951] transition-all resize-none"
         />
       </div>
@@ -619,7 +639,7 @@ function RequestMoreModal({
           onClick={onClose}
           className="px-4 py-2 rounded-lg border border-[#E5E7EB] text-[13px] font-semibold text-[#4B5563] hover:bg-[#F9FAFB] transition-colors"
         >
-          Cancel
+          {tc('cancel')}
         </button>
         <button
           type="button"
@@ -627,7 +647,7 @@ function RequestMoreModal({
           disabled={submitting}
           className="px-4 py-2 rounded-lg bg-[#0E3470] text-white text-[13px] font-semibold hover:bg-[#0a2856] transition-colors disabled:opacity-40"
         >
-          {submitting ? 'Submitting…' : 'Submit request'}
+          {submitting ? t('submitting') : t('submitRequest')}
         </button>
       </ModalActions>
     </ModalShell>
@@ -635,12 +655,13 @@ function RequestMoreModal({
 }
 
 function RevokeButton({ memberId, onDone }: { memberId: string; onDone: () => void }) {
+  const t = useTranslations('portal.team');
   const [busy, setBusy] = useState(false);
   return (
     <button
       type="button"
       onClick={async () => {
-        if (!confirm('Revoke this team member\u2019s access? They won\u2019t be able to sign in until you reactivate them.')) return;
+        if (!confirm(t('revokeConfirm'))) return;
         setBusy(true);
         try {
           await fetch(`/api/team/members/${memberId}/revoke`, {
@@ -656,12 +677,13 @@ function RevokeButton({ memberId, onDone }: { memberId: string; onDone: () => vo
       disabled={busy}
       className="px-3 py-1.5 text-[12px] font-semibold text-[#DC2626] hover:bg-[#FEF2F2] rounded-md transition-colors disabled:opacity-50"
     >
-      {busy ? '…' : 'Revoke'}
+      {busy ? '…' : t('revoke')}
     </button>
   );
 }
 
 function ReactivateButton({ memberId, onDone }: { memberId: string; onDone: () => void }) {
+  const t = useTranslations('portal.team');
   const [busy, setBusy] = useState(false);
   return (
     <button
@@ -682,12 +704,13 @@ function ReactivateButton({ memberId, onDone }: { memberId: string; onDone: () =
       disabled={busy}
       className="px-3 py-1.5 text-[12px] font-semibold text-[#0B8A4D] hover:bg-[#ECFDF5] rounded-md transition-colors disabled:opacity-50"
     >
-      {busy ? '…' : 'Reactivate'}
+      {busy ? '…' : t('reactivate')}
     </button>
   );
 }
 
 function ResendInviteButton({ inviteId, locale, onDone }: { inviteId: string; locale: string; onDone: () => void }) {
+  const t = useTranslations('portal.team');
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<'idle' | 'sent'>('idle');
   return (
@@ -713,18 +736,20 @@ function ResendInviteButton({ inviteId, locale, onDone }: { inviteId: string; lo
       disabled={busy}
       className="px-3 py-1.5 text-[12px] font-semibold text-[#0E3470] hover:bg-[#F3F4F6] rounded-md transition-colors disabled:opacity-50"
     >
-      {status === 'sent' ? '✓ Sent' : busy ? '…' : 'Resend'}
+      {status === 'sent' ? `✓ ${t('sent')}` : busy ? '…' : t('resend')}
     </button>
   );
 }
 
 function CancelInviteButton({ inviteId, onDone }: { inviteId: string; onDone: () => void }) {
+  const t = useTranslations('portal.team');
+  const tc = useTranslations('common');
   const [busy, setBusy] = useState(false);
   return (
     <button
       type="button"
       onClick={async () => {
-        if (!confirm('Cancel this pending invite?')) return;
+        if (!confirm(t('cancelInviteConfirm'))) return;
         setBusy(true);
         try {
           await fetch(`/api/team/invites/${inviteId}`, { method: 'DELETE' });
@@ -736,7 +761,7 @@ function CancelInviteButton({ inviteId, onDone }: { inviteId: string; onDone: ()
       disabled={busy}
       className="px-3 py-1.5 text-[12px] font-semibold text-[#DC2626] hover:bg-[#FEF2F2] rounded-md transition-colors disabled:opacity-50"
     >
-      {busy ? '…' : 'Cancel'}
+      {busy ? '…' : tc('cancel')}
     </button>
   );
 }
@@ -752,6 +777,7 @@ function ModalShell({
   onClose: () => void;
   children: React.ReactNode;
 }) {
+  const tc = useTranslations('common');
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6 bg-black/40" onClick={onClose}>
       <div
@@ -764,7 +790,7 @@ function ModalShell({
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-md text-[#6B7280] hover:bg-[#F3F4F6] transition-colors"
-            aria-label="Close"
+            aria-label={tc('close')}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M18 6L6 18M6 6l12 12" />

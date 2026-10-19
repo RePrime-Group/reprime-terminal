@@ -26,6 +26,7 @@ interface DealCardProps {
 export default function DealCard({ deal, locale, index, previewMode = false, from }: DealCardProps) {
   const t = useTranslations('portal.dealCard');
   const tPt = useTranslations('portal.propertyTypes');
+  const tErr = useTranslations('auth.friendlyErrors');
   const [watched, setWatched] = useState(false);
   const [watchLoading, setWatchLoading] = useState(false);
   const [watchError, setWatchError] = useState<string | null>(null);
@@ -71,7 +72,7 @@ export default function DealCard({ deal, locale, index, previewMode = false, fro
   const { bg: urgencyBg, color: urgencyTextColor } = urgencyMap[urgency] ?? urgencyMap.expired;
 
   const infReturn = deal.fully_financed
-    ? (deal.has_positive_cash_flow ? '∞' : 'N/A')
+    ? (deal.has_positive_cash_flow ? '∞' : t('na'))
     : null;
 
   const address = [deal.address, deal.city, deal.state].filter(Boolean).join(', ');
@@ -96,11 +97,11 @@ export default function DealCard({ deal, locale, index, previewMode = false, fro
       >
         {/* ── Header: Name + Address ── */}
         <div className="px-[20px] pt-[14px] pb-2">
-          <h3 className="text-[22px] font-semibold text-[#0E3470] font-[family-name:var(--font-playfair)] leading-tight tracking-[-0.01em] truncate">
+          <h3 dir="auto" className="text-[22px] font-semibold text-[#0E3470] font-[family-name:var(--font-playfair)] leading-tight tracking-[-0.01em] truncate">
             {deal.name}
           </h3>
           {address && (
-            <p className="text-[12px] text-[#6B7280] mt-0.5 truncate">
+            <p dir="auto" className="text-[12px] text-[#6B7280] mt-0.5 truncate">
               {address}
             </p>
           )}
@@ -136,7 +137,7 @@ export default function DealCard({ deal, locale, index, previewMode = false, fro
           {!previewMode && (
             <div
               role="button"
-              aria-label="Watch"
+              aria-label={t('watch')}
               className="absolute top-1 right-1 z-[3] p-2 min-w-[44px] min-h-[44px] flex items-center justify-center"
               onClick={async (e) => {
                 e.preventDefault();
@@ -148,10 +149,10 @@ export default function DealCard({ deal, locale, index, previewMode = false, fro
                   const method = watched ? 'DELETE' : 'POST';
                   const res = await fetch(`/api/deals/${deal.id}/watch`, { method });
                   if (res.ok) setWatched(!watched);
-                  else setWatchError('Couldn’t save. Try again.');
+                  else setWatchError(t('saveFailed'));
                 } catch (err) {
                   console.error('watch toggle failed:', err);
-                  setWatchError(friendlyFetchError(err, 'Couldn’t save. Try again.'));
+                  setWatchError(friendlyFetchError(err, t('saveFailed'), tErr));
                 } finally {
                   setWatchLoading(false);
                 }

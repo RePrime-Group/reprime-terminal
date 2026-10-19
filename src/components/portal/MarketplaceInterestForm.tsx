@@ -49,7 +49,7 @@ export default function MarketplaceInterestForm({
     if (interestType === 'custom_price') {
       const parsed = parseFloat(targetPrice.replace(/[$,\s]/g, ''));
       if (!Number.isFinite(parsed) || parsed <= 0) {
-        setError('Please enter a valid target price.');
+        setError(t('invalidTargetPrice'));
         return;
       }
     }
@@ -66,13 +66,13 @@ export default function MarketplaceInterestForm({
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        setError(body?.error ?? 'Failed to submit. Please try again.');
+        setError(body?.error ?? t('submitFailed'));
         return;
       }
       setSubmittedAt(Date.now());
       router.refresh();
     } catch {
-      setError('Network error.');
+      setError(t('networkError'));
     } finally {
       setSubmitting(false);
     }

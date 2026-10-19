@@ -66,7 +66,7 @@ export default function CriteriaFormClient({ locale, initial }: Props) {
       return;
     }
     for (let i = 0; i < mandates.length; i++) {
-      const v = validateMandate(mandates[i]);
+      const v = validateMandate(mandates[i], (key) => t(`mandate.errors.${key}`));
       if (v) {
         setError(`${t('errors.mandatePrefix', { num: i + 1 })} ${v}`);
         return;
@@ -145,7 +145,7 @@ export default function CriteriaFormClient({ locale, initial }: Props) {
           {t('hero')}
         </h1>
         <p className="text-[14px] md:text-[15px] text-rp-gray-500 max-w-[560px] mx-auto leading-relaxed">
-          {t('subhero', { name: identity.first_name || identity.last_name || 'investor' })}
+          {t('subhero', { name: identity.first_name || identity.last_name || t('subheroFallbackName') })}
         </p>
       </div>
 
@@ -223,6 +223,7 @@ function FormSection({
   onRemove?: () => void;
   children: React.ReactNode;
 }) {
+  const t = useTranslations('criteria');
   return (
     <div className="bg-white border border-rp-gray-200 rp-card-shadow rounded-2xl p-6 md:p-7">
       <div className="flex items-center justify-between mb-4">
@@ -233,7 +234,7 @@ function FormSection({
             onClick={onRemove}
             className="text-[11px] text-rp-gray-400 hover:text-rp-red"
           >
-            × remove
+            × {t('remove')}
           </button>
         )}
       </div>
@@ -297,11 +298,11 @@ function CriteriaThankYou({
           {outcome.isRegistered ? (
             outcome.isLoggedIn ? (
               <Link href={outcome.terminalUrl} locale={locale} className={`${primaryBtn} w-full sm:w-auto`}>
-                {t('btnGoToTerminal')} →
+                <span>{t('btnGoToTerminal')} <span aria-hidden className="inline-block rtl:-scale-x-100">→</span></span>
               </Link>
             ) : (
               <Link href={outcome.loginUrl} locale={locale} className={`${primaryBtn} w-full sm:w-auto`}>
-                {t('btnLogin')} →
+                <span>{t('btnLogin')} <span aria-hidden className="inline-block rtl:-scale-x-100">→</span></span>
               </Link>
             )
           ) : (
@@ -324,7 +325,7 @@ function CriteriaThankYou({
                 locale={locale}
                 className={`${primaryBtn} w-full ${outcome.whatsappUrl ? '' : 'sm:col-span-2'}`}
               >
-                {t('btnApplyMembership')} →
+                <span>{t('btnApplyMembership')} <span aria-hidden className="inline-block rtl:-scale-x-100">→</span></span>
               </Link>
             </div>
           )}

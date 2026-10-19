@@ -7,6 +7,7 @@ import { friendlyFetchError, readApiError } from '@/lib/utils/friendly-error';
 
 export default function ForgotPasswordPage() {
   const t = useTranslations('auth');
+  const tErr = useTranslations('auth.friendlyErrors');
   const params = useParams();
   const locale = (params.locale as string) || 'en';
 
@@ -38,7 +39,7 @@ export default function ForgotPasswordPage() {
       setSent(true);
     } catch (err) {
       console.error('forgot password failed:', err);
-      setError(friendlyFetchError(err, t('forgotPasswordFailed')));
+      setError(friendlyFetchError(err, t('forgotPasswordFailed'), tErr));
     } finally {
       setSubmitting(false);
     }
@@ -67,7 +68,7 @@ export default function ForgotPasswordPage() {
                 href={`/${locale}/login`}
                 className="mt-4 text-[13px] text-[#BC9C45] hover:text-[#D4B96A] font-medium transition-colors"
               >
-                ← {t('backToSignIn')}
+                <span aria-hidden className="inline-block rtl:-scale-x-100">←</span> {t('backToSignIn')}
               </a>
             </div>
           ) : (
@@ -107,7 +108,7 @@ export default function ForgotPasswordPage() {
                   href={`/${locale}/login`}
                   className="text-[13px] text-[#BC9C45] hover:text-[#D4B96A] font-medium transition-colors"
                 >
-                  ← {t('backToSignIn')}
+                  <span aria-hidden className="inline-block rtl:-scale-x-100">←</span> {t('backToSignIn')}
                 </a>
               </div>
             </form>
