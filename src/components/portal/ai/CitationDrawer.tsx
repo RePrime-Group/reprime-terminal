@@ -55,7 +55,7 @@ export default function CitationDrawer({ citation, onClose }: Props) {
 
       if (cancelled) return;
       if (docErr || !doc?.storage_path) {
-        setError(docErr?.message ?? 'Source document not found.');
+        setError(docErr?.message ?? t('sourceNotFound'));
         setLoading(false);
         return;
       }
@@ -66,7 +66,7 @@ export default function CitationDrawer({ citation, onClose }: Props) {
 
       if (cancelled) return;
       if (signErr || !signed?.signedUrl) {
-        setError(signErr?.message ?? 'Could not generate a signed URL.');
+        setError(signErr?.message ?? t('signedUrlError'));
         setLoading(false);
         return;
       }
@@ -78,7 +78,7 @@ export default function CitationDrawer({ citation, onClose }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [documentId]);
+  }, [documentId, t]);
 
   if (!citation) return null;
 
@@ -136,7 +136,7 @@ export default function CitationDrawer({ citation, onClose }: Props) {
             <span className="text-[9px] font-semibold tracking-[1.5px] uppercase text-[#BC9C45]/80">
               {t('sourceDrawerTitle')}
             </span>
-            <span className="text-[12px] font-medium text-white truncate">
+            <span dir="auto" className="text-[12px] font-medium text-white truncate">
               {citation.label}
             </span>
           </div>
@@ -167,14 +167,14 @@ export default function CitationDrawer({ citation, onClose }: Props) {
               </div>
             ) : fileKind === 'other' ? (
               <div className="w-full h-full flex flex-col items-center justify-center gap-3 p-6 text-center">
-                <p className="text-[12px] text-white/60">Inline preview is not supported for this file type.</p>
+                <p className="text-[12px] text-white/60">{t('previewUnsupported')}</p>
                 <a
                   href={viewerUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[12px] font-medium text-[#BC9C45] underline hover:text-[#D4A843]"
                 >
-                  Download source
+                  {t('downloadSource')}
                 </a>
               </div>
             ) : (
@@ -191,9 +191,9 @@ export default function CitationDrawer({ citation, onClose }: Props) {
           <div className="p-5">
             <div className="rounded-lg border border-white/[0.08] bg-white/[0.02] p-5 space-y-2">
               <div className="text-[10px] font-semibold tracking-[1.5px] uppercase text-white/50">
-                {citation.kind}
+                {t.has(`citationKind.${citation.kind}`) ? t(`citationKind.${citation.kind}`) : citation.kind}
               </div>
-              <div className="text-[14px] text-white">{citation.label}</div>
+              <div dir="auto" className="text-[14px] text-white">{citation.label}</div>
             </div>
           </div>
         )}

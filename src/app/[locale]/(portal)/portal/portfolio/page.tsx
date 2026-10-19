@@ -9,7 +9,11 @@ import { getHouseholdUserIds } from '@/lib/auth/household';
 import { ACTIVE_DEAL_STATUSES } from '@/lib/constants';
 import type { DealStatus } from '@/lib/types/database';
 
-export const metadata = { title: 'Portfolio — RePrime Terminal Beta' };
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'portal.navbar' });
+  return { title: `${t('portfolio')} — RePrime Terminal Beta` };
+}
 
 interface Deal {
   id: string;
@@ -160,12 +164,12 @@ export default async function PortfolioPage({
           committedDealIds={committedDealIds}
           initialPhone={profile?.phone ?? ''}
           statusBadges={{
-            assigned: { label: t('performing'), bg: 'bg-green-50', text: 'text-green-700' },
+            assigned: { label: t('statusPerforming'), bg: 'bg-green-50', text: 'text-green-700' },
             renovation: { label: t('underRenovation'), bg: 'bg-amber-50', text: 'text-amber-700' },
             stabilized: { label: t('stabilized'), bg: 'bg-blue-50', text: 'text-blue-700' },
             closed: { label: t('closed'), bg: 'bg-[#0A1628]/5', text: 'text-[#0A1628]' },
           }}
-          defaultBadge={{ label: t('performing'), bg: 'bg-green-50', text: 'text-green-700' }}
+          defaultBadge={{ label: t('statusPerforming'), bg: 'bg-green-50', text: 'text-green-700' }}
         />
       ) : (
         <div className="bg-white rounded-lg shadow-sm border border-gray-100 px-6 py-12 text-center">

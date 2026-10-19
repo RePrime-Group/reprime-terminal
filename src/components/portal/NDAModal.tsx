@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import NDADocument from '@/components/legal/NDADocument';
 import NDASignaturePanel, { type NDASignatureValues } from '@/components/legal/NDASignaturePanel';
 import { formatNDADate } from '@/lib/legal/nda-text';
@@ -15,6 +15,7 @@ interface NDAModalProps {
 export default function NDAModal({ dealName, onSign, onClose }: NDAModalProps) {
   const t = useTranslations('portal.nda');
   const tc = useTranslations('common');
+  const locale = useLocale();
   const [ndaType, setNdaType] = useState<'blanket' | 'deal'>('blanket');
   const [values, setValues] = useState<NDASignatureValues>({
     fullName: '',
@@ -26,6 +27,7 @@ export default function NDAModal({ dealName, onSign, onClose }: NDAModalProps) {
   const [error, setError] = useState('');
 
   const today = formatNDADate();
+  const todayDisplay = new Date().toLocaleDateString(locale === 'he' ? 'he-IL' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
   const handleSign = async () => {
     setError('');
@@ -91,7 +93,7 @@ export default function NDAModal({ dealName, onSign, onClose }: NDAModalProps) {
               },
               {
                 value: 'deal' as const,
-                title: t('dealSpecificTitle', { dealName }),
+                title: t('dealSpecificTitle', { dealName: `\u2068${dealName}\u2069` }),
                 desc: t('dealSpecificDesc'),
               },
             ].map((opt) => (
@@ -120,7 +122,7 @@ export default function NDAModal({ dealName, onSign, onClose }: NDAModalProps) {
           </div>
 
           {/* Signature panel */}
-          <NDASignaturePanel values={values} onChange={setValues} date={today} />
+          <NDASignaturePanel values={values} onChange={setValues} date={todayDisplay} />
 
           {/* Error */}
           {error && (

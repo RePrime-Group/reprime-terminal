@@ -35,8 +35,9 @@ export function TopNavBar({
 }: Props) {
   const t = useTranslations('portal.dealDetail');
   const tPt = useTranslations('portal.propertyTypes');
+  const tn = useTranslations('portal.dealNav');
   const router = useRouter();
-  const previewTitle = previewMode ? 'Preview mode — read-only' : undefined;
+  const previewTitle = previewMode ? tn('previewReadOnly') : undefined;
 
   // Resolve the originating list page from the nav context so the back button
   // returns there explicitly (deep links / cross-entry have no reliable
@@ -62,7 +63,7 @@ export function TopNavBar({
         <button
           onClick={handleBack}
           className="hover:bg-[#F7F8FA] rounded-full p-2 transition mr-3 group"
-          aria-label="Back to portal"
+          aria-label={tn('backToPortal')}
         >
           <svg
             width="18"
@@ -81,10 +82,10 @@ export function TopNavBar({
         <div className="hidden md:block h-5 w-px bg-[#EEF0F4] mr-4" />
         <div className="flex-1 min-w-0">
           <h1 className="font-[family-name:var(--font-playfair)] text-[18px] font-semibold text-[#0E3470] truncate">
-            {deal.name}
+            <bdi>{deal.name}</bdi>
           </h1>
           <p className="text-[10px] text-[#9CA3AF] truncate">
-            {deal.city}, {deal.state} &middot; {tPt.has(deal.property_type) ? tPt(deal.property_type) : deal.property_type}
+            <bdi>{deal.city}, {deal.state}</bdi> &middot; {tPt.has(deal.property_type) ? tPt(deal.property_type) : deal.property_type}
           </p>
         </div>
         <div className="flex items-center gap-2 md:gap-3 ml-2 md:ml-4 shrink-0">

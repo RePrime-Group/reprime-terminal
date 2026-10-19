@@ -4,8 +4,13 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { parseDealInputs, calculatePropertyMetrics } from '@/lib/utils/deal-calculator';
 import PortalDashboardClient from '@/components/portal/PortalDashboardClient';
 import { ACTIVE_DEAL_STATUSES } from '@/lib/constants';
+import { getTranslations } from 'next-intl/server';
 
-export const metadata = { title: 'Active Opportunities — RePrime Terminal Beta' };
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'portal' });
+  return { title: `${t('activeOpportunities')} — RePrime Terminal Beta` };
+}
 
 /** Parse text column to number, stripping $, commas, whitespace */
 function num(val: string | number | null | undefined): number {

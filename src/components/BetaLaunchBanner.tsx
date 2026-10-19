@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 // Official launch: 90 days from April 19, 2026 = July 18, 2026 (00:00 UTC).
 const LAUNCH_DATE_ISO = '2026-07-18T00:00:00Z';
@@ -13,6 +14,8 @@ const HIDDEN_PATH_PATTERN = /^\/[^/]+\/(invite|onboarding)(\/|$)/;
 
 export default function BetaLaunchBanner() {
   const pathname = usePathname();
+  const t = useTranslations('common.launch');
+  const tCard = useTranslations('portal.dealCard');
   const [now, setNow] = useState<number | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [collapsed, setCollapsed] = useState(true);
@@ -58,7 +61,7 @@ export default function BetaLaunchBanner() {
       <button
         type="button"
         onClick={() => setCollapsed(false)}
-        aria-label="Show launch countdown"
+        aria-label={t('showCountdown')}
         className="fixed bottom-5 right-5 z-50 group"
       >
         <span className="flex items-center justify-center w-11 h-11 rounded-full bg-[#0A1628] border border-[#BC9C45]/40 shadow-[0_10px_30px_rgba(10,22,40,0.35)] hover:border-[#BC9C45] transition-colors">
@@ -104,7 +107,7 @@ export default function BetaLaunchBanner() {
         <button
           type="button"
           onClick={() => setCollapsed(true)}
-          aria-label="Minimize countdown"
+          aria-label={t('minimizeCountdown')}
           className="absolute top-2.5 right-2.5 z-10 w-5 h-5 rounded-full flex items-center justify-center text-white/30 hover:text-[#D4A843] hover:bg-white/[0.04] transition-colors"
         >
           <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
@@ -132,10 +135,10 @@ export default function BetaLaunchBanner() {
           {isLaunched ? (
             <div className="pt-3">
               <div className="font-[family-name:var(--font-playfair)] italic text-[#D4A843] text-[22px] leading-tight">
-                Now live
+                {t('nowLive')}
               </div>
               <div className="text-[9px] font-medium uppercase tracking-[2.5px] text-white/40 mt-1.5">
-                Official launch
+                {t('officialLaunch')}
               </div>
             </div>
           ) : (
@@ -147,7 +150,7 @@ export default function BetaLaunchBanner() {
                     {now === null ? '--' : String(days).padStart(2, '0')}
                   </span>
                   <span className="mt-1 text-[8px] font-semibold uppercase tracking-[3px] text-[#D4A843]">
-                    Days
+                    {tCard('countdownDays')}
                   </span>
                 </div>
 
@@ -159,9 +162,9 @@ export default function BetaLaunchBanner() {
                 >
                   <span className="font-[family-name:var(--font-playfair)] italic text-white/20 text-[28px] leading-[0.9] -mb-0.5">·</span>
                   {[
-                    { value: hours, label: 'Hrs' },
-                    { value: minutes, label: 'Min' },
-                    { value: seconds, label: 'Sec' },
+                    { value: hours, label: tCard('countdownHrs') },
+                    { value: minutes, label: tCard('countdownMin') },
+                    { value: seconds, label: tCard('countdownSec') },
                   ].map((c) => (
                     <div key={c.label} className="flex flex-col items-start">
                       <span className="font-[family-name:var(--font-playfair)] text-white/85 text-[20px] leading-[0.9] tabular-nums">
@@ -181,7 +184,7 @@ export default function BetaLaunchBanner() {
               {/* Footer caption */}
               <div className="mt-2.5">
                 <span className="text-[8.5px] font-medium uppercase tracking-[2.5px] text-white/35">
-                  Until official launch
+                  {t('untilOfficialLaunch')}
                 </span>
               </div>
             </>

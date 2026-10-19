@@ -64,7 +64,7 @@ export default function DealDetailClient({
   stageProgress,
   currentStage,
   hasSignedNDA: initialNDA = false,
-  investorName = 'Member',
+  investorName: investorNameProp,
   investorEmail = '',
   addresses = [],
   pipelineTasks = [],
@@ -95,6 +95,11 @@ export default function DealDetailClient({
   const tcom = useTranslations('common');
   const ts = useTranslations('portal.structure');
   const tPt = useTranslations('portal.propertyTypes');
+  const tDp = useTranslations('portal.dealPage');
+  const tCommit = useTranslations('portal.commitment');
+  const tNav = useTranslations('portal.navbar');
+  const tErr = useTranslations('auth.friendlyErrors');
+  const investorName = investorNameProp ?? tNav('member');
   const router = useRouter();
   const searchParams = useSearchParams();
   const { trackActivity: rawTrackActivity } = useActivityTracker();
@@ -479,13 +484,13 @@ export default function DealDetailClient({
       setStructurePhoneError(
         await readApiError(
           res,
-          "We couldn't save your commitment. Please try again, or contact RePrime if this keeps happening.",
+          tCommit('saveFailedContact'),
         ),
       );
     } catch (err) {
       console.error('structure commit failed:', err);
       setStructurePhoneError(
-        friendlyFetchError(err, "We couldn't save your commitment. Please try again."),
+        friendlyFetchError(err, tCommit('saveFailed'), tErr),
       );
     } finally {
       setStructureCommitting(false);
@@ -545,12 +550,12 @@ export default function DealDetailClient({
     { key: 'overview', label: t('overview'), enabled: true },
     { key: 'due-diligence', label: t('dueDiligence'), enabled: true },
     { key: 'photos', label: t('photos'), enabled: true },
-    { key: 'rent-roll', label: 'Rent Roll', enabled: showRentRoll },
+    { key: 'rent-roll', label: tDp('tabRentRoll'), enabled: showRentRoll },
     { key: 'financial-modeling', label: t('financialModeling'), enabled: true },
     { key: 'deal-structure', label: t('dealStructure'), enabled: true },
-    { key: 'capex', label: 'CapEx & Condition', enabled: showCapex },
-    { key: 'exit-strategy', label: 'Exit Strategy', enabled: showExitStrategy },
-    { key: 'insights', label: 'Insights', enabled: showInsights },
+    { key: 'capex', label: tDp('tabCapex'), enabled: showCapex },
+    { key: 'exit-strategy', label: tDp('tabExitStrategy'), enabled: showExitStrategy },
+    { key: 'insights', label: tDp('tabInsights'), enabled: showInsights },
     { key: 'schedule', label: t('scheduleContact'), enabled: true },
   ];
 

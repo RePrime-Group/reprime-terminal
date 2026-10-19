@@ -145,7 +145,7 @@ export default function CriteriaFormClient({ locale, initial }: Props) {
           {t('hero')}
         </h1>
         <p className="text-[14px] md:text-[15px] text-rp-gray-500 max-w-[560px] mx-auto leading-relaxed">
-          {t('subhero', { name: identity.first_name || identity.last_name || 'investor' })}
+          {t('subhero', { name: identity.first_name || identity.last_name || t('subheroFallbackName') })}
         </p>
       </div>
 
@@ -223,6 +223,7 @@ function FormSection({
   onRemove?: () => void;
   children: React.ReactNode;
 }) {
+  const t = useTranslations('criteria');
   return (
     <div className="bg-white border border-rp-gray-200 rp-card-shadow rounded-2xl p-6 md:p-7">
       <div className="flex items-center justify-between mb-4">
@@ -233,7 +234,7 @@ function FormSection({
             onClick={onRemove}
             className="text-[11px] text-rp-gray-400 hover:text-rp-red"
           >
-            × remove
+            × {t('remove')}
           </button>
         )}
       </div>

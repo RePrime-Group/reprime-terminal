@@ -46,7 +46,7 @@ export function OverviewFinancials({ inputs, metrics, traditional }: FinancialPr
             {metrics.capex > 0 ? (
               <span className="text-[15px] font-semibold text-[#DC2626]/80 tabular-nums">{fmtFull(metrics.capex)}</span>
             ) : (
-              <span className="text-[13px] font-medium text-[#6B7280] italic">Calculated at Closing*</span>
+              <span className="text-[13px] font-medium text-[#6B7280] italic">{t('calculatedAtClosing')}</span>
             )}
           </div>
           <div className="flex justify-between py-1.5 border-b border-[#EEF0F4]">
@@ -81,7 +81,7 @@ export function OverviewFinancials({ inputs, metrics, traditional }: FinancialPr
         )}
         {metrics.capex === 0 && (
           <p className="mt-3 text-[11px] text-[#9CA3AF] leading-relaxed italic">
-            * CapEx reserves will be determined during due diligence and reflected in final offering terms.
+            {t('capexFootnote')}
           </p>
         )}
       </div>
@@ -109,7 +109,7 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
           // are still pending rather than truly zero.
           metrics.capex > 0
             ? { label: t('capexReserves'), value: -metrics.capex }
-            : { label: t('capexReserves'), value: 0, displayText: 'Calculated at Closing*' },
+            : { label: t('capexReserves'), value: 0, displayText: t('calculatedAtClosing') },
           {
             label: metrics.ioPeriodMonths > 0 ? t('seniorDebtServiceIO') + '*' : t('seniorDebtService'),
             value: -metrics.headlineSeniorDS,
@@ -143,7 +143,7 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
         )}
         {metrics.capex === 0 && (
           <p className="mt-3 text-[11px] text-[#9CA3AF] leading-relaxed italic">
-            * CapEx reserves will be determined during due diligence and reflected in final offering terms.
+            {t('capexFootnote')}
           </p>
         )}
       </div>
@@ -173,7 +173,7 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
               [t('loanOrigination'), `${inputs.loanFeePoints} ${t('points')} (${fmtFull(metrics.loanFeeDollar)})`],
               [
                 inputs.sellerFinancing
-                  ? (metrics.ioPeriodMonths > 0 ? `${t('lenderDscr')} (IO)` : t('lenderDscr'))
+                  ? (metrics.ioPeriodMonths > 0 ? t('lenderDscrIO') : t('lenderDscr'))
                   : (metrics.ioPeriodMonths > 0 ? t('dscrIO') : t('dscr')),
                 metrics.lenderDSCR.toFixed(2) + 'x',
               ],
@@ -363,7 +363,7 @@ function CapitalStackVisual({ inputs, metrics, isEstimated }: { inputs: DealInpu
         )}
         <div className="flex justify-between items-center text-[14px]">
           <span className="text-[#6B7280]">+ {metrics.closingCosts === 0 ? t('estClosingCosts') : t('closingCosts')}</span>
-          <span className="font-semibold text-[#0E3470] tabular-nums">{metrics.closingCosts === 0 ? 'TBD*' : fmtFull(metrics.closingCosts)}</span>
+          <span className="font-semibold text-[#0E3470] tabular-nums">{metrics.closingCosts === 0 ? t('tbd') : fmtFull(metrics.closingCosts)}</span>
         </div>
         <div className="flex justify-between items-center text-[14px]">
           <span className="text-[#6B7280]">{t('totalCapitalRequired')}</span>
@@ -410,21 +410,22 @@ function CapitalStackVisual({ inputs, metrics, isEstimated }: { inputs: DealInpu
 // ═══════════════════════════════════════════════════════════
 function ReturnComparison({ inputs, metrics, traditional }: { inputs: DealInputs; metrics: DealMetrics; traditional: DealMetrics }) {
   const t = useTranslations('portal.financial');
+  const tDr = useTranslations('portal.dataRoom');
   const mFullyFinanced = metrics.netEquity <= 0;
   const mHasPositiveCF = metrics.distributableCashFlow > 0;
-  const mInf = mFullyFinanced ? (mHasPositiveCF ? '∞' : 'N/A') : null;
-  const mCoC = mInf ?? (metrics.cocReturn !== null ? pct(metrics.cocReturn, 2) : 'N/A');
-  const mIRR = mInf ?? (metrics.irr !== null ? pct(metrics.irr, 2) : 'N/A');
+  const mInf = mFullyFinanced ? (mHasPositiveCF ? '∞' : tDr('na')) : null;
+  const mCoC = mInf ?? (metrics.cocReturn !== null ? pct(metrics.cocReturn, 2) : tDr('na'));
+  const mIRR = mInf ?? (metrics.irr !== null ? pct(metrics.irr, 2) : tDr('na'));
   const mEquity = mFullyFinanced ? '$0' : fmtFull(metrics.netEquity);
-  const tCoC = traditional.cocReturn !== null ? pct(traditional.cocReturn, 2) : 'N/A';
-  const tIRR = traditional.irr !== null ? pct(traditional.irr, 2) : 'N/A';
+  const tCoC = traditional.cocReturn !== null ? pct(traditional.cocReturn, 2) : tDr('na');
+  const tIRR = traditional.irr !== null ? pct(traditional.irr, 2) : tDr('na');
   const rows = [
     { label: t('seniorDebt'), t: fmtFull(traditional.loanAmount), m: fmtFull(metrics.loanAmount) },
     { label: t('sellerMezz'), t: '—', m: `${fmtFull(metrics.mezzAmount)} ${t('at')} ${pct(inputs.mezzRate)} ${t('io')}` },
     { label: t('investorEquity'), t: fmtFull(traditional.netEquity), m: mEquity },
     { label: t('annualCashFlow'), t: fmtFull(traditional.distributableCashFlow), m: fmtFull(metrics.distributableCashFlow) },
     { label: t('cocReturn'), t: tCoC, m: mCoC, bold: true, greenIfBetter: mFullyFinanced || ((metrics.cocReturn ?? 0) - (traditional.cocReturn ?? 0) > 2) },
-    { label: `${t('irr')} (${inputs.holdPeriodYears}yr)`, t: tIRR, m: mIRR, bold: true, greenIfBetter: mFullyFinanced || ((metrics.irr ?? 0) - (traditional.irr ?? 0) > 2) },
+    { label: t('irrHoldYears', { years: inputs.holdPeriodYears }), t: tIRR, m: mIRR, bold: true, greenIfBetter: mFullyFinanced || ((metrics.irr ?? 0) - (traditional.irr ?? 0) > 2) },
   ];
 
   return (

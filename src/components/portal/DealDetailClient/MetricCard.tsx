@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import type { DealMetrics } from '@/lib/utils/deal-calculator';
 
 // ---------------------------------------------------------------------------
@@ -13,16 +14,17 @@ import type { DealMetrics } from '@/lib/utils/deal-calculator';
  */
 export function buildIrrAssumptions(
   deal: { exit_cap_rate?: string | null; hold_period_years?: string | null; rent_growth?: string | null },
-  metrics: Pick<DealMetrics, 'capRate'>
+  metrics: Pick<DealMetrics, 'capRate'>,
+  t: (key: 'irrExit' | 'irrExitDefault' | 'irrHold' | 'irrGrowth', values: Record<string, string>) => string
 ): string {
   const storedExit = deal.exit_cap_rate ? parseFloat(String(deal.exit_cap_rate)) : 0;
   const exitCapStr = storedExit > 0
-    ? `${storedExit.toFixed(1)}% exit`
-    : `${(metrics.capRate + 1).toFixed(1)}% exit (entry +1%)`;
+    ? t('irrExit', { rate: storedExit.toFixed(1) })
+    : t('irrExitDefault', { rate: (metrics.capRate + 1).toFixed(1) });
   const hold = deal.hold_period_years ? parseInt(String(deal.hold_period_years), 10) : 5;
-  const holdStr = `${hold}yr hold`;
+  const holdStr = t('irrHold', { years: String(hold) });
   const growth = deal.rent_growth ? parseFloat(String(deal.rent_growth)) : 0;
-  const growthStr = growth > 0 ? ` · ${growth.toFixed(1)}% growth` : '';
+  const growthStr = growth > 0 ? ` · ${t('irrGrowth', { rate: growth.toFixed(1) })}` : '';
   return `${exitCapStr} · ${holdStr}${growthStr}`;
 }
 
@@ -77,10 +79,11 @@ export function MetricCard({
 // ---------------------------------------------------------------------------
 
 export function FileTypeBadge({ fileType }: { fileType: string | null }) {
+  const t = useTranslations('portal.dealHero');
   const ext = fileType?.toLowerCase() ?? '';
   let icon = '\u{1F4C4}';
   let colorClass = 'bg-gray-100 text-gray-600';
-  let label = 'FILE';
+  let label = t('fileBadge');
 
   if (ext.includes('pdf')) {
     icon = '\u{1F4D5}';

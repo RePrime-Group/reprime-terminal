@@ -40,7 +40,22 @@
     "page": "עמוד",
     "of": "מתוך",
     "total": "סה\"כ",
-    "language": "שפה"
+    "language": "שפה",
+    "tryAgain": "נסה שוב",
+    "closeModal": "סגירת חלון",
+    "launch": {
+      "showCountdown": "הצג ספירה לאחור להשקה",
+      "minimizeCountdown": "מזער ספירה לאחור",
+      "nowLive": "כעת באוויר",
+      "officialLaunch": "השקה רשמית",
+      "untilOfficialLaunch": "עד ההשקה הרשמית",
+      "headlineLine1": "ההשקה הרשמית",
+      "headlineLine2": "בפתח.",
+      "taglineLine1": "גלה את עתיד ההשקעות בנדל\"ן מסחרי.",
+      "taglineLine2": "גישה בלעדית.",
+      "enterTerminalBeta": "כניסה ל-Terminal Beta",
+      "copyright": "© {year} REPRIME. כל הזכויות שמורות."
+    }
   },
   "auth": {
     "loginTitle": "כניסה ל-RePrime Terminal Beta",
@@ -112,7 +127,28 @@
     "requestNewResetLink": "בקש קישור חדש",
     "validatingResetLink": "מאמת קישור איפוס...",
     "showPassword": "הצג סיסמה",
-    "hidePassword": "הסתר סיסמה"
+    "hidePassword": "הסתר סיסמה",
+    "metaTitle": "כניסה — RePrime Terminal Beta",
+    "signInUnavailable": "הכניסה אינה זמינה כרגע. נא לנסות שוב בעוד רגע.",
+    "signInFailed": "הכניסה נכשלה. בדוק את כתובת האימייל והסיסמה ונסה שוב.",
+    "emailNotConfirmedHelp": "כתובת האימייל שלך טרם אומתה. בדוק את תיבת הדואר שלך לקבלת קישור האימות, או צור קשר עם RePrime אם אתה זקוק לעזרה.",
+    "profileNotFound": "לא מצאנו את הפרופיל שלך. צור קשר עם RePrime כדי להשלים את הגדרת החשבון.",
+    "signInError": "משהו השתבש בעת הכניסה. נא לנסות שוב.",
+    "connectionProblemTitle": "בעיית חיבור",
+    "inviteNetworkErrorBody": "לא הצלחנו להתחבר לשרתים שלנו כדי לבדוק את ההזמנה שלך. בדוק את חיבור האינטרנט ונסה שוב.",
+    "tryAgain": "נסה שוב",
+    "friendlyErrors": {
+      "invalidCredentials": "כתובת האימייל או הסיסמה שגויים.",
+      "emailNotConfirmed": "כתובת האימייל שלך טרם אומתה. בדוק את תיבת הדואר שלך לקבלת קישור האימות.",
+      "alreadyRegistered": "כבר קיים חשבון עם כתובת אימייל זו. נסה להיכנס לחשבון במקום זאת.",
+      "rateLimited": "יותר מדי ניסיונות. המתן מספר דקות ונסה שוב.",
+      "passwordTooShort": "הסיסמה קצרה מדי. השתמש בלפחות 8 תווים.",
+      "passwordSameAsCurrent": "הסיסמה החדשה חייבת להיות שונה מהסיסמה הנוכחית.",
+      "invalidEmail": "כתובת האימייל אינה נראית תקינה.",
+      "weakPassword": "בחר סיסמה חזקה יותר (לפחות 8 תווים).",
+      "userNotFound": "לא מצאנו חשבון עם כתובת אימייל זו.",
+      "connectionProblem": "בעיית חיבור. בדוק את חיבור האינטרנט ונסה שוב."
+    }
   },
   "admin": {
     "sidebar": {
@@ -1001,7 +1037,9 @@
       "daysAgo": "לפני {count} ימים",
       "member": "חבר",
       "settings": "הגדרות",
-      "pipelines": "צינורות עסקאות"
+      "pipelines": "צינורות עסקאות",
+      "unread": "לא נקרא",
+      "menu": "תפריט"
     },
     "curated": {
       "eyebrow": "צינור עסקאות פרטי",
@@ -1009,7 +1047,8 @@
       "exclusive": "בלעדי · מחוץ לשוק",
       "emptyTitle": "צינור העסקאות הייעודי שלך",
       "emptyBody": "היועץ שלך אוצר עבורך הזדמנויות.",
-      "noMatching": "אין עסקאות התואמות לסינון שלך."
+      "noMatching": "אין עסקאות התואמות לסינון שלך.",
+      "metaTitle": "צינור העסקאות שלך"
     },
     "settings": {
       "title": "הגדרות",
@@ -1059,7 +1098,10 @@
       "gpCarryPct": "GP Carry %",
       "prefReturnPct": "תשואה מועדפת %",
       "reprimeDefaultPlaceholder": "ברירת מחדל REPRIME: {value}%",
-      "saveMyTerms": "שמור את התנאים שלי"
+      "saveMyTerms": "שמור את התנאים שלי",
+      "teamAccessTitle": "גישת צוות",
+      "teamAccessBody": "אתה חבר צוות בחשבון RePrime. בעל החשבון קובע אילו פעולות תוכל לבצע. פנה אליו אם אתה צריך גישה לתכונות נוספות.",
+      "teamAccessBodyWithParent": "אתה חבר צוות בחשבון ה-RePrime של <strong>{parentName}</strong>. בעל החשבון קובע אילו פעולות תוכל לבצע. פנה אליו אם אתה צריך גישה לתכונות נוספות."
     },
     "dealCard": {
       "purchasePrice": "מחיר רכישה",
@@ -1103,7 +1145,16 @@
       "marketplaceBadge": "מרקטפלייס",
       "interested": "{count, plural, one {# מתעניין} other {# מתעניינים}}",
       "beTheFirstInterested": "היו הראשונים להביע עניין",
-      "pricingNegotiable": "המחיר והתנאים בדיון"
+      "pricingNegotiable": "המחיר והתנאים בדיון",
+      "watch": "מעקב",
+      "saveFailed": "השמירה נכשלה. נסה שוב.",
+      "na": "לא רלוונטי",
+      "previewReadOnly": "מצב תצוגה מקדימה — קריאה בלבד",
+      "notificationsOffFailed": "לא הצלחנו לבטל את ההתראות. נסה שוב.",
+      "notificationSaveFailed": "לא הצלחנו לשמור את העדפת ההתראות שלך. נסה שוב.",
+      "notificationUpdateFailed": "לא הצלחנו לעדכן את ההתראות. נסה שוב.",
+      "commitFailed": "לא הצלחנו לשמור את ההתחייבות שלך. נסה שוב.",
+      "groupsAlreadyCommitted": "{count, plural, one {קבוצה אחת כבר התחייבה} other {# קבוצות כבר התחייבו}}"
     },
     "dealDetail": {
       "overview": "סקירה כללית",
@@ -1196,7 +1247,6 @@
       "leaseSummaryPending": "סיכום חוזה — ממתין",
       "transactionDocuments": "מסמכי עסקה",
       "transactionDocumentsSubtitle": "הסכמים חתומים וחומרי הצעה",
-      "offeringMemorandum": "מסמך הצעה",
       "signedLoi": "מכתב כוונות חתום",
       "viewSignedLoi": "צפה במכתב כוונות חתום",
       "signedLoiPending": "מכתב כוונות חתום — ממתין",
@@ -1321,7 +1371,6 @@
       "projectedCoc": "CoC צפוי",
       "commitToDeal": "התחייב לעסקה",
       "cancel": "ביטול",
-      "preferredReturn": "תשואה מועדפת",
       "allFeesIncludedShort": "כל העמלות כלולות",
       "lpSplit": "חלוקת LP",
       "sellerFinancing": "מימון מוכר",
@@ -1425,7 +1474,13 @@
       "packagePartial": "הורדו {succeeded} מתוך {total} קבצים — {missing} לא הצליחו להוריד.",
       "packagePartialNames": "חסרים: {names}",
       "packagePartialNamesOverflow": "חסרים: {names} ועוד {overflow}.",
-      "packagePartialRetryHint": "לחץ על 'הורד הכל' שוב כדי לנסות שוב את הקבצים החסרים."
+      "packagePartialRetryHint": "לחץ על 'הורד הכל' שוב כדי לנסות שוב את הקבצים החסרים.",
+      "downloadFailed": "ההורדה נכשלה",
+      "documentCount": "{count, plural, one {מסמך אחד} other {{count} מסמכים}}",
+      "expand": "הרחב",
+      "collapse": "כווץ",
+      "viewDocumentAria": "צפה ב-{name}",
+      "downloadDocumentAria": "הורד את {name}"
     },
     "compare": {
       "title": "השוואת עסקאות",
@@ -1459,7 +1514,8 @@
       "deposit": "פיקדון",
       "highestIrr": "IRR הגבוה ביותר",
       "lowestEquity": "הון עצמי הנמוך ביותר",
-      "highestCapRate": "Cap Rate הגבוה ביותר"
+      "highestCapRate": "Cap Rate הגבוה ביותר",
+      "removeColumn": "הסר עמודה"
     },
     "financial": {
       "cashFlowSummary": "סיכום תזרים מזומנים",
@@ -1533,7 +1589,12 @@
       "above": "מעל",
       "pref": "פריף",
       "at": "ב-",
-      "io": "IO"
+      "io": "ריבית בלבד",
+      "calculatedAtClosing": "יחושב בסגירה*",
+      "capexFootnote": "* רזרבות להשקעות הון ייקבעו במהלך בדיקת הנאותות וישוקפו בתנאי ההצעה הסופיים.",
+      "tbd": "ייקבע*",
+      "lenderDscrIO": "DSCR מלווה (ריבית בלבד)",
+      "irrHoldYears": "IRR ({years, plural, one {שנה אחת} other {# שנים}})"
     },
     "nda": {
       "title": "הסכם סודיות",
@@ -1602,7 +1663,8 @@
       "deadlineChanges": "שינויי מועדים",
       "priceUpdates": "עדכוני מחירים",
       "competingInterest": "עניין מתחרה",
-      "startWatching": "התחל מעקב"
+      "startWatching": "התחל מעקב",
+      "saveFailed": "לא הצלחנו לשמור את העדפות ההתראות שלך. נסה שוב."
     },
     "portfolio": {
       "totalEquityCommitted": "סה\"כ הון שהושקע",
@@ -1614,7 +1676,11 @@
       "performing": "ביצועים",
       "underRenovation": "בשיפוץ",
       "stabilized": "יציב",
-      "closed": "נסגר"
+      "closed": "נסגר",
+      "invested": "הושקע",
+      "withdrawFailed": "לא הצלחנו לעבד את ביטול ההתחייבות כרגע. נסה שוב.",
+      "withdrawFailedContact": "לא הצלחנו לעבד את ביטול ההתחייבות כרגע. נסה שוב, או צור קשר עם RePrime אם הבעיה נמשכת.",
+      "statusPerforming": "מניב"
     },
     "marketplace": {
       "title": "מרקטפלייס",
@@ -1632,7 +1698,10 @@
       "interestSubmitted": "✓ העניין הוגש",
       "updateInterest": "עדכן עניין",
       "marketplaceBannerTitle": "מרקטפלייס",
-      "marketplaceBannerDesc": "המחיר והתנאים בדיון. הביעו עניין והנחיות תמחור להלן."
+      "marketplaceBannerDesc": "המחיר והתנאים בדיון. הביעו עניין והנחיות תמחור להלן.",
+      "invalidTargetPrice": "הזן מחיר יעד תקין.",
+      "submitFailed": "השליחה נכשלה. נסה שוב.",
+      "networkError": "שגיאת רשת."
     },
     "marketIntel": {
       "marketCycle": "מחזור שוק",
@@ -1641,7 +1710,18 @@
       "peak": "שיא",
       "creMaturityWall": "חומת פדיון נדל\"ן",
       "terminalActivity": "פעילות פלטפורמה",
-      "noRecentActivity": "אין פעילות אחרונה"
+      "noRecentActivity": "אין פעילות אחרונה",
+      "daysAgo": "{count, plural, one {לפני יום} two {לפני יומיים} other {לפני # ימים}}",
+      "asOf": "נכון ל-{time}",
+      "tickerLabels": {
+        "10-Yr Treasury": "אג\"ח ארה\"ב ל-10 שנים",
+        "CRE Cap Rate Spread": "מרווח Cap Rate בנדל\"ן מסחרי",
+        "CMBS Delinquency": "שיעור פיגורים ב-CMBS",
+        "Office Vacancy": "שיעור פנויות במשרדים",
+        "Multifamily Vacancy": "שיעור פנויות במגורים רב-דירתיים",
+        "Industrial Vacancy": "שיעור פנויות בתעשייה",
+        "Retail Vacancy": "שיעור פנויות במסחר"
+      }
     },
     "terminalScore": {
       "label": "ציון Terminal",
@@ -1683,12 +1763,366 @@
       "memberSince": "חבר מאז {date}",
       "noFeesFounding": "אין דמי חברות בתקופת המייסדים",
       "enterTerminal": "כנס ל-Terminal →"
+    },
+    "pages": {
+      "tryAgain": "נסה שוב"
+    },
+    "dashboard": {
+      "drafts": "טיוטות",
+      "adminOnly": "למנהלים בלבד",
+      "quarterRelease": "השקת {quarter}"
+    },
+    "notepad": {
+      "myNotes": "ההערות שלי",
+      "placeholder": "הוסף הערות פרטיות על עסקה זו...",
+      "saving": "שומר…",
+      "saveFailed": "השמירה נכשלה",
+      "saved": "נשמר ✓",
+      "lastSaved": "נשמר לאחרונה: {time}",
+      "justNow": "עכשיו",
+      "secondsAgo": "לפני {count} שנ'",
+      "minutesAgo": "לפני {count} דק'",
+      "hoursAgo": "לפני {count} שע'",
+      "daysAgo": "{count, plural, one {לפני יום} two {לפני יומיים} other {לפני # ימים}}"
+    },
+    "photos": {
+      "rangeOf": "{start}–{end} מתוך {total}",
+      "previousPage": "העמוד הקודם",
+      "nextPage": "העמוד הבא",
+      "closeLightbox": "סגור תצוגת תמונה",
+      "previousPhoto": "התמונה הקודמת",
+      "nextPhoto": "התמונה הבאה",
+      "goToPhoto": "עבור לתמונה {index}",
+      "propertyPhotoAlt": "תמונת הנכס {index}",
+      "previousSlide": "השקופית הקודמת",
+      "nextSlide": "השקופית הבאה",
+      "goToSlide": "עבור לשקופית {index}",
+      "slideAlt": "שקופית {index}"
+    },
+    "commitment": {
+      "saveFailedContact": "לא הצלחנו לשמור את ההתחייבות שלך. נסה שוב, או צור קשר עם RePrime אם הבעיה נמשכת.",
+      "saveFailed": "לא הצלחנו לשמור את ההתחייבות שלך. נסה שוב.",
+      "withdrawFailedContact": "לא הצלחנו לבטל את ההתחייבות כרגע. נסה שוב, או צור קשר עם RePrime אם הבעיה נמשכת.",
+      "withdrawFailed": "לא הצלחנו לבטל את ההתחייבות כרגע. נסה שוב.",
+      "heldByEscrowAttorney": "מוחזק ע\"י: <bdi>Bruce J. Smoler, Esq.</bdi>, עורך דין נאמנות",
+      "depositFallback": "את הפיקדון",
+      "wireInstructionsIntro": "העבר את הכספים לחשבון הנאמנות הייעודי המוחזק על ידי <bdi>Bruce J. Smoler, Esq.</bdi> במשרד <bdi>Smoler & Associates, P.A.</bdi> — <bdi>J.P. Morgan Chase Florida IOTA Trust Account</bdi>",
+      "acctNo": "מספר חשבון:",
+      "abaNo": "מספר ABA:",
+      "fullWiringOnConfirmation": "הוראות העברה מלאות יימסרו לאחר האישור.",
+      "escrowHolderLine": "<bdi>Bruce J. Smoler, Esq.</bdi> · <bdi>Smoler & Associates, P.A.</bdi> — חשבון נאמנות IOTA בפלורידה",
+      "perYearPair": "{pct} לשנה ({amount} לשנה)",
+      "carryAbovePref": "{carry} מעל תשואה מועדפת של {pref}"
+    },
+    "dealPage": {
+      "previewReadOnly": "מצב תצוגה מקדימה — קריאה בלבד",
+      "tabRentRoll": "גליון שכירות",
+      "tabCapex": "השקעות הון ומצב הנכס",
+      "tabExitStrategy": "אסטרטגיית יציאה",
+      "tabInsights": "תובנות",
+      "investorsInterested": "{count, plural, one {# משקיע מתעניין} other {# משקיעים מתעניינים}}",
+      "noInterestYet": "עדיין אין הבעות עניין — היה הראשון",
+      "metaTitleFallback": "עסקה — RePrime Terminal Beta"
+    },
+    "meetings": {
+      "slotDateTime": "{date} בשעה {time}",
+      "previewReadOnly": "מצב תצוגה מקדימה — קריאה בלבד"
+    },
+    "dealNav": {
+      "backToPortal": "חזרה לפורטל",
+      "previewReadOnly": "מצב תצוגה מקדימה — קריאה בלבד",
+      "live": "פעיל",
+      "aiBannerSubtitle": "שאל על הנתונים הפיננסיים, השוכרים או חוזי השכירות של עסקה זו.",
+      "askAiAssistant": "שאל את עוזר ה-AI"
+    },
+    "exitStrategy": {
+      "emptyState": "תרחישי היציאה נמצאים בשלבי השלמה.",
+      "disclaimer": "התרחישים הם תחזיות להמחשה בלבד. עלויות המכירה מחושבות לפי 2% מערך היציאה. תזרים המזומנים בתקופת ההחזקה מחושב לפי המדדים המרכזיים הנוכחיים ונשאר קבוע בכל שנה. התוצאות בפועל יהיו שונות בהתאם לתנאי השוק, פעילות ההשכרה והחלטות ההון בעת הסגירה.",
+      "types": {
+        "conservative": "שמרני",
+        "moderate": "מתון",
+        "aggressive": "אגרסיבי",
+        "refinance": "מימון מחדש"
+      },
+      "buyerProfiles": {
+        "ValueInvestor": "משקיע ערך",
+        "StabilizedAssetBuyer": "רוכש נכסים מיוצבים",
+        "Institutional": "משקיע מוסדי",
+        "NetLeaseBuyer": "רוכש נכסי Net Lease",
+        "1031ExchangeBuyer": "רוכש בעסקת 1031 Exchange",
+        "PrivateEquity": "קרן השקעות פרטית",
+        "LocalInvestor": "משקיע מקומי",
+        "NA": "לא רלוונטי"
+      },
+      "yearCap": "שנה {year} · Cap {cap}",
+      "exitValue": "ערך יציאה",
+      "netProceeds": "תמורה נטו",
+      "equityMultiple": "מכפיל הון",
+      "scenarioIrr": "IRR התרחיש",
+      "propertyValue": "שווי הנכס",
+      "cashOut": "משיכת הון",
+      "postRefiCf": "תזרים לאחר מימון מחדש",
+      "cashOnRemaining": "תשואה על ההון הנותר",
+      "whatIfRefiLtv": "LTV במימון מחדש — מה אם",
+      "whatIfExitCap": "Cap ביציאה — מה אם",
+      "suffixLtv": "% LTV",
+      "suffixExitCap": "% Cap ביציאה",
+      "sliderHint": "גרור כדי לבחון. רענן כדי לאפס.",
+      "sensitivity": "ניתוח רגישות",
+      "fullProforma": "פרופורמה מלאה",
+      "exitCap": "Cap ביציאה",
+      "multiple": "מכפיל",
+      "refiLtv": "LTV במימון מחדש",
+      "saleProformaTitle": "<bdi>{name}</bdi> — פרופורמה לשנה {year}",
+      "exitNoi": "NOI ביציאה",
+      "exitCapRate": "שיעור Cap ביציאה",
+      "grossExitValue": "ערך יציאה ברוטו",
+      "dispositionCosts": "− עלויות מכירה (2%)",
+      "seniorLoanPayoff": "− פירעון הלוואה בכירה",
+      "mezzBalloon": "− תשלום בלון מזנין",
+      "netSaleProceeds": "תמורת מכירה נטו",
+      "holdCashFlow": "תזרים מזומנים בתקופת ההחזקה ({years} × {amount})",
+      "totalReturn": "תשואה כוללת",
+      "equityInvested": "הון עצמי שהושקע",
+      "refiProformaTitle": "<bdi>{name}</bdi> — מימון מחדש בשנה {year}",
+      "propertyValueAtRefi": "שווי הנכס במועד המימון מחדש",
+      "newSeniorLoan": "הלוואה בכירה חדשה ({ltv}% LTV)",
+      "existingSeniorPayoff": "− פירעון ההלוואה הבכירה הקיימת",
+      "mezzPayoff": "− פירעון מזנין",
+      "netRefiProceeds": "תמורת מימון מחדש נטו",
+      "newDebtService": "שירות חוב חדש",
+      "cashFlowPostRefi": "תזרים מזומנים לאחר מימון מחדש",
+      "capitalReturned": "הון שהוחזר (משיכת הון + תזרים של {years} שנים)",
+      "remainingEquity": "הון עצמי שנותר",
+      "valueSuffix": "{amount} (שווי)",
+      "cashOutSuffix": "{amount} (משיכת הון)",
+      "ongoing": "מתמשך",
+      "na": "לא רלוונטי",
+      "scenarioComparison": "השוואת תרחישים",
+      "metric": "מדד",
+      "exitYear": "שנת יציאה",
+      "capRate": "Cap Rate",
+      "exitOrPropertyValue": "ערך יציאה / שווי הנכס",
+      "netProceedsOrCashOut": "תמורה נטו / משיכת הון",
+      "cashFlowHold": "תזרים מזומנים (תקופת החזקה)"
+    },
+    "capex": {
+      "emptyState": "מידע על מצב הנכס נמצא בשלבי השלמה.",
+      "viewingConditionFor": "מציג מצב עבור:",
+      "allBuildings": "כל הבניינים",
+      "propertyCondition": "מצב הנכס",
+      "informationalOnly": "למידע בלבד. הרזרבות נקבעות סופית במהלך בדיקת הנאותות.",
+      "noItems": "לא נרשמו פריטים עבור בחירה זו.",
+      "colComponent": "רכיב",
+      "colCondition": "מצב",
+      "colLastReplaced": "הוחלף לאחרונה",
+      "colLifeRemaining": "יתרת אורך חיים משוערת",
+      "colReplacementCost": "עלות החלפה משוערת",
+      "colPriority": "עדיפות",
+      "conditions": {
+        "Excellent": "מצוין",
+        "Good": "טוב",
+        "Fair": "סביר",
+        "Poor": "ירוד",
+        "Unknown": "לא ידוע"
+      },
+      "priorities": {
+        "Immediate": "מיידי",
+        "NearTerm": "טווח קרוב",
+        "DuringHold": "במהלך ההחזקה",
+        "PostHold": "לאחר ההחזקה",
+        "NA": "לא רלוונטי"
+      },
+      "notes": "הערות:",
+      "budgetSummary": "סיכום תקציב השקעות הון",
+      "nearTermYears": "טווח קרוב (1-2 שנים)",
+      "duringHoldYears": "במהלך ההחזקה (3-5 שנים)",
+      "totalDuringHold": "סך הכל משוער לתקופת ההחזקה",
+      "annualizedReserve": "רזרבה שנתית (החזקה של {years} שנים)",
+      "perYear": "{amount}/שנה*",
+      "footnote": "* רזרבות השקעות ההון מחושבות בעת הסגירה ומשתקפות בתנאי ההצעה הסופיים."
+    },
+    "insights": {
+      "uncategorized": "ללא קטגוריה",
+      "title": "תובנות העסקה",
+      "subtitle": "הקשר ותובנות מצוות העסקה, מאורגנים לפי נושא."
+    },
+    "rentRoll": {
+      "comingSoon": "ניתוח גליון שכירות מלא — בקרוב",
+      "building": "בניין",
+      "allBuildings": "כל הבניינים (סה\"כ התיק)",
+      "tenantCount": "{count, plural, one {שוכר אחד} other {# שוכרים}}",
+      "noTenantsForBuilding": "טרם נרשמו שוכרים לבניין זה.",
+      "waltSublabel": "משוקלל לפי דמי שכירות",
+      "years": "{value} שנים",
+      "occupancySf": "{leased} / {total} רגל רבוע",
+      "topTenant": "שוכר מוביל",
+      "pctOfRent": "{pct}% מדמי השכירות",
+      "nearTermRollover": "פקיעות בטווח הקרוב",
+      "noneUnder3Yrs": "אין ב-3 השנים הקרובות",
+      "allLeasesSecure": "כל חוזי השכירות יציבים",
+      "rolloverExpires": "{pct}% · פקיעה: {date}",
+      "tenantRoster": "רשימת שוכרים",
+      "clickToExpand": "לחץ על שורה להרחבה",
+      "colTenant": "שוכר",
+      "colSuite": "יחידה",
+      "colSf": "רגל רבוע",
+      "colRentPerSf": "שכירות / רגל רבוע",
+      "colAnnualRent": "שכירות שנתית",
+      "colType": "סוג",
+      "colLeaseEnd": "סיום חוזה",
+      "escalations": "העלאות שכירות",
+      "anchorTenant": "שוכר עוגן",
+      "vacant": "פנוי",
+      "total": "סה\"כ",
+      "avgRentPerSf": "ממוצע {value}",
+      "expirationSchedule": "לוח פקיעת חוזי שכירות",
+      "bucketLabel": "<bdi>{tenants}</bdi> ({pct}% מדמי השכירות)",
+      "creditLegend": "צבע העמודה משקף את איכות האשראי של השוכר (ירוק = דירוג השקעה / ארצי, זהב = אזורי, אפור = מקומי / ללא דירוג).",
+      "disclaimer": "גליון השכירות הוא למידע בלבד — מדדי העסקה המרכזיים (Cap Rate, CoC, IRR, DSCR) אינם מושפעים ממנו.",
+      "leaseStarted": "תחילה: {date}",
+      "leaseExpires": "סיום: {date}",
+      "lease": "חוזה שכירות",
+      "rentCommencement": "תחילת תשלום שכירות",
+      "options": "אופציות הארכה",
+      "nnnReimbursement": "חוזה NNN — השוכר משלם CAM, מיסים וביטוח",
+      "reimbCam": "אחזקה משותפת (CAM): {amount}",
+      "reimbTax": "מיסים: {amount}",
+      "reimbInsurance": "ביטוח: {amount}",
+      "reimbursements": "החזרי הוצאות",
+      "percentageRent": "שכירות מבוססת מחזור",
+      "securityDeposit": "פיקדון ביטחון",
+      "guarantor": "ערבות",
+      "industry": "ענף",
+      "credit": "אשראי",
+      "status": "סטטוס",
+      "notes": "הערות:",
+      "leaseTypes": {
+        "NNN": "NNN",
+        "NN": "NN",
+        "Modified Gross": "ברוטו מותאם",
+        "Gross": "ברוטו",
+        "Ground": "חכירת קרקע"
+      },
+      "creditRatings": {
+        "Investment Grade": "דירוג השקעה",
+        "National Credit": "אשראי ארצי",
+        "Regional": "אזורי",
+        "Local": "מקומי",
+        "Unknown": "לא ידוע"
+      },
+      "leaseStatuses": {
+        "Active": "פעיל",
+        "Expired": "פג תוקף",
+        "Month-to-Month": "חודש לחודש",
+        "In Negotiation": "במשא ומתן"
+      },
+      "guarantorTypes": {
+        "Corporate": "תאגידית",
+        "Personal": "אישית",
+        "Parent Company": "חברת האם",
+        "None": "ללא"
+      }
+    },
+    "dealHero": {
+      "irrExit": "Cap ביציאה {rate}%",
+      "irrExitDefault": "Cap ביציאה {rate}% (Cap כניסה בתוספת 1%)",
+      "irrHold": "החזקה {years} שנים",
+      "irrGrowth": "צמיחה {rate}%",
+      "fileBadge": "קובץ"
+    },
+    "overview": {
+      "addressSf": "{sf} רגל רבוע"
+    },
+    "team": {
+      "title": "חברי צוות",
+      "subtitle": "הזמן עמיתים, עובדים או שותפים להשתמש ב-RePrime בשמך. אתה קובע מה כל אחד מהם יכול לעשות.",
+      "invitesUsed": "<num>{used}</num> מתוך <num>{limit}</num> הזמנות נוצלו",
+      "loading": "טוען את הצוות שלך…",
+      "loadFailed": "לא הצלחנו לטעון את הצוות שלך. נסה שוב.",
+      "inviteMember": "הזמן חבר צוות",
+      "pendingRequestHint": "כבר יש לך בקשה ממתינה.",
+      "requestMoreHint": "בקש מ-RePrime להגדיל את מכסת ההזמנות שלך",
+      "requestPending": "הבקשה ממתינה…",
+      "requestMore": "בקש עוד",
+      "yourTeam": "הצוות שלך",
+      "revoked": "הגישה בוטלה",
+      "permissionsEnabled": "{count, plural, one {# הרשאה מופעלת} other {# הרשאות מופעלות}}",
+      "editAccess": "ערוך גישה",
+      "pendingInvites": "הזמנות ממתינות",
+      "expires": "בתוקף עד {date}",
+      "noMembers": "עדיין לא הזמנת חברי צוות.",
+      "namePlaceholder": "ישראל ישראלי",
+      "emailPlaceholder": "name@example.com",
+      "initialPermissions": "הרשאות התחלתיות",
+      "alwaysEnabled": "מופעל תמיד",
+      "requiresApprovalAfterInvite": "דורש אישור מנהל — ניתן לבקש לאחר שההזמנה תתקבל",
+      "nameRequired": "הזן שם.",
+      "emailInvalid": "הזן כתובת אימייל תקינה.",
+      "inviteFailed": "לא הצלחנו לשלוח את ההזמנה. נסה שוב.",
+      "sending": "שולח…",
+      "sendInvite": "שלח הזמנה",
+      "editAccessTitle": "עריכת גישה — {name}",
+      "always": "תמיד",
+      "requesting": "שולח בקשה…",
+      "requestApproval": "בקש אישור",
+      "pendingAdminApproval": "ממתין לאישור מנהל",
+      "updateFailed": "לא הצלחנו לעדכן את ההרשאות. נסה שוב.",
+      "requestFailed": "לא הצלחנו לשלוח את הבקשה שלך.",
+      "requestMoreTitle": "בקשת הזמנות נוספות",
+      "currentLimitIntro": "המכסה הנוכחית שלך היא <strong>{limit}</strong>. בקש מ-RePrime להגדיל אותה וספר לנו מדוע.",
+      "requestedTotal": "סה\"כ מבוקש",
+      "reasonOptional": "סיבה (אופציונלי)",
+      "reasonPlaceholder": "בקצרה, מדוע אתה צריך הזמנות נוספות?",
+      "limitTooLow": "בקש סה\"כ גבוה מהמכסה הנוכחית שלך ({limit}).",
+      "submitting": "שולח…",
+      "submitRequest": "שלח בקשה",
+      "revokeConfirm": "לבטל את הגישה של חבר הצוות? הוא לא יוכל להתחבר עד שתפעיל אותו מחדש.",
+      "revoke": "בטל גישה",
+      "reactivate": "הפעל מחדש",
+      "sent": "נשלח",
+      "resend": "שלח שוב",
+      "cancelInviteConfirm": "לבטל את ההזמנה הממתינה?",
+      "permissions": {
+        "viewDeals": {
+          "label": "צפייה בעסקאות",
+          "description": "מופעל תמיד. משתמשי משנה יכולים לעיין בכל העסקאות."
+        },
+        "manageWatchlist": {
+          "label": "ניהול רשימת מעקב",
+          "description": "הוספת עסקאות לרשימת המעקב והגדרת העדפות התראות."
+        },
+        "commitWithdraw": {
+          "label": "התחייבות לעסקאות",
+          "description": "הגשה וביטול של התחייבויות בשם המשקיע הראשי."
+        },
+        "downloadDocuments": {
+          "label": "הורדת מסמכים",
+          "description": "הורדת קבצי בדיקת נאותות ומסמך ההצעה."
+        },
+        "scheduleMeetings": {
+          "label": "קביעת פגישות",
+          "description": "קביעת פגישות עם צוות הרכישות של RePrime."
+        }
+      }
+    },
+    "phoneConfirm": {
+      "title": "אשר את מספר הטלפון שלך",
+      "description": "הצוות שלנו ישתמש במספר זה כדי ליצור איתך קשר בנוגע לפרטי ההעברה הבנקאית ולשלבים הבאים. המספר יישמר בפרופיל שלך.",
+      "confirmLabel": "אשר והתחייב",
+      "confirmingLabel": "מאשר…",
+      "phoneNumber": "מספר טלפון",
+      "searchPlaceholder": "חפש מדינה או קידומת",
+      "noMatch": "אין תוצאות",
+      "enterPhone": "הזן את מספר הטלפון שלך.",
+      "invalidNumber": "זה לא נראה כמו מספר תקין ב{country}.",
+      "fullNumber": "מספר מלא: <num>{number}</num>"
     }
   },
   "join": {
     "investorLogin": "כניסת משקיעים",
     "foundingBadge": "חברי מייסדים — מקומות מוגבלים",
-    "fromCriteriaBanner": "Thanks for sharing your criteria — finish your membership application below.",
+    "fromCriteriaBanner": "תודה ששיתפת את הקריטריונים שלך — השלם את בקשת החברות שלך למטה.",
     "heroTitle": "גישה מוסדית לנדל\"ן מסחרי",
     "heroDescription": "RePrime Terminal Beta מחבר משקיעים מוסמכים עם הזדמנויות נדל\"ן מסחרי מחוץ לשוק, מגובות ב-30+ שנות בדיקת נאותות מוסדית.",
     "foundingAccess": "חברי מייסדים מקבלים גישה חינם עד דצמבר 2027",
@@ -1759,7 +2193,7 @@
     "noi": "NOI",
     "dscr": "DSCR",
     "occupancy": "תפוסה",
-    "classBadge": "Class {class}",
+    "classBadge": "סיווג {class}",
     "tenants": "{count, plural, one {# שוכר} other {# שוכרים}}",
     "sellerFinancing": "מימון מוכר",
     "noteSale": "מכירת חוב",
@@ -1768,10 +2202,11 @@
     "ctaTitle": "צור חשבון חינם",
     "ctaBody": "קבל גישה לניתוח עסקאות מלא, מודלים פיננסיים וכלי התחייבות ב-RePrime Terminal.",
     "moreOpportunities": "הזדמנויות נוספות",
-    "copyright": "© {year} RePrime Terminal. כל הזכויות שמורות."
+    "copyright": "© {year} RePrime Terminal. כל הזכויות שמורות.",
+    "metaTitleFallback": "עסקה — RePrime Terminal"
   },
   "ai": {
-    "title": "AI Assistant",
+    "title": "עוזר AI",
     "subtitle": "ממוקד ב-{deal}",
     "askPlaceholder": "שאל על העסקה הזו…",
     "askPill": "שאל את ה-AI",
@@ -1794,7 +2229,7 @@
     "newThread": "שיחה חדשה",
     "threadHistory": "היסטוריה",
     "noPriorThreads": "אין שיחות קודמות על עסקה זו",
-    "emptyGreeting": "אני AI Assistant של {deal}. שאל אותי על הפיננסים, השוכרים או חדר הנתונים.",
+    "emptyGreeting": "אני עוזר ה-AI של {deal}. שאל אותי כל דבר על הנתונים הכספיים, השוכרים או חדר הנתונים.",
     "suggestedPrompts": "הצעות לשאלות",
     "prompt1": "סכם את לוח השכירויות ואת ריכוז השוכרים",
     "prompt2": "מה ה-IRR אם תשואת היציאה תעלה ל-9%?",
@@ -1842,7 +2277,28 @@
     "errorUnauthorized": "אינך מחובר. רענן את הדף ונסה שוב.",
     "errorNotFound": "השיחה לא נמצאה.",
     "errorTimeout": "לעוזר לקח יותר מדי זמן להגיב. נסה שוב.",
-    "errorUpstream": "העוזר לא הצליח לעבד את הבקשה. נסה שוב."
+    "errorUpstream": "העוזר לא הצליח לעבד את הבקשה. נסה שוב.",
+    "sourceNotFound": "מסמך המקור לא נמצא.",
+    "signedUrlError": "לא ניתן ליצור קישור גישה למסמך.",
+    "previewUnsupported": "תצוגה מקדימה אינה נתמכת עבור סוג קובץ זה.",
+    "downloadSource": "הורד את קובץ המקור",
+    "citationKind": {
+      "document": "מסמך",
+      "tenant": "שוכר",
+      "deal_field": "שדה עסקה",
+      "computed": "נתון מחושב"
+    },
+    "dockToSide": "הצמד לצד",
+    "undockSidebar": "בטל הצמדה לצד",
+    "askAssistant": "שאל את עוזר ה-AI",
+    "askAssistantAbout": "שאל את עוזר ה-AI על {deal}",
+    "relative": {
+      "now": "עכשיו",
+      "minutes": "{count} דק'",
+      "hours": "{count} שע'",
+      "days": "{count} ימ'",
+      "weeks": "{count} שב'"
+    }
   },
   "errors": {
     "notFound": "הדף לא נמצא",
@@ -1851,7 +2307,9 @@
     "unauthorized": "יש להתחבר כדי לגשת לדף זה.",
     "forbidden": "אין לך הרשאה לגשת לדף זה.",
     "networkError": "שגיאת רשת — בדוק את החיבור שלך.",
-    "tryAgain": "נא לנסות שוב."
+    "tryAgain": "נא לנסות שוב.",
+    "networkTryAgain": "שגיאת רשת. נסה שוב.",
+    "saveSignatureFailed": "שמירת החתימה נכשלה. נסה שוב."
   },
   "unsubscribe": {
     "successTitle": "ההסרה מרשימת התפוצה הושלמה",
@@ -1859,64 +2317,165 @@
     "successGeneric": "לא תקבלו עוד הודעות אלה. תוכלו לנהל את כל העדפות ההתראות שלכם בהגדרות החשבון.",
     "successWithCategory": "לא תקבלו עוד הודעות {category}. תוכלו לנהל את כל העדפות ההתראות שלכם בהגדרות החשבון.",
     "invalidBody": "קישור ההסרה הזה אינו חוקי או שפג תוקפו. אנא התחברו לחשבון כדי לנהל את העדפות ההתראות ישירות.",
-    "managePreferences": "ניהול העדפות"
+    "managePreferences": "ניהול העדפות",
+    "categories": {
+      "new_deals": "עסקאות חדשות",
+      "document_uploads": "העלאות מסמכים",
+      "deal_activity": "פעילות עסקה"
+    }
   },
   "criteria": {
-    "signIn": "Investor Login",
-    "badge": "By Invitation",
-    "hero": "Tell us what you're buying",
-    "subhero": "Hi {name} — about 90 seconds. The more precise you are, the better the deals we can send.",
-    "sectionIdentity": "About You",
-    "sectionTarget": "Target / Mandate",
-    "sectionTargetN": "Target / Mandate #{num}",
-    "sectionConsent": "Consent & Submit",
-    "addTarget": "Add another target",
-    "consentText": "I consent to RePrime contacting me about investment opportunities that match my mandates.",
-    "submit": "Submit my criteria",
-    "submitting": "Submitting...",
-    "singleUseHint": "This link is single-use. After you submit, your relationship lead can send you a fresh one if anything changes.",
+    "signIn": "כניסת משקיעים",
+    "badge": "בהזמנה בלבד",
+    "hero": "ספר לנו מה אתה מחפש לרכוש",
+    "subhero": "שלום {name} — זה ייקח כ-90 שניות. ככל שתהיה מדויק יותר, כך העסקאות שנשלח לך יתאימו יותר.",
+    "sectionIdentity": "פרטים אישיים",
+    "sectionTarget": "יעד / מנדט",
+    "sectionTargetN": "יעד / מנדט מס׳ {num}",
+    "sectionConsent": "הסכמה ושליחה",
+    "addTarget": "הוסף יעד נוסף",
+    "consentText": "אני מסכים ש-RePrime תיצור איתי קשר בנוגע להזדמנויות השקעה התואמות את המנדטים שלי.",
+    "submit": "שלח את הקריטריונים שלי",
+    "submitting": "שולח...",
+    "singleUseHint": "קישור זה מיועד לשימוש חד-פעמי. לאחר השליחה, איש הקשר שלך ב-RePrime יוכל לשלוח לך קישור חדש אם משהו ישתנה.",
     "errors": {
-      "nameRequired": "First and last name are required.",
-      "phoneRequired": "Phone number is required.",
-      "consentRequired": "Please confirm consent to be contacted before submitting.",
-      "mandatePrefix": "Mandate #{num}:",
-      "submitFailed": "Something went wrong saving your criteria. Please try again.",
-      "network": "Network error — please check your connection and try again."
+      "nameRequired": "שם פרטי ושם משפחה הם שדות חובה.",
+      "phoneRequired": "מספר טלפון הוא שדה חובה.",
+      "consentRequired": "נא לאשר את ההסכמה ליצירת קשר לפני השליחה.",
+      "mandatePrefix": "מנדט מס׳ {num}:",
+      "submitFailed": "משהו השתבש בשמירת הקריטריונים שלך. נא לנסות שוב.",
+      "network": "שגיאת רשת — בדוק את החיבור שלך ונסה שוב."
     },
     "fields": {
-      "firstName": "First name",
-      "lastName": "Last name",
-      "email": "Email",
-      "emailHint": "This link was sent to your email; the address can't be changed here.",
-      "phone": "Phone",
+      "firstName": "שם פרטי",
+      "lastName": "שם משפחה",
+      "email": "אימייל",
+      "emailHint": "הקישור נשלח לכתובת האימייל שלך; לא ניתן לשנות את הכתובת כאן.",
+      "phone": "טלפון",
       "whatsapp": "WhatsApp",
-      "company": "Company / Entity",
-      "title": "Role / Title",
-      "preferredContact": "Preferred contact method",
-      "investingAs": "Investing as",
-      "capitalReady": "Capital ready to deploy",
-      "ownershipPref": "Preferred ownership path",
-      "timeline": "Timeline to deploy",
-      "accredited": "I am an accredited investor"
+      "company": "חברה / ישות",
+      "title": "תפקיד",
+      "preferredContact": "אמצעי קשר מועדף",
+      "investingAs": "סוג המשקיע",
+      "capitalReady": "הון זמין להשקעה",
+      "ownershipPref": "מסלול בעלות מועדף",
+      "timeline": "לוח זמנים להשקעה",
+      "accredited": "אני משקיע מוסמך",
+      "locked": "(נעול)"
     },
     "invalid": {
-      "title": "Link unavailable",
-      "bodyMissing": "This criteria form requires a personal invitation from RePrime. The link you opened doesn't include a valid token.",
-      "bodyUsed": "This link has already been used or is no longer valid.",
-      "bodyUnknown": "This link doesn't match any active invitation in our records.",
-      "contactLine": "Contact your RePrime relationship lead to request a new link.",
-      "signIn": "Investor Login",
-      "returnToLogin": "Return to login"
+      "title": "הקישור אינו זמין",
+      "bodyMissing": "טופס הקריטריונים דורש הזמנה אישית מ-RePrime. הקישור שפתחת אינו כולל קוד גישה תקף.",
+      "bodyUsed": "כבר נעשה שימוש בקישור זה, או שהוא אינו תקף עוד.",
+      "bodyUnknown": "קישור זה אינו תואם אף הזמנה פעילה ברשומות שלנו.",
+      "contactLine": "צור קשר עם איש הקשר שלך ב-RePrime כדי לבקש קישור חדש.",
+      "signIn": "כניסת משקיעים",
+      "returnToLogin": "חזרה לכניסה"
     },
     "thanks": {
-      "title": "Thank you — we have your criteria",
-      "body": "Our team will use what you shared to surface deals that fit. You'll hear from us when something matches.",
-      "emailLine": "Confirmation sent to {email}.",
-      "btnLogin": "Login to the Terminal",
-      "btnGoToTerminal": "Go to the Terminal",
-      "btnContactTeam": "Message on WhatsApp",
-      "btnApplyMembership": "Apply for Membership",
-      "footnote": "You can update your criteria at any time — your RePrime relationship lead can send you a fresh link."
+      "title": "תודה — קיבלנו את הקריטריונים שלך",
+      "body": "הצוות שלנו ישתמש במידע ששיתפת כדי לאתר עסקאות שמתאימות לך. ניצור איתך קשר כשתימצא התאמה.",
+      "emailLine": "אישור נשלח אל {email}.",
+      "btnLogin": "כניסה ל-Terminal",
+      "btnGoToTerminal": "מעבר ל-Terminal",
+      "btnContactTeam": "שלח הודעה בוואטסאפ",
+      "btnApplyMembership": "הגש בקשת חברות",
+      "footnote": "ניתן לעדכן את הקריטריונים שלך בכל עת — איש הקשר שלך ב-RePrime יוכל לשלוח לך קישור חדש."
+    },
+    "metaTitle": "קריטריוני השקעה — RePrime",
+    "subheroFallbackName": "משקיע",
+    "remove": "הסר",
+    "options": {
+      "contactMethod": {
+        "email": "אימייל",
+        "phone": "טלפון",
+        "whatsapp": "WhatsApp",
+        "text_message": "הודעת טקסט"
+      },
+      "investingAs": {
+        "principal": "משקיע פרטי",
+        "fund": "קרן",
+        "family_office": "פמילי אופיס",
+        "jv": "מיזם משותף (JV)",
+        "1031": "עסקת החלפה לפי סעיף 1031"
+      },
+      "capitalReady": {
+        "<1M": "פחות מ-$1,000,000",
+        "flexible": "גמיש"
+      },
+      "ownershipPref": {
+        "direct": "רכישה ישירה",
+        "gp_lp": "שותף GP / LP",
+        "either": "כל אחת מהאפשרויות"
+      },
+      "timeline": {
+        "now": "מיידי",
+        "<3mo": "תוך 3 חודשים",
+        "3-6mo": "בין 3 ל-6 חודשים",
+        "6mo+": "6 חודשים ומעלה"
+      }
     }
+  },
+  "kyc": {
+    "title": "אימות משקיע",
+    "subtitle": "מלא טופס זה כדי לאמת את מעמדך כמשקיע. כל המידע נשמר בסודיות ומשמש למטרות ציות רגולטורי בלבד.",
+    "sections": {
+      "personal": "פרטים אישיים",
+      "employment": "תעסוקה והכנסה",
+      "financial": "פרופיל פיננסי",
+      "accreditation": "הצהרת משקיע מוסמך"
+    },
+    "fields": {
+      "legalName": "שם משפטי מלא *",
+      "dob": "תאריך לידה *",
+      "ssn": "מספר ביטוח לאומי (SSN) / מספר מזהה מס *",
+      "driversLicense": "מספר רישיון נהיגה",
+      "address": "כתובת *",
+      "city": "עיר *",
+      "state": "מדינה *",
+      "zip": "מיקוד *",
+      "country": "ארץ",
+      "phone": "מספר טלפון *",
+      "email": "כתובת אימייל",
+      "occupation": "עיסוק *",
+      "employer": "שם המעסיק *",
+      "employerAddress": "כתובת המעסיק",
+      "industry": "סוג העסק / ענף",
+      "annualIncome": "הכנסה שנתית *",
+      "sourceOfFunds": "מקור הכספים *",
+      "netWorth": "שווי נקי משוער *",
+      "investmentRange": "טווח השקעה צפוי",
+      "otherInstitutions": "האם יש לך חשבונות השקעה במוסדות אחרים? *",
+      "institutionName": "שם המוסד"
+    },
+    "ssnOnFile": "SSN שמור במערכת",
+    "changeSsn": "שינוי",
+    "cancelKeepSsn": "ביטול — השאר את ה-SSN השמור",
+    "selectPlaceholder": "בחר…",
+    "rangeUnder": "מתחת ל-{amount}",
+    "sourceOfFundsOptions": {
+      "Employment": "הכנסה מעבודה",
+      "Business Income": "הכנסה מעסק",
+      "Investments": "השקעות",
+      "Inheritance": "ירושה",
+      "Real Estate": "נדל\"ן",
+      "Savings": "חסכונות",
+      "Other": "אחר"
+    },
+    "accreditation": {
+      "intro": "אני מצהיר כי אני עומד לפחות באחד מהקריטריונים הבאים (סמן את כל המתאימים):",
+      "individualIncome": "הכנסה אישית העולה על $200,000 בכל אחת משתי השנים האחרונות, עם ציפייה סבירה להכנסה דומה בשנה הנוכחית",
+      "jointIncome": "הכנסה משותפת עם בן/בת הזוג העולה על $300,000 בכל אחת משתי השנים האחרונות, עם ציפייה סבירה להכנסה דומה בשנה הנוכחית",
+      "netWorthExceeds1M": "שווי נקי העולה על $1,000,000 (באופן אישי או במשותף עם בן/בת הזוג), לא כולל דירת המגורים העיקרית",
+      "licensedProfessional": "בעל רישיון בתחום ניירות הערך (Series 7, 65 או 82) בתוקף",
+      "knowledgeableEmployee": "עובד בעל ידע (Knowledgeable Employee) בקרן פרטית",
+      "entityAssets": "ישות שנכסיה עולים על $5,000,000",
+      "notAccredited": "אף אחד מהנ\"ל — אינני משקיע מוסמך"
+    },
+    "certify": "אני מצהיר כי המידע שמסרתי לעיל נכון ומדויק למיטב ידיעתי. *",
+    "submitting": "שולח…",
+    "submit": "שלח לאימות",
+    "saveContinueLater": "שמור והמשך מאוחר יותר",
+    "submitFailed": "השליחה נכשלה. נסה שוב."
   }
 }

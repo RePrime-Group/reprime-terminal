@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   computeSaleScenario,
   computeRefinanceScenario,
@@ -63,13 +64,14 @@ function toNum(v: string | number | null | undefined): number {
 }
 
 export default function ExitStrategyTab({ scenarios, context }: ExitStrategyTabProps) {
+  const t = useTranslations('portal.exitStrategy');
   const enabled = scenarios.filter((s) => s.is_enabled);
 
   if (enabled.length === 0) {
     return (
       <div className="bg-white rounded-2xl border border-rp-gray-200 p-10 text-center">
         <p className="text-[14px] text-rp-gray-500">
-          Exit scenarios are being finalized.
+          {t('emptyState')}
         </p>
       </div>
     );
@@ -86,10 +88,7 @@ export default function ExitStrategyTab({ scenarios, context }: ExitStrategyTabP
       <ComparisonTable scenarios={enabled} context={context} />
 
       <p className="text-[11px] text-rp-gray-400 italic">
-        Scenarios are illustrative projections. Disposition costs modeled at 2% of exit value.
-        Cash flow during hold is computed from the current headline metrics and held constant
-        per year. Actual results will differ based on market conditions, lease activity, and
-        capital decisions at closing.
+        {t('disclaimer')}
       </p>
     </div>
   );
@@ -104,6 +103,7 @@ function ScenarioCard({
 }) {
   const isRefi = scenario.scenario_type === 'refinance';
   const color = TYPE_COLOR[scenario.scenario_type];
+  const t = useTranslations('portal.exitStrategy');
   const [showSensitivity, setShowSensitivity] = useState(false);
   const [showProforma, setShowProforma] = useState(false);
 
@@ -180,7 +180,7 @@ function ScenarioCard({
   // Moderate: ±150bps (between)
   // Refinance: 60%-80% LTV
   const sliderBounds = (() => {
-    if (isRefi) return { min: 60, max: 80, step: 1, suffix: '% LTV' };
+    if (isRefi) return { min: 60, max: 80, step: 1, suffix: t('suffixLtv') };
     const baseCap = toNum(scenario.exit_cap_rate);
     const range = scenario.scenario_type === 'aggressive' ? 1.0
       : scenario.scenario_type === 'moderate' ? 1.5
@@ -189,7 +189,7 @@ function ScenarioCard({
       min: Math.max(0.25, baseCap - range),
       max: baseCap + range,
       step: 0.05,
-      suffix: '% exit cap',
+      suffix: t('suffixExitCap'),
     };
   })();
 
@@ -202,16 +202,16 @@ function ScenarioCard({
       <div className="flex items-start justify-between gap-3">
         <div>
           <span className={`text-[9px] font-bold tracking-[1.5px] uppercase px-2 py-1 rounded ${color.chip}`}>
-            {TYPE_LABEL[scenario.scenario_type]}
+            {t.has(`types.${scenario.scenario_type}`) ? t(`types.${scenario.scenario_type}`) : TYPE_LABEL[scenario.scenario_type]}
           </span>
-          <h3 className="mt-2 text-[16px] font-semibold text-rp-navy font-[family-name:var(--font-playfair)]">
+          <h3 dir="auto" className="mt-2 text-[16px] font-semibold text-rp-navy font-[family-name:var(--font-playfair)]">
             {scenario.scenario_name}
           </h3>
           <p className="mt-1 text-[11px] text-rp-gray-500">
-            Year {scenario.exit_year}
-            {' · '}
-            {fmtPct(toNum(scenario.exit_cap_rate), 2)} cap
-            {scenario.buyer_profile ? ` · ${scenario.buyer_profile}` : ''}
+            {t('yearCap', { year: scenario.exit_year, cap: fmtPct(toNum(scenario.exit_cap_rate), 2) })}
+            {scenario.buyer_profile
+              ? ` · ${t.has(`buyerProfiles.${scenario.buyer_profile.replace(/[^A-Za-z0-9]/g, '')}`) ? t(`buyerProfiles.${scenario.buyer_profile.replace(/[^A-Za-z0-9]/g, '')}`) : scenario.buyer_profile}`
+              : ''}
           </p>
         </div>
       </div>
@@ -220,26 +220,26 @@ function ScenarioCard({
       <div className="grid grid-cols-2 gap-3 pt-1">
         {live.kind === 'sale' ? (
           <>
-            <MetricBlock label="Exit Value" value={fmtMoney(live.result.exitValue)} />
-            <MetricBlock label="Net Proceeds" value={fmtMoney(live.result.netProceeds)} />
+            <MetricBlock label={t('exitValue')} value={fmtMoney(live.result.exitValue)} />
+            <MetricBlock label={t('netProceeds')} value={fmtMoney(live.result.netProceeds)} />
             <MetricBlock
-              label="Equity Multiple"
-              value={fmtMultiple(live.result.equityMultiple, positive)}
+              label={t('equityMultiple')}
+              value={fmtMultiple(live.result.equityMultiple, positive).replace('N/A', t('na'))}
               strong
             />
             <MetricBlock
-              label="Scenario IRR"
-              value={fmtIRR(live.result.irr, positive)}
+              label={t('scenarioIrr')}
+              value={fmtIRR(live.result.irr, positive).replace('N/A', t('na'))}
               strong
             />
           </>
         ) : (
           <>
-            <MetricBlock label="Property Value" value={fmtMoney(live.result.propertyValue)} />
-            <MetricBlock label="Cash Out" value={fmtMoney(live.result.cashOut)} />
-            <MetricBlock label="Post-Refi CF" value={fmtMoney(live.result.postRefiCF)} />
+            <MetricBlock label={t('propertyValue')} value={fmtMoney(live.result.propertyValue)} />
+            <MetricBlock label={t('cashOut')} value={fmtMoney(live.result.cashOut)} />
+            <MetricBlock label={t('postRefiCf')} value={fmtMoney(live.result.postRefiCF)} />
             <MetricBlock
-              label="Cash-on-Remaining"
+              label={t('cashOnRemaining')}
               value={live.result.cashOnRemainingPct !== null ? fmtPct(live.result.cashOnRemainingPct) : '—'}
               strong
             />
@@ -251,7 +251,7 @@ function ScenarioCard({
       <div className="bg-rp-gray-50/50 rounded-lg p-3">
         <div className="flex items-center justify-between mb-1.5">
           <label className="text-[11px] font-semibold text-rp-gray-600 uppercase tracking-wider">
-            {isRefi ? 'Refi LTV' : 'Exit Cap'} — What-If
+            {isRefi ? t('whatIfRefiLtv') : t('whatIfExitCap')}
           </label>
           <span className="text-[12px] font-semibold text-rp-navy tabular-nums">
             {sliderVal.toFixed(isRefi ? 0 : 2)}{sliderBounds.suffix}
@@ -267,13 +267,13 @@ function ScenarioCard({
           className="w-full accent-rp-gold"
         />
         <p className="mt-1 text-[10px] text-rp-gray-400">
-          Drag to explore. Refresh to reset.
+          {t('sliderHint')}
         </p>
       </div>
 
       {/* Narrative */}
       {scenario.strategy_narrative && (
-        <p className="text-[12px] text-rp-gray-600 leading-relaxed italic border-l-2 border-rp-gray-200 pl-3">
+        <p dir="auto" className="text-[12px] text-rp-gray-600 leading-relaxed italic border-l-2 border-rp-gray-200 pl-3">
           {scenario.strategy_narrative}
         </p>
       )}
@@ -284,13 +284,13 @@ function ScenarioCard({
           onClick={() => setShowSensitivity((v) => !v)}
           className="text-[11px] font-medium text-rp-navy hover:text-rp-gold"
         >
-          {showSensitivity ? '▲' : '▼'} Sensitivity
+          {showSensitivity ? '▲' : '▼'} {t('sensitivity')}
         </button>
         <button
           onClick={() => setShowProforma((v) => !v)}
           className="text-[11px] font-medium text-rp-navy hover:text-rp-gold"
         >
-          {showProforma ? '▲' : '▼'} Full Proforma
+          {showProforma ? '▲' : '▼'} {t('fullProforma')}
         </button>
       </div>
 
@@ -339,14 +339,15 @@ function MetricBlock({ label, value, strong = false }: { label: string; value: s
 }
 
 function SaleSensitivity({ inputs }: { inputs: SaleScenarioInputs }) {
+  const t = useTranslations('portal.exitStrategy');
   const rows = exitCapSensitivity(inputs);
   return (
     <table className="w-full text-[12px]">
       <thead>
         <tr className="text-left text-[10px] uppercase tracking-wider text-rp-gray-500">
-          <th className="py-1.5">Exit Cap</th>
-          <th className="py-1.5 text-right">Exit Value</th>
-          <th className="py-1.5 text-right">Multiple</th>
+          <th className="py-1.5">{t('exitCap')}</th>
+          <th className="py-1.5 text-right">{t('exitValue')}</th>
+          <th className="py-1.5 text-right">{t('multiple')}</th>
           <th className="py-1.5 text-right">IRR</th>
         </tr>
       </thead>
@@ -357,8 +358,8 @@ function SaleSensitivity({ inputs }: { inputs: SaleScenarioInputs }) {
             <tr key={i} className={`border-t border-rp-gray-200 ${r.isBase ? 'font-semibold text-rp-navy' : 'text-rp-gray-700'}`}>
               <td className="py-1.5">{fmtPct(r.capRatePct, 2)}</td>
               <td className="py-1.5 text-right tabular-nums">{fmtMoney(r.result.exitValue)}</td>
-              <td className="py-1.5 text-right tabular-nums">{fmtMultiple(r.result.equityMultiple, positive)}</td>
-              <td className="py-1.5 text-right tabular-nums">{fmtIRR(r.result.irr, positive)}</td>
+              <td className="py-1.5 text-right tabular-nums">{fmtMultiple(r.result.equityMultiple, positive).replace('N/A', t('na'))}</td>
+              <td className="py-1.5 text-right tabular-nums">{fmtIRR(r.result.irr, positive).replace('N/A', t('na'))}</td>
             </tr>
           );
         })}
@@ -368,15 +369,16 @@ function SaleSensitivity({ inputs }: { inputs: SaleScenarioInputs }) {
 }
 
 function RefiSensitivity({ inputs }: { inputs: RefiScenarioInputs }) {
+  const t = useTranslations('portal.exitStrategy');
   const rows = refiLTVSensitivity(inputs);
   return (
     <table className="w-full text-[12px]">
       <thead>
         <tr className="text-left text-[10px] uppercase tracking-wider text-rp-gray-500">
-          <th className="py-1.5">Refi LTV</th>
-          <th className="py-1.5 text-right">Cash Out</th>
-          <th className="py-1.5 text-right">Post-Refi CF</th>
-          <th className="py-1.5 text-right">Cash-on-Remaining</th>
+          <th className="py-1.5">{t('refiLtv')}</th>
+          <th className="py-1.5 text-right">{t('cashOut')}</th>
+          <th className="py-1.5 text-right">{t('postRefiCf')}</th>
+          <th className="py-1.5 text-right">{t('cashOnRemaining')}</th>
         </tr>
       </thead>
       <tbody>
@@ -404,28 +406,33 @@ function SaleProforma({
   result: SaleScenarioResult;
   context: ExitStrategyContext;
 }) {
+  const t = useTranslations('portal.exitStrategy');
   const positive = result.totalReturn > 0;
   return (
     <div className="space-y-1 text-[12px]">
       <h4 className="text-[11px] font-semibold uppercase tracking-wider text-rp-gray-500 mb-2">
-        {scenario.scenario_name} — Year {scenario.exit_year} Proforma
+        {t.rich('saleProformaTitle', {
+          name: scenario.scenario_name,
+          year: scenario.exit_year,
+          bdi: (chunks) => <bdi>{chunks}</bdi>,
+        })}
       </h4>
-      <Line label="Exit NOI" value={fmtMoney(toNum(scenario.exit_noi))} />
-      <Line label="Exit Cap Rate" value={fmtPct(toNum(scenario.exit_cap_rate), 2)} />
-      <Line label="Gross Exit Value" value={fmtMoney(result.exitValue)} bold />
-      <Line label="− Disposition Costs (2%)" value={fmtMoney(result.dispositionCosts)} muted />
-      <Line label="− Senior Loan Payoff" value={fmtMoney(result.seniorPayoff)} muted />
-      {context.hasMezz && <Line label="− Mezz Balloon" value={fmtMoney(result.mezzPayoff)} muted />}
-      <Line label="Net Sale Proceeds" value={fmtMoney(result.netProceeds)} bold />
+      <Line label={t('exitNoi')} value={fmtMoney(toNum(scenario.exit_noi))} />
+      <Line label={t('exitCapRate')} value={fmtPct(toNum(scenario.exit_cap_rate), 2)} />
+      <Line label={t('grossExitValue')} value={fmtMoney(result.exitValue)} bold />
+      <Line label={t('dispositionCosts')} value={fmtMoney(result.dispositionCosts)} muted />
+      <Line label={t('seniorLoanPayoff')} value={fmtMoney(result.seniorPayoff)} muted />
+      {context.hasMezz && <Line label={t('mezzBalloon')} value={fmtMoney(result.mezzPayoff)} muted />}
+      <Line label={t('netSaleProceeds')} value={fmtMoney(result.netProceeds)} bold />
       <div className="border-t border-rp-gray-200 my-2" />
       <Line
-        label={`Cash Flow During Hold (${scenario.exit_year} × ${fmtMoney(context.distributableCF)})`}
+        label={t('holdCashFlow', { years: scenario.exit_year, amount: fmtMoney(context.distributableCF) })}
         value={fmtMoney(result.holdCashFlow)}
       />
-      <Line label="Total Return" value={fmtMoney(result.totalReturn)} bold />
-      <Line label="Equity Invested" value={context.equityInvested <= 0 ? '$0' : fmtMoney(context.equityInvested)} muted />
-      <Line label="Equity Multiple" value={fmtMultiple(result.equityMultiple, positive)} bold />
-      <Line label="Scenario IRR" value={fmtIRR(result.irr, positive)} bold />
+      <Line label={t('totalReturn')} value={fmtMoney(result.totalReturn)} bold />
+      <Line label={t('equityInvested')} value={context.equityInvested <= 0 ? '$0' : fmtMoney(context.equityInvested)} muted />
+      <Line label={t('equityMultiple')} value={fmtMultiple(result.equityMultiple, positive).replace('N/A', t('na'))} bold />
+      <Line label={t('scenarioIrr')} value={fmtIRR(result.irr, positive).replace('N/A', t('na'))} bold />
     </div>
   );
 }
@@ -439,28 +446,33 @@ function RefiProforma({
   result: RefiScenarioResult;
   context: ExitStrategyContext;
 }) {
+  const t = useTranslations('portal.exitStrategy');
   return (
     <div className="space-y-1 text-[12px]">
       <h4 className="text-[11px] font-semibold uppercase tracking-wider text-rp-gray-500 mb-2">
-        {scenario.scenario_name} — Year {scenario.exit_year} Refinance
+        {t.rich('refiProformaTitle', {
+          name: scenario.scenario_name,
+          year: scenario.exit_year,
+          bdi: (chunks) => <bdi>{chunks}</bdi>,
+        })}
       </h4>
-      <Line label="Property Value at Refi" value={fmtMoney(result.propertyValue)} bold />
-      <Line label={`New Senior Loan (${scenario.refi_params?.ltv ?? 75}% LTV)`} value={fmtMoney(result.newLoan)} />
-      <Line label="− Existing Senior Payoff" value={fmtMoney(result.existingSeniorPayoff)} muted />
-      {context.hasMezz && <Line label="− Mezz Payoff" value={fmtMoney(result.mezzPayoff)} muted />}
-      <Line label="Net Refi Proceeds" value={fmtMoney(result.cashOut)} bold />
+      <Line label={t('propertyValueAtRefi')} value={fmtMoney(result.propertyValue)} bold />
+      <Line label={t('newSeniorLoan', { ltv: scenario.refi_params?.ltv ?? 75 })} value={fmtMoney(result.newLoan)} />
+      <Line label={t('existingSeniorPayoff')} value={fmtMoney(result.existingSeniorPayoff)} muted />
+      {context.hasMezz && <Line label={t('mezzPayoff')} value={fmtMoney(result.mezzPayoff)} muted />}
+      <Line label={t('netRefiProceeds')} value={fmtMoney(result.cashOut)} bold />
       <div className="border-t border-rp-gray-200 my-2" />
-      <Line label="New Debt Service" value={fmtMoney(result.newAnnualDS)} />
-      <Line label="Cash Flow Post-Refi" value={fmtMoney(result.postRefiCF)} bold />
+      <Line label={t('newDebtService')} value={fmtMoney(result.newAnnualDS)} />
+      <Line label={t('cashFlowPostRefi')} value={fmtMoney(result.postRefiCF)} bold />
       <div className="border-t border-rp-gray-200 my-2" />
       <Line
-        label={`Capital Returned (cash out + ${scenario.exit_year}yr CF)`}
+        label={t('capitalReturned', { years: scenario.exit_year })}
         value={fmtMoney(result.totalCapitalReturned)}
         bold
       />
-      <Line label="Remaining Equity" value={fmtMoney(result.remainingEquity)} muted />
+      <Line label={t('remainingEquity')} value={fmtMoney(result.remainingEquity)} muted />
       <Line
-        label="Cash-on-Remaining"
+        label={t('cashOnRemaining')}
         value={result.cashOnRemainingPct !== null ? fmtPct(result.cashOnRemainingPct) : '—'}
         bold
       />
@@ -489,6 +501,7 @@ function ComparisonTable({
   scenarios: ExitScenario[];
   context: ExitStrategyContext;
 }) {
+  const t = useTranslations('portal.exitStrategy');
   const rows = scenarios.map((s) => {
     const isRefi = s.scenario_type === 'refinance';
     if (isRefi) {
@@ -512,12 +525,12 @@ function ComparisonTable({
         scenario: s,
         exitYear: s.exit_year,
         exitCap: fmtPct(toNum(s.exit_cap_rate), 2),
-        exitOrValue: fmtMoney(result.propertyValue) + ' (value)',
-        netOrCash: fmtMoney(result.cashOut) + ' (cash out)',
+        exitOrValue: t('valueSuffix', { amount: fmtMoney(result.propertyValue) }),
+        netOrCash: t('cashOutSuffix', { amount: fmtMoney(result.cashOut) }),
         hold: fmtMoney(context.distributableCF * s.exit_year),
-        total: 'Ongoing',
-        multiple: 'N/A',
-        irr: 'N/A',
+        total: t('ongoing'),
+        multiple: t('na'),
+        irr: t('na'),
       };
     }
     const result = computeSaleScenario({
@@ -542,8 +555,8 @@ function ComparisonTable({
       netOrCash: fmtMoney(result.netProceeds),
       hold: fmtMoney(result.holdCashFlow),
       total: fmtMoney(result.totalReturn),
-      multiple: fmtMultiple(result.equityMultiple, positive),
-      irr: fmtIRR(result.irr, positive),
+      multiple: fmtMultiple(result.equityMultiple, positive).replace('N/A', t('na')),
+      irr: fmtIRR(result.irr, positive).replace('N/A', t('na')),
     };
   });
 
@@ -551,30 +564,30 @@ function ComparisonTable({
     <div className="bg-white rounded-2xl border border-rp-gray-200 overflow-hidden">
       <div className="px-6 py-4 border-b border-rp-gray-200">
         <h3 className="text-[15px] font-semibold text-rp-navy font-[family-name:var(--font-playfair)]">
-          Scenario Comparison
+          {t('scenarioComparison')}
         </h3>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-[12px]">
           <thead>
             <tr className="text-left text-[10px] uppercase tracking-wider text-rp-gray-500 bg-rp-gray-50/50">
-              <th className="py-2.5 px-5">Metric</th>
+              <th className="py-2.5 px-5">{t('metric')}</th>
               {rows.map((r) => (
                 <th key={r.scenario.id} className="py-2.5 px-3 text-right">
-                  {TYPE_LABEL[r.scenario.scenario_type]}
+                  {t.has(`types.${r.scenario.scenario_type}`) ? t(`types.${r.scenario.scenario_type}`) : TYPE_LABEL[r.scenario.scenario_type]}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            <CompRow label="Exit Year" cells={rows.map((r) => String(r.exitYear))} />
-            <CompRow label="Cap Rate" cells={rows.map((r) => r.exitCap)} />
-            <CompRow label="Exit Value / Property Value" cells={rows.map((r) => r.exitOrValue)} />
-            <CompRow label="Net Proceeds / Cash Out" cells={rows.map((r) => r.netOrCash)} />
-            <CompRow label="Cash Flow (hold)" cells={rows.map((r) => r.hold)} />
-            <CompRow label="Total Return" cells={rows.map((r) => r.total)} />
-            <CompRow label="Equity Multiple" cells={rows.map((r) => r.multiple)} strong />
-            <CompRow label="Scenario IRR" cells={rows.map((r) => r.irr)} strong />
+            <CompRow label={t('exitYear')} cells={rows.map((r) => String(r.exitYear))} />
+            <CompRow label={t('capRate')} cells={rows.map((r) => r.exitCap)} />
+            <CompRow label={t('exitOrPropertyValue')} cells={rows.map((r) => r.exitOrValue)} />
+            <CompRow label={t('netProceedsOrCashOut')} cells={rows.map((r) => r.netOrCash)} />
+            <CompRow label={t('cashFlowHold')} cells={rows.map((r) => r.hold)} />
+            <CompRow label={t('totalReturn')} cells={rows.map((r) => r.total)} />
+            <CompRow label={t('equityMultiple')} cells={rows.map((r) => r.multiple)} strong />
+            <CompRow label={t('scenarioIrr')} cells={rows.map((r) => r.irr)} strong />
           </tbody>
         </table>
       </div>

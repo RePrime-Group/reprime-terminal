@@ -7,6 +7,7 @@ import type { DealWithDetails } from '@/lib/types/database';
 
 export function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
   const t = useTranslations('portal.dealDetail');
+  const tDr = useTranslations('portal.dataRoom');
 
   const baseInputs = useMemo(
     () => parseDealInputs(deal as unknown as Record<string, unknown>),
@@ -52,13 +53,13 @@ export function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
 
   const mmFullyFinanced = mm.netEquity <= 0;
   const mmHasPositiveCF = mm.distributableCashFlow > 0;
-  const mmInfReturn = mmFullyFinanced ? (mmHasPositiveCF ? '∞' : 'N/A') : null;
+  const mmInfReturn = mmFullyFinanced ? (mmHasPositiveCF ? '∞' : tDr('na')) : null;
   const greenOrDefault = mmFullyFinanced ? '#0B8A4D' : undefined;
   const results = [
     { l: t('exitValue'), v: fmt(mm.exitPrice), c: '#0E3470' },
     { l: t('totalProfit'), v: fmt(totalProfit), c: totalProfit > 0 ? '#0B8A4D' : '#DC2626' },
     { l: t('equityMultiple'), v: mmInfReturn ?? (mm.equityMultiple !== null ? mm.equityMultiple.toFixed(2) + 'x' : '—'), c: greenOrDefault ?? '#BC9C45' },
-    { l: t('estLeveredIrr'), v: mmInfReturn ?? (mm.irr !== null ? mm.irr.toFixed(2) + '%' : 'N/A'), c: '#0B8A4D' },
+    { l: t('estLeveredIrr'), v: mmInfReturn ?? (mm.irr !== null ? mm.irr.toFixed(2) + '%' : tDr('na')), c: '#0B8A4D' },
     { l: t('annualDebtService'), v: fmt(mm.headlineSeniorDS + mm.annualMezzPayment), c: '#0E3470' },
     { l: t('equityRequired'), v: mmFullyFinanced ? '$0' : fmt(mm.netEquity), c: greenOrDefault ?? '#BC9C45' },
   ];
@@ -107,7 +108,7 @@ export function FinancialModelingTab({ deal }: { deal: DealWithDetails }) {
               <div className="flex justify-between mb-1.5">
                 <span className="text-[13px] font-medium text-[#4B5563]">{inp.label}</span>
                 <span className="text-[14px] font-semibold text-[#0E3470] tabular-nums">
-                  {inp.val}{inp.label.includes('years') ? '' : '%'}
+                  {inp.val}{inp.label === t('holdPeriod') ? '' : '%'}
                 </span>
               </div>
               <input

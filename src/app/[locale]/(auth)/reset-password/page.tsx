@@ -10,6 +10,7 @@ type Status = 'loading' | 'ready' | 'invalid' | 'done';
 
 export default function ResetPasswordPage() {
   const t = useTranslations('auth');
+  const tErr = useTranslations('auth.friendlyErrors');
   const params = useParams();
   const searchParams = useSearchParams();
   const locale = (params.locale as string) || 'en';
@@ -82,7 +83,7 @@ export default function ResetPasswordPage() {
       const { error: updateError } = await supabase.auth.updateUser({ password });
 
       if (updateError) {
-        setError(friendlyAuthError(updateError.message, t('passwordResetFailed')));
+        setError(friendlyAuthError(updateError.message, t('passwordResetFailed'), tErr));
         setSubmitting(false);
         return;
       }
@@ -93,7 +94,7 @@ export default function ResetPasswordPage() {
       setStatus('done');
     } catch (err) {
       console.error('password reset failed:', err);
-      setError(friendlyFetchError(err, t('passwordResetFailed')));
+      setError(friendlyFetchError(err, t('passwordResetFailed'), tErr));
       setSubmitting(false);
     }
   }

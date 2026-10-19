@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 
 interface CarouselImage {
   url: string;
@@ -13,6 +14,7 @@ interface ImageCarouselProps {
 }
 
 export default function ImageCarousel({ images }: ImageCarouselProps) {
+  const t = useTranslations('portal.photos');
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const goToPrevious = useCallback(() => {
@@ -59,7 +61,7 @@ export default function ImageCarousel({ images }: ImageCarouselProps) {
           <div key={index} className="relative w-full h-full flex-shrink-0">
             <Image
               src={image.url}
-              alt={image.caption ?? `Slide ${index + 1}`}
+              alt={image.caption ?? t('slideAlt', { index: index + 1 })}
               fill
               className="object-cover"
               sizes="(max-width: 768px) 100vw, 50vw"
@@ -67,7 +69,7 @@ export default function ImageCarousel({ images }: ImageCarouselProps) {
             />
             {image.caption && (
               <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent px-4 py-3">
-                <p className="text-white text-sm">{image.caption}</p>
+                <p className="text-white text-sm"><bdi>{image.caption}</bdi></p>
               </div>
             )}
           </div>
@@ -85,7 +87,7 @@ export default function ImageCarousel({ images }: ImageCarouselProps) {
           <button
             type="button"
             onClick={goToPrevious}
-            aria-label="Previous slide"
+            aria-label={t('previousSlide')}
             className="absolute left-3 top-1/2 -translate-y-1/2 w-[44px] h-[44px] rounded-full bg-white/90 shadow-lg flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 hover:bg-white"
           >
             <svg
@@ -103,7 +105,7 @@ export default function ImageCarousel({ images }: ImageCarouselProps) {
           <button
             type="button"
             onClick={goToNext}
-            aria-label="Next slide"
+            aria-label={t('nextSlide')}
             className="absolute right-3 top-1/2 -translate-y-1/2 w-[44px] h-[44px] rounded-full bg-white/90 shadow-lg flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 hover:bg-white"
           >
             <svg
@@ -124,7 +126,7 @@ export default function ImageCarousel({ images }: ImageCarouselProps) {
                 key={index}
                 type="button"
                 onClick={() => goToSlide(index)}
-                aria-label={`Go to slide ${index + 1}`}
+                aria-label={t('goToSlide', { index: index + 1 })}
                 className={`w-2.5 h-2.5 rounded-full transition-colors duration-200 ${
                   index === currentIndex
                     ? 'bg-rp-gold'

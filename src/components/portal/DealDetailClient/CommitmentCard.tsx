@@ -10,6 +10,9 @@ import type { DealWithDetails } from '@/lib/types/database';
 export function CommitmentCard({ deal, previewMode = false }: { deal: DealWithDetails; previewMode?: boolean }) {
   const t = useTranslations('portal.dealDetail');
   const tcom = useTranslations('common');
+  const tx = useTranslations('portal.commitment');
+  const tDp = useTranslations('portal.dealPage');
+  const tErr = useTranslations('auth.friendlyErrors');
   const isAssigned = deal.status === 'assigned';
   const [showWire, setShowWire] = useState(false);
   const [committed, setCommitted] = useState(false);
@@ -68,11 +71,11 @@ export function CommitmentCard({ deal, previewMode = false }: { deal: DealWithDe
         setShowWire(false);
         return true;
       }
-      setPhoneError(await readApiError(res, 'We couldn’t save your commitment. Please try again, or contact RePrime if this keeps happening.'));
+      setPhoneError(await readApiError(res, tx('saveFailedContact')));
       return false;
     } catch (err) {
       console.error('commit failed:', err);
-      setPhoneError(friendlyFetchError(err, 'We couldn’t save your commitment. Please try again.'));
+      setPhoneError(friendlyFetchError(err, tx('saveFailed'), tErr));
       return false;
     } finally {
       setCommitting(false);
@@ -97,10 +100,10 @@ export function CommitmentCard({ deal, previewMode = false }: { deal: DealWithDe
         setTotalCommitments((p) => Math.max(0, p - 1));
         return;
       }
-      setPhoneError(await readApiError(res, 'We couldn’t process the withdrawal right now. Please try again, or contact RePrime if this keeps happening.'));
+      setPhoneError(await readApiError(res, tx('withdrawFailedContact')));
     } catch (err) {
       console.error('withdraw failed:', err);
-      setPhoneError(friendlyFetchError(err, 'We couldn’t process the withdrawal right now. Please try again.'));
+      setPhoneError(friendlyFetchError(err, tx('withdrawFailed'), tErr));
     } finally {
       setWithdrawing(false);
     }
@@ -144,7 +147,7 @@ export function CommitmentCard({ deal, previewMode = false }: { deal: DealWithDe
             <button
               onClick={() => handleCommit('backup')}
               disabled={committing || previewMode}
-              title={previewMode ? 'Preview mode — read-only' : undefined}
+              title={previewMode ? tDp('previewReadOnly') : undefined}
               className="w-full sm:w-auto px-5 py-2.5 min-h-[44px] rounded-lg border border-[#EEF0F4] bg-white text-[#0E3470] text-[11px] font-semibold hover:border-[#BC9C45] transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {committing ? t('processing') : t('registerAsBackup')}
@@ -191,7 +194,7 @@ export function CommitmentCard({ deal, previewMode = false }: { deal: DealWithDe
                   setShowWithdrawConfirm(true);
                 }}
                 disabled={previewMode}
-                title={previewMode ? 'Preview mode — read-only' : undefined}
+                title={previewMode ? tDp('previewReadOnly') : undefined}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#FCA5A5] text-[#DC2626] text-[11px] font-semibold hover:bg-[#FEF2F2] hover:border-[#DC2626] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -246,15 +249,15 @@ export function CommitmentCard({ deal, previewMode = false }: { deal: DealWithDe
             {t('commitToThisDeal')}
           </h3>
           <p className="text-[13px] text-[#6B7280] mt-2">
-            {deal.deposit_amount && <>{t('deposit')} {deal.deposit_amount}</>}
-            {deal.deposit_amount && <> · Held by: Bruce J. Smoler, Esq., Escrow Attorney</>}
+            {deal.deposit_amount && <>{t('deposit')} <bdi>{deal.deposit_amount}</bdi></>}
+            {deal.deposit_amount && <> · {tx.rich('heldByEscrowAttorney', { bdi: (chunks) => <bdi>{chunks}</bdi> })}</>}
             {!deal.deposit_amount && t('contactToDiscuss')}
           </p>
         </div>
         <button
           onClick={() => setShowWire(true)}
           disabled={committing || previewMode}
-          title={previewMode ? 'Preview mode — read-only' : undefined}
+          title={previewMode ? tDp('previewReadOnly') : undefined}
           className="w-full md:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] text-[15px] font-bold shadow-[0_6px_24px_rgba(188,156,69,0.3)] hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {t('lockThisDeal')}
@@ -264,18 +267,18 @@ export function CommitmentCard({ deal, previewMode = false }: { deal: DealWithDe
       {showWire && (
         <div className="p-6 bg-[#FDF8ED] rounded-xl border border-[#ECD9A0]/30 animate-slide-down mb-5">
           <div className="text-[14px] font-semibold text-[#0E3470] mb-3">
-            {t('wire', { amount: deal.deposit_amount || 'deposit' })}
+            {t('wire', { amount: deal.deposit_amount || tx('depositFallback') })}
           </div>
           <div className="bg-white rounded-lg p-4 text-[13px] text-[#4B5563] leading-[1.7] border border-[#EEF0F4]">
-            Wire funds to the designated escrow trust account held by Bruce J. Smoler, Esq. at Smoler & Associates, P.A. — J.P. Morgan Chase Florida IOTA Trust Account
+            {tx.rich('wireInstructionsIntro', { bdi: (chunks) => <bdi>{chunks}</bdi> })}
             <br />
-            Acct No.: 991521071
+            {tx('acctNo')} 991521071
             <br />
-            ABA No.: 267084131
+            {tx('abaNo')} 267084131
             <br />
-            Wire deadline: 72 hours from confirmation.
+            {t('wireDeadline')}.
             <br />
-            Full wiring instructions will be delivered upon confirmation.
+            {tx('fullWiringOnConfirmation')}
           </div>
           <div className="flex gap-3 mt-4">
             <button
@@ -284,7 +287,7 @@ export function CommitmentCard({ deal, previewMode = false }: { deal: DealWithDe
                 setShowPhoneModal(true);
               }}
               disabled={committing || previewMode}
-              title={previewMode ? 'Preview mode — read-only' : undefined}
+              title={previewMode ? tDp('previewReadOnly') : undefined}
               className="flex-1 py-3.5 rounded-xl bg-[#BC9C45] hover:bg-[#A88A3D] text-[#0E3470] text-[13px] font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {committing ? t('processing') : t('confirmSendWire')}
@@ -322,7 +325,7 @@ export function CommitmentCard({ deal, previewMode = false }: { deal: DealWithDe
         <button
           onClick={() => handleCommit('backup')}
           disabled={committing || previewMode}
-          title={previewMode ? 'Preview mode — read-only' : undefined}
+          title={previewMode ? tDp('previewReadOnly') : undefined}
           className="w-full sm:w-auto px-5 py-2.5 min-h-[44px] rounded-lg border border-[#EEF0F4] bg-white text-[#0E3470] text-[11px] font-semibold hover:border-[#BC9C45] transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {t('registerAsBackup')}

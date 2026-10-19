@@ -11,6 +11,7 @@ export default function WelcomeClient() {
   const [userName, setUserName] = useState('');
   const [loading, setLoading] = useState(true);
   const t = useTranslations('portal.welcome');
+  const tn = useTranslations('portal.navbar');
 
   useEffect(() => {
     const supabase = createClient();
@@ -24,17 +25,18 @@ export default function WelcomeClient() {
               window.location.href = `/${locale}/portal`;
               return;
             }
-            setUserName(data?.full_name?.split(' ')[0] ?? 'Member');
+            setUserName(data?.full_name?.split(' ')[0] ?? tn('member'));
             setLoading(false);
           });
       } else {
         setLoading(false);
       }
     });
-  }, [locale]);
+  }, [locale, tn]);
 
-  const memberSince = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-  const expiresDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const dateLocale = locale === 'he' ? 'he-IL' : 'en-US';
+  const memberSince = new Date().toLocaleDateString(dateLocale, { month: 'long', year: 'numeric' });
+  const expiresDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toLocaleDateString(dateLocale, { month: 'long', day: 'numeric', year: 'numeric' });
 
   if (loading) {
     return (

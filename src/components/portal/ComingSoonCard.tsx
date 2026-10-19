@@ -19,6 +19,7 @@ export default function ComingSoonCard({ deal, index, previewMode = false }: Com
   const tc = useTranslations('portal.countdown');
   const tp = useTranslations('portal');
   const tPt = useTranslations('portal.propertyTypes');
+  const tErr = useTranslations('auth.friendlyErrors');
   const [subscribed, setSubscribed] = useState(deal.is_subscribed ?? false);
   const [loading, setLoading] = useState(false);
   const [committing, setCommitting] = useState(false);
@@ -52,12 +53,12 @@ export default function ComingSoonCard({ deal, index, previewMode = false }: Com
         setSubscribed(!subscribed);
       } else {
         setActionError(await readApiError(res, subscribed
-          ? 'Couldn’t turn off notifications. Please try again.'
-          : 'Couldn’t save your notification preference. Please try again.'));
+          ? t('notificationsOffFailed')
+          : t('notificationSaveFailed')));
       }
     } catch (err) {
       console.error('subscribe toggle failed:', err);
-      setActionError(friendlyFetchError(err, 'Couldn’t update notifications. Please try again.'));
+      setActionError(friendlyFetchError(err, t('notificationUpdateFailed'), tErr));
     } finally {
       setLoading(false);
     }
@@ -73,11 +74,11 @@ export default function ComingSoonCard({ deal, index, previewMode = false }: Com
       <div className="relative bg-white rounded-[14px] overflow-hidden border border-transparent rp-card-shadow group-hover:-translate-y-2 group-hover:rp-card-shadow-hover transition-all duration-300">
         {/* Header: Name + Address */}
         <div className="px-[20px] pt-[14px] pb-2">
-          <h3 className="text-[22px] font-semibold text-[#0E3470] font-[family-name:var(--font-playfair)] leading-tight tracking-[-0.01em] truncate">
+          <h3 dir="auto" className="text-[22px] font-semibold text-[#0E3470] font-[family-name:var(--font-playfair)] leading-tight tracking-[-0.01em] truncate">
             {deal.name}
           </h3>
           {address && (
-            <p className="text-[12px] text-[#6B7280] mt-0.5 truncate">
+            <p dir="auto" className="text-[12px] text-[#6B7280] mt-0.5 truncate">
               {address}
             </p>
           )}
@@ -181,7 +182,7 @@ export default function ComingSoonCard({ deal, index, previewMode = false }: Com
 
           {/* Teaser description */}
           {deal.teaser_description && (
-            <p className="text-[12px] text-[#4B5563] mt-3 leading-relaxed line-clamp-3">
+            <p dir="auto" className="text-[12px] text-[#4B5563] mt-3 leading-relaxed line-clamp-3">
               {deal.teaser_description}
             </p>
           )}
@@ -221,7 +222,7 @@ export default function ComingSoonCard({ deal, index, previewMode = false }: Com
           {(deal.commitment_count ?? 0) > 0 && (
             <div className="mt-4 p-2.5 bg-[#FEF2F2] border border-[#FECACA] rounded-lg text-center">
               <span className="text-[11px] font-bold text-[#DC2626]">
-                🔥 {deal.commitment_count} {(deal.commitment_count ?? 0) > 1 ? t('groups') : t('group')} {t('alreadyCommitted')}
+                🔥 {t('groupsAlreadyCommitted', { count: deal.commitment_count ?? 0 })}
               </span>
             </div>
           )}
@@ -237,7 +238,7 @@ export default function ComingSoonCard({ deal, index, previewMode = false }: Com
             <button
               onClick={handleSubscribe}
               disabled={loading || previewMode}
-              title={previewMode ? 'Preview mode — read-only' : undefined}
+              title={previewMode ? t('previewReadOnly') : undefined}
               className={`flex-1 py-2.5 min-h-[44px] rounded-lg text-[12px] font-semibold transition-all duration-200 disabled:cursor-not-allowed ${
                 subscribed
                   ? 'bg-[#BC9C45]/[0.08] border border-[#BC9C45]/20 text-[#BC9C45]'
@@ -268,16 +269,16 @@ export default function ComingSoonCard({ deal, index, previewMode = false }: Com
                         body: JSON.stringify({ type: 'primary' }),
                       });
                       if (res.ok) setCommitted(true);
-                      else setActionError(await readApiError(res, 'We couldn’t save your commitment. Please try again.'));
+                      else setActionError(await readApiError(res, t('commitFailed')));
                     } catch (err) {
                       console.error('early commit failed:', err);
-                      setActionError(friendlyFetchError(err, 'We couldn’t save your commitment. Please try again.'));
+                      setActionError(friendlyFetchError(err, t('commitFailed'), tErr));
                     } finally {
                       setCommitting(false);
                     }
                   }}
                   disabled={committing || previewMode}
-                  title={previewMode ? 'Preview mode — read-only' : undefined}
+                  title={previewMode ? t('previewReadOnly') : undefined}
                   className="flex-1 py-2.5 min-h-[44px] rounded-lg text-[12px] font-bold bg-gradient-to-r from-[#BC9C45] to-[#D4B96A] text-[#0E3470] hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
                 >
                   {committing && <div className="w-3 h-3 border-2 border-[#0E3470] border-t-transparent rounded-full animate-spin" />}

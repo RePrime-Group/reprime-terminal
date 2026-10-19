@@ -38,7 +38,8 @@ export default function DeleteConversationDialog({ title, onConfirm, onCancel }:
         </div>
 
         <p className="text-[12px] text-white/55 leading-relaxed mb-4">
-          {t('deleteThreadBody', { title: title || t('newThread') })}
+          {/* \u2068…\u2069 (FSI/PDI) isolate the title's direction inside the localized text */}
+          {t('deleteThreadBody', { title: `\u2068${title || t('newThread')}\u2069` })}
         </p>
 
         <div className="flex items-center justify-end gap-2">

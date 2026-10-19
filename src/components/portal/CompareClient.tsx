@@ -220,7 +220,7 @@ export default function CompareClient({ dealOptions, locale }: CompareClientProp
                   <button
                     onClick={() => removeColumn(colIndex)}
                     className="text-[#9CA3AF] hover:text-[#DC2626] transition-colors"
-                    aria-label="Remove column"
+                    aria-label={t('removeColumn')}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                   </button>
@@ -239,8 +239,9 @@ export default function CompareClient({ dealOptions, locale }: CompareClientProp
                     key={opt.id}
                     value={opt.id}
                     disabled={chosenIds.has(opt.id) && opt.id !== selectedId}
+                    dir="auto"
                   >
-                    {opt.name} — {opt.city}, {opt.state} · {formatPercent(opt.cap_rate)} cap
+                    {opt.name} — {opt.city}, {opt.state} · {formatPercent(opt.cap_rate)} {t('cap')}
                   </option>
                 ))}
               </select>
@@ -255,9 +256,9 @@ export default function CompareClient({ dealOptions, locale }: CompareClientProp
               {deal && !isLoading && (
                 <div className="mt-3 space-y-1.5">
                   <Link href={`/portal/deals/${deal.id}`} locale={locale} className="text-[14px] font-semibold text-[#0E3470] hover:text-[#1D5FB8] transition-colors">
-                    {deal.name}
+                    <bdi>{deal.name}</bdi>
                   </Link>
-                  <p className="text-[11px] text-[#6B7280]">{deal.city}, {deal.state} · {tPt.has(deal.property_type) ? tPt(deal.property_type) : deal.property_type}</p>
+                  <p className="text-[11px] text-[#6B7280]"><bdi>{deal.city}, {deal.state}</bdi> · {tPt.has(deal.property_type) ? tPt(deal.property_type) : deal.property_type}</p>
                   <div className="flex items-center gap-3 pt-1">
                     <div>
                       <div className="text-[8px] font-bold uppercase tracking-[1.5px] text-[#9CA3AF]">{t('capRate')}</div>
@@ -301,9 +302,9 @@ export default function CompareClient({ dealOptions, locale }: CompareClientProp
                               <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: color }} />
                               <div>
                                 <Link href={`/portal/deals/${deal.id}`} locale={locale} className="text-[14px] font-semibold text-[#0E3470] hover:text-[#1D5FB8]">
-                                  {deal.name}
+                                  <bdi>{deal.name}</bdi>
                                 </Link>
-                                <p className="text-[10px] text-[#6B7280]">{deal.city}, {deal.state}</p>
+                                <p className="text-[10px] text-[#6B7280]"><bdi>{deal.city}, {deal.state}</bdi></p>
                               </div>
                             </div>
                           ) : isLoading ? (
@@ -381,9 +382,9 @@ export default function CompareClient({ dealOptions, locale }: CompareClientProp
                               <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: color }} />
                               <div className="min-w-0">
                                 <Link href={`/portal/deals/${deal.id}`} locale={locale} className="block text-[12px] font-semibold text-[#0E3470] truncate">
-                                  {deal.name}
+                                  <bdi>{deal.name}</bdi>
                                 </Link>
-                                <p className="text-[10px] text-[#6B7280] truncate">{deal.city}, {deal.state}</p>
+                                <p className="text-[10px] text-[#6B7280] truncate"><bdi>{deal.city}, {deal.state}</bdi></p>
                               </div>
                             </div>
                           ) : isLoading ? (
@@ -431,7 +432,7 @@ export default function CompareClient({ dealOptions, locale }: CompareClientProp
                 <div className="flex items-center gap-3">
                   <span className="text-[11px] font-semibold text-[#6B7280]">
                     {t('shift')} <span className={`${capShift >= 0 ? 'text-[#DC2626]' : 'text-[#0B8A4D]'} font-bold`}>
-                      {capShift >= 0 ? '+' : ''}{capShift} {t('bps')}
+                      <bdi>{capShift >= 0 ? '+' : ''}{capShift}</bdi> {t('bps')}
                     </span>
                   </span>
                   <input
@@ -458,7 +459,7 @@ export default function CompareClient({ dealOptions, locale }: CompareClientProp
                     <div key={colIndex} className="rounded-xl p-4 border" style={{ borderColor: deal ? color + '30' : '#EEF0F4', borderLeftWidth: '3px', borderLeftColor: deal ? color : '#EEF0F4' }}>
                       {deal && s ? (
                         <>
-                          <div className="text-[12px] font-semibold text-[#0E3470] mb-3">{deal.name}</div>
+                          <div className="text-[12px] font-semibold text-[#0E3470] mb-3"><bdi>{deal.name}</bdi></div>
                           <div className="space-y-2">
                             <div className="flex justify-between">
                               <span className="text-[10px] text-[#9CA3AF]">{t('currentValue')}</span>
@@ -470,7 +471,7 @@ export default function CompareClient({ dealOptions, locale }: CompareClientProp
                             </div>
                             <div className="flex justify-between pt-2 border-t border-[#EEF0F4]">
                               <span className="text-[10px] text-[#9CA3AF]">{t('delta')}</span>
-                              <span className={`text-[12px] font-bold tabular-nums ${s.delta >= 0 ? 'text-[#0B8A4D]' : 'text-[#DC2626]'}`}>
+                              <span className={`text-[12px] font-bold tabular-nums ${s.delta >= 0 ? 'text-[#0B8A4D]' : 'text-[#DC2626]'}`} dir="auto">
                                 {s.delta >= 0 ? '+' : ''}{formatPriceCompact(s.delta)} ({s.pctChange >= 0 ? '+' : ''}{s.pctChange.toFixed(1)}%)
                               </span>
                             </div>
@@ -497,7 +498,7 @@ export default function CompareClient({ dealOptions, locale }: CompareClientProp
                   <div key={v.label} className="bg-[#F7F8FA] rounded-xl p-4 border border-[#EEF0F4]">
                     <div className="text-[9px] font-bold text-[#9CA3AF] uppercase tracking-[1.5px] mb-2">{v.label}</div>
                     <div className="text-[18px] font-bold text-[#0E3470]">{v.value}</div>
-                    <div className="text-[11px] text-[#6B7280] mt-1">{v.deal.name} — {v.deal.city}, {v.deal.state}</div>
+                    <div className="text-[11px] text-[#6B7280] mt-1"><bdi>{v.deal.name} — {v.deal.city}, {v.deal.state}</bdi></div>
                   </div>
                 ))}
               </div>

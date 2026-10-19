@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import DealDetailClient from '@/components/portal/DealDetailClient';
@@ -17,10 +18,11 @@ interface DealDetailPageProps {
 }
 
 export async function generateMetadata({ params }: DealDetailPageProps) {
-  const { id } = await params;
+  const { locale, id } = await params;
+  const t = await getTranslations({ locale, namespace: 'portal.dealPage' });
   const supabase = await createClient();
   const { data } = await supabase.from('terminal_deals').select('name').eq('id', id).single();
-  return { title: data ? `${data.name} — RePrime Terminal Beta` : 'Deal — RePrime Terminal Beta' };
+  return { title: data ? `${data.name} — RePrime Terminal Beta` : t('metaTitleFallback') };
 }
 
 // Columns needed by the overview tab + header + hero + metric bar
@@ -368,6 +370,8 @@ export default async function DealDetailPage({ params, searchParams }: DealDetai
     }
   }
 
+  const tNav = await getTranslations({ locale, namespace: 'portal.navbar' });
+
   return (
     <DealDetailClient
       deal={{
@@ -388,7 +392,7 @@ export default async function DealDetailPage({ params, searchParams }: DealDetai
       stageProgress={stageProgress}
       currentStage={currentStage}
       hasSignedNDA={hasSignedNDA}
-      investorName={investorProfile?.full_name ?? 'Member'}
+      investorName={investorProfile?.full_name ?? tNav('member')}
       investorEmail={investorProfile?.email ?? ''}
       addresses={addressesWithDocs}
       pipelineTasks={tasks as { id: string; name: string; status: string; stage: string }[]}

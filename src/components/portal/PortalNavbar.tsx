@@ -32,6 +32,7 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
   const t = useTranslations('portal');
   const tn = useTranslations('portal.navbar');
   const tc = useTranslations('common');
+  const tPreview = useTranslations('admin.preview');
   const router = useRouter();
   const pathname = usePathname();
   const activeTab = pathname.startsWith('/portal/portfolio')
@@ -148,7 +149,7 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
           {previewMode && (
             <span className="hidden md:inline-flex items-center gap-1.5 ml-1 px-2.5 py-1 rounded-full bg-[#BC9C45]/15 border border-[#BC9C45]/40 text-[#D4A843] text-[10px] font-bold uppercase tracking-[1.5px]">
               <span className="w-1.5 h-1.5 rounded-full bg-[#D4A843]" />
-              Admin Preview
+              {tPreview('adminPreview')}
             </span>
           )}
         </div>
@@ -183,9 +184,9 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
             <button
               onClick={() => setShowNotifications(!showNotifications)}
               className="w-[44px] h-[44px] md:w-[34px] md:h-[34px] rounded-full border border-white/[0.08] bg-white/[0.06] flex items-center justify-center hover:border-[#BC9C45] transition-colors relative"
-              aria-label="Notifications"
+              aria-label={tn('notifications')}
             >
-              <Image src="/images/notification_logo.png" alt="Notifications" width={28} height={28} className="rounded-full" />
+              <Image src="/images/notification_logo.png" alt={tn('notifications')} width={28} height={28} className="rounded-full" />
               {hasUnread && <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-[#DC2626] countdown-pulse" />}
             </button>
 
@@ -283,12 +284,12 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
                         <>
                           <span className="text-lg shrink-0">{icon}</span>
                           <div className="min-w-0 flex-1 text-start">
-                            <div className={`text-[12px] font-medium ${item.read_at ? 'text-white/70' : 'text-white'}`}>{item.title}</div>
-                            <div className="text-[11px] text-white/50 truncate">{item.description}</div>
+                            <div className={`text-[12px] font-medium ${item.read_at ? 'text-white/70' : 'text-white'}`}><bdi>{item.title}</bdi></div>
+                            <div className="text-[11px] text-white/50 truncate"><bdi>{item.description}</bdi></div>
                             <div className="text-[10px] text-white/25 mt-0.5">{timeAgo}</div>
                           </div>
                           {!item.read_at && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#D4A843] shrink-0 mt-1.5" aria-label="Unread" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#D4A843] shrink-0 mt-1.5" aria-label={tn('unread')} />
                           )}
                         </>
                       );
@@ -339,7 +340,7 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
               className="flex items-center gap-2.5 group rounded-full pl-3 pr-2 py-1 hover:bg-white/[0.04] transition-colors"
             >
               <div className="text-right">
-                <div className="text-[12px] font-medium text-white group-hover:text-[#D4A843] transition-colors">{firstName || tn('member')}</div>
+                <div className="text-[12px] font-medium text-white group-hover:text-[#D4A843] transition-colors"><bdi>{firstName || tn('member')}</bdi></div>
                 <div className="text-[9px] font-semibold text-[#D4A843] uppercase tracking-[2px]">{tn('member')}</div>
               </div>
               <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#BC9C45] to-[#A88A3D] flex items-center justify-center border border-[#D4A843]/30 group-hover:shadow-[0_0_12px_rgba(212,168,67,0.4)] transition-shadow">
@@ -373,10 +374,10 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="text-[14px] font-semibold text-white truncate">
-                        {fullName || firstName || tn('member')}
+                        <bdi>{fullName || firstName || tn('member')}</bdi>
                       </div>
                       {email && (
-                        <div className="text-[11px] text-white/50 truncate mt-0.5">{email}</div>
+                        <div className="text-[11px] text-white/50 truncate mt-0.5"><bdi>{email}</bdi></div>
                       )}
                     </div>
                   </div>
@@ -438,7 +439,7 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
           <button
             onClick={() => setMobileMenuOpen((o) => !o)}
             className="md:hidden w-[44px] h-[44px] rounded-full border border-white/[0.08] bg-white/[0.06] flex items-center justify-center hover:border-[#BC9C45] transition-colors"
-            aria-label="Menu"
+            aria-label={tn('menu')}
             aria-expanded={mobileMenuOpen}
           >
             {mobileMenuOpen ? (
@@ -456,7 +457,7 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
             {previewMode && (
               <div className="px-4 py-3 inline-flex items-center gap-2 rounded-md bg-[#BC9C45]/10 border border-[#BC9C45]/30 text-[#D4A843] text-[11px] font-bold uppercase tracking-[1.5px] mb-2 w-fit">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#D4A843]" />
-                Admin Preview
+                {tPreview('adminPreview')}
               </div>
             )}
 
@@ -497,7 +498,7 @@ export default function PortalNavbar({ firstName, fullName, email, locale, acces
                 <span className="text-white text-[14px] font-semibold">{initials}</span>
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-[14px] font-medium text-white truncate">{firstName || tn('member')}</div>
+                <div className="text-[14px] font-medium text-white truncate"><bdi>{firstName || tn('member')}</bdi></div>
                 <div className="text-[9px] font-semibold text-[#D4A843] uppercase tracking-[2px]">{tn('settings')}</div>
               </div>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/40">

@@ -4,26 +4,49 @@
  * messages to investors — always route through here.
  */
 
-const SUPABASE_AUTH_MAP: Array<[RegExp, string]> = [
-  [/invalid login credentials/i, 'That email or password is incorrect.'],
-  [/email not confirmed/i, "Your email hasn't been confirmed yet. Please check your inbox for the confirmation link."],
-  [/user already registered|already been registered/i, 'An account with that email already exists. Try signing in instead.'],
-  [/rate limit/i, 'Too many attempts. Please wait a few minutes and try again.'],
-  [/password should be at least/i, 'Your password is too short. Use at least 8 characters.'],
-  [/new password should be different/i, 'Your new password must be different from your current password.'],
-  [/unable to validate email address/i, 'That email address looks invalid.'],
-  [/signup requires a valid password/i, 'Please choose a stronger password (at least 8 characters).'],
-  [/user not found/i, 'We couldn\u2019t find an account with that email.'],
+/**
+ * Keys under `auth.friendlyErrors` in src/messages/*.json. Callers that pass
+ * a translator (e.g. `useTranslations('auth.friendlyErrors')`) get the
+ * localized string; callers that don't keep the English text below.
+ */
+export type FriendlyErrorKey =
+  | 'invalidCredentials'
+  | 'emailNotConfirmed'
+  | 'alreadyRegistered'
+  | 'rateLimited'
+  | 'passwordTooShort'
+  | 'passwordSameAsCurrent'
+  | 'invalidEmail'
+  | 'weakPassword'
+  | 'userNotFound'
+  | 'connectionProblem';
+
+export type FriendlyErrorTranslator = (key: FriendlyErrorKey) => string;
+
+const SUPABASE_AUTH_MAP: Array<[RegExp, FriendlyErrorKey, string]> = [
+  [/invalid login credentials/i, 'invalidCredentials', 'That email or password is incorrect.'],
+  [/email not confirmed/i, 'emailNotConfirmed', "Your email hasn't been confirmed yet. Please check your inbox for the confirmation link."],
+  [/user already registered|already been registered/i, 'alreadyRegistered', 'An account with that email already exists. Try signing in instead.'],
+  [/rate limit/i, 'rateLimited', 'Too many attempts. Please wait a few minutes and try again.'],
+  [/password should be at least/i, 'passwordTooShort', 'Your password is too short. Use at least 8 characters.'],
+  [/new password should be different/i, 'passwordSameAsCurrent', 'Your new password must be different from your current password.'],
+  [/unable to validate email address/i, 'invalidEmail', 'That email address looks invalid.'],
+  [/signup requires a valid password/i, 'weakPassword', 'Please choose a stronger password (at least 8 characters).'],
+  [/user not found/i, 'userNotFound', 'We couldn\u2019t find an account with that email.'],
 ];
 
 /**
  * Map a Supabase auth error message to a friendly string.
  * Returns `fallback` if no known pattern matches.
  */
-export function friendlyAuthError(message: string | undefined | null, fallback: string): string {
+export function friendlyAuthError(
+  message: string | undefined | null,
+  fallback: string,
+  translate?: FriendlyErrorTranslator,
+): string {
   if (!message) return fallback;
-  for (const [pattern, friendly] of SUPABASE_AUTH_MAP) {
-    if (pattern.test(message)) return friendly;
+  for (const [pattern, key, friendly] of SUPABASE_AUTH_MAP) {
+    if (pattern.test(message)) return translate ? translate(key) : friendly;
   }
   return fallback;
 }
@@ -42,9 +65,15 @@ export function isNetworkError(err: unknown): boolean {
  * Message for an exception caught around `fetch()`. Network failures
  * get a friendly connectivity message; anything else falls back.
  */
-export function friendlyFetchError(err: unknown, fallback: string): string {
+export function friendlyFetchError(
+  err: unknown,
+  fallback: string,
+  translate?: FriendlyErrorTranslator,
+): string {
   if (isNetworkError(err)) {
-    return 'Connection problem. Please check your internet and try again.';
+    return translate
+      ? translate('connectionProblem')
+      : 'Connection problem. Please check your internet and try again.';
   }
   return fallback;
 }

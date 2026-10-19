@@ -36,6 +36,9 @@ export default function PortfolioList({
 }: Props) {
   const router = useRouter();
   const t = useTranslations('portal.dealDetail');
+  const tPortfolio = useTranslations('portal.portfolio');
+  const tPt = useTranslations('portal.propertyTypes');
+  const tErr = useTranslations('auth.friendlyErrors');
   const [deals, setDeals] = useState(initialDeals);
   const [committedIds, setCommittedIds] = useState(new Set(initialCommittedIds));
   const [pendingDealId, setPendingDealId] = useState<string | null>(null);
@@ -54,7 +57,7 @@ export default function PortfolioList({
         body: JSON.stringify({ phone: e164 }),
       });
       if (!res.ok) {
-        setError(await readApiError(res, 'We couldn\u2019t process the withdrawal right now. Please try again, or contact RePrime if this keeps happening.'));
+        setError(await readApiError(res, tPortfolio('withdrawFailedContact')));
         return;
       }
       setPhone(e164);
@@ -69,7 +72,7 @@ export default function PortfolioList({
       router.refresh();
     } catch (err) {
       console.error('portfolio withdraw failed:', err);
-      setError(friendlyFetchError(err, 'We couldn\u2019t process the withdrawal right now. Please try again.'));
+      setError(friendlyFetchError(err, tPortfolio('withdrawFailed'), tErr));
     } finally {
       setWithdrawing(false);
     }
@@ -109,18 +112,18 @@ export default function PortfolioList({
                   </svg>
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[14px] font-semibold text-[#0A1628] truncate">
+                  <p dir="auto" className="text-[14px] font-semibold text-[#0A1628] truncate">
                     {deal.name}
                   </p>
                   <p className="text-[11px] text-gray-500">
-                    {deal.city}, {deal.state} &middot; {deal.property_type}
+                    <bdi>{deal.city}, {deal.state}</bdi> &middot; {tPt.has(deal.property_type) ? tPt(deal.property_type) : deal.property_type}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-4 md:gap-6 flex-shrink-0">
                 <div className="text-right hidden sm:block">
-                  <p className="text-[9px] uppercase tracking-[0.08em] text-gray-400 font-medium">INVESTED</p>
+                  <p className="text-[9px] uppercase tracking-[0.08em] text-gray-400 font-medium">{tPortfolio('invested')}</p>
                   <p className="text-[14px] font-semibold text-[#0A1628]">
                     {formatPriceCompact(deal.purchase_price)}
                   </p>

@@ -19,7 +19,8 @@ export default function SuggestedPrompts({ onPick, dealName }: Props) {
   return (
     <div className="px-4 py-5 space-y-4">
       <p className="text-[12.5px] text-white/65 leading-relaxed">
-        {t('emptyGreeting', { deal: dealName ?? '—' })}
+        {/* \u2068…\u2069 (FSI/PDI) isolate the deal name's direction inside the localized text */}
+        {t('emptyGreeting', { deal: dealName !== null ? `\u2068${dealName}\u2069` : '—' })}
       </p>
       <div>
         <div className="text-[9.5px] font-semibold tracking-[1.5px] uppercase text-white/35 mb-2">

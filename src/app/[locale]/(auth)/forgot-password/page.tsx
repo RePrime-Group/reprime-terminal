@@ -7,6 +7,7 @@ import { friendlyFetchError, readApiError } from '@/lib/utils/friendly-error';
 
 export default function ForgotPasswordPage() {
   const t = useTranslations('auth');
+  const tErr = useTranslations('auth.friendlyErrors');
   const params = useParams();
   const locale = (params.locale as string) || 'en';
 
@@ -38,7 +39,7 @@ export default function ForgotPasswordPage() {
       setSent(true);
     } catch (err) {
       console.error('forgot password failed:', err);
-      setError(friendlyFetchError(err, t('forgotPasswordFailed')));
+      setError(friendlyFetchError(err, t('forgotPasswordFailed'), tErr));
     } finally {
       setSubmitting(false);
     }

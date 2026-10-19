@@ -237,13 +237,13 @@ export default function DealFilterBar({ controller }: { controller: DealFilterCo
             <span className="text-[10px] text-[#9CA3AF] font-medium">{resultsCount} {t('resultsFound')}</span>
             {searchQuery && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#EFF6FF] text-[#1D5FB8] rounded-md text-[10px] font-semibold">
-                &quot;{searchQuery}&quot;
+                <bdi>&quot;{searchQuery}&quot;</bdi>
                 <button onClick={() => setSearchQuery('')} className="hover:text-[#DC2626] transition-colors"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
               </span>
             )}
             {[...selectedTypes].map((pt) => (
               <span key={pt} className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#0E3470]/8 text-[#0E3470] rounded-md text-[10px] font-semibold">
-                {pt}
+                {tPt.has(pt) ? tPt(pt) : pt}
                 <button onClick={() => toggleType(pt)} className="hover:text-[#DC2626] transition-colors"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
               </span>
             ))}

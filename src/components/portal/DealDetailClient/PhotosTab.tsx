@@ -30,6 +30,7 @@ export function PhotosTab({
   handleDocumentDownload,
 }: Props) {
   const t = useTranslations('portal.dealDetail');
+  const tPhotos = useTranslations('portal.photos');
   return (
     <div className="mt-4 md:mt-6 px-4 md:px-8 pb-8 md:pb-10">
       {ddLoading ? (
@@ -76,7 +77,11 @@ export function PhotosTab({
           {totalPhotoPages > 1 && (
             <div className="mt-5 flex items-center justify-between gap-3">
               <div className="text-[12px] text-[#9CA3AF]">
-                {`${safePhotoPage * PHOTOS_PER_PAGE + 1}–${Math.min((safePhotoPage + 1) * PHOTOS_PER_PAGE, photoDocs.length)} of ${photoDocs.length}`}
+                {tPhotos('rangeOf', {
+                  start: safePhotoPage * PHOTOS_PER_PAGE + 1,
+                  end: Math.min((safePhotoPage + 1) * PHOTOS_PER_PAGE, photoDocs.length),
+                  total: photoDocs.length,
+                })}
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -84,7 +89,7 @@ export function PhotosTab({
                   disabled={safePhotoPage === 0}
                   onClick={() => setPhotoPage((p) => Math.max(0, p - 1))}
                   className="w-9 h-9 rounded-lg border border-[#EEF0F4] bg-white text-[#0E3470] flex items-center justify-center transition-colors hover:border-[#BC9C45]/50 hover:text-[#BC9C45] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-[#EEF0F4] disabled:hover:text-[#0E3470]"
-                  aria-label="Previous page"
+                  aria-label={tPhotos('previousPage')}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M15 18l-6-6 6-6" />
@@ -98,7 +103,7 @@ export function PhotosTab({
                   disabled={safePhotoPage >= totalPhotoPages - 1}
                   onClick={() => setPhotoPage((p) => Math.min(totalPhotoPages - 1, p + 1))}
                   className="w-9 h-9 rounded-lg border border-[#EEF0F4] bg-white text-[#0E3470] flex items-center justify-center transition-colors hover:border-[#BC9C45]/50 hover:text-[#BC9C45] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-[#EEF0F4] disabled:hover:text-[#0E3470]"
-                  aria-label="Next page"
+                  aria-label={tPhotos('nextPage')}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M9 18l6-6-6-6" />

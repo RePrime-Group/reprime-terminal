@@ -1,9 +1,14 @@
 import { redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
 import CompareClient from '@/components/portal/CompareClient';
 import { ACTIVE_DEAL_STATUSES } from '@/lib/constants';
 
-export const metadata = { title: 'Deal Comparison — RePrime Terminal Beta' };
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'portal.compare' });
+  return { title: `${t('title')} — RePrime Terminal Beta` };
+}
 
 export default async function ComparePage({
   params,

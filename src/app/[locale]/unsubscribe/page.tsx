@@ -21,7 +21,12 @@ export default async function UnsubscribePage({
   const t = await getTranslations('unsubscribe');
 
   const success = status === 'ok';
-  const categoryLabel = cat && CATEGORY_LABELS[cat] ? CATEGORY_LABELS[cat] : null;
+  const categoryLabel =
+    cat && CATEGORY_LABELS[cat]
+      ? t.has(`categories.${cat}`)
+        ? t(`categories.${cat}`)
+        : CATEGORY_LABELS[cat]
+      : null;
 
   return (
     <div style={{ minHeight: '100vh', background: '#F2F4F8', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 16px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif' }}>

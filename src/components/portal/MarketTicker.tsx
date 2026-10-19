@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
 import type { MarketDataPoint } from '@/lib/market-data';
 import { FALLBACK_MARKET_DATA } from '@/lib/market-data';
 
@@ -26,7 +27,7 @@ function TickerItem({ label, value, change, direction }: MarketDataPoint) {
           style={changeStyle}
         >
           {arrow && <span className="text-[8px]">{arrow}</span>}
-          {change}
+          <bdi>{change}</bdi>
         </span>
       )}
     </span>
@@ -34,6 +35,9 @@ function TickerItem({ label, value, change, direction }: MarketDataPoint) {
 }
 
 export default function MarketTicker() {
+  const t = useTranslations('portal.marketIntel');
+  const tl = useTranslations('portal.marketIntel.tickerLabels');
+  const locale = useLocale();
   const [items, setItems] = useState<MarketDataPoint[]>(FALLBACK_MARKET_DATA);
   const [asOf, setAsOf] = useState<string | null>(null);
 
@@ -75,7 +79,7 @@ export default function MarketTicker() {
           {doubled.map((item, idx) => (
             <span key={idx} className="inline-flex items-center">
               <span className="px-6">
-                <TickerItem {...item} />
+                <TickerItem {...item} label={tl.has(item.label) ? tl(item.label) : item.label} />
               </span>
               <span
                 className="h-3 w-px"
@@ -89,7 +93,7 @@ export default function MarketTicker() {
               className="px-6 text-[10px] font-medium uppercase tracking-[1.2px]"
               style={{ color: 'rgba(255,255,255,0.4)' }}
             >
-              as of {new Date(asOf).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              {t('asOf', { time: new Date(asOf).toLocaleTimeString(locale === 'he' ? 'he-IL' : 'en-US', { hour: '2-digit', minute: '2-digit' }) })}
             </span>
           )}
         </div>

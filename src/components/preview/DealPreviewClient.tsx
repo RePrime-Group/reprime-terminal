@@ -62,6 +62,7 @@ export default function DealPreviewClient({
 }: DealPreviewClientProps) {
   const t = useTranslations('preview');
   const tPt = useTranslations('portal.propertyTypes');
+  const tDetail = useTranslations('portal.dealDetail');
   const [activePhoto, setActivePhoto] = useState(0);
 
   const address = [deal.address, deal.city, deal.state].filter(Boolean).join(', ');
@@ -115,13 +116,13 @@ export default function DealPreviewClient({
         {/* ─── Property Header ─── */}
         <div className="mb-6">
           <h1 className="text-[28px] md:text-[36px] font-semibold text-[#0E3470] font-[family-name:var(--font-playfair)] leading-tight tracking-[-0.01em]">
-            {deal.name}
+            <bdi>{deal.name}</bdi>
           </h1>
           {subline && (
             <p className="text-[13px] md:text-[14px] text-[#6B7280] mt-2">{subline}</p>
           )}
           {address && address !== cityState && (
-            <p className="text-[12px] text-[#9CA3AF] mt-1">{address}</p>
+            <p className="text-[12px] text-[#9CA3AF] mt-1"><bdi>{address}</bdi></p>
           )}
         </div>
 
@@ -232,7 +233,7 @@ export default function DealPreviewClient({
             <div className="grid grid-cols-3 gap-6">
               <PlaceholderMetric label="IRR" value="00.00%" />
               <PlaceholderMetric label="CoC" value="00.00%" />
-              <PlaceholderMetric label="Equity Multiple" value="0.00x" />
+              <PlaceholderMetric label={tDetail('equityMultiple')} value="0.00x" />
             </div>
             <div className="mt-6 space-y-2">
               <div className="h-3 bg-[#EEF0F4] rounded-full w-full" />
@@ -378,8 +379,8 @@ function SuggestedCard({ deal, locale }: { deal: SuggestedDeal; locale: string }
         )}
       </div>
       <div className="p-4">
-        <h3 className="text-[15px] font-semibold text-[#0E3470] truncate">{deal.name}</h3>
-        {cityState && <p className="text-[11px] text-[#6B7280] truncate mt-0.5">{cityState}</p>}
+        <h3 className="text-[15px] font-semibold text-[#0E3470] truncate"><bdi>{deal.name}</bdi></h3>
+        {cityState && <p className="text-[11px] text-[#6B7280] truncate mt-0.5"><bdi>{cityState}</bdi></p>}
         <div className="flex items-baseline justify-between mt-3">
           <span className="text-[14px] font-bold text-[#0E3470] tabular-nums">
             {formatPrice(deal.purchase_price)}

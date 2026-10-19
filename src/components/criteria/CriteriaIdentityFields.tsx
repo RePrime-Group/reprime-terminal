@@ -39,6 +39,9 @@ interface Props {
 
 export default function CriteriaIdentityFields({ value, onChange }: Props) {
   const t = useTranslations('criteria.fields');
+  const tOpt = useTranslations('criteria.options');
+  const optLabel = (group: string, c: { value: string; label: string }) =>
+    tOpt.has(`${group}.${c.value}`) ? tOpt(`${group}.${c.value}`) : c.label;
   const set = <K extends keyof CriteriaIdentityValue>(k: K, v: CriteriaIdentityValue[K]) =>
     onChange({ ...value, [k]: v });
 
@@ -66,7 +69,7 @@ export default function CriteriaIdentityFields({ value, onChange }: Props) {
       </div>
 
       <div>
-        <label className={labelCls}>{t('email')} (locked)</label>
+        <label className={labelCls}>{t('email')} {t('locked')}</label>
         <input type="email" value={value.email} readOnly className={lockedInputCls} />
         <p className="text-[11px] text-rp-gray-400 mt-1">{t('emailHint')}</p>
       </div>
@@ -122,7 +125,7 @@ export default function CriteriaIdentityFields({ value, onChange }: Props) {
         >
           {CONTACT_METHODS.map((c) => (
             <option key={c.value} value={c.value}>
-              {c.label}
+              {optLabel('contactMethod', c)}
             </option>
           ))}
         </select>
@@ -139,7 +142,7 @@ export default function CriteriaIdentityFields({ value, onChange }: Props) {
             <option value="">—</option>
             {INVESTING_AS_OPTIONS.map((c) => (
               <option key={c.value} value={c.value}>
-                {c.label}
+                {optLabel('investingAs', c)}
               </option>
             ))}
           </select>
@@ -154,7 +157,7 @@ export default function CriteriaIdentityFields({ value, onChange }: Props) {
             <option value="">—</option>
             {CAPITAL_READY_BUCKETS.map((c) => (
               <option key={c.value} value={c.value}>
-                {c.label}
+                {optLabel('capitalReady', c)}
               </option>
             ))}
           </select>
@@ -169,7 +172,7 @@ export default function CriteriaIdentityFields({ value, onChange }: Props) {
             <option value="">—</option>
             {OWNERSHIP_PREFS.map((c) => (
               <option key={c.value} value={c.value}>
-                {c.label}
+                {optLabel('ownershipPref', c)}
               </option>
             ))}
           </select>
@@ -184,7 +187,7 @@ export default function CriteriaIdentityFields({ value, onChange }: Props) {
             <option value="">—</option>
             {TIMELINE_OPTIONS.map((c) => (
               <option key={c.value} value={c.value}>
-                {c.label}
+                {optLabel('timeline', c)}
               </option>
             ))}
           </select>

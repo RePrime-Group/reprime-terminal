@@ -5,7 +5,7 @@ import FadeInOnScroll from '@/components/ui/FadeInOnScroll';
 import { OverviewFinancials } from '@/components/portal/FinancialOverview';
 import MarketplaceInterestForm from '@/components/portal/MarketplaceInterestForm';
 import { formatNumber, formatSqFt } from '@/lib/utils/format';
-import { computeWALT, computeOccupancy, formatYears } from '@/lib/utils/rent-roll';
+import { computeWALT, computeOccupancy } from '@/lib/utils/rent-roll';
 import type { DealWithDetails, TerminalTenantLease } from '@/lib/types/database';
 import type { FeeDefaults } from '@/lib/utils/fee-resolver';
 import { type DealInputs, calculatePropertyMetrics, calculateTraditionalClose } from '@/lib/utils/deal-calculator';
@@ -65,6 +65,8 @@ export function OverviewTab({
   const t = useTranslations('portal.dealDetail');
   const tc = useTranslations('portal.dealCard');
   const tPt = useTranslations('portal.propertyTypes');
+  const tRr = useTranslations('portal.rentRoll');
+  const tOv = useTranslations('portal.overview');
 
   const sfNum = parseFloat((deal.square_footage ?? '').replace(/,/g, ''));
 
@@ -92,15 +94,15 @@ export function OverviewTab({
                         🏢
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-[14px] font-semibold text-[#0E3470] truncate">{addr.label}</h4>
+                        <h4 className="text-[14px] font-semibold text-[#0E3470] truncate"><bdi>{addr.label}</bdi></h4>
                         <p className="text-[11px] text-[#6B7280] mt-0.5">
-                          {[addr.address, addr.city, addr.state].filter(Boolean).join(', ')}
+                          <bdi>{[addr.address, addr.city, addr.state].filter(Boolean).join(', ')}</bdi>
                         </p>
                         {(addr.square_footage || addr.units) && (
                           <p className="text-[10px] text-[#9CA3AF] mt-1">
-                            {addr.square_footage && `${addr.square_footage} SF`}
+                            {addr.square_footage && tOv('addressSf', { sf: addr.square_footage })}
                             {addr.square_footage && addr.units && ' · '}
-                            {addr.units && `${addr.units} Units`}
+                            {addr.units && tc('units', { count: addr.units })}
                           </p>
                         )}
                       </div>
@@ -131,7 +133,7 @@ export function OverviewTab({
                           <path d="M3 8l4 4 6-7" />
                         </svg>
                       </div>
-                      <span className="text-[15px] text-[#374151] leading-relaxed">
+                      <span className="text-[15px] text-[#374151] leading-relaxed" dir="auto">
                         {highlight}
                       </span>
                     </div>
@@ -148,7 +150,7 @@ export function OverviewTab({
               <h3 className="font-[family-name:var(--font-playfair)] text-lg font-semibold text-[#0E3470] mb-3">
                 {t('acquisitionThesis')}
               </h3>
-              <p className="text-[15px] text-[#4B5563] leading-[1.7]">
+              <p className="text-[15px] text-[#4B5563] leading-[1.7]" dir="auto">
                 {deal.acquisition_thesis}
               </p>
             </div>
@@ -202,7 +204,7 @@ export function OverviewTab({
                   <span className="data-label">{t('jobGrowth')}</span>
                 </div>
                 <div className="text-lg font-bold text-[#0B8A4D]">
-                  {deal.job_growth ? `+${deal.job_growth}` : '--'}
+                  {deal.job_growth ? <bdi>{`+${deal.job_growth}`}</bdi> : '--'}
                 </div>
               </div>
               <div className="bg-white rounded-xl border border-[#EEF0F4] p-3 md:p-4 rp-card-shadow min-w-0">
@@ -339,13 +341,13 @@ export function OverviewTab({
                   Number.isFinite(sfNum) && sfNum > 0 ? sfNum : null,
                 );
                 if (wVal !== null) {
-                  rows.push({ key: 'walt', label: 'WALT', value: formatYears(wVal) });
+                  rows.push({ key: 'walt', label: 'WALT', value: Number.isFinite(wVal) ? tRr('years', { value: wVal.toFixed(1) }) : '—' });
                 }
                 if (occ.occupancyPct !== null) {
-                  rows.push({ key: 'occupancy', label: 'Occupancy', value: `${occ.occupancyPct.toFixed(1)}%` });
+                  rows.push({ key: 'occupancy', label: t('occupancy'), value: `${occ.occupancyPct.toFixed(1)}%` });
                 }
               } else if (deal.occupancy) {
-                rows.push({ key: 'occupancy', label: 'Occupancy', value: `${deal.occupancy}%` });
+                rows.push({ key: 'occupancy', label: t('occupancy'), value: `${deal.occupancy}%` });
               }
               rows.push({ key: 'neighborhood', label: t('neighborhood'), value: deal.neighborhood });
               if (pricePerSf) {
@@ -357,7 +359,7 @@ export function OverviewTab({
                   className={`flex justify-between gap-3 py-2 ${idx % 2 === 0 ? 'bg-[#F7F8FA]' : ''} px-2 rounded`}
                 >
                   <span className="data-label shrink-0">{row.label}</span>
-                  <span className="text-[14px] font-semibold text-[#0E3470] text-right break-words min-w-0">
+                  <span className="text-[14px] font-semibold text-[#0E3470] text-right break-words min-w-0" dir="auto">
                     {row.value ?? '--'}
                   </span>
                 </div>

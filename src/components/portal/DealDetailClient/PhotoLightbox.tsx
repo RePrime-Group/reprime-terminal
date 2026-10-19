@@ -1,6 +1,7 @@
 'use client';
 
 import type React from 'react';
+import { useTranslations } from 'next-intl';
 import type { TerminalDDDocument } from '@/lib/types/database';
 
 interface Props {
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function PhotoLightbox({ photoDocs, photoLightboxIndex, photoLightboxLoading, setPhotoLightboxIndex, setPhotoLightboxLoading }: Props) {
+  const t = useTranslations('portal.photos');
   const doc = photoDocs[photoLightboxIndex];
   if (!doc) return null;
 
@@ -38,7 +40,7 @@ export function PhotoLightbox({ photoDocs, photoLightboxIndex, photoLightboxLoad
         type="button"
         onClick={() => setPhotoLightboxIndex(null)}
         className="absolute top-5 right-5 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors"
-        aria-label="Close lightbox"
+        aria-label={t('closeLightbox')}
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M18 6L6 18" />
@@ -52,7 +54,7 @@ export function PhotoLightbox({ photoDocs, photoLightboxIndex, photoLightboxLoad
         </div>
       )}
 
-      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 max-w-[80vw] bg-white/10 backdrop-blur-sm text-white text-[12px] px-4 py-1.5 rounded-full truncate">
+      <div dir="auto" className="absolute bottom-5 left-1/2 -translate-x-1/2 max-w-[80vw] bg-white/10 backdrop-blur-sm text-white text-[12px] px-4 py-1.5 rounded-full truncate">
         {caption}
       </div>
 
@@ -61,7 +63,7 @@ export function PhotoLightbox({ photoDocs, photoLightboxIndex, photoLightboxLoad
           type="button"
           onClick={goPrev}
           className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors"
-          aria-label="Previous photo"
+          aria-label={t('previousPhoto')}
         >
           <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M10 12L6 8l4-4" />
@@ -90,7 +92,7 @@ export function PhotoLightbox({ photoDocs, photoLightboxIndex, photoLightboxLoad
           type="button"
           onClick={goNext}
           className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors"
-          aria-label="Next photo"
+          aria-label={t('nextPhoto')}
         >
           <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M6 4l4 4-4 4" />

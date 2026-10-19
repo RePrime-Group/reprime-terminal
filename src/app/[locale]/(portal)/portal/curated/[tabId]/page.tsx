@@ -3,9 +3,14 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { parseDealInputs, calculatePropertyMetrics } from '@/lib/utils/deal-calculator';
 import CuratedTabClient from '@/components/portal/curated/CuratedTabClient';
+import { getTranslations } from 'next-intl/server';
 import type { DealCardData } from '@/components/portal/PortalDashboardClient';
 
-export const metadata = { title: 'Your Pipeline — RePrime Terminal Beta' };
+export async function generateMetadata({ params }: PageProps) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'portal.curated' });
+  return { title: `${t('metaTitle')} — RePrime Terminal Beta` };
+}
 
 /** Parse text column to number, stripping $, commas, whitespace */
 function num(val: string | number | null | undefined): number {

@@ -1,6 +1,7 @@
 'use client';
 
 import { Fragment, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   sortCapExForDisplay,
   groupByPriority,
@@ -33,6 +34,7 @@ export default function CapExTab({
 }: CapExTabProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [selectedBuildingId, setSelectedBuildingId] = useState<string>(ALL_BUILDINGS);
+  const t = useTranslations('portal.capex');
 
   const filtered = isPortfolio && selectedBuildingId !== ALL_BUILDINGS
     ? items.filter((i) => i.address_id === selectedBuildingId)
@@ -56,7 +58,7 @@ export default function CapExTab({
     return (
       <div className="bg-white rounded-2xl border border-rp-gray-200 p-10 text-center">
         <p className="text-[14px] text-rp-gray-500">
-          Property condition information is being finalized.
+          {t('emptyState')}
         </p>
       </div>
     );
@@ -67,16 +69,16 @@ export default function CapExTab({
       {isPortfolio && buildings.length > 0 && (
         <div className="flex items-center justify-between bg-white rounded-2xl border border-rp-gray-200 p-4">
           <label className="text-[12px] font-medium text-rp-gray-600">
-            Viewing condition for:
+            {t('viewingConditionFor')}
           </label>
           <select
             value={selectedBuildingId}
             onChange={(e) => setSelectedBuildingId(e.target.value)}
             className="px-3.5 py-2 border border-rp-gray-300 rounded-lg text-sm text-rp-gray-700 bg-white focus:outline-none focus:ring-[3px] focus:ring-rp-gold/15 focus:border-rp-gold"
           >
-            <option value={ALL_BUILDINGS}>All Buildings</option>
+            <option value={ALL_BUILDINGS}>{t('allBuildings')}</option>
             {buildings.map((b) => (
-              <option key={b.id} value={b.id}>{b.label}</option>
+              <option key={b.id} value={b.id} dir="auto">{b.label}</option>
             ))}
           </select>
         </div>
@@ -86,28 +88,28 @@ export default function CapExTab({
       <div className="bg-white rounded-2xl border border-rp-gray-200 overflow-hidden">
         <div className="px-6 py-5 border-b border-rp-gray-200">
           <h2 className="text-[16px] font-semibold text-rp-navy font-[family-name:var(--font-playfair)]">
-            Property Condition
+            {t('propertyCondition')}
           </h2>
           <p className="text-[12px] text-rp-gray-500 mt-1">
-            Informational only. Reserves are finalized during due diligence.
+            {t('informationalOnly')}
           </p>
         </div>
 
         {sorted.length === 0 ? (
           <div className="py-10 text-center text-rp-gray-400 text-[13px]">
-            No items recorded for this selection.
+            {t('noItems')}
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-[11px] uppercase tracking-wide text-rp-gray-500 border-b border-rp-gray-200 bg-rp-gray-50/50">
-                  <th className="py-3 px-6">Component</th>
-                  <th className="py-3 px-3">Condition</th>
-                  <th className="py-3 px-3">Last Replaced</th>
-                  <th className="py-3 px-3">Est. Life Remaining</th>
-                  <th className="py-3 px-3 text-right">Est. Replacement Cost</th>
-                  <th className="py-3 px-3">Priority</th>
+                  <th className="py-3 px-6">{t('colComponent')}</th>
+                  <th className="py-3 px-3">{t('colCondition')}</th>
+                  <th className="py-3 px-3">{t('colLastReplaced')}</th>
+                  <th className="py-3 px-3">{t('colLifeRemaining')}</th>
+                  <th className="py-3 px-3 text-right">{t('colReplacementCost')}</th>
+                  <th className="py-3 px-3">{t('colPriority')}</th>
                   <th className="py-3 px-6 w-10"></th>
                 </tr>
               </thead>
@@ -122,17 +124,23 @@ export default function CapExTab({
                         className={`border-b border-rp-gray-100 ${hasNotes ? 'cursor-pointer hover:bg-rp-gray-50/50' : ''}`}
                         onClick={() => hasNotes && toggle(item.id)}
                       >
-                        <td className="py-3 px-6 font-medium text-rp-navy">{item.component_name}</td>
+                        <td dir="auto" className="py-3 px-6 font-medium text-rp-navy">{item.component_name}</td>
                         <td className="py-3 px-3">
                           <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${cc.bg} ${cc.text}`}>
                             <span className={`w-1.5 h-1.5 rounded-full ${cc.dot}`} />
-                            {item.current_condition}
+                            {t.has(`conditions.${String(item.current_condition).replace(/[^A-Za-z0-9]/g, '')}`)
+                              ? t(`conditions.${String(item.current_condition).replace(/[^A-Za-z0-9]/g, '')}`)
+                              : item.current_condition}
                           </span>
                         </td>
-                        <td className="py-3 px-3 text-rp-gray-600">{item.year_last_replaced ?? '—'}</td>
-                        <td className="py-3 px-3 text-rp-gray-600">{item.useful_life_remaining ?? '—'}</td>
+                        <td dir="auto" className="py-3 px-3 text-rp-gray-600">{item.year_last_replaced ?? '—'}</td>
+                        <td dir="auto" className="py-3 px-3 text-rp-gray-600">{item.useful_life_remaining ?? '—'}</td>
                         <td className="py-3 px-3 text-right tabular-nums">{formatMoney(item.estimated_replacement_cost)}</td>
-                        <td className="py-3 px-3 text-rp-gray-600">{item.priority}</td>
+                        <td className="py-3 px-3 text-rp-gray-600">
+                          {t.has(`priorities.${String(item.priority).replace(/[^A-Za-z0-9]/g, '')}`)
+                            ? t(`priorities.${String(item.priority).replace(/[^A-Za-z0-9]/g, '')}`)
+                            : item.priority}
+                        </td>
                         <td className="py-3 px-6 text-rp-gray-400 text-xs">
                           {hasNotes ? (isExpanded ? '▲' : '▼') : ''}
                         </td>
@@ -141,8 +149,8 @@ export default function CapExTab({
                         <tr className="bg-rp-gray-50/50">
                           <td colSpan={7} className="py-3 px-6">
                             <div className="text-[12px] text-rp-gray-600 whitespace-pre-wrap">
-                              <span className="font-semibold text-rp-gray-700">Notes: </span>
-                              {item.notes}
+                              <span className="font-semibold text-rp-gray-700">{t('notes')} </span>
+                              <bdi>{item.notes}</bdi>
                             </div>
                           </td>
                         </tr>
@@ -159,31 +167,31 @@ export default function CapExTab({
       {/* Budget summary */}
       <div className="bg-white rounded-2xl border border-rp-gray-200 p-6">
         <h2 className="text-[16px] font-semibold text-rp-navy font-[family-name:var(--font-playfair)] mb-4">
-          CapEx Budget Summary
+          {t('budgetSummary')}
         </h2>
         <div className="space-y-2 text-[13px]">
-          <BudgetRow label="Immediate" value={formatMoney(totals['Immediate'], false)} />
-          <BudgetRow label="Near-Term (1-2 years)" value={formatMoney(totals['Near-Term'], false)} />
-          <BudgetRow label="During Hold (3-5 years)" value={formatMoney(totals['During Hold'], false)} />
-          <BudgetRow label="Post-Hold" value={formatMoney(totals['Post-Hold'], false)} />
+          <BudgetRow label={t('priorities.Immediate')} value={formatMoney(totals['Immediate'], false)} />
+          <BudgetRow label={t('nearTermYears')} value={formatMoney(totals['Near-Term'], false)} />
+          <BudgetRow label={t('duringHoldYears')} value={formatMoney(totals['During Hold'], false)} />
+          <BudgetRow label={t('priorities.PostHold')} value={formatMoney(totals['Post-Hold'], false)} />
           {totals['N/A'] > 0 && (
-            <BudgetRow label="N/A" value={formatMoney(totals['N/A'], false)} />
+            <BudgetRow label={t('priorities.NA')} value={formatMoney(totals['N/A'], false)} />
           )}
         </div>
         <div className="border-t border-rp-gray-200 mt-4 pt-4 space-y-2 text-[13px]">
           <BudgetRow
-            label="Total Estimated During Hold"
+            label={t('totalDuringHold')}
             value={formatMoney(totalDuringHold, false)}
             strong
           />
           <BudgetRow
-            label={`Annualized Reserve (${holdPeriodYears}-yr hold)`}
-            value={`${formatMoney(annualized, false)}/yr*`}
+            label={t('annualizedReserve', { years: holdPeriodYears })}
+            value={t('perYear', { amount: formatMoney(annualized, false) })}
             strong
           />
         </div>
         <p className="mt-4 text-[11px] text-rp-gray-500 italic">
-          * CapEx reserves are calculated at closing and reflected in final offering terms.
+          {t('footnote')}
         </p>
       </div>
     </div>

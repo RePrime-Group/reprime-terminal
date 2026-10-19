@@ -8,7 +8,11 @@ import { formatPrice } from '@/lib/utils/format';
 import MarketplaceClient from '@/components/portal/MarketplaceClient';
 import type { DealCardData } from '@/components/portal/PortalDashboardClient';
 
-export const metadata = { title: 'Marketplace — RePrime Terminal Beta' };
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'portal.marketplace' });
+  return { title: `${t('title')} — RePrime Terminal Beta` };
+}
 
 function num(val: string | number | null | undefined): number {
   if (val == null) return 0;

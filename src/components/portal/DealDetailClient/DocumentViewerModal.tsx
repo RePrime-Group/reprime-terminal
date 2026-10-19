@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 interface Props {
   viewerUrl: string;
@@ -12,6 +12,7 @@ interface Props {
 
 export function DocumentViewerModal({ viewerUrl, viewerName, investorName, investorEmail, onClose }: Props) {
   const t = useTranslations('portal.dealDetail');
+  const dateLocale = useLocale() === 'he' ? 'he-IL' : 'en-US';
   return (
     <div
       className="fixed inset-0 z-[100] flex items-stretch md:items-center justify-center bg-black/80 backdrop-blur-md md:p-4"
@@ -31,7 +32,7 @@ export function DocumentViewerModal({ viewerUrl, viewerName, investorName, inves
               </svg>
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-white text-[13px] md:text-[14px] font-semibold truncate">{viewerName}</div>
+              <div className="text-white text-[13px] md:text-[14px] font-semibold truncate"><bdi>{viewerName}</bdi></div>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -67,7 +68,7 @@ export function DocumentViewerModal({ viewerUrl, viewerName, investorName, inves
                   textTransform: 'uppercase',
                 }}
               >
-                CONFIDENTIAL · {investorName} · {investorEmail}
+                {t('confidential')} · <bdi>{investorName}</bdi> · <bdi>{investorEmail}</bdi>
               </div>
             ))}
           </div>
@@ -80,7 +81,7 @@ export function DocumentViewerModal({ viewerUrl, viewerName, investorName, inves
 
         <div className="flex items-center justify-between px-6 py-3 bg-white border-t border-[#EEF0F4] shrink-0">
           <div className="text-[11px] text-[#9CA3AF]">
-            {t('viewedBy')} <span className="font-semibold text-[#0E3470]">{investorName}</span> · {new Date().toLocaleString()}
+            {t('viewedBy')} <span dir="auto" className="font-semibold text-[#0E3470]">{investorName}</span> · {new Date().toLocaleString(dateLocale)}
           </div>
         </div>
       </div>

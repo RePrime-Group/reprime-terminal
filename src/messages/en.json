@@ -40,7 +40,22 @@
     "page": "Page",
     "of": "of",
     "total": "total",
-    "language": "Language"
+    "language": "Language",
+    "tryAgain": "Try Again",
+    "closeModal": "Close modal",
+    "launch": {
+      "showCountdown": "Show launch countdown",
+      "minimizeCountdown": "Minimize countdown",
+      "nowLive": "Now live",
+      "officialLaunch": "Official launch",
+      "untilOfficialLaunch": "Until official launch",
+      "headlineLine1": "The Official Launch",
+      "headlineLine2": "Is Imminent.",
+      "taglineLine1": "Experience the Future of Commercial Real Estate Investment.",
+      "taglineLine2": "Exclusive Access.",
+      "enterTerminalBeta": "Enter Terminal Beta",
+      "copyright": "© {year} REPRIME. All Rights Reserved."
+    }
   },
   "auth": {
     "loginTitle": "Sign In to RePrime Terminal Beta",
@@ -112,7 +127,28 @@
     "requestNewResetLink": "Request a new link",
     "validatingResetLink": "Validating reset link...",
     "showPassword": "Show password",
-    "hidePassword": "Hide password"
+    "hidePassword": "Hide password",
+    "metaTitle": "Sign In — RePrime Terminal Beta",
+    "signInUnavailable": "Sign-in is temporarily unavailable. Please try again shortly.",
+    "signInFailed": "We couldn’t sign you in. Please check your email and password and try again.",
+    "emailNotConfirmedHelp": "Your email hasn’t been confirmed yet. Please check your inbox for the confirmation link, or contact RePrime if you need help.",
+    "profileNotFound": "We couldn’t find your profile. Please contact RePrime to finish setting up your account.",
+    "signInError": "Something went wrong while signing in. Please try again.",
+    "connectionProblemTitle": "Connection problem",
+    "inviteNetworkErrorBody": "We couldn’t reach our servers to check your invitation. Please check your internet connection and try again.",
+    "tryAgain": "Try again",
+    "friendlyErrors": {
+      "invalidCredentials": "That email or password is incorrect.",
+      "emailNotConfirmed": "Your email hasn't been confirmed yet. Please check your inbox for the confirmation link.",
+      "alreadyRegistered": "An account with that email already exists. Try signing in instead.",
+      "rateLimited": "Too many attempts. Please wait a few minutes and try again.",
+      "passwordTooShort": "Your password is too short. Use at least 8 characters.",
+      "passwordSameAsCurrent": "Your new password must be different from your current password.",
+      "invalidEmail": "That email address looks invalid.",
+      "weakPassword": "Please choose a stronger password (at least 8 characters).",
+      "userNotFound": "We couldn’t find an account with that email.",
+      "connectionProblem": "Connection problem. Please check your internet and try again."
+    }
   },
   "admin": {
     "sidebar": {
@@ -1001,7 +1037,9 @@
       "daysAgo": "{count}d ago",
       "member": "Member",
       "settings": "Settings",
-      "pipelines": "Pipelines"
+      "pipelines": "Pipelines",
+      "unread": "Unread",
+      "menu": "Menu"
     },
     "curated": {
       "eyebrow": "Private Pipeline",
@@ -1009,7 +1047,8 @@
       "exclusive": "Exclusive · Off-Market",
       "emptyTitle": "Your dedicated pipeline",
       "emptyBody": "Your advisor is curating opportunities for you.",
-      "noMatching": "No deals match your filters."
+      "noMatching": "No deals match your filters.",
+      "metaTitle": "Your Pipeline"
     },
     "settings": {
       "title": "Settings",
@@ -1059,7 +1098,10 @@
       "gpCarryPct": "GP Carry %",
       "prefReturnPct": "Preferred Return %",
       "reprimeDefaultPlaceholder": "REPRIME default: {value}%",
-      "saveMyTerms": "Save My Terms"
+      "saveMyTerms": "Save My Terms",
+      "teamAccessTitle": "Team Access",
+      "teamAccessBody": "You’re a team member on a RePrime account. They control what actions you can perform. Contact them if you need access to more features.",
+      "teamAccessBodyWithParent": "You’re a team member on <strong>{parentName}</strong>’s RePrime account. They control what actions you can perform. Contact them if you need access to more features."
     },
     "dealCard": {
       "purchasePrice": "Purchase Price",
@@ -1103,7 +1145,16 @@
       "marketplaceBadge": "MARKETPLACE",
       "interested": "{count, plural, one {# Interested} other {# Interested}}",
       "beTheFirstInterested": "Be the first to express interest",
-      "pricingNegotiable": "Pricing & terms under negotiation"
+      "pricingNegotiable": "Pricing & terms under negotiation",
+      "watch": "Watch",
+      "saveFailed": "Couldn’t save. Try again.",
+      "na": "N/A",
+      "previewReadOnly": "Preview mode — read-only",
+      "notificationsOffFailed": "Couldn’t turn off notifications. Please try again.",
+      "notificationSaveFailed": "Couldn’t save your notification preference. Please try again.",
+      "notificationUpdateFailed": "Couldn’t update notifications. Please try again.",
+      "commitFailed": "We couldn’t save your commitment. Please try again.",
+      "groupsAlreadyCommitted": "{count, plural, one {# group} other {# groups}} already committed"
     },
     "dealDetail": {
       "overview": "Overview",
@@ -1196,7 +1247,6 @@
       "leaseSummaryPending": "Lease Summary — Pending",
       "transactionDocuments": "TRANSACTION DOCUMENTS",
       "transactionDocumentsSubtitle": "Executed agreements and offering materials",
-      "offeringMemorandum": "Offering Memorandum",
       "signedLoi": "Signed LOI",
       "viewSignedLoi": "View Signed LOI",
       "signedLoiPending": "Signed LOI — Pending",
@@ -1321,7 +1371,6 @@
       "projectedCoc": "Projected CoC",
       "commitToDeal": "Commit to Deal",
       "cancel": "Cancel",
-      "preferredReturn": "Preferred Return",
       "allFeesIncludedShort": "All fees included",
       "lpSplit": "LP Split",
       "sellerFinancing": "Seller Financing",
@@ -1425,7 +1474,13 @@
       "packagePartial": "Downloaded {succeeded} of {total} files — {missing} couldn't be retrieved.",
       "packagePartialNames": "Missing: {names}",
       "packagePartialNamesOverflow": "Missing: {names} and {overflow} more.",
-      "packagePartialRetryHint": "Click Download All again to retry the missing files."
+      "packagePartialRetryHint": "Click Download All again to retry the missing files.",
+      "downloadFailed": "Download failed",
+      "documentCount": "{count, plural, one {{count} Document} other {{count} Documents}}",
+      "expand": "Expand",
+      "collapse": "Collapse",
+      "viewDocumentAria": "View {name}",
+      "downloadDocumentAria": "Download {name}"
     },
     "compare": {
       "title": "Deal Comparison",
@@ -1459,7 +1514,8 @@
       "deposit": "Deposit",
       "highestIrr": "Highest IRR",
       "lowestEquity": "Lowest Equity",
-      "highestCapRate": "Highest Cap Rate"
+      "highestCapRate": "Highest Cap Rate",
+      "removeColumn": "Remove column"
     },
     "financial": {
       "cashFlowSummary": "Cash Flow Summary",
@@ -1533,7 +1589,12 @@
       "above": "above",
       "pref": "pref",
       "at": "at",
-      "io": "IO"
+      "io": "IO",
+      "calculatedAtClosing": "Calculated at Closing*",
+      "capexFootnote": "* CapEx reserves will be determined during due diligence and reflected in final offering terms.",
+      "tbd": "TBD*",
+      "lenderDscrIO": "Lender DSCR (IO)",
+      "irrHoldYears": "IRR ({years, plural, other {#yr}})"
     },
     "nda": {
       "title": "Non-Disclosure Agreement",
@@ -1602,7 +1663,8 @@
       "deadlineChanges": "Deadline changes",
       "priceUpdates": "Price updates",
       "competingInterest": "Competing interest",
-      "startWatching": "Start Watching"
+      "startWatching": "Start Watching",
+      "saveFailed": "We couldn’t save your alert preferences. Please try again."
     },
     "portfolio": {
       "totalEquityCommitted": "TOTAL EQUITY COMMITTED",
@@ -1614,7 +1676,11 @@
       "performing": "Performing",
       "underRenovation": "Under Renovation",
       "stabilized": "Stabilized",
-      "closed": "Closed"
+      "closed": "Closed",
+      "invested": "INVESTED",
+      "withdrawFailed": "We couldn’t process the withdrawal right now. Please try again.",
+      "withdrawFailedContact": "We couldn’t process the withdrawal right now. Please try again, or contact RePrime if this keeps happening.",
+      "statusPerforming": "Performing"
     },
     "marketplace": {
       "title": "Marketplace",
@@ -1632,7 +1698,10 @@
       "interestSubmitted": "✓ Interest expressed",
       "updateInterest": "Update Interest",
       "marketplaceBannerTitle": "MARKETPLACE",
-      "marketplaceBannerDesc": "Pricing & terms under negotiation. Express your interest and pricing guidance below."
+      "marketplaceBannerDesc": "Pricing & terms under negotiation. Express your interest and pricing guidance below.",
+      "invalidTargetPrice": "Please enter a valid target price.",
+      "submitFailed": "Failed to submit. Please try again.",
+      "networkError": "Network error."
     },
     "marketIntel": {
       "marketCycle": "MARKET CYCLE",
@@ -1641,7 +1710,18 @@
       "peak": "PEAK",
       "creMaturityWall": "CRE MATURITY WALL",
       "terminalActivity": "TERMINAL ACTIVITY",
-      "noRecentActivity": "No recent activity"
+      "noRecentActivity": "No recent activity",
+      "daysAgo": "{count, plural, one {#d ago} other {#d ago}}",
+      "asOf": "as of {time}",
+      "tickerLabels": {
+        "10-Yr Treasury": "10-Yr Treasury",
+        "CRE Cap Rate Spread": "CRE Cap Rate Spread",
+        "CMBS Delinquency": "CMBS Delinquency",
+        "Office Vacancy": "Office Vacancy",
+        "Multifamily Vacancy": "Multifamily Vacancy",
+        "Industrial Vacancy": "Industrial Vacancy",
+        "Retail Vacancy": "Retail Vacancy"
+      }
     },
     "terminalScore": {
       "label": "Terminal Score",
@@ -1683,6 +1763,360 @@
       "memberSince": "Member since {date}",
       "noFeesFounding": "No membership fees apply during the founding period",
       "enterTerminal": "Enter Terminal →"
+    },
+    "pages": {
+      "tryAgain": "Try Again"
+    },
+    "dashboard": {
+      "drafts": "Drafts",
+      "adminOnly": "Admin only",
+      "quarterRelease": "{quarter} Release"
+    },
+    "notepad": {
+      "myNotes": "My Notes",
+      "placeholder": "Add your private notes about this deal...",
+      "saving": "Saving…",
+      "saveFailed": "Save failed",
+      "saved": "Saved ✓",
+      "lastSaved": "Last: {time}",
+      "justNow": "just now",
+      "secondsAgo": "{count}s ago",
+      "minutesAgo": "{count}m ago",
+      "hoursAgo": "{count}h ago",
+      "daysAgo": "{count, plural, other {#d ago}}"
+    },
+    "photos": {
+      "rangeOf": "{start}–{end} of {total}",
+      "previousPage": "Previous page",
+      "nextPage": "Next page",
+      "closeLightbox": "Close lightbox",
+      "previousPhoto": "Previous photo",
+      "nextPhoto": "Next photo",
+      "goToPhoto": "Go to photo {index}",
+      "propertyPhotoAlt": "Property photo {index}",
+      "previousSlide": "Previous slide",
+      "nextSlide": "Next slide",
+      "goToSlide": "Go to slide {index}",
+      "slideAlt": "Slide {index}"
+    },
+    "commitment": {
+      "saveFailedContact": "We couldn’t save your commitment. Please try again, or contact RePrime if this keeps happening.",
+      "saveFailed": "We couldn’t save your commitment. Please try again.",
+      "withdrawFailedContact": "We couldn’t process the withdrawal right now. Please try again, or contact RePrime if this keeps happening.",
+      "withdrawFailed": "We couldn’t process the withdrawal right now. Please try again.",
+      "heldByEscrowAttorney": "Held by: <bdi>Bruce J. Smoler, Esq.</bdi>, Escrow Attorney",
+      "depositFallback": "deposit",
+      "wireInstructionsIntro": "Wire funds to the designated escrow trust account held by <bdi>Bruce J. Smoler, Esq.</bdi> at <bdi>Smoler & Associates, P.A.</bdi> — <bdi>J.P. Morgan Chase Florida IOTA Trust Account</bdi>",
+      "acctNo": "Acct No.:",
+      "abaNo": "ABA No.:",
+      "fullWiringOnConfirmation": "Full wiring instructions will be delivered upon confirmation.",
+      "escrowHolderLine": "<bdi>Bruce J. Smoler, Esq.</bdi> · <bdi>Smoler & Associates, P.A.</bdi> — Florida IOTA Trust Account",
+      "perYearPair": "{pct}/yr ({amount}/yr)",
+      "carryAbovePref": "{carry} above {pref} pref"
+    },
+    "dealPage": {
+      "previewReadOnly": "Preview mode — read-only",
+      "tabRentRoll": "Rent Roll",
+      "tabCapex": "CapEx & Condition",
+      "tabExitStrategy": "Exit Strategy",
+      "tabInsights": "Insights",
+      "investorsInterested": "{count, plural, one {# investor interested} other {# investors interested}}",
+      "noInterestYet": "No interest yet — be the first",
+      "metaTitleFallback": "Deal — RePrime Terminal Beta"
+    },
+    "meetings": {
+      "slotDateTime": "{date} at {time}",
+      "previewReadOnly": "Preview mode — read-only"
+    },
+    "dealNav": {
+      "backToPortal": "Back to portal",
+      "previewReadOnly": "Preview mode — read-only",
+      "live": "Live",
+      "aiBannerSubtitle": "Ask about financials, tenants, or leases on this deal.",
+      "askAiAssistant": "Ask AI Assistant"
+    },
+    "exitStrategy": {
+      "emptyState": "Exit scenarios are being finalized.",
+      "disclaimer": "Scenarios are illustrative projections. Disposition costs modeled at 2% of exit value. Cash flow during hold is computed from the current headline metrics and held constant per year. Actual results will differ based on market conditions, lease activity, and capital decisions at closing.",
+      "types": {
+        "conservative": "Conservative",
+        "moderate": "Moderate",
+        "aggressive": "Aggressive",
+        "refinance": "Refinance"
+      },
+      "buyerProfiles": {
+        "ValueInvestor": "Value Investor",
+        "StabilizedAssetBuyer": "Stabilized Asset Buyer",
+        "Institutional": "Institutional",
+        "NetLeaseBuyer": "Net Lease Buyer",
+        "1031ExchangeBuyer": "1031 Exchange Buyer",
+        "PrivateEquity": "Private Equity",
+        "LocalInvestor": "Local Investor",
+        "NA": "N/A"
+      },
+      "yearCap": "Year {year} · {cap} cap",
+      "exitValue": "Exit Value",
+      "netProceeds": "Net Proceeds",
+      "equityMultiple": "Equity Multiple",
+      "scenarioIrr": "Scenario IRR",
+      "propertyValue": "Property Value",
+      "cashOut": "Cash Out",
+      "postRefiCf": "Post-Refi CF",
+      "cashOnRemaining": "Cash-on-Remaining",
+      "whatIfRefiLtv": "Refi LTV — What-If",
+      "whatIfExitCap": "Exit Cap — What-If",
+      "suffixLtv": "% LTV",
+      "suffixExitCap": "% exit cap",
+      "sliderHint": "Drag to explore. Refresh to reset.",
+      "sensitivity": "Sensitivity",
+      "fullProforma": "Full Proforma",
+      "exitCap": "Exit Cap",
+      "multiple": "Multiple",
+      "refiLtv": "Refi LTV",
+      "saleProformaTitle": "<bdi>{name}</bdi> — Year {year} Proforma",
+      "exitNoi": "Exit NOI",
+      "exitCapRate": "Exit Cap Rate",
+      "grossExitValue": "Gross Exit Value",
+      "dispositionCosts": "− Disposition Costs (2%)",
+      "seniorLoanPayoff": "− Senior Loan Payoff",
+      "mezzBalloon": "− Mezz Balloon",
+      "netSaleProceeds": "Net Sale Proceeds",
+      "holdCashFlow": "Cash Flow During Hold ({years} × {amount})",
+      "totalReturn": "Total Return",
+      "equityInvested": "Equity Invested",
+      "refiProformaTitle": "<bdi>{name}</bdi> — Year {year} Refinance",
+      "propertyValueAtRefi": "Property Value at Refi",
+      "newSeniorLoan": "New Senior Loan ({ltv}% LTV)",
+      "existingSeniorPayoff": "− Existing Senior Payoff",
+      "mezzPayoff": "− Mezz Payoff",
+      "netRefiProceeds": "Net Refi Proceeds",
+      "newDebtService": "New Debt Service",
+      "cashFlowPostRefi": "Cash Flow Post-Refi",
+      "capitalReturned": "Capital Returned (cash out + {years}yr CF)",
+      "remainingEquity": "Remaining Equity",
+      "valueSuffix": "{amount} (value)",
+      "cashOutSuffix": "{amount} (cash out)",
+      "ongoing": "Ongoing",
+      "na": "N/A",
+      "scenarioComparison": "Scenario Comparison",
+      "metric": "Metric",
+      "exitYear": "Exit Year",
+      "capRate": "Cap Rate",
+      "exitOrPropertyValue": "Exit Value / Property Value",
+      "netProceedsOrCashOut": "Net Proceeds / Cash Out",
+      "cashFlowHold": "Cash Flow (hold)"
+    },
+    "capex": {
+      "emptyState": "Property condition information is being finalized.",
+      "viewingConditionFor": "Viewing condition for:",
+      "allBuildings": "All Buildings",
+      "propertyCondition": "Property Condition",
+      "informationalOnly": "Informational only. Reserves are finalized during due diligence.",
+      "noItems": "No items recorded for this selection.",
+      "colComponent": "Component",
+      "colCondition": "Condition",
+      "colLastReplaced": "Last Replaced",
+      "colLifeRemaining": "Est. Life Remaining",
+      "colReplacementCost": "Est. Replacement Cost",
+      "colPriority": "Priority",
+      "conditions": {
+        "Excellent": "Excellent",
+        "Good": "Good",
+        "Fair": "Fair",
+        "Poor": "Poor",
+        "Unknown": "Unknown"
+      },
+      "priorities": {
+        "Immediate": "Immediate",
+        "NearTerm": "Near-Term",
+        "DuringHold": "During Hold",
+        "PostHold": "Post-Hold",
+        "NA": "N/A"
+      },
+      "notes": "Notes:",
+      "budgetSummary": "CapEx Budget Summary",
+      "nearTermYears": "Near-Term (1-2 years)",
+      "duringHoldYears": "During Hold (3-5 years)",
+      "totalDuringHold": "Total Estimated During Hold",
+      "annualizedReserve": "Annualized Reserve ({years}-yr hold)",
+      "perYear": "{amount}/yr*",
+      "footnote": "* CapEx reserves are calculated at closing and reflected in final offering terms."
+    },
+    "insights": {
+      "uncategorized": "Uncategorized",
+      "title": "Deal Insights",
+      "subtitle": "Context and color from the deal team, organized by theme."
+    },
+    "rentRoll": {
+      "comingSoon": "Full Rent Roll Analysis Coming Soon",
+      "building": "Building",
+      "allBuildings": "All Buildings (portfolio total)",
+      "tenantCount": "{count, plural, one {# tenant} other {# tenants}}",
+      "noTenantsForBuilding": "No tenants recorded for this building yet.",
+      "waltSublabel": "weighted by rent",
+      "years": "{value} yrs",
+      "occupancySf": "{leased} / {total} SF",
+      "topTenant": "Top Tenant",
+      "pctOfRent": "{pct}% of rent",
+      "nearTermRollover": "Near-term Rollover",
+      "noneUnder3Yrs": "None < 3 yrs",
+      "allLeasesSecure": "All leases secure",
+      "rolloverExpires": "{pct}% · expires {date}",
+      "tenantRoster": "Tenant Roster",
+      "clickToExpand": "Click a row to expand",
+      "colTenant": "Tenant",
+      "colSuite": "Suite",
+      "colSf": "SF",
+      "colRentPerSf": "Rent/SF",
+      "colAnnualRent": "Annual Rent",
+      "colType": "Type",
+      "colLeaseEnd": "Lease End",
+      "escalations": "Escalations",
+      "anchorTenant": "Anchor Tenant",
+      "vacant": "Vacant",
+      "total": "TOTAL",
+      "avgRentPerSf": "{value} avg",
+      "expirationSchedule": "Lease Expiration Schedule",
+      "bucketLabel": "<bdi>{tenants}</bdi> ({pct}% of rent)",
+      "creditLegend": "Bar color reflects tenant credit quality (green = investment / national, gold = regional, gray = local / unrated).",
+      "disclaimer": "Rent roll is informational only — headline deal metrics (cap rate, CoC, IRR, DSCR) are unaffected.",
+      "leaseStarted": "Started {date}",
+      "leaseExpires": "Expires {date}",
+      "lease": "Lease",
+      "rentCommencement": "Rent commencement",
+      "options": "Options",
+      "nnnReimbursement": "NNN — tenant pays CAM, taxes, insurance",
+      "reimbCam": "CAM: {amount}",
+      "reimbTax": "Tax: {amount}",
+      "reimbInsurance": "Insurance: {amount}",
+      "reimbursements": "Reimbursements",
+      "percentageRent": "Percentage Rent",
+      "securityDeposit": "Security Deposit",
+      "guarantor": "Guarantor",
+      "industry": "Industry",
+      "credit": "Credit",
+      "status": "Status",
+      "notes": "Notes:",
+      "leaseTypes": {
+        "NNN": "NNN",
+        "NN": "NN",
+        "Modified Gross": "Modified Gross",
+        "Gross": "Gross",
+        "Ground": "Ground"
+      },
+      "creditRatings": {
+        "Investment Grade": "Investment Grade",
+        "National Credit": "National Credit",
+        "Regional": "Regional",
+        "Local": "Local",
+        "Unknown": "Unknown"
+      },
+      "leaseStatuses": {
+        "Active": "Active",
+        "Expired": "Expired",
+        "Month-to-Month": "Month-to-Month",
+        "In Negotiation": "In Negotiation"
+      },
+      "guarantorTypes": {
+        "Corporate": "Corporate",
+        "Personal": "Personal",
+        "Parent Company": "Parent Company",
+        "None": "None"
+      }
+    },
+    "dealHero": {
+      "irrExit": "{rate}% exit",
+      "irrExitDefault": "{rate}% exit (entry +1%)",
+      "irrHold": "{years}yr hold",
+      "irrGrowth": "{rate}% growth",
+      "fileBadge": "FILE"
+    },
+    "overview": {
+      "addressSf": "{sf} SF"
+    },
+    "team": {
+      "title": "Team Members",
+      "subtitle": "Invite colleagues, employees, or partners to use RePrime on your behalf. You control what each can do.",
+      "invitesUsed": "<num>{used}</num> of <num>{limit}</num> invites used",
+      "loading": "Loading your team…",
+      "loadFailed": "We couldn’t load your team. Please try again.",
+      "inviteMember": "Invite team member",
+      "pendingRequestHint": "You already have a pending request.",
+      "requestMoreHint": "Ask RePrime to raise your invite limit",
+      "requestPending": "Request pending…",
+      "requestMore": "Request more",
+      "yourTeam": "Your team",
+      "revoked": "Revoked",
+      "permissionsEnabled": "{count, plural, one {# permission enabled} other {# permissions enabled}}",
+      "editAccess": "Edit access",
+      "pendingInvites": "Pending invites",
+      "expires": "Expires {date}",
+      "noMembers": "You haven’t invited any team members yet.",
+      "namePlaceholder": "Jane Doe",
+      "emailPlaceholder": "jane@example.com",
+      "initialPermissions": "Initial permissions",
+      "alwaysEnabled": "Always enabled",
+      "requiresApprovalAfterInvite": "Requires admin approval — request after invite is accepted",
+      "nameRequired": "Please enter a name.",
+      "emailInvalid": "Please enter a valid email.",
+      "inviteFailed": "We couldn’t send the invite. Please try again.",
+      "sending": "Sending…",
+      "sendInvite": "Send invite",
+      "editAccessTitle": "Edit access — {name}",
+      "always": "Always",
+      "requesting": "Requesting…",
+      "requestApproval": "Request approval",
+      "pendingAdminApproval": "Pending admin approval",
+      "updateFailed": "We couldn’t update permissions. Please try again.",
+      "requestFailed": "We couldn’t submit your request.",
+      "requestMoreTitle": "Request more invites",
+      "currentLimitIntro": "Your current limit is <strong>{limit}</strong>. Ask RePrime to raise it and let us know why.",
+      "requestedTotal": "Requested total",
+      "reasonOptional": "Reason (optional)",
+      "reasonPlaceholder": "Briefly, why do you need more?",
+      "limitTooLow": "Please request a total higher than your current limit ({limit}).",
+      "submitting": "Submitting…",
+      "submitRequest": "Submit request",
+      "revokeConfirm": "Revoke this team member’s access? They won’t be able to sign in until you reactivate them.",
+      "revoke": "Revoke",
+      "reactivate": "Reactivate",
+      "sent": "Sent",
+      "resend": "Resend",
+      "cancelInviteConfirm": "Cancel this pending invite?",
+      "permissions": {
+        "viewDeals": {
+          "label": "View deals",
+          "description": "Always on. Sub-users can browse all deals."
+        },
+        "manageWatchlist": {
+          "label": "Manage watchlist",
+          "description": "Add deals to watchlist and set notification preferences."
+        },
+        "commitWithdraw": {
+          "label": "Commit to deals",
+          "description": "Submit and withdraw commitments on the parent investor’s behalf."
+        },
+        "downloadDocuments": {
+          "label": "Download documents",
+          "description": "Download DD files and the Offering Memorandum."
+        },
+        "scheduleMeetings": {
+          "label": "Schedule meetings",
+          "description": "Book meetings with the RePrime acquisitions team."
+        }
+      }
+    },
+    "phoneConfirm": {
+      "title": "Confirm your phone number",
+      "description": "Our team will use this number to contact you about wire instructions and next steps. Your number will be saved to your profile.",
+      "confirmLabel": "Confirm & commit",
+      "confirmingLabel": "Confirming…",
+      "phoneNumber": "Phone number",
+      "searchPlaceholder": "Search country or code",
+      "noMatch": "No match",
+      "enterPhone": "Enter your phone number.",
+      "invalidNumber": "That doesn’t look like a valid {country} number.",
+      "fullNumber": "Full number: <num>{number}</num>"
     }
   },
   "join": {
@@ -1768,7 +2202,8 @@
     "ctaTitle": "Create Your Free Account",
     "ctaBody": "Access the full deal analysis, financial modeling, and commitment tools on RePrime Terminal.",
     "moreOpportunities": "More Opportunities",
-    "copyright": "© {year} RePrime Terminal. All rights reserved."
+    "copyright": "© {year} RePrime Terminal. All rights reserved.",
+    "metaTitleFallback": "Deal — RePrime Terminal"
   },
   "ai": {
     "title": "AI Assistant",
@@ -1842,7 +2277,28 @@
     "errorUnauthorized": "You are not signed in. Please refresh and try again.",
     "errorNotFound": "Conversation not found.",
     "errorTimeout": "The assistant took too long to respond. Please try again.",
-    "errorUpstream": "The assistant could not process your request. Please try again."
+    "errorUpstream": "The assistant could not process your request. Please try again.",
+    "sourceNotFound": "Source document not found.",
+    "signedUrlError": "Could not generate a signed URL.",
+    "previewUnsupported": "Inline preview is not supported for this file type.",
+    "downloadSource": "Download source",
+    "citationKind": {
+      "document": "Document",
+      "tenant": "Tenant",
+      "deal_field": "Deal field",
+      "computed": "Computed"
+    },
+    "dockToSide": "Dock to side",
+    "undockSidebar": "Undock sidebar",
+    "askAssistant": "Ask AI Assistant",
+    "askAssistantAbout": "Ask AI Assistant about {deal}",
+    "relative": {
+      "now": "now",
+      "minutes": "{count}m",
+      "hours": "{count}h",
+      "days": "{count}d",
+      "weeks": "{count}w"
+    }
   },
   "errors": {
     "notFound": "Page Not Found",
@@ -1851,7 +2307,9 @@
     "unauthorized": "You must be signed in to access this page.",
     "forbidden": "You do not have permission to access this page.",
     "networkError": "Network error — please check your connection.",
-    "tryAgain": "Please try again."
+    "tryAgain": "Please try again.",
+    "networkTryAgain": "Network error. Please try again.",
+    "saveSignatureFailed": "Failed to save signature. Please try again."
   },
   "unsubscribe": {
     "successTitle": "You've been unsubscribed",
@@ -1859,7 +2317,12 @@
     "successGeneric": "You will no longer receive these emails. You can manage all of your notification preferences in your account settings.",
     "successWithCategory": "You will no longer receive {category} emails. You can manage all of your notification preferences in your account settings.",
     "invalidBody": "This unsubscribe link is invalid or has expired. Please sign in to manage your notification preferences directly.",
-    "managePreferences": "Manage Preferences"
+    "managePreferences": "Manage Preferences",
+    "categories": {
+      "new_deals": "New Deals",
+      "document_uploads": "Document Uploads",
+      "deal_activity": "Deal Activity"
+    }
   },
   "criteria": {
     "signIn": "Investor Login",
@@ -1897,7 +2360,8 @@
       "capitalReady": "Capital ready to deploy",
       "ownershipPref": "Preferred ownership path",
       "timeline": "Timeline to deploy",
-      "accredited": "I am an accredited investor"
+      "accredited": "I am an accredited investor",
+      "locked": "(locked)"
     },
     "invalid": {
       "title": "Link unavailable",
@@ -1917,6 +2381,101 @@
       "btnContactTeam": "Message on WhatsApp",
       "btnApplyMembership": "Apply for Membership",
       "footnote": "You can update your criteria at any time — your RePrime relationship lead can send you a fresh link."
+    },
+    "metaTitle": "Investor Criteria — RePrime",
+    "subheroFallbackName": "investor",
+    "remove": "remove",
+    "options": {
+      "contactMethod": {
+        "email": "Email",
+        "phone": "Phone",
+        "whatsapp": "WhatsApp",
+        "text_message": "Text"
+      },
+      "investingAs": {
+        "principal": "Principal",
+        "fund": "Fund",
+        "family_office": "Family Office",
+        "jv": "JV",
+        "1031": "1031 Exchange"
+      },
+      "capitalReady": {
+        "<1M": "Under $1,000,000",
+        "flexible": "Flexible"
+      },
+      "ownershipPref": {
+        "direct": "Acquire Directly",
+        "gp_lp": "GP / LP Partner",
+        "either": "Either"
+      },
+      "timeline": {
+        "now": "Now",
+        "<3mo": "Within 3 months",
+        "3-6mo": "3 – 6 months",
+        "6mo+": "6+ months"
+      }
     }
+  },
+  "kyc": {
+    "title": "Investor Verification",
+    "subtitle": "Complete this form to verify your investor status. All information is confidential and used solely for compliance purposes.",
+    "sections": {
+      "personal": "Personal Information",
+      "employment": "Employment & Income",
+      "financial": "Financial Profile",
+      "accreditation": "Accredited Investor Certification"
+    },
+    "fields": {
+      "legalName": "Full Legal Name *",
+      "dob": "Date of Birth *",
+      "ssn": "Social Security / Tax ID *",
+      "driversLicense": "Driver's License #",
+      "address": "Address *",
+      "city": "City *",
+      "state": "State *",
+      "zip": "Zip *",
+      "country": "Country",
+      "phone": "Phone Number *",
+      "email": "Email Address",
+      "occupation": "Occupation *",
+      "employer": "Employer Name *",
+      "employerAddress": "Employer Address",
+      "industry": "Type of Business / Industry",
+      "annualIncome": "Annual Income *",
+      "sourceOfFunds": "Source of Funds *",
+      "netWorth": "Estimated Net Worth *",
+      "investmentRange": "Expected Investment Range",
+      "otherInstitutions": "Do you have investment accounts at other institutions? *",
+      "institutionName": "Institution name"
+    },
+    "ssnOnFile": "SSN on file",
+    "changeSsn": "Change",
+    "cancelKeepSsn": "Cancel — keep saved SSN",
+    "selectPlaceholder": "Select…",
+    "rangeUnder": "Under {amount}",
+    "sourceOfFundsOptions": {
+      "Employment": "Employment",
+      "Business Income": "Business Income",
+      "Investments": "Investments",
+      "Inheritance": "Inheritance",
+      "Real Estate": "Real Estate",
+      "Savings": "Savings",
+      "Other": "Other"
+    },
+    "accreditation": {
+      "intro": "I certify that I meet at least one of the following criteria (check all that apply):",
+      "individualIncome": "Individual income exceeding $200,000 in each of the two most recent years, with reasonable expectation of the same in the current year",
+      "jointIncome": "Joint income with spouse/partner exceeding $300,000 in each of the two most recent years, with reasonable expectation of the same in the current year",
+      "netWorthExceeds1M": "Net worth exceeding $1,000,000 (individually or jointly with spouse/partner), excluding primary residence",
+      "licensedProfessional": "Licensed securities professional holding Series 7, 65, or 82 in good standing",
+      "knowledgeableEmployee": "Knowledgeable employee of a private fund",
+      "entityAssets": "Entity with assets exceeding $5,000,000",
+      "notAccredited": "None of the above — I am not an accredited investor"
+    },
+    "certify": "I certify that the information provided above is true and accurate to the best of my knowledge. *",
+    "submitting": "Submitting…",
+    "submit": "Submit Verification",
+    "saveContinueLater": "Save & Continue Later",
+    "submitFailed": "Failed to submit. Please try again."
   }
 }

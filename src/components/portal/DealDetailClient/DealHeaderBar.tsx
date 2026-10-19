@@ -24,10 +24,10 @@ export function DealHeaderBar({ deal, prevDeal, nextDeal, locale, previewMode, a
       <div className="flex items-center gap-3 md:gap-4">
         <div className="flex-1 min-w-0">
           <h2 className="font-[family-name:var(--font-playfair)] text-[22px] md:text-[28px] font-semibold text-[#0E3470] leading-tight tracking-[-0.01em]">
-            {deal.name}
+            <bdi>{deal.name}</bdi>
           </h2>
           <p className="text-[12px] text-[#9CA3AF] mt-1">
-            {deal.city}, {deal.state}
+            <bdi>{deal.city}, {deal.state}</bdi>
             {deal.square_footage ? ` · ${deal.square_footage} SF` : ''}
             {deal.units ? ` · ${tc('units', { count: deal.units })}` : ''}
             {deal.class_type ? ` · ${tc('classType', { type: deal.class_type })}` : ''}

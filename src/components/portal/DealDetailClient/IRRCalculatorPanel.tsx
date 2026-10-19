@@ -35,6 +35,8 @@ export function IRRCalculatorPanel({
 }) {
   const t = useTranslations('portal.dealDetail');
   const ts = useTranslations('portal.structure');
+  const tf = useTranslations('portal.financial');
+  const tDr = useTranslations('portal.dataRoom');
   const [mode, setMode] = useState<CalculatorMode>('assignment');
   const fmtPct = (v: number): string =>
     Number.isInteger(v) ? `${v}%` : `${v.toFixed(2).replace(/\.?0+$/, '')}%`;
@@ -59,7 +61,7 @@ export function IRRCalculatorPanel({
   );
   const customIRR = customMetrics.irr ?? 0;
 
-  const infReturn = fullyFinanced ? (hasPositiveCashFlow ? '∞' : 'N/A') : null;
+  const infReturn = fullyFinanced ? (hasPositiveCashFlow ? '∞' : tDr('na')) : null;
 
   const handleSliderChange = (setter: (v: number) => void, value: number) => {
     setter(value);
@@ -117,8 +119,8 @@ export function IRRCalculatorPanel({
           <div className="space-y-2 mb-4">
             {[
               { label: t('acquisitionFee'), value: `${fmtPct(effectiveFees.acqFee)} ($${Math.round(acqFeeDollar).toLocaleString()})` },
-              { label: t('assetMgmtFee'), value: `${fmtPct(effectiveFees.assetMgmtFee)} ($${Math.round(assetMgmtFeeDollar).toLocaleString()}/yr)` },
-              { label: t('gpCarry'), value: `${fmtPct(effectiveFees.gpCarry)} above ${fmtPct(effectiveFees.prefReturn)} pref` },
+              { label: t('assetMgmtFee'), value: `${fmtPct(effectiveFees.assetMgmtFee)} ($${Math.round(assetMgmtFeeDollar).toLocaleString()}${tf('yr')})` },
+              { label: t('gpCarry'), value: `${fmtPct(effectiveFees.gpCarry)} ${tf('above')} ${fmtPct(effectiveFees.prefReturn)} ${tf('pref')}` },
               { label: t('equityRequired'), value: formatPrice(deal.equity_required) },
             ].map((row) => (
               <div key={row.label} className="flex justify-between text-sm">

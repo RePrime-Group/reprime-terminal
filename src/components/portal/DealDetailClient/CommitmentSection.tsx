@@ -37,7 +37,7 @@ export function CommitmentSection({ deal, previewMode, contactName, contactTitle
             <span className="font-bold text-[#BC9C45] mr-2 tracking-[1px]">
               ℹ {t('timelineNoteLabel')}
             </span>
-            {deal.timeline_note}
+            <bdi>{deal.timeline_note}</bdi>
           </div>
         )}
       </div>
@@ -59,7 +59,7 @@ export function CommitmentSection({ deal, previewMode, contactName, contactTitle
         <div>
           <div className="text-[14px] font-medium text-[#0E3470]">{t('questionsBeforeCommitting')}</div>
           <div className="text-[11px] text-[#9CA3AF] mt-1">
-            {contactName || t('reprimeTeam')}{contactTitle ? ` · ${contactTitle}` : ''}
+            <bdi>{contactName || t('reprimeTeam')}{contactTitle ? ` · ${contactTitle}` : ''}</bdi>
           </div>
         </div>
         <div className="flex gap-3">

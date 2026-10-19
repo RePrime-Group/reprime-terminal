@@ -74,10 +74,10 @@ export function ScheduleContactTab({
             </div>
             <div>
               <div className="font-semibold text-[#0E3470]">
-                {displayName || t('reprimeTeam')}
+                <bdi>{displayName || t('reprimeTeam')}</bdi>
               </div>
               <div className="text-xs text-[#9CA3AF]">
-                {displayTitle || t('investmentAdvisor')}
+                <bdi>{displayTitle || t('investmentAdvisor')}</bdi>
               </div>
             </div>
           </div>

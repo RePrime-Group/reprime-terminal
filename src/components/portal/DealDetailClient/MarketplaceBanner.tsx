@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 
 export function MarketplaceBanner({ interestCount }: { interestCount: number }) {
   const t = useTranslations('portal.marketplace');
+  const tDp = useTranslations('portal.dealPage');
   return (
     <div className="bg-gradient-to-r from-[#0E7490] via-[#0F8FA8] to-[#0E7490] text-white">
       <div className="max-w-[1600px] mx-auto px-4 md:px-8 py-3 md:py-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5">
@@ -23,8 +24,8 @@ export function MarketplaceBanner({ interestCount }: { interestCount: number }) 
             <path d="M16 3.13a4 4 0 0 1 0 7.75" />
           </svg>
           {interestCount > 0
-            ? `${interestCount} ${interestCount === 1 ? 'investor' : 'investors'} interested`
-            : 'No interest yet — be the first'}
+            ? tDp('investorsInterested', { count: interestCount })
+            : tDp('noInterestYet')}
         </div>
       </div>
     </div>

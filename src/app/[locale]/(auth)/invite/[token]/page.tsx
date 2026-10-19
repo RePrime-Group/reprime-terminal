@@ -13,6 +13,7 @@ type ValidationResult =
 
 export default function InviteRegistrationPage() {
   const t = useTranslations('auth');
+  const tErr = useTranslations('auth.friendlyErrors');
   const params = useParams();
   const locale = (params.locale as string) || 'en';
   const token = params.token as string;
@@ -103,7 +104,7 @@ export default function InviteRegistrationPage() {
       });
 
       if (signUpError) {
-        setError(friendlyAuthError(signUpError.message, t('accountCreationFailed')));
+        setError(friendlyAuthError(signUpError.message, t('accountCreationFailed'), tErr));
         setSubmitting(false);
         return;
       }
@@ -160,7 +161,7 @@ export default function InviteRegistrationPage() {
       }
     } catch (err) {
       console.error('invite submit failed:', err);
-      setError(friendlyFetchError(err, t('unexpectedError')));
+      setError(friendlyFetchError(err, t('unexpectedError'), tErr));
       setSubmitting(false);
     }
   }
@@ -185,13 +186,13 @@ export default function InviteRegistrationPage() {
         <div className="w-full max-w-md flex flex-col items-center gap-8">
           <RePrimeLogo width={220} />
           <div className="w-full rounded-2xl border border-white/[0.08] bg-white/[0.02] backdrop-blur p-8 text-center">
-            <h1 className="text-xl font-semibold text-white mb-2">Connection problem</h1>
-            <p className="text-white/50 text-sm mb-6">We couldn&rsquo;t reach our servers to check your invitation. Please check your internet connection and try again.</p>
+            <h1 className="text-xl font-semibold text-white mb-2">{t('connectionProblemTitle')}</h1>
+            <p className="text-white/50 text-sm mb-6">{t('inviteNetworkErrorBody')}</p>
             <button
               onClick={() => window.location.reload()}
               className="rounded-lg bg-[#C9A54E] px-5 py-2.5 text-sm font-semibold text-black hover:opacity-90 transition-opacity"
             >
-              Try again
+              {t('tryAgain')}
             </button>
           </div>
         </div>
@@ -235,7 +236,7 @@ export default function InviteRegistrationPage() {
             <p className="text-white/60 text-sm text-center px-4">
               {t.rich('invitedToTeam', {
                 name: validation.parent_name,
-                highlight: (chunks) => <span className="text-[#C9A54E] font-medium">{chunks}</span>,
+                highlight: (chunks) => <span dir="auto" className="text-[#C9A54E] font-medium">{chunks}</span>,
               })}
             </p>
           ) : (
@@ -249,7 +250,7 @@ export default function InviteRegistrationPage() {
             <div className="flex flex-col gap-1.5">
               <label className="text-white/50 text-xs font-medium uppercase tracking-wider">{t('email')}</label>
               <div className="rounded-lg border border-white/[0.06] bg-white/[0.03] px-4 py-3 text-white/40 text-sm">
-                {validation.email}
+                <bdi>{validation.email}</bdi>
               </div>
             </div>
 

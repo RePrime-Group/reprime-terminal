@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useDealAssistantPanelOptional } from '@/components/portal/ai/DealAssistantContext';
 
 interface Props {
@@ -9,6 +10,8 @@ interface Props {
 
 export function AISpotlightBanner({ dealId, dealName }: Props) {
   const assistantPanel = useDealAssistantPanelOptional();
+  const t = useTranslations('portal.dealNav');
+  const td = useTranslations('portal.dealDetail');
   return (
     <div className="relative overflow-hidden bg-[#0E3470] px-4 md:px-8 py-3.5 flex items-center justify-between gap-3 border-y border-white/[0.05]">
       <div
@@ -52,15 +55,15 @@ export function AISpotlightBanner({ dealId, dealName }: Props) {
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-bold uppercase tracking-[2.5px] text-[#D4A843]">
-              Terminal Intelligence
+              {td('terminalIntelligence')}
             </span>
             <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-[2px] rounded-full bg-[#22C55E]/10 border border-[#22C55E]/30 text-[8px] font-bold uppercase tracking-[1.5px] text-[#4ADE80]">
               <span className="w-1 h-1 rounded-full bg-[#4ADE80]" aria-hidden />
-              Live
+              {t('live')}
             </span>
           </div>
           <p className="hidden sm:block text-[11.5px] text-white/55 leading-tight mt-0.5 truncate">
-            Ask about financials, tenants, or leases on this deal.
+            {t('aiBannerSubtitle')}
           </p>
         </div>
       </div>
@@ -92,7 +95,7 @@ export function AISpotlightBanner({ dealId, dealName }: Props) {
           <line x1="17" y1="9" x2="17" y2="15" />
           <line x1="21" y1="11" x2="21" y2="13" />
         </svg>
-        <span className="relative tracking-[0.2px]">Ask AI Assistant</span>
+        <span className="relative tracking-[0.2px]">{t('askAiAssistant')}</span>
         <svg
           className="relative opacity-70 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-150"
           width="11"
