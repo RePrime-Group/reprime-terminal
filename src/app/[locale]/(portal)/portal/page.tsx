@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { parseDealInputs, calculatePropertyMetrics } from '@/lib/utils/deal-calculator';
+import { parseDealInputs, calculatePropertyMetrics, calculateEquityRequired } from '@/lib/utils/deal-calculator';
+import { getGlobalFeeDefaults, resolveFeeSetting } from '@/lib/utils/fee-resolver';
 import PortalDashboardClient from '@/components/portal/PortalDashboardClient';
 import { ACTIVE_DEAL_STATUSES } from '@/lib/constants';
 
@@ -24,6 +25,9 @@ export default async function PortalDashboardPage({
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) redirect(`/${locale}/login`);
+
+  // Acquisition fee default for Equity Required — runs alongside the deal queries.
+  const feeDefaultsPromise = getGlobalFeeDefaults(supabase);
 
   // Fetch deals — include new pre-pipeline statuses
   const { data: deals } = await supabase
@@ -115,6 +119,8 @@ export default async function PortalDashboardPage({
     notesByDeal.set(n.deal_id, { content: n.content ?? '', updated_at: n.updated_at });
   }
 
+  const feeDefaults = await feeDefaultsPromise;
+
   // Enrich deals using lookup maps (no additional queries)
   const enrichedDeals = deals.map((deal) => {
     const storagePath = photoByDeal.get(deal.id);
@@ -129,12 +135,12 @@ export default async function PortalDashboardPage({
     // Compute metrics from deal inputs, fall back to stored DB values
     const inputs = parseDealInputs(deal as unknown as Record<string, unknown>);
     const computed = calculatePropertyMetrics(inputs);
+    const equity = calculateEquityRequired(inputs, computed, resolveFeeSetting(deal.acq_fee, feeDefaults.acqFee));
 
     const dbCapRate = num(deal.cap_rate);
     const dbIrr = num(deal.irr);
     const dbCoc = num(deal.coc);
     const dbDscr = num(deal.dscr);
-    const dbEquity = num(deal.equity_required);
 
     return {
       id: deal.id,
@@ -149,11 +155,14 @@ export default async function PortalDashboardPage({
       irr: computed.irr !== null && computed.irr !== 0 ? computed.irr : dbIrr,
       coc: computed.cocReturn !== null && computed.cocReturn !== 0 ? computed.cocReturn : dbCoc,
       dscr: computed.combinedDSCR > 0 ? computed.combinedDSCR : dbDscr,
-      equity_required: computed.netEquity > 0 ? computed.netEquity : dbEquity,
+      equity_required: equity.total,
+      equity_breakdown: equity,
       occupancy: deal.occupancy ?? null,
       fully_financed: computed.netEquity <= 0,
       has_positive_cash_flow: computed.distributableCashFlow > 0,
       seller_financing: deal.seller_financing,
+      seller_carry_pct: inputs.sellerFinancing ? inputs.mezzPercent : null,
+      seller_carry_rate: inputs.sellerFinancing ? inputs.mezzRate : null,
       note_sale: deal.note_sale ?? false,
       special_terms: deal.special_terms,
       dd_deadline: deal.dd_deadline,

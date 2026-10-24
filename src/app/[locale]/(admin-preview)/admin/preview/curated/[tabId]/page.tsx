@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { parseDealInputs, calculatePropertyMetrics } from '@/lib/utils/deal-calculator';
+import { parseDealInputs, calculatePropertyMetrics, calculateEquityRequired } from '@/lib/utils/deal-calculator';
+import { getGlobalFeeDefaults, resolveFeeSetting } from '@/lib/utils/fee-resolver';
 import CuratedTabClient from '@/components/portal/curated/CuratedTabClient';
 import CuratedPreviewPicker from '@/components/admin/investor-tabs/CuratedPreviewPicker';
 import type { DealCardData } from '@/components/portal/PortalDashboardClient';
@@ -29,6 +30,9 @@ export default async function CuratedPreviewPage({ params }: PageProps) {
   const { locale, tabId } = await params;
   const tp = await getTranslations('admin.preview');
   const admin = createAdminClient();
+
+  // Acquisition fee default for Equity Required — runs alongside the deal queries.
+  const feeDefaultsPromise = getGlobalFeeDefaults(admin);
 
   const [{ data: tab }, { data: allGroups }, { data: assignmentRows }] = await Promise.all([
     admin.from('terminal_investor_tabs').select('id, name, hero_note').eq('id', tabId).maybeSingle(),
@@ -67,6 +71,7 @@ export default async function CuratedPreviewPage({ params }: PageProps) {
       if (!photoByDeal.has(photo.deal_id)) photoByDeal.set(photo.deal_id, photo.storage_path);
     }
 
+    const feeDefaults = await feeDefaultsPromise;
     deals = rawDeals.map(({ deal, match_reason }) => {
       const id = deal.id as string;
       const storagePath = photoByDeal.get(id);
@@ -78,12 +83,12 @@ export default async function CuratedPreviewPage({ params }: PageProps) {
 
       const inputs = parseDealInputs(deal);
       const computed = calculatePropertyMetrics(inputs);
+      const equity = calculateEquityRequired(inputs, computed, resolveFeeSetting(deal.acq_fee as string | null, feeDefaults.acqFee));
 
       const dbCapRate = num(deal.cap_rate as string);
       const dbIrr = num(deal.irr as string);
       const dbCoc = num(deal.coc as string);
       const dbDscr = num(deal.dscr as string);
-      const dbEquity = num(deal.equity_required as string);
 
       return {
         id,
@@ -98,11 +103,14 @@ export default async function CuratedPreviewPage({ params }: PageProps) {
         irr: computed.irr !== null && computed.irr !== 0 ? computed.irr : dbIrr,
         coc: computed.cocReturn !== null && computed.cocReturn !== 0 ? computed.cocReturn : dbCoc,
         dscr: computed.combinedDSCR > 0 ? computed.combinedDSCR : dbDscr,
-        equity_required: computed.netEquity > 0 ? computed.netEquity : dbEquity,
+        equity_required: equity.total,
+        equity_breakdown: equity,
         occupancy: (deal.occupancy as string) ?? null,
         fully_financed: computed.netEquity <= 0,
         has_positive_cash_flow: computed.distributableCashFlow > 0,
         seller_financing: deal.seller_financing as boolean,
+        seller_carry_pct: inputs.sellerFinancing ? inputs.mezzPercent : null,
+        seller_carry_rate: inputs.sellerFinancing ? inputs.mezzRate : null,
         note_sale: (deal.note_sale as boolean) ?? false,
         special_terms: (deal.special_terms as string) ?? null,
         dd_deadline: (deal.dd_deadline as string) ?? null,

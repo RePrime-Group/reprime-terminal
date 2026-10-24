@@ -1,7 +1,8 @@
 import { getTranslations } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { parseDealInputs, calculatePropertyMetrics } from '@/lib/utils/deal-calculator';
+import { parseDealInputs, calculatePropertyMetrics, calculateEquityRequired } from '@/lib/utils/deal-calculator';
+import { getGlobalFeeDefaults, resolveFeeSetting } from '@/lib/utils/fee-resolver';
 import DealCard from '@/components/portal/DealCard';
 import type { DealCardData } from '@/components/portal/PortalDashboardClient';
 
@@ -27,6 +28,9 @@ export default async function MarketplacePreviewPage({
   const tp = await getTranslations('admin.preview');
   const supabase = await createClient();
   const admin = createAdminClient();
+
+  // Acquisition fee default for Equity Required — runs alongside the deal queries.
+  const feeDefaultsPromise = getGlobalFeeDefaults(supabase);
 
   const { data: deals } = await supabase
     .from('terminal_deals')
@@ -98,9 +102,11 @@ export default async function MarketplacePreviewPage({
     interestByDeal.set(r.deal_id, (interestByDeal.get(r.deal_id) ?? 0) + 1);
   }
 
+  const feeDefaults = await feeDefaultsPromise;
   const enriched: DealCardData[] = deals.map((deal) => {
     const inputs = parseDealInputs(deal as unknown as Record<string, unknown>);
     const computed = calculatePropertyMetrics(inputs);
+    const equity = calculateEquityRequired(inputs, computed, resolveFeeSetting(deal.acq_fee, feeDefaults.acqFee));
 
     const storagePath = photoByDeal.get(deal.id);
     let photo_url: string | null = null;
@@ -113,7 +119,6 @@ export default async function MarketplacePreviewPage({
     const dbIrr = num(deal.irr);
     const dbCoc = num(deal.coc);
     const dbDscr = num(deal.dscr);
-    const dbEquity = num(deal.equity_required);
 
     return {
       id: deal.id,
@@ -128,11 +133,14 @@ export default async function MarketplacePreviewPage({
       irr: computed.irr !== null && computed.irr !== 0 ? computed.irr : dbIrr,
       coc: computed.cocReturn !== null && computed.cocReturn !== 0 ? computed.cocReturn : dbCoc,
       dscr: computed.combinedDSCR > 0 ? computed.combinedDSCR : dbDscr,
-      equity_required: computed.netEquity > 0 ? computed.netEquity : dbEquity,
+      equity_required: equity.total,
+      equity_breakdown: equity,
       occupancy: deal.occupancy ?? null,
       fully_financed: computed.netEquity <= 0,
       has_positive_cash_flow: computed.distributableCashFlow > 0,
       seller_financing: deal.seller_financing,
+      seller_carry_pct: inputs.sellerFinancing ? inputs.mezzPercent : null,
+      seller_carry_rate: inputs.sellerFinancing ? inputs.mezzRate : null,
       note_sale: deal.note_sale ?? false,
       special_terms: deal.special_terms,
       dd_deadline: deal.dd_deadline,

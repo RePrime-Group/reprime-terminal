@@ -1,7 +1,8 @@
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { parseDealInputs, calculatePropertyMetrics } from '@/lib/utils/deal-calculator';
+import { parseDealInputs, calculatePropertyMetrics, calculateEquityRequired } from '@/lib/utils/deal-calculator';
+import { getGlobalFeeDefaults, resolveFeeSetting } from '@/lib/utils/fee-resolver';
 import CuratedTabClient from '@/components/portal/curated/CuratedTabClient';
 import type { DealCardData } from '@/components/portal/PortalDashboardClient';
 
@@ -29,6 +30,9 @@ export default async function CuratedTabPage({ params }: PageProps) {
   } = await supabase.auth.getUser();
 
   if (!user) redirect(`/${locale}/login`);
+
+  // Acquisition fee default for Equity Required — runs alongside the deal queries.
+  const feeDefaultsPromise = getGlobalFeeDefaults(supabase);
 
   // RLS confirms membership + enabled. A non-member gets no row → notFound().
   const [{ data: tab }, { data: assignmentRows }] = await Promise.all([
@@ -109,6 +113,7 @@ export default async function CuratedTabPage({ params }: PageProps) {
   const notesByDeal = new Map<string, { content: string; updated_at: string }>();
   for (const n of allNotes ?? []) notesByDeal.set(n.deal_id, { content: n.content ?? '', updated_at: n.updated_at });
 
+  const feeDefaults = await feeDefaultsPromise;
   const deals: DealCardData[] = rawDeals.map(({ deal, match_reason }) => {
     const id = deal.id as string;
     const storagePath = photoByDeal.get(id);
@@ -120,12 +125,12 @@ export default async function CuratedTabPage({ params }: PageProps) {
 
     const inputs = parseDealInputs(deal);
     const computed = calculatePropertyMetrics(inputs);
+    const equity = calculateEquityRequired(inputs, computed, resolveFeeSetting(deal.acq_fee as string | null, feeDefaults.acqFee));
 
     const dbCapRate = num(deal.cap_rate as string);
     const dbIrr = num(deal.irr as string);
     const dbCoc = num(deal.coc as string);
     const dbDscr = num(deal.dscr as string);
-    const dbEquity = num(deal.equity_required as string);
 
     return {
       id,
@@ -140,11 +145,14 @@ export default async function CuratedTabPage({ params }: PageProps) {
       irr: computed.irr !== null && computed.irr !== 0 ? computed.irr : dbIrr,
       coc: computed.cocReturn !== null && computed.cocReturn !== 0 ? computed.cocReturn : dbCoc,
       dscr: computed.combinedDSCR > 0 ? computed.combinedDSCR : dbDscr,
-      equity_required: computed.netEquity > 0 ? computed.netEquity : dbEquity,
+      equity_required: equity.total,
+      equity_breakdown: equity,
       occupancy: (deal.occupancy as string) ?? null,
       fully_financed: computed.netEquity <= 0,
       has_positive_cash_flow: computed.distributableCashFlow > 0,
       seller_financing: deal.seller_financing as boolean,
+      seller_carry_pct: inputs.sellerFinancing ? inputs.mezzPercent : null,
+      seller_carry_rate: inputs.sellerFinancing ? inputs.mezzRate : null,
       note_sale: (deal.note_sale as boolean) ?? false,
       special_terms: (deal.special_terms as string) ?? null,
       dd_deadline: (deal.dd_deadline as string) ?? null,

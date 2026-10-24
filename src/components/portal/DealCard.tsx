@@ -9,6 +9,7 @@ import { formatPercent, formatDSCR, formatPrice } from '@/lib/utils/format';
 import type { DealCardData } from '@/components/portal/PortalDashboardClient';
 import { friendlyFetchError } from '@/lib/utils/friendly-error';
 import DealNotepad from '@/components/portal/DealNotepad';
+import SellerFinancingBadge from '@/components/portal/SellerFinancingBadge';
 
 interface DealCardProps {
   deal: DealCardData;
@@ -255,16 +256,7 @@ export default function DealCard({ deal, locale, index, previewMode = false, fro
                 {t('marketplaceBadge')}
               </span>
             )}
-            {deal.seller_financing && (
-              <span
-                className="text-white text-[10px] font-semibold px-2.5 py-[5px] rounded-full"
-                style={{
-                  background: 'linear-gradient(135deg, #BC9C45 0%, #D4B85A 50%, #BC9C45 100%)',
-                }}
-              >
-                {t('sellerFinancing')}
-              </span>
-            )}
+            <SellerFinancingBadge deal={deal} />
             {deal.note_sale && (
               <span
                 className="text-white text-[10px] font-semibold px-2.5 py-[5px] rounded-full"
@@ -292,10 +284,30 @@ export default function DealCard({ deal, locale, index, previewMode = false, fro
                 {t('equityRequired')}
               </div>
               <div className="text-[22px] font-bold text-[#0B8A4D] tabular-nums leading-tight tracking-[-0.03em] mt-1 truncate">
-                {deal.fully_financed ? '$0' : formatPrice(deal.equity_required)}
+                {formatPrice(deal.equity_required)}
               </div>
             </div>
           </div>
+
+          {/* Equity Required breakdown: gap + acquisition fee + est. closing */}
+          {deal.equity_breakdown && (
+            <div className="grid grid-cols-3 mt-2 rounded-lg border border-[#EEF0F4] bg-[#F8F9FB]">
+              {[
+                { label: t('equityGap'), value: deal.equity_breakdown.equityGap },
+                { label: t('acqFeeShort', { pct: `${deal.equity_breakdown.acqFeePct}%` }), value: deal.equity_breakdown.acqFee },
+                { label: t('closingCostsShort', { pct: `${deal.equity_breakdown.closingCostPct}%` }), value: deal.equity_breakdown.closingCosts },
+              ].map((part, i) => (
+                <div key={i} className={`min-w-0 px-2 pt-1 pb-[5px] ${i > 0 ? 'border-s border-[#EEF0F4]' : ''}`}>
+                  <div className="text-[8.5px] leading-[11px] font-bold text-gray-400 uppercase tracking-[1.2px] truncate">
+                    {part.label}
+                  </div>
+                  <div className="text-[12px] leading-[15px] font-semibold text-[#0E3470] tabular-nums mt-px truncate">
+                    {formatPrice(part.value)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Secondary metrics: 2 rows × 3 */}
           <div className="grid grid-cols-3 gap-x-3 gap-y-2 mt-3">

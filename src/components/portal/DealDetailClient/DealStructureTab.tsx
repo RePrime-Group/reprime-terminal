@@ -23,6 +23,8 @@ interface Props {
   deal: DealWithDetails;
   financialProps: FinancialProps;
   computed: ReturnType<typeof calculatePropertyMetrics>;
+  /** Investor cash at closing: equity gap + acquisition fee + est. closing costs. */
+  equityRequired: number;
   feeAdjustedMetrics: ReturnType<typeof calculateDeal>;
   feeAdjustedInputs: DealInputs;
   effectiveDealFees: FeeDefaults;
@@ -41,6 +43,7 @@ export function DealStructureTab({
   deal,
   financialProps,
   computed,
+  equityRequired,
   feeAdjustedMetrics,
   feeAdjustedInputs,
   effectiveDealFees,
@@ -143,7 +146,7 @@ export function DealStructureTab({
                 { label: t('acquisitionFee'), value: `${formatFeePct(effectiveDealFees.acqFee)} ($${Math.round(feeAdjustedMetrics.acqFeeDollar).toLocaleString()})` },
                 { label: t('assetMgmtFee'), value: `${formatFeePct(effectiveDealFees.assetMgmtFee)} ($${Math.round(feeAdjustedMetrics.assetMgmtFeeDollar).toLocaleString()}/yr)` },
                 { label: t('gpCarry'), value: `${formatFeePct(effectiveDealFees.gpCarry)} above ${formatFeePct(effectiveDealFees.prefReturn)} pref` },
-                { label: t('equityRequired'), value: formatPrice(deal.equity_required) },
+                { label: t('equityRequired'), value: formatPrice(equityRequired) },
               ].map((row) => (
                 <div
                   key={row.label}
