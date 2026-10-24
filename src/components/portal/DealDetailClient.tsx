@@ -501,10 +501,7 @@ export default function DealDetailClient({
   const computed = useMemo(() => calculatePropertyMetrics(dealInputs), [dealInputs]);
   // Investor cash at closing (equity gap + acquisition fee + est. closing) —
   // the same figure the deal card shows.
-  const equityRequired = useMemo(
-    () => calculateEquityRequired(dealInputs, computed, effectiveDealFees.acqFee),
-    [dealInputs, computed, effectiveDealFees.acqFee],
-  );
+  const equityRequired = useMemo(() => calculateEquityRequired(dealInputs, computed), [dealInputs, computed]);
   // Fee-adjusted inputs overlay the resolved REPRIME terms onto the raw deal
   // inputs. Used by the Returns Calculator and Option A/B cards to show
   // fee-impacted IRRs. The headline metrics above still go through

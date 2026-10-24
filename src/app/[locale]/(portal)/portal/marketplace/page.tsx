@@ -4,7 +4,6 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getCurrentAuthUser } from '@/lib/supabase/currentUser';
 import { parseDealInputs, calculatePropertyMetrics, calculateEquityRequired } from '@/lib/utils/deal-calculator';
-import { getGlobalFeeDefaults, resolveFeeSetting } from '@/lib/utils/fee-resolver';
 import { formatPrice } from '@/lib/utils/format';
 import MarketplaceClient from '@/components/portal/MarketplaceClient';
 import type { DealCardData } from '@/components/portal/PortalDashboardClient';
@@ -28,9 +27,6 @@ export default async function MarketplacePage({
   const supabase = await createClient();
   const user = await getCurrentAuthUser();
   if (!user) redirect(`/${locale}/login`);
-
-  // Acquisition fee default for Equity Required — runs alongside the deal queries.
-  const feeDefaultsPromise = getGlobalFeeDefaults(supabase);
 
   const { data: dealsRaw } = await supabase
     .from('terminal_deals')
@@ -105,11 +101,10 @@ export default async function MarketplacePage({
     interestByDeal.set(r.deal_id, (interestByDeal.get(r.deal_id) ?? 0) + 1);
   }
 
-  const feeDefaults = await feeDefaultsPromise;
   const enriched: DealCardData[] = deals.map((deal) => {
     const inputs = parseDealInputs(deal as unknown as Record<string, unknown>);
     const computed = calculatePropertyMetrics(inputs);
-    const equity = calculateEquityRequired(inputs, computed, resolveFeeSetting(deal.acq_fee, feeDefaults.acqFee));
+    const equity = calculateEquityRequired(inputs, computed);
 
     const storagePath = photoByDeal.get(deal.id);
     let photo_url: string | null = null;

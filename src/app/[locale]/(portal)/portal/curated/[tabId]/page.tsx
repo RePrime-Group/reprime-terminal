@@ -2,7 +2,6 @@ import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { parseDealInputs, calculatePropertyMetrics, calculateEquityRequired } from '@/lib/utils/deal-calculator';
-import { getGlobalFeeDefaults, resolveFeeSetting } from '@/lib/utils/fee-resolver';
 import CuratedTabClient from '@/components/portal/curated/CuratedTabClient';
 import type { DealCardData } from '@/components/portal/PortalDashboardClient';
 
@@ -30,9 +29,6 @@ export default async function CuratedTabPage({ params }: PageProps) {
   } = await supabase.auth.getUser();
 
   if (!user) redirect(`/${locale}/login`);
-
-  // Acquisition fee default for Equity Required — runs alongside the deal queries.
-  const feeDefaultsPromise = getGlobalFeeDefaults(supabase);
 
   // RLS confirms membership + enabled. A non-member gets no row → notFound().
   const [{ data: tab }, { data: assignmentRows }] = await Promise.all([
@@ -113,7 +109,6 @@ export default async function CuratedTabPage({ params }: PageProps) {
   const notesByDeal = new Map<string, { content: string; updated_at: string }>();
   for (const n of allNotes ?? []) notesByDeal.set(n.deal_id, { content: n.content ?? '', updated_at: n.updated_at });
 
-  const feeDefaults = await feeDefaultsPromise;
   const deals: DealCardData[] = rawDeals.map(({ deal, match_reason }) => {
     const id = deal.id as string;
     const storagePath = photoByDeal.get(id);
@@ -125,7 +120,7 @@ export default async function CuratedTabPage({ params }: PageProps) {
 
     const inputs = parseDealInputs(deal);
     const computed = calculatePropertyMetrics(inputs);
-    const equity = calculateEquityRequired(inputs, computed, resolveFeeSetting(deal.acq_fee as string | null, feeDefaults.acqFee));
+    const equity = calculateEquityRequired(inputs, computed);
 
     const dbCapRate = num(deal.cap_rate as string);
     const dbIrr = num(deal.irr as string);

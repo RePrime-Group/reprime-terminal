@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { parseDealInputs, calculatePropertyMetrics, calculateEquityRequired } from '@/lib/utils/deal-calculator';
-import { getGlobalFeeDefaults, resolveFeeSetting } from '@/lib/utils/fee-resolver';
 import CuratedTabClient from '@/components/portal/curated/CuratedTabClient';
 import CuratedPreviewPicker from '@/components/admin/investor-tabs/CuratedPreviewPicker';
 import type { DealCardData } from '@/components/portal/PortalDashboardClient';
@@ -30,9 +29,6 @@ export default async function CuratedPreviewPage({ params }: PageProps) {
   const { locale, tabId } = await params;
   const tp = await getTranslations('admin.preview');
   const admin = createAdminClient();
-
-  // Acquisition fee default for Equity Required — runs alongside the deal queries.
-  const feeDefaultsPromise = getGlobalFeeDefaults(admin);
 
   const [{ data: tab }, { data: allGroups }, { data: assignmentRows }] = await Promise.all([
     admin.from('terminal_investor_tabs').select('id, name, hero_note').eq('id', tabId).maybeSingle(),
@@ -71,7 +67,6 @@ export default async function CuratedPreviewPage({ params }: PageProps) {
       if (!photoByDeal.has(photo.deal_id)) photoByDeal.set(photo.deal_id, photo.storage_path);
     }
 
-    const feeDefaults = await feeDefaultsPromise;
     deals = rawDeals.map(({ deal, match_reason }) => {
       const id = deal.id as string;
       const storagePath = photoByDeal.get(id);
@@ -83,7 +78,7 @@ export default async function CuratedPreviewPage({ params }: PageProps) {
 
       const inputs = parseDealInputs(deal);
       const computed = calculatePropertyMetrics(inputs);
-      const equity = calculateEquityRequired(inputs, computed, resolveFeeSetting(deal.acq_fee as string | null, feeDefaults.acqFee));
+      const equity = calculateEquityRequired(inputs, computed);
 
       const dbCapRate = num(deal.cap_rate as string);
       const dbIrr = num(deal.irr as string);

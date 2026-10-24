@@ -2,7 +2,6 @@ import { getTranslations } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { parseDealInputs, calculatePropertyMetrics, calculateEquityRequired } from '@/lib/utils/deal-calculator';
-import { getGlobalFeeDefaults, resolveFeeSetting } from '@/lib/utils/fee-resolver';
 import PortalDashboardClient from '@/components/portal/PortalDashboardClient';
 import { ACTIVE_DEAL_STATUSES } from '@/lib/constants';
 
@@ -26,9 +25,6 @@ export default async function AdminDashboardPreviewPage({
   const t = await getTranslations('admin.preview');
   const supabase = await createClient();
   const admin = createAdminClient();
-
-  // Acquisition fee default for Equity Required — runs alongside the deal queries.
-  const feeDefaultsPromise = getGlobalFeeDefaults(supabase);
 
   const { data: deals } = await supabase
     .from('terminal_deals')
@@ -119,7 +115,6 @@ export default async function AdminDashboardPreviewPage({
     commitmentsByDeal.set(c.deal_id, (commitmentsByDeal.get(c.deal_id) ?? 0) + 1);
   }
 
-  const feeDefaults = await feeDefaultsPromise;
   const enrichedDeals = deals.map((deal) => {
     const storagePath = photoByDeal.get(deal.id);
     let photo_url: string | null = null;
@@ -132,7 +127,7 @@ export default async function AdminDashboardPreviewPage({
 
     const inputs = parseDealInputs(deal as unknown as Record<string, unknown>);
     const computed = calculatePropertyMetrics(inputs);
-    const equity = calculateEquityRequired(inputs, computed, resolveFeeSetting(deal.acq_fee, feeDefaults.acqFee));
+    const equity = calculateEquityRequired(inputs, computed);
 
     const dbCapRate = num(deal.cap_rate);
     const dbIrr = num(deal.irr);

@@ -21,12 +21,12 @@ interface FinancialProps {
 // ═══════════════════════════════════════════════════════════
 // OVERVIEW TAB — Capital Stack + Return Comparison + Quick CF
 // ═══════════════════════════════════════════════════════════
-export function OverviewFinancials({ inputs, metrics, traditional, feeDisclosure }: FinancialProps) {
+export function OverviewFinancials({ inputs, metrics, traditional }: FinancialProps) {
   const t = useTranslations('portal.financial');
   return (
     <div className="space-y-4">
       {/* Capital Stack */}
-      <CapitalStackVisual inputs={inputs} metrics={metrics} isEstimated={false} acqFeePct={feeDisclosure?.acqFee ?? inputs.acqFee} />
+      <CapitalStackVisual inputs={inputs} metrics={metrics} isEstimated={false} />
 
       {/* Return Comparison (mezz only) */}
       {traditional && (
@@ -97,7 +97,7 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
   return (
     <div className="space-y-5">
       {/* Capital Stack */}
-      <CapitalStackVisual inputs={inputs} metrics={metrics} isEstimated={isEstimated} acqFeePct={feeDisclosure?.acqFee ?? inputs.acqFee} />
+      <CapitalStackVisual inputs={inputs} metrics={metrics} isEstimated={isEstimated} />
 
       {/* Cash Flow Waterfall — Full Detail */}
       <div className="bg-white rounded-xl border border-[#EEF0F4] p-5 rp-card-shadow">
@@ -271,7 +271,7 @@ export function DealStructureFinancials({ inputs, metrics, traditional, isEstima
 // ═══════════════════════════════════════════════════════════
 // SHARED: Capital Stack Visual
 // ═══════════════════════════════════════════════════════════
-function CapitalStackVisual({ inputs, metrics, isEstimated, acqFeePct }: { inputs: DealInputs; metrics: DealMetrics; isEstimated: boolean; acqFeePct: number }) {
+function CapitalStackVisual({ inputs, metrics, isEstimated }: { inputs: DealInputs; metrics: DealMetrics; isEstimated: boolean }) {
   const t = useTranslations('portal.financial');
   const tp = useTranslations('portal.dealCard');
   // Bar percentages based on Net Basis (purchasePrice - sellerCredit)
@@ -279,7 +279,7 @@ function CapitalStackVisual({ inputs, metrics, isEstimated, acqFeePct }: { input
   const nb = metrics.netBasis;
   const fullyFinanced = metrics.netEquity <= 0;
   // Investor cash at closing — same figure as the deal card and hero.
-  const equity = calculateEquityRequired(inputs, metrics, acqFeePct);
+  const equity = calculateEquityRequired(inputs, metrics);
   const rawSeniorPct = nb > 0 ? (metrics.loanAmount / nb) * 100 : 0;
   const rawMezzPct = nb > 0 && metrics.mezzAmount > 0 ? (metrics.mezzAmount / nb) * 100 : 0;
   const equityGapPct = nb > 0 ? ((nb - metrics.loanAmount - metrics.mezzAmount) / nb) * 100 : 0;

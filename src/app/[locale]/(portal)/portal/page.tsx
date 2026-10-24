@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { parseDealInputs, calculatePropertyMetrics, calculateEquityRequired } from '@/lib/utils/deal-calculator';
-import { getGlobalFeeDefaults, resolveFeeSetting } from '@/lib/utils/fee-resolver';
 import PortalDashboardClient from '@/components/portal/PortalDashboardClient';
 import { ACTIVE_DEAL_STATUSES } from '@/lib/constants';
 
@@ -25,9 +24,6 @@ export default async function PortalDashboardPage({
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) redirect(`/${locale}/login`);
-
-  // Acquisition fee default for Equity Required — runs alongside the deal queries.
-  const feeDefaultsPromise = getGlobalFeeDefaults(supabase);
 
   // Fetch deals — include new pre-pipeline statuses
   const { data: deals } = await supabase
@@ -119,8 +115,6 @@ export default async function PortalDashboardPage({
     notesByDeal.set(n.deal_id, { content: n.content ?? '', updated_at: n.updated_at });
   }
 
-  const feeDefaults = await feeDefaultsPromise;
-
   // Enrich deals using lookup maps (no additional queries)
   const enrichedDeals = deals.map((deal) => {
     const storagePath = photoByDeal.get(deal.id);
@@ -135,7 +129,7 @@ export default async function PortalDashboardPage({
     // Compute metrics from deal inputs, fall back to stored DB values
     const inputs = parseDealInputs(deal as unknown as Record<string, unknown>);
     const computed = calculatePropertyMetrics(inputs);
-    const equity = calculateEquityRequired(inputs, computed, resolveFeeSetting(deal.acq_fee, feeDefaults.acqFee));
+    const equity = calculateEquityRequired(inputs, computed);
 
     const dbCapRate = num(deal.cap_rate);
     const dbIrr = num(deal.irr);
