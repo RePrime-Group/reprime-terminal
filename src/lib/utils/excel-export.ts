@@ -268,7 +268,7 @@ function buildSummarySheet(deal: DealWithDetails, mm: DealMetrics, inputs: DealI
   if (hasMezz) {
     writeRow(stackRow++, `Seller Mezzanine (${inputs.mezzPercent.toFixed(1)}%)`, num(mm.mezzAmount, FMT_USD));
   }
-  writeRow(stackRow++, 'Investor Equity', num(fullyFinanced ? 0 : mm.netEquity, FMT_USD));
+  writeRow(stackRow++, 'Equity Gap', num(fullyFinanced ? 0 : mm.netEquity, FMT_USD));
   writeRow(
     stackRow++,
     'Total',

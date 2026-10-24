@@ -1625,7 +1625,7 @@ export default function EditDealPage() {
                   { label: 'Annual Mezz IO', value: fmt(m.annualMezzPayment) },
                   { label: m.ioPeriodMonths > 0 ? 'Combined DSCR (IO)' : 'Combined DSCR', value: m.combinedDSCR.toFixed(2) + 'x' },
                 ] : []),
-                { label: 'Net Equity (Check Size)', value: m.netEquity > 0 ? fmt(m.netEquity) : '$0' },
+                { label: 'Equity Gap (before 3% fee + 2% closing)', value: m.netEquity > 0 ? fmt(m.netEquity) : '$0' },
                 { label: 'Distributable CF', value: fmt(m.distributableCashFlow) },
                 { label: 'Total Leverage', value: pct(m.totalLeverage) },
               ].map((row) => (
