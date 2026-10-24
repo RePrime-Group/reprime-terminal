@@ -16,7 +16,7 @@ import CapExTab from '@/components/portal/CapExTab';
 import ExitStrategyTab from '@/components/portal/ExitStrategyTab';
 import InsightsTab from '@/components/portal/InsightsTab';
 import { parseHoldPeriod } from '@/lib/utils/capex';
-import { parseDealInputs, calculateDeal, calculatePropertyMetrics, calculateTraditionalClose, type DealInputs } from '@/lib/utils/deal-calculator';
+import { parseDealInputs, calculateDeal, calculatePropertyMetrics, calculateTraditionalClose, calculateEquityRequired, type DealInputs } from '@/lib/utils/deal-calculator';
 import { useDealAssistantPanelOptional } from '@/components/portal/ai/DealAssistantContext';
 import type {
   TerminalDDFolder,
@@ -499,6 +499,9 @@ export default function DealDetailClient({
   // only in the Fee Disclosure section and the Returns Calculator below.
   const dealInputs = useMemo(() => parseDealInputs(deal as unknown as Record<string, unknown>), [deal]);
   const computed = useMemo(() => calculatePropertyMetrics(dealInputs), [dealInputs]);
+  // Investor cash at closing (equity gap + acquisition fee + est. closing) —
+  // the same figure the deal card shows.
+  const equityRequired = useMemo(() => calculateEquityRequired(dealInputs, computed), [dealInputs, computed]);
   // Fee-adjusted inputs overlay the resolved REPRIME terms onto the raw deal
   // inputs. Used by the Returns Calculator and Option A/B cards to show
   // fee-impacted IRRs. The headline metrics above still go through
@@ -618,6 +621,7 @@ export default function DealDetailClient({
           deal={deal}
           photoUrls={photoUrls}
           computed={computed}
+          equityRequired={equityRequired.total}
           addresses={addresses}
           omMenuRef={omMenuRef}
           omMenuOpen={omMenuOpen}
@@ -647,6 +651,7 @@ export default function DealDetailClient({
           <OverviewTab
             deal={deal}
             computed={computed}
+            equityRequired={equityRequired.total}
             financialProps={financialProps}
             addresses={addresses}
             tenants={tenants}
@@ -773,6 +778,7 @@ export default function DealDetailClient({
             deal={deal}
             financialProps={financialProps}
             computed={computed}
+            equityRequired={equityRequired.total}
             feeAdjustedMetrics={feeAdjustedMetrics}
             feeAdjustedInputs={feeAdjustedInputs}
             effectiveDealFees={effectiveDealFees}
@@ -878,7 +884,7 @@ export default function DealDetailClient({
         structure={structureModal ?? 'assignment'}
         fees={effectiveDealFees}
         purchasePrice={feeAdjustedInputs.purchasePrice}
-        equityRequired={computed.netEquity}
+        equityRequired={equityRequired.total}
         projectedIRR={
           structureModal === 'assignment'
             ? feeAdjustedMetrics.assignmentIRR

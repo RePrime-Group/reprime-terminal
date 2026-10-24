@@ -20,6 +20,7 @@ export function IRRCalculatorPanel({
   effectiveFees,
   customStartingFees,
   feeAdjustedInputs,
+  equityRequired,
 }: {
   deal: DealWithDetails;
   baseIRR: number;
@@ -32,6 +33,8 @@ export function IRRCalculatorPanel({
   effectiveFees: FeeDefaults;
   customStartingFees: FeeDefaults;
   feeAdjustedInputs: DealInputs;
+  /** Investor cash at closing; falls back to the stored deal value. */
+  equityRequired?: number;
 }) {
   const t = useTranslations('portal.dealDetail');
   const ts = useTranslations('portal.structure');
@@ -119,7 +122,7 @@ export function IRRCalculatorPanel({
               { label: t('acquisitionFee'), value: `${fmtPct(effectiveFees.acqFee)} ($${Math.round(acqFeeDollar).toLocaleString()})` },
               { label: t('assetMgmtFee'), value: `${fmtPct(effectiveFees.assetMgmtFee)} ($${Math.round(assetMgmtFeeDollar).toLocaleString()}/yr)` },
               { label: t('gpCarry'), value: `${fmtPct(effectiveFees.gpCarry)} above ${fmtPct(effectiveFees.prefReturn)} pref` },
-              { label: t('equityRequired'), value: formatPrice(deal.equity_required) },
+              { label: t('equityRequired'), value: formatPrice(equityRequired ?? deal.equity_required) },
             ].map((row) => (
               <div key={row.label} className="flex justify-between text-sm">
                 <span className="text-[#9CA3AF]">{row.label}</span>

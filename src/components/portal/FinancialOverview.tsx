@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { type DealInputs, type DealMetrics } from '@/lib/utils/deal-calculator';
+import { type DealInputs, type DealMetrics, calculateEquityRequired } from '@/lib/utils/deal-calculator';
 import type { FeeDefaults } from '@/lib/utils/fee-resolver';
 
 // Shared formatting
@@ -278,6 +278,8 @@ function CapitalStackVisual({ inputs, metrics, isEstimated }: { inputs: DealInpu
   const pp = inputs.purchasePrice;
   const nb = metrics.netBasis;
   const fullyFinanced = metrics.netEquity <= 0;
+  // Investor cash at closing — same figure as the deal card and hero.
+  const equity = calculateEquityRequired(inputs, metrics);
   const rawSeniorPct = nb > 0 ? (metrics.loanAmount / nb) * 100 : 0;
   const rawMezzPct = nb > 0 && metrics.mezzAmount > 0 ? (metrics.mezzAmount / nb) * 100 : 0;
   const equityGapPct = nb > 0 ? ((nb - metrics.loanAmount - metrics.mezzAmount) / nb) * 100 : 0;
@@ -286,9 +288,7 @@ function CapitalStackVisual({ inputs, metrics, isEstimated }: { inputs: DealInpu
   const debtSum = rawSeniorPct + rawMezzPct;
   const seniorWidth = fullyFinanced && debtSum > 0 ? (rawSeniorPct / debtSum) * 100 : rawSeniorPct;
   const mezzWidth = fullyFinanced && debtSum > 0 ? (rawMezzPct / debtSum) * 100 : rawMezzPct;
-  const totalCapital = fullyFinanced
-    ? nb + metrics.closingCosts
-    : metrics.loanAmount + metrics.mezzAmount + metrics.netEquity;
+  const totalCapital = nb + equity.acqFee + equity.closingCosts;
 
   return (
     <div className="bg-white rounded-xl border border-[#EEF0F4] p-4 rp-card-shadow">
@@ -313,7 +313,7 @@ function CapitalStackVisual({ inputs, metrics, isEstimated }: { inputs: DealInpu
       </div>
       {fullyFinanced && (
         <div className="mb-3 text-[11px] font-semibold text-[#0B8A4D]">
-          {t('fullyFinanced')}
+          {t('fullyFinancedNoGap')}
         </div>
       )}
       {/* Dollar amounts */}
@@ -335,12 +335,17 @@ function CapitalStackVisual({ inputs, metrics, isEstimated }: { inputs: DealInpu
             <span className="text-[15px] font-bold text-[#BC9C45] tabular-nums">{fmtFull(metrics.mezzAmount)}</span>
           </div>
         )}
-        <div className="flex justify-between items-center py-1.5 border-b border-[#EEF0F4]">
-          <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-sm bg-[#0B8A4D]" />
-            <span className="text-[14px] text-[#374151]">{t('investorEquity')}</span>
+        <div className="py-1.5 border-b border-[#EEF0F4]">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-sm bg-[#0B8A4D]" />
+              <span className="text-[14px] text-[#374151]">{t('investorEquity')}</span>
+            </div>
+            <span className="text-[15px] font-bold text-[#0B8A4D] tabular-nums">{fmtFull(equity.total)}</span>
           </div>
-          <span className="text-[15px] font-bold text-[#0B8A4D] tabular-nums">{fullyFinanced ? '$0' : fmtFull(metrics.netEquity)}</span>
+          <p className="mt-0.5 ps-[18px] text-[11px] text-[#6B7280] tabular-nums">
+            {t('equityBreakdown', { gap: fmtFull(equity.equityGap), fee: fmtFull(equity.acqFee), closing: fmtFull(equity.closingCosts) })}
+          </p>
         </div>
       </div>
       {/* Summary lines */}
@@ -362,18 +367,20 @@ function CapitalStackVisual({ inputs, metrics, isEstimated }: { inputs: DealInpu
           </>
         )}
         <div className="flex justify-between items-center text-[14px]">
-          <span className="text-[#6B7280]">+ {metrics.closingCosts === 0 ? t('estClosingCosts') : t('closingCosts')}</span>
-          <span className="font-semibold text-[#0E3470] tabular-nums">{metrics.closingCosts === 0 ? 'TBD*' : fmtFull(metrics.closingCosts)}</span>
+          <span className="text-[#6B7280]">+ {t('acqFeeWithPct', { pct: `${equity.acqFeePct}%` })}</span>
+          <span className="font-semibold text-[#0E3470] tabular-nums">{fmtFull(equity.acqFee)}</span>
+        </div>
+        <div className="flex justify-between items-center text-[14px]">
+          <span className="text-[#6B7280]">+ {t('estClosingCostsWithPct', { pct: `${equity.closingCostPct}%` })}*</span>
+          <span className="font-semibold text-[#0E3470] tabular-nums">{fmtFull(equity.closingCosts)}</span>
         </div>
         <div className="flex justify-between items-center text-[14px]">
           <span className="text-[#6B7280]">{t('totalCapitalRequired')}</span>
-          <span className="font-bold text-[#0E3470] tabular-nums">{fmtFull(totalCapital)}{metrics.closingCosts === 0 ? '+' : ''}</span>
+          <span className="font-bold text-[#0E3470] tabular-nums">{fmtFull(totalCapital)}</span>
         </div>
-        {metrics.closingCosts === 0 && (
-          <p className="text-[11px] text-[#9CA3AF] leading-relaxed pt-1">
-            {t('closingCostsFootnote')}
-          </p>
-        )}
+        <p className="text-[11px] text-[#9CA3AF] leading-relaxed pt-1">
+          {t('closingCostsEstimateFootnote', { pct: `${equity.closingCostPct}%` })}
+        </p>
         {fullyFinanced && (
           <>
             <div className="mt-2 pt-2 border-t border-[#EEF0F4]" />
@@ -396,7 +403,7 @@ function CapitalStackVisual({ inputs, metrics, isEstimated }: { inputs: DealInpu
             </div>
             <div className="flex justify-between items-center text-[14px]">
               <span className="text-[#6B7280]">{t('investorEquity')}</span>
-              <span className="font-bold text-[#0B8A4D] tabular-nums">$0</span>
+              <span className="font-bold text-[#0B8A4D] tabular-nums">{fmtFull(equity.total)}</span>
             </div>
           </>
         )}
@@ -421,7 +428,7 @@ function ReturnComparison({ inputs, metrics, traditional }: { inputs: DealInputs
   const rows = [
     { label: t('seniorDebt'), t: fmtFull(traditional.loanAmount), m: fmtFull(metrics.loanAmount) },
     { label: t('sellerMezz'), t: '—', m: `${fmtFull(metrics.mezzAmount)} ${t('at')} ${pct(inputs.mezzRate)} ${t('io')}` },
-    { label: t('investorEquity'), t: fmtFull(traditional.netEquity), m: mEquity },
+    { label: t('equityGap'), t: fmtFull(traditional.netEquity), m: mEquity },
     { label: t('annualCashFlow'), t: fmtFull(traditional.distributableCashFlow), m: fmtFull(metrics.distributableCashFlow) },
     { label: t('cocReturn'), t: tCoC, m: mCoC, bold: true, greenIfBetter: mFullyFinanced || ((metrics.cocReturn ?? 0) - (traditional.cocReturn ?? 0) > 2) },
     { label: `${t('irr')} (${inputs.holdPeriodYears}yr)`, t: tIRR, m: mIRR, bold: true, greenIfBetter: mFullyFinanced || ((metrics.irr ?? 0) - (traditional.irr ?? 0) > 2) },

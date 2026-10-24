@@ -8,7 +8,7 @@ type DocType = 'loi' | 'psa' | 'full-report' | 'costar-report' | 'tenants-report
 // slotName is the terminal_dd_documents.name for this deal-level doc (the single
 // source of truth); downloads resolve the storage path through that row.
 const DOC_META: Record<DocType, { slotName: string; logAction: string; filenameSuffix: string; humanName: string }> = {
-  'loi': { slotName: 'loi-signed', logAction: 'loi_downloaded', filenameSuffix: 'Signed_LOI', humanName: 'Signed LOI' },
+  'loi': { slotName: 'loi-signed', logAction: 'loi_downloaded', filenameSuffix: 'LOI', humanName: 'LOI' },
   'psa': { slotName: 'purchase-sale-agreement', logAction: 'psa_downloaded', filenameSuffix: 'PSA', humanName: 'PSA' },
   'full-report': { slotName: 'full-report', logAction: 'full_report_downloaded', filenameSuffix: 'Full_Report', humanName: 'Full Report' },
   'costar-report': { slotName: 'costar-report', logAction: 'costar_report_downloaded', filenameSuffix: 'CoStar_Report', humanName: 'CoStar Report' },

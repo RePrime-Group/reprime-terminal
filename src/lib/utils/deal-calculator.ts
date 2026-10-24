@@ -408,3 +408,39 @@ export function calculateTraditionalClose(inputs: DealInputs): DealMetrics {
     sellerCredit: 0, // seller credits contingent on mezz structure excluded
   });
 }
+
+// ═══════ EQUITY REQUIRED (investor cash at closing) ═══════
+// What an investor actually wires at closing: the equity gap left after the
+// senior loan and seller carry, plus the RePrime acquisition fee and an
+// estimate of closing costs. Both percentages are fixed and apply to the full
+// purchase price, so investor cost is always price + 5% (plus any gap); the
+// purchase price itself never changes. Shown on deal cards, the deal hero
+// and the Capital Stack so a 70% senior + 30% carry deal no longer reads "$0".
+export const REPRIME_ACQ_FEE_PCT = 3;
+export const EST_CLOSING_COST_PCT = 2;
+
+export interface EquityRequiredBreakdown {
+  equityGap: number;
+  acqFeePct: number;
+  acqFee: number;
+  closingCostPct: number;
+  closingCosts: number;
+  total: number;
+}
+
+export function calculateEquityRequired(
+  inputs: Pick<DealInputs, 'purchasePrice'>,
+  metrics: Pick<DealMetrics, 'grossEquity'>,
+): EquityRequiredBreakdown {
+  const equityGap = Math.max(0, metrics.grossEquity);
+  const acqFee = inputs.purchasePrice * (REPRIME_ACQ_FEE_PCT / 100);
+  const closingCosts = inputs.purchasePrice * (EST_CLOSING_COST_PCT / 100);
+  return {
+    equityGap,
+    acqFeePct: REPRIME_ACQ_FEE_PCT,
+    acqFee,
+    closingCostPct: EST_CLOSING_COST_PCT,
+    closingCosts,
+    total: equityGap + acqFee + closingCosts,
+  };
+}

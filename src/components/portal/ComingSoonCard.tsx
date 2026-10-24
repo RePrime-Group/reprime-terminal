@@ -7,6 +7,7 @@ import { useCountdown } from '@/lib/hooks/useCountdown';
 import { formatPercent, formatDSCR, formatPrice } from '@/lib/utils/format';
 import type { DealCardData } from '@/components/portal/PortalDashboardClient';
 import { friendlyFetchError, readApiError } from '@/lib/utils/friendly-error';
+import SellerFinancingBadge from '@/components/portal/SellerFinancingBadge';
 
 interface ComingSoonCardProps {
   deal: DealCardData;
@@ -134,16 +135,7 @@ export default function ComingSoonCard({ deal, index, previewMode = false }: Com
             <span className="bg-[#0E3470] text-white text-[10px] font-semibold px-2.5 py-[5px] rounded-full">
               {tPt.has(deal.property_type) ? tPt(deal.property_type) : deal.property_type}
             </span>
-            {deal.seller_financing && (
-              <span
-                className="text-white text-[10px] font-semibold px-2.5 py-[5px] rounded-full"
-                style={{
-                  background: 'linear-gradient(135deg, #BC9C45 0%, #D4B85A 50%, #BC9C45 100%)',
-                }}
-              >
-                {t('sellerFinancing')}
-              </span>
-            )}
+            <SellerFinancingBadge deal={deal} />
             {deal.note_sale && (
               <span
                 className="text-white text-[10px] font-semibold px-2.5 py-[5px] rounded-full"

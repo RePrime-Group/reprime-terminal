@@ -12,6 +12,7 @@ import { useDealFilters } from '@/components/portal/deal-filters/useDealFilters'
 import DealFilterBar from '@/components/portal/deal-filters/DealFilterBar';
 import { ACTIVE_DEAL_STATUSES } from '@/lib/constants';
 import type { DealStatus } from '@/lib/types/database';
+import type { EquityRequiredBreakdown } from '@/lib/utils/deal-calculator';
 
 // Initial page size used until the grid's column count is measured from the DOM
 // (which happens immediately after mount via ResizeObserver).
@@ -31,9 +32,15 @@ export interface DealCardData {
   irr: number;
   coc: number;
   dscr: number;
+  /** Investor cash at closing: equity gap + acquisition fee + est. closing costs. */
   equity_required: number;
+  /** The three parts of equity_required, shown as a strip on the card. */
+  equity_breakdown?: EquityRequiredBreakdown;
   occupancy?: string | null;
   seller_financing: boolean;
+  /** Seller carry as % of net basis and its IO rate; null without seller financing. */
+  seller_carry_pct?: number | null;
+  seller_carry_rate?: number | null;
   note_sale: boolean;
   special_terms: string | null;
   dd_deadline: string | null;

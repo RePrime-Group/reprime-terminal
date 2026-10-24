@@ -33,6 +33,8 @@ interface Address {
 interface Props {
   deal: DealWithDetails;
   computed: ReturnType<typeof calculatePropertyMetrics>;
+  /** Investor cash at closing: equity gap + acquisition fee + est. closing costs. */
+  equityRequired: number;
   financialProps: FinancialProps;
   addresses: Address[];
   tenants: TerminalTenantLease[];
@@ -52,6 +54,7 @@ interface Props {
 export function OverviewTab({
   deal,
   computed,
+  equityRequired,
   financialProps,
   addresses,
   tenants,
@@ -165,7 +168,7 @@ export function OverviewTab({
                 ${Math.round(computed.distributableCashFlow).toLocaleString()}
               </div>
               <div className="text-[11px] text-[#6B7280] mt-1">
-                {t('zeroEquityCallout')}
+                {t('zeroEquityCallout', { amount: '$' + Math.round(equityRequired).toLocaleString() })}
               </div>
             </div>
           </FadeInOnScroll>

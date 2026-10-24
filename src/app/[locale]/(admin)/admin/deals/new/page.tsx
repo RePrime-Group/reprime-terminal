@@ -955,7 +955,7 @@ export default function NewDealPage() {
             <div className="grid grid-cols-3 gap-2">
               {[
                 { l: 'Loan Amount', v: fmt(m.loanAmount) },
-                { l: 'Net Equity', v: m.netEquity > 0 ? fmt(m.netEquity) : '$0' },
+                { l: 'Equity Gap', v: m.netEquity > 0 ? fmt(m.netEquity) : '$0' },
                 { l: m.ioPeriodMonths > 0 ? 'Lender DSCR (IO)' : 'Lender DSCR', v: m.lenderDSCR.toFixed(2) + 'x' },
                 { l: 'Distributable CF', v: fmt(m.distributableCashFlow) },
                 { l: 'Total Leverage', v: pct(m.totalLeverage) },

@@ -137,7 +137,7 @@ export default function StructureCommitModal({
               <span
                 className={`text-[13px] font-semibold tabular-nums ${fullyFinanced ? 'text-[#0B8A4D]' : 'text-[#0E3470]'}`}
               >
-                {fullyFinanced ? '$0' : fmtDollars(equityRequired)}
+                {fmtDollars(equityRequired)}
               </span>
             </div>
             <div className="flex justify-between py-2 border-b border-[#EEF0F4]">

@@ -26,6 +26,8 @@ interface Props {
   deal: DealWithDetails;
   photoUrls: string[];
   computed: ReturnType<typeof calculatePropertyMetrics>;
+  /** Investor cash at closing: equity gap + acquisition fee + est. closing costs. */
+  equityRequired: number;
   addresses: Address[];
   omMenuRef: RefObject<HTMLDivElement | null>;
   omMenuOpen: boolean;
@@ -41,6 +43,7 @@ export function HeroSection({
   deal,
   photoUrls,
   computed,
+  equityRequired,
   addresses,
   omMenuRef,
   omMenuOpen,
@@ -61,7 +64,7 @@ export function HeroSection({
 
   const metrics = [
     { label: tc('purchasePrice'), value: formatPrice(deal.purchase_price), borderColor: '#0E3470', span: 'col-span-2', size: 'headline' },
-    { label: tc('equityRequired'), value: fullyFinanced ? '$0' : (computed.netEquity > 0 ? '$' + Math.round(computed.netEquity).toLocaleString() : formatPrice(deal.equity_required)), borderColor: '#BC9C45', valueColor: fullyFinanced ? '#0B8A4D' : undefined, span: 'col-span-2', size: 'headline' },
+    { label: tc('equityRequired'), value: formatPrice(equityRequired), borderColor: '#BC9C45', valueColor: fullyFinanced ? '#0B8A4D' : undefined, span: 'col-span-2', size: 'headline' },
     { label: tc('noi'), value: formatPrice(deal.noi), borderColor: '#0E3470', span: 'col-span-1' },
     { label: t('occupancy'), value: deal.occupancy ? `${deal.occupancy}%` : '—', borderColor: '#0E3470', span: 'col-span-1' },
     { label: tc('capRate'), value: computed.capRate > 0 ? computed.capRate.toFixed(2) + '%' : formatPercent(deal.cap_rate), borderColor: '#BC9C45', span: 'col-span-1' },

@@ -155,6 +155,9 @@ export default function SellerBrief({ deal, tenants = [], capexItems = [], addre
   const totalCapex = capexItems.reduce((s, c) => s + (parseFloat(String(c.estimated_replacement_cost ?? "0").replace(/[^0-9.-]/g, "")) || 0), 0);
   const mezzAmt   = deal.mezz_percent ? price * parseFloat(deal.mezz_percent) / 100 : 0;
   const sellerCredit = parseFloat(String(deal.seller_credit ?? "0").replace(/[^0-9.-]/g, "")) || 0;
+  // Gap left after senior + seller mezz. equity_required now stores the investor
+  // total (gap + RePrime fee + closing), which is not a seller-facing number.
+  const ourEquityPct = Math.max(0, 100 - (parseFloat(deal.ltv) || 0) - (parseFloat(deal.mezz_percent) || 0));
 
   // Sort tenants: anchors first, then by SF descending, vacant last
   const sortedTenants = [...tenants].sort((a, b) => {
@@ -417,10 +420,10 @@ export default function SellerBrief({ deal, tenants = [], capexItems = [], addre
               )}
               <CapRow
                 label="Our Equity"
-                amount={fmt(deal.equity_required)}
+                amount={fmt(price * ourEquityPct / 100)}
                 terms={`Deposit: ${deal.deposit_amount || "—"}`}
                 color={P.gold}
-                pct={100 - (parseFloat(deal.ltv) || 0) - (parseFloat(deal.mezz_percent) || 0)}
+                pct={ourEquityPct}
               />
               {sellerCredit > 0 && (
                 <CapRow label="Seller Credit" amount={`(${fmt(sellerCredit)})`} terms="Applied at closing" color={P.green} pct={0} />
