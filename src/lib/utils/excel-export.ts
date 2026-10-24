@@ -461,7 +461,7 @@ function buildProjectionSheet(
     fml(`B28+${lastYearCol}25`, totalCF + (exitVal - mm.seniorPayoffAtExit - mezzBalloon), FMT_USD, STYLES.valueBold),
   );
 
-  setCell(ws, 'A30', txt('Equity Invested', STYLES.label));
+  setCell(ws, 'A30', txt('Equity Gap', STYLES.label));
   setCell(ws, 'B30', num(equityCellValue, FMT_USD, STYLES.value));
 
   setCell(ws, 'A31', txt('Equity Multiple', STYLES.returnsLabel));

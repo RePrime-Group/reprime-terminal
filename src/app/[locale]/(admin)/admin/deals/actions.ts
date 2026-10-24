@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
-import { parseDealInputs, calculatePropertyMetrics } from '@/lib/utils/deal-calculator';
+import { parseDealInputs, calculatePropertyMetrics, calculateEquityRequired } from '@/lib/utils/deal-calculator';
 import { parseImport, IMPORT_STATUSES, type RowError } from '@/lib/deals/importSchema';
 import type { DealCreateInput } from '@/lib/deals/types';
 import type { DealStatus } from '@/lib/types/database';
@@ -73,7 +73,8 @@ function computeMetrics(input: DealCreateInput) {
     hold_period_years: input.hold_period_years || '5',
     exit_cap_rate: input.exit_cap_rate,
   });
-  return calculatePropertyMetrics(ci);
+  const metrics = calculatePropertyMetrics(ci);
+  return { ...metrics, equityRequiredTotal: calculateEquityRequired(ci, metrics).total };
 }
 
 /**
@@ -128,7 +129,7 @@ async function insertDeal(
       irr: cm.irr !== null ? cm.irr.toFixed(2) : null,
       coc: cm.cocReturn !== null ? cm.cocReturn.toFixed(2) : null,
       dscr: cm.lenderDSCR > 0 ? cm.lenderDSCR.toFixed(2) : null,
-      equity_required: cm.netEquity > 0 ? String(Math.round(cm.netEquity)) : null,
+      equity_required: cm.equityRequiredTotal > 0 ? String(Math.round(cm.equityRequiredTotal)) : null,
       loan_estimate: cm.loanAmount > 0 ? String(Math.round(cm.loanAmount)) : null,
       seller_financing: !!input.seller_financing,
       note_sale: !!input.note_sale,

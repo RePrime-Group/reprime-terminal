@@ -651,6 +651,7 @@ export default function DealDetailClient({
           <OverviewTab
             deal={deal}
             computed={computed}
+            equityRequired={equityRequired.total}
             financialProps={financialProps}
             addresses={addresses}
             tenants={tenants}
@@ -883,7 +884,7 @@ export default function DealDetailClient({
         structure={structureModal ?? 'assignment'}
         fees={effectiveDealFees}
         purchasePrice={feeAdjustedInputs.purchasePrice}
-        equityRequired={computed.netEquity}
+        equityRequired={equityRequired.total}
         projectedIRR={
           structureModal === 'assignment'
             ? feeAdjustedMetrics.assignmentIRR

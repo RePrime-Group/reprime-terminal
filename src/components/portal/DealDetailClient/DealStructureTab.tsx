@@ -197,6 +197,7 @@ export function DealStructureTab({
             effectiveFees={effectiveDealFees}
             customStartingFees={effectiveInvestorTerms}
             feeAdjustedInputs={feeAdjustedInputs}
+            equityRequired={equityRequired}
           />
         </div>
       </FadeInOnScroll>

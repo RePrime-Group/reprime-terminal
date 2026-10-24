@@ -10,7 +10,7 @@ export interface FeeDefaults {
 
 export const REPRIME_STANDARD_FEES: FeeDefaults = {
   assignmentFee: 3,
-  acqFee: 2,
+  acqFee: 3,
   assetMgmtFee: 1.5,
   gpCarry: 20,
   prefReturn: 8,

@@ -9,7 +9,7 @@
 
 import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
-import { parseDealInputs, calculatePropertyMetrics } from './src/lib/utils/deal-calculator';
+import { parseDealInputs, calculatePropertyMetrics, calculateEquityRequired } from './src/lib/utils/deal-calculator';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -39,6 +39,7 @@ async function main() {
   for (const deal of deals) {
     const inputs = parseDealInputs(deal as unknown as Record<string, unknown>);
     const metrics = calculatePropertyMetrics(inputs);
+    const equity = calculateEquityRequired(inputs, metrics);
 
     const { error: updateError } = await supabase
       .from('terminal_deals')
@@ -47,7 +48,7 @@ async function main() {
         irr: metrics.irr !== null ? metrics.irr.toFixed(2) : null,
         coc: metrics.cocReturn !== null ? metrics.cocReturn.toFixed(2) : null,
         dscr: metrics.combinedDSCR > 0 ? metrics.combinedDSCR.toFixed(2) : null,
-        equity_required: metrics.netEquity > 0 ? String(Math.round(metrics.netEquity)) : null,
+        equity_required: equity.total > 0 ? String(Math.round(equity.total)) : null,
         loan_estimate: metrics.loanAmount > 0 ? String(Math.round(metrics.loanAmount)) : null,
       })
       .eq('id', deal.id);

@@ -428,7 +428,7 @@ function ReturnComparison({ inputs, metrics, traditional }: { inputs: DealInputs
   const rows = [
     { label: t('seniorDebt'), t: fmtFull(traditional.loanAmount), m: fmtFull(metrics.loanAmount) },
     { label: t('sellerMezz'), t: '—', m: `${fmtFull(metrics.mezzAmount)} ${t('at')} ${pct(inputs.mezzRate)} ${t('io')}` },
-    { label: t('investorEquity'), t: fmtFull(traditional.netEquity), m: mEquity },
+    { label: t('equityGap'), t: fmtFull(traditional.netEquity), m: mEquity },
     { label: t('annualCashFlow'), t: fmtFull(traditional.distributableCashFlow), m: fmtFull(metrics.distributableCashFlow) },
     { label: t('cocReturn'), t: tCoC, m: mCoC, bold: true, greenIfBetter: mFullyFinanced || ((metrics.cocReturn ?? 0) - (traditional.cocReturn ?? 0) > 2) },
     { label: `${t('irr')} (${inputs.holdPeriodYears}yr)`, t: tIRR, m: mIRR, bold: true, greenIfBetter: mFullyFinanced || ((metrics.irr ?? 0) - (traditional.irr ?? 0) > 2) },

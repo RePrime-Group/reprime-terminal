@@ -298,7 +298,7 @@ export default function DealCard({ deal, locale, index, previewMode = false, fro
                 { label: t('closingCostsShort', { pct: `${deal.equity_breakdown.closingCostPct}%` }), value: deal.equity_breakdown.closingCosts },
               ].map((part, i) => (
                 <div key={i} className={`min-w-0 px-2 pt-1 pb-[5px] ${i > 0 ? 'border-s border-[#EEF0F4]' : ''}`}>
-                  <div className="text-[8.5px] leading-[11px] font-bold text-gray-400 uppercase tracking-[1.2px] truncate">
+                  <div className="text-[8.5px] leading-[11px] font-bold text-gray-400 uppercase tracking-[1.2px] rtl:tracking-normal truncate">
                     {part.label}
                   </div>
                   <div className="text-[12px] leading-[15px] font-semibold text-[#0E3470] tabular-nums mt-px truncate">

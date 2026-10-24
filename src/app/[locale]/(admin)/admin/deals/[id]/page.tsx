@@ -9,7 +9,7 @@ import Badge from '@/components/ui/Badge';
 import Modal from '@/components/ui/Modal';
 import DealSubNav from '@/components/admin/DealSubNav';
 import DealInvestorGroupsCard from '@/components/admin/investor-tabs/DealInvestorGroupsCard';
-import { parseDealInputs, calculatePropertyMetrics } from '@/lib/utils/deal-calculator';
+import { parseDealInputs, calculatePropertyMetrics, calculateEquityRequired } from '@/lib/utils/deal-calculator';
 import {
   REPRIME_STANDARD_FEES,
   type FeeDefaults,
@@ -647,7 +647,8 @@ export default function EditDealPage() {
       updateData.irr = computedMetrics.irr !== null ? computedMetrics.irr.toFixed(2) : null;
       updateData.coc = computedMetrics.cocReturn !== null ? computedMetrics.cocReturn.toFixed(2) : null;
       updateData.dscr = computedMetrics.combinedDSCR > 0 ? computedMetrics.combinedDSCR.toFixed(2) : null;
-      updateData.equity_required = computedMetrics.netEquity > 0 ? String(Math.round(computedMetrics.netEquity)) : null;
+      const computedEquity = calculateEquityRequired(computedInputs, computedMetrics);
+      updateData.equity_required = computedEquity.total > 0 ? String(Math.round(computedEquity.total)) : null;
       updateData.loan_estimate = computedMetrics.loanAmount > 0 ? String(Math.round(computedMetrics.loanAmount)) : null;
 
       const { error } = await supabase
@@ -1020,7 +1021,7 @@ export default function EditDealPage() {
         'lease-summary': 'lease-summary',
       };
       const RAG_DOC_NAME: Record<Exclude<DocKey, 'om'>, string> = {
-        'loi': 'Signed LOI',
+        'loi': 'LOI',
         'psa': 'Purchase and Sale Agreement',
         'full-report': 'Full Report',
         'costar-report': 'CoStar Report',

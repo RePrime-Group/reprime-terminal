@@ -423,7 +423,7 @@ function SaleProforma({
         value={fmtMoney(result.holdCashFlow)}
       />
       <Line label="Total Return" value={fmtMoney(result.totalReturn)} bold />
-      <Line label="Equity Invested" value={context.equityInvested <= 0 ? '$0' : fmtMoney(context.equityInvested)} muted />
+      <Line label="Equity Gap" value={context.equityInvested <= 0 ? '$0' : fmtMoney(context.equityInvested)} muted />
       <Line label="Equity Multiple" value={fmtMultiple(result.equityMultiple, positive)} bold />
       <Line label="Scenario IRR" value={fmtIRR(result.irr, positive)} bold />
     </div>
